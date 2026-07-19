@@ -2,7 +2,7 @@
 
 > **Status**: current
 > **Last updated**: 2026-07-19
-> **Sources**: концепт Codex (одобрен, `staging/journal/2026-07-19-codex-curriculum-concept.md`) · [[../product/learning-model]] §9 · [[../product/lexical-system]] · flows [[../flows/session]], [[../flows/placement]] · лицензии проверены 2026-07-19 (OPEN-6, [PD-2026-07-19])
+> **Sources**: концепт Codex (одобрен, `staging/journal/2026-07-19-codex-curriculum-concept.md`) · red-team триаж (`staging/journal/2026-07-19-concept-review-triage.md`) · [[../product/learning-model]] §9 · [[../product/lexical-system]] · flows [[../flows/session]], [[../flows/placement]] · лицензии проверены 2026-07-19 ([PD-2026-07-19])
 > **Bounded context**: `src/english_trainer/curriculum/`
 
 > Спека — **target**. Фазы — тегами `[mvp]` / `[post-mvp]`. Термины — из [[../glossary]]; поведение — полностью inline. Это контракт формата и правил программы (roadmap 0.3); само наполнение — фаза П.
@@ -17,12 +17,13 @@
 
 | Сущность | Назначение | Ключевые поля |
 |---|---|---|
-| `CurriculumVersion` | версионируемый снимок программы | version, activated_at, changelog |
+| `CurriculumVersion` | иммутабельный версионируемый снимок программы | version, activated_at, changelog |
 | `Level` | CEFR-уровень с главным результатом | id (A1…C2), outcome |
 | `Track` | сквозной трек через уровни | id, title, from_level |
 | `Module` | группа тем уровня вокруг рабочей задачи | id (`a2.2-results-and-experience`), can_do, topics |
 | `Topic` | единица изучения | см. формат ниже |
-| `LexicalItem` | единица лексикона ([[../product/lexical-system]]) | id, type, band, register, usage_policy… |
+| `LexicalItem` | единица лексикона ([[../product/lexical-system]]) | id, type, `frequency_band`, `curriculum_priority_band`, register, usage_policy, source_refs… |
+| `SourceArtifact` | внешний источник данных (provenance) | id, exact_version, url, retrieved_at, sha256, license, attribution, notices |
 
 **Программа — граф can-do умений, не линейный учебник** [PD-2026-07-19]. Каждая тема отвечает на вопрос «что ученик сможет сделать», грамматика привязана к рабочей задаче (Present Perfect ← «сообщить о готовом результате»).
 
@@ -44,11 +45,12 @@ typical_errors:
   - using Past Simple without a finished-time context
   - incorrect past participle
   - omitting have/has
-mastery_criteria: {...}        # критерии по dimensions
+mastery_criteria: {...}        # по versioned schema из 0.4, критерий на каждую required dimension
 explanation_language: ru-allowed   # когда допустим русский
 ```
 
-`advisory_prerequisites.strong/soft` — сила рекомендации, не замок (в learning-model §9 это hard/soft; здесь переименовано в strong/soft, чтобы исключить прочтение «hard = блокирует»).
+- **Единый enum prerequisites — `strong`/`soft`** [ревью A-4]: сила рекомендации, не замок. `hard/soft` из брифа — **superseded**, в текущей schema не используется.
+- **`mastery_criteria`** — по versioned schema контракта 0.4 ([[../product/learning-model]] §9, ревью E-1); валидатор (§5) проверяет наличие критерия на каждую required dimension. До 0.4 полноценное авторское наполнение критериев не финализируется (см. roadmap: П.2 зависит от 0.4).
 
 ### Треки
 
@@ -69,16 +71,21 @@ explanation_language: ru-allowed   # когда допустим русский
 - **living layer** — мемы, сленг и форумные единицы, встреченные во время обучения; добавляются через `maintain-english-curriculum` workflow с provenance (`first_observed_at`, источник, `currency`);
 - **learner lexicon** — личный словарь; живёт в модуле learner, не здесь.
 
-## 3. Данные и лицензии [PD-2026-07-19, закрывает OPEN-6]
+## 3. Данные и лицензии [PD-2026-07-19]
+
+Источники и режим использования выбраны (OPEN-6 решён). Схема provenance и полнота CC BY-SA notices — [[../OPEN]] OPEN-15.
 
 | Источник | Роль | Лицензия | Обязательства |
 |---|---|---|---|
-| CEFR-J Vocabulary/Grammar Profiles (olp-en-cefrj) | CEFR-разметка слов и грамматики | A1–B2: free research+commercial с цитированием (Tono Lab); C1/C2 Octanove: CC BY-SA 4.0 | цитирование в ATTRIBUTIONS |
-| NGSL / NAWL / Business SL | core/high frequency band, рабочая лексика | CC BY-SA 4.0 | attribution; производные данные при публикации — CC BY-SA |
-| wordfreq (rspeer) | численные частоты; присутствие в Reddit/Twitter для informal | код Apache-2.0, данные CC BY-SA 4.0 | attribution; данные заморожены ~2021 — ок для stable core |
+| CEFR-J Vocabulary/Grammar Profiles (olp-en-cefrj) | CEFR-разметка слов и грамматики | A1–B2: free research+commercial с цитированием (Tono Lab); C1/C2 Octanove: CC BY-SA 4.0 | цитирование |
+| NGSL / NAWL / Business Service List (BSL) | core/high frequency band, рабочая лексика | CC BY-SA 4.0 | attribution; ShareAlike на распространяемый производный dataset |
+| wordfreq (rspeer) | численные частоты (агрегированный корпусный score) | код Apache-2.0, данные CC BY-SA 4.0 | attribution; snapshot ~2021 |
 
-- **MUST**: файл `ATTRIBUTIONS.md` в корне репо с цитированиями появляется вместе с первым импортом данных.
-- **MUST NOT**: импортировать данные CEFR-SP (лицензия не указана) и данные OpenVLT (лицензия данных не заявлена; используется только как архитектурный reference).
+- **MUST — режим build-time** [PD-2026-07-19/Q3, ревью I-1]: частотные данные используются pinned на build-time/этапе отбора; **сырые частотные датасеты в репо не коммитятся**. В репо — только отобранный лексикон с `source_refs`. Это минимизирует ShareAlike-границу (нет распространяемого сырого dataset).
+- **MUST — provenance** [ревью I-2/I-3]: каждый импорт фиксирует `SourceArtifact` (exact_version, url, retrieved_at, sha256, license, attribution, notices); каждая импортированная запись несёт `source_refs` + `transformations`. Схема и CC BY-SA notice boundary — OPEN-15.
+- **Уточнение по wordfreq** [ревью I-5]: wordfreq даёт **агрегированную корпусную частоту** (домены, включая Reddit/Twitter, слиты в один score) — per-domain «присутствие в Reddit/Twitter» из API не запрашивается, а snapshot ~2021 не доказывает текущую currency. Источник informal-currency — отдельно, OPEN-14.
+- **MUST**: `ATTRIBUTIONS.md` (или data-license manifest) появляется вместе с первым импортом.
+- **MUST NOT**: импортировать данные CEFR-SP (лицензия не указана) и данные OpenVLT (лицензия данных не заявлена; только архитектурный reference).
 
 ## 4. Публичный API и события
 
@@ -86,7 +93,8 @@ explanation_language: ru-allowed   # когда допустим русский
 |---|---|---|---|
 | `get_topic(id)` | API | тема с полным содержимым | `[mvp]` |
 | `recommendations(learner_state)` | API | темы с флагом `recommended / early` по advisory-графу и уровням | `[mvp]` |
-| `lexicon_query(filter)` | API | выборка LexicalItem (band, track, usage_policy, currency) | `[mvp]` |
+| `lexicon_query(filter)` | API | выборка LexicalItem (frequency_band, curriculum_priority_band, track, usage_policy, currency) | `[mvp]` |
+| `get_version(v)` | API | иммутабельный snapshot указанной версии (для replay/pin) | `[mvp]` |
 | `validate()` | API | полная валидация активной версии | `[mvp]` |
 | `CURRICULUM_VERSION_ACTIVATED` | publishes | активация новой версии программы | `[mvp]` |
 | `LEXICAL_ITEM_ADDED` | publishes | пополнение living layer | `[mvp]` |
@@ -95,10 +103,13 @@ explanation_language: ru-allowed   # когда допустим русский
 
 - **MUST**: у каждой темы есть `can_do`; тема без наблюдаемого умения не проходит валидацию.
 - **MUST**: граф advisory — модуль выдаёт рекомендации, никогда не запрещает ([[../product/learning-model]] §1, §4).
-- **MUST**: стабильные ID бессмертны: использованный в evidence ID нельзя изменить или удалить — только deprecation с указанием преемника и миграцией.
-- **MUST**: программа версионируется; движок работает с активированной валидной версией; изменения — только через `maintain-english-curriculum` workflow.
-- **MUST**: валидация ловит: циклы advisory-графа; битые ссылки prerequisites/lexicon/module/track; дубли ID; prerequisite с CEFR выше уровня темы; пустые dimensions; отсутствие can_do; informal-единицу без `usage_policy`; `meme_template` без нейтрального объяснения или `currency`; импортированную единицу без attribution-меты.
-- **MUST**: informal-единицы с `usage_policy: avoid` и `recognition_only` не попадают в production-упражнения и не рекомендуются к употреблению — только на понимание ([[../product/lexical-system]]).
+- **MUST — pinning и не-ретроактивность** [PD-2026-07-19, ревью G-2/G-3]: `CurriculumVersion` иммутабелен. Evidence, session и Session Manifest **pin-ят** версию curriculum (и scoring/scheduler/generation/rubric policy), под которой созданы. Активация новой версии **никогда не ретроактивна**: replay и resume используют pinned-версию, не current active. «Движок работает с активной версией» относится только к формированию *новых* манифестов.
+- **MUST — deprecation и replay** [ревью G-3]: изменение ID — только deprecation через append-only alias/migration events с явной семантикой `1:1 | split | merge | retired`; исходная версия сохраняется в snapshot, historical evidence не перепривязывается. Перезапись event log запрещена (append-only). Механизм — [[../OPEN]] OPEN-9.
+- **MUST — бессмертие ссылок** [ревью G-5]: стабильный ID бессмертен, если на него ссылается **любой** persistent reference (evidence, manifest, review queue, банк, assessment), не только evidence; tombstones сохраняются; cross-validator проверяет разрешимость ссылок в learner state, манифестах, очереди, банке и assessments.
+- **MUST — enforcement активации** [ревью E-5]: `validate()`/активация энфорсят schema, provenance и целостность **независимо от способа правки файла**; невалидная версия не активируется. (Отдельный attestation-протокол workflow в MVP не вводится — осознанный отказ от gate-машинерии, [[README]].)
+- **MUST**: изменения программы проходят `maintain-english-curriculum` workflow с последующей валидацией.
+- **MUST**: валидация ловит: циклы advisory-графа; битые ссылки prerequisites/lexicon/module/track/source_refs; дубли ID; prerequisite с CEFR выше уровня темы; пустые dimensions или отсутствие `mastery_criteria` на required dimension; отсутствие can_do; informal-единицу без `usage_policy`; `context_dependent` без `allowed_contexts`; `volatility: changing` без полного набора (`first_observed_at`/`last_verified_at`/`currency`/источник); `meme_template` без нейтрального объяснения; импортированную единицу без `source_refs`/SourceArtifact.
+- **MUST**: informal-единицы с `usage_policy: avoid`/`recognition_only` не попадают в production-упражнения и не рекомендуются к употреблению — только на понимание; банк/формы ре-валидируются против active policy ([[../product/lexical-system]] §3b, [[../OPEN]] OPEN-14).
 - **MUST**: TOEFL-трек не порождает тем ниже B1.
 - **SHOULD**: каждая тема связана хотя бы с одним рабочим контекстом (AI/AEC/SaaS/переписка/форум).
 
@@ -118,8 +129,13 @@ explanation_language: ru-allowed   # когда допустим русский
 
 ## 8. Открытые вопросы
 
-Нет новых. OPEN-6 закрыт этим контрактом.
+OPEN-6 решён (источники + build-time режим). Остаточные механизмы, зафиксированные инвариантами выше ([[../OPEN]]):
+
+- **OPEN-9**: version pinning, deterministic replay, deprecation split/merge/retired, бессмертие ссылок → 0.2/0.3.
+- **OPEN-14**: currency/usage-policy lifecycle, stale-safety банка, владелец/TTL мемов → curriculum detail/П.3.
+- **OPEN-15**: SourceArtifact schema, CC BY-SA notice boundary, rights_basis living layer → 0.3/П.4.
 
 ## История изменений
 
-- **2026-07-19**: создан по одобренному концепту Codex (can-do граф, 8 треков, формат темы) + решение OPEN-6 (CEFR-J + NGSL + wordfreq). Все решения [PD-2026-07-19].
+- **2026-07-19 (2)**: red-team триаж — единый enum `strong/soft` (A-4); pinning/не-ретроактивность и deprecation replay (G-2/G-3); бессмертие любого persistent reference (G-5); build-time режим данных (I-1/Q3); SourceArtifact provenance (I-2/I-3); полное имя BSL (I-4); исправлено утверждение о wordfreq Reddit/Twitter (I-5); enforcement активации без attestation (E-5); `mastery_criteria` → 0.4; расширена валидация. Механизмы → OPEN-9/14/15.
+- **2026-07-19**: создан по одобренному концепту Codex (can-do граф, 8 треков, формат темы) + решение OPEN-6. Все решения [PD-2026-07-19].

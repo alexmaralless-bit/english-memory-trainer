@@ -9,14 +9,21 @@
 
 ## Решения этого flow [PD-2026-07-19]
 
-1. **Evidence только проверенным темам.** Каждый placement-item привязан к теме программы или LexicalItem. Проверенные единицы получают настоящий evidence и стартовые состояния (`INTRODUCED`/`LEARNING`/…); все остальные остаются `NEW`. Предположительной разметки «ниже уровня — значит знает» нет: рекомендации строятся от уровней+confidence, не от фиктивных состояний тем.
-2. **Placement рекомендован, отказ возможен.** При onboarding агент настойчиво предлагает placement; при отказе старт с консервативной самооценки, помеченной `very-low-confidence`, и rolling-уточнение полностью берёт оценку на себя. Жёсткого гейта нет.
+1. **Evidence только проверенным темам.** Каждый placement-item привязан к теме программы или LexicalItem. Проверенные единицы получают настоящий evidence и стартовые состояния; все остальные остаются `NEW`. Предположительной разметки «ниже уровня — значит знает» нет: рекомендации строятся от уровней+confidence.
+2. **Placement рекомендован, отказ возможен.** При onboarding агент настойчиво предлагает placement; при отказе — консервативный старт, rolling-уточнение берёт оценку на себя. Жёсткого гейта нет.
+3. **Потолок** [ревью D-9]: проверенным темам placement выдаёт максимум `ACTIVE`, **никогда `MASTERED`** (нет retention во времени); writing из одного rubric-фрагмента — только provisional (полный уровень — ≥2 независимых items).
+4. **Самооценка отдельно** [ревью A-2]: `placement decline --self-assessment` пишет `self_reported_level` **отдельно** от измеренного уровня; это provisional working estimate, полностью перекрываемый первым допустимым evidence ([[../product/learning-model]] §5).
 
-Унаследовано из [[../product/learning-model]] §6: короткий тест ~30–40 мин; grammar/vocabulary/reading — объективно, writing — короткий фрагмент по rubric с ограниченным вкладом; deterministic seed; минимум две формы; результат `low-confidence` с уточнением за 3–5 сессий; после перерыва — re-entry ([[session]]), не повторный placement; повторный placement — по запросу ученика.
+Унаследовано из [[../product/learning-model]] §6: короткий тест (целевая медиана ~30–40 мин, SHOULD); grammar/vocabulary/reading — объективно, writing — короткий фрагмент по rubric с ограниченным вкладом; deterministic seed; минимум две формы; `low-confidence` с rolling-уточнением (окно — versioned policy, OPEN-8); после перерыва — re-entry ([[session]]), не повторный placement; повторный placement — по запросу ученика.
 
-## Правило форм
+## Правило форм и exposure
 
-- **MUST**: placement-формы — фиксированные авторские наборы items в curriculum/assessments (версионируемые), не генерённые на лету. Причина: сравнимость результатов между формами и повторными прохождениями; генерённые items несравнимы и недетерминированы.
+- **MUST**: placement-формы — фиксированные авторские наборы items в curriculum/assessments (версионируемые), не генерённые на лету. Причина: сравнимость результатов между формами и повторными прохождениями.
+- **MUST — exposure history** [ревью C-6]: движок хранит историю показанных items/форм; при повторном прохождении применяются rotation/cooldown, а вес повторно увиденных items понижается или обнуляется — заученную форму нельзя «сдать» повторно как свежий evidence. Механизм — [[../OPEN]] OPEN-17.
+
+## Жизненный цикл placement [ревью G-1]
+
+`STARTED → IN_PROGRESS → SUBMITTED → SCORED | ABANDONED`. Ответы фиксируются инкрементально с checkpoint; после обрыва чата placement **resume**-абелен с сохранённой секции. `submit` идемпотентен и терминален (один терминальный submit на форму); scoring допустим только в `SUBMITTED`. Expiry/recover и точная схема — контракт assessments/lessons ([[../OPEN]] OPEN-17). Так placement переживает потерю чата так же, как учебная сессия.
 
 ## Сценарий
 
@@ -28,52 +35,54 @@ sequenceDiagram
     participant T as trainer CLI
 
     Note over A,T: onboarding: профиль создан, уровней нет
-    A->>L: предлагает placement (~30–40 мин)
+    A->>L: предлагает placement (SHOULD ~30–40 мин)
     alt ученик согласен
         A->>T: placement start --format json
-        T-->>A: форма (seed, версия): секции grammar · vocabulary · reading · writing
-        loop по секциям
-            A->>L: предъявляет items как есть (без подсказок и переформулировок)
+        T-->>A: форма (seed, версия, pinned): секции grammar · vocabulary · reading · writing
+        loop по секциям (checkpoint, resume-абельно)
+            A->>L: предъявляет items дословно (без подсказок и переформулировок)
             L-->>A: ответы
-            A->>T: placement submit --input answers.json
+            A->>T: placement answer --checkpoint (инкрементально)
         end
-        T->>T: объективный скоринг + rubric-оценка writing (кодом фиксируется, агент оценивает по rubric)
-        T-->>A: уровни по навыкам + confidence; evidence проверенным темам/LexicalItem; вход в личный словарь по критериям
+        A->>T: placement submit (идемпотентный, терминальный)
+        T->>T: объективный скоринг кодом + rubric-observations по writing → outcome движком
+        T-->>A: уровни по навыкам + confidence (потолок ACTIVE); evidence проверенным темам/LexicalItem
     else отказ
         A->>T: placement decline --self-assessment A2
-        T-->>A: консервативный старт: уровни very-low-confidence
+        T-->>A: self_reported_level (отдельно) → provisional very-low-confidence старт
     end
     A->>L: итог: стартовая картина + что уточнится в первых сессиях
-    Note over T: первые 3–5 сессий: rolling-уточнение confidence по evidence
+    Note over T: первые сессии: rolling-уточнение confidence по evidence (versioned policy, OPEN-8)
 ```
 
 ## Правила сценария
 
 - **MUST**: агент предъявляет items дословно — без подсказок, упрощений и переформулировок; это диагностика, не обучение.
-- **MUST**: объективные секции оценивает только код; writing оценивается агентом по versioned rubric, evidence сохраняется полностью, вклад ограничен ([[../product/learning-model]] §3).
+- **MUST**: объективные секции оценивает только код; по writing агент даёт rubric-observations, outcome и cap считает движок ([[../product/learning-model]] §3).
 - **MUST**: placement-items, проверяющие лексику, создают записи личного словаря по критерию «была целью упражнения» ([[../product/lexical-system]] §3).
-- **MUST**: отказ от placement фиксируется событием и ничего не блокирует; рекомендации при `very-low-confidence` максимально консервативны.
-- **MUST**: rolling-уточнение — обычный механизм evidence первых сессий, не отдельный тест; движок повышает confidence и корректирует уровни автоматически.
-- **MUST**: результаты placement (и отказ) попадают в tutor briefing ([[continuation]]).
-- **MUST NOT**: повторять placement автоматически; повторный — только по явному запросу ученика.
+- **MUST**: отказ от placement фиксируется событием и ничего не блокирует. «Консервативные рекомендации» при `very-low-confidence` определены наблюдаемо (fallback range, unknown не трактуется как mastered) — versioned policy, [[../OPEN]] OPEN-8 (не «максимально консервативно» на глаз, ревью E-8).
+- **MUST**: rolling-уточнение — обычный механизм evidence первых сессий, не отдельный тест; движок повышает confidence по versioned policy.
+- **MUST**: результаты placement (и отказ, и `self_reported_level`) попадают в tutor briefing ([[continuation]]).
+- **MUST NOT**: повторять placement автоматически; повторный — только по явному запросу ученика (с exposure/cooldown, см. выше).
 
 ## Выведенные контракты (фиксируются в спеках модулей)
 
 | Модуль (спека) | Обязан предоставить |
 |---|---|
-| `assessments` (0.4/0.3) | версионируемые формы с seed; объективный скоринг; привязка item → тема/LexicalItem |
-| `curriculum` (0.3) | адресуемость тем и LexicalItem из placement-items |
-| `learner` | уровни по навыкам + confidence; consume rolling-evidence; консервативный старт при отказе |
-| `evidence` (0.4) | placement-attempts как обычный evidence; вход лексики в личный словарь |
-| `scoring` (0.4) | cap вклада rubric-writing; правила rolling-уточнения confidence |
-| `cli` (0.7) | `trainer placement start/submit/decline`; JSON-контракт форм и результатов |
+| `assessments`/`lessons` (0.4/0.5) | placement lifecycle (checkpoint/resume/один терминальный submit); версионируемые формы с seed; exposure history + cooldown (OPEN-17) |
+| `curriculum` (0.3) | адресуемость тем и LexicalItem; потолок ACTIVE для placement-evidence |
+| `learner` | уровни + confidence; `self_reported_level` отдельно; consume rolling-evidence |
+| `evidence` (0.4) | placement-attempts как обычный evidence с семантической идентичностью (OPEN-7); вход лексики в личный словарь |
+| `scoring` (0.4) | cap вклада rubric-writing; versioned confidence-policy и потолок состояния (OPEN-8) |
+| `cli` (0.7) | `trainer placement start/answer/submit/decline/resume`; JSON форм и результатов |
 | `adapters`/skills (0.7) | skill `run-placement-assessment`: дословное предъявление, запрет подсказок |
-| `audit` | события PLACEMENT_STARTED / SUBMITTED / SCORED / DECLINED |
+| `audit` | события PLACEMENT_STARTED / SUBMITTED / SCORED / DECLINED / RESUMED |
 
 ## Открытые вопросы
 
-Нет новых. Состав и объём форм A1–B1 — работа уровня П (наполнение), не развилка.
+Механизмы — в контрактах ([[../OPEN]]): OPEN-17 (placement lifecycle, exposure/cooldown), OPEN-8 (confidence-policy, потолок, консервативные рекомендации), OPEN-7 (семантическая идентичность evidence). Состав форм A1–B1 — наполнение фазы П.
 
 ## История изменений
 
+- **2026-07-19 (2)**: red-team триаж — placement lifecycle с checkpoint/resume/одним терминальным submit (G-1); потолок ACTIVE, никогда MASTERED (D-9); `self_reported_level` отдельно (A-2); exposure history и cooldown (C-6); консервативные рекомендации и confidence → versioned policy (E-8); ~30–40 мин → SHOULD (E-9); rubric-observations вместо готовой оценки.
 - **2026-07-19**: создан по Concept Gate: evidence только проверенным темам, placement рекомендован с правом отказа. Все решения [PD-2026-07-19]. Закрывает 0.8.
