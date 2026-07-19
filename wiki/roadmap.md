@@ -15,7 +15,7 @@ HTML-версия (пересобирается по запросу из это�
 |---|---|---|---|---|
 | 0.1 | Learning Model Requirements | `wiki/product/learning-model.md` | done | OPEN-4, OPEN-5 решены [PD-2026-07-19] |
 | 0.2 | Application Foundation Contract (kernel) | `wiki/platform/foundation.md` | planned | informed by 0.1 |
-| 0.3 | Curriculum Contract | `wiki/modules/curriculum.md` | next | после 0.1; открывает фазу П |
+| 0.3 | Curriculum Contract | `wiki/modules/curriculum.md` | done | can-do граф, 8 треков, формат Topic, OPEN-6 закрыт [PD-2026-07-19] |
 | 0.4 | Evidence, Scoring & Review Contract | `wiki/modules/evidence.md` + `scoring.md` + `scheduler.md` | planned | после 0.1; OPEN-1 |
 | 0.5 | Lesson Lifecycle & Completion Contract | `wiki/modules/lessons.md` | planned | после 0.1, 0.4 |
 | 0.6 | Obsidian Vault Contract | `wiki/modules/memory.md` | planned | OPEN-2, OPEN-3 |
@@ -29,10 +29,10 @@ HTML-версия (пересобирается по запросу из это�
 
 | # | Работа | Статус | Зависимости |
 |---|---|---|---|
-| П.1 | Каркас программы A1–C2: уровни, треки, модули | planned | после 0.3 |
-| П.2 | Программа A1–A2 полностью: темы, цели, критерии, prerequisites, типовые ошибки | planned | после П.1 |
+| П.1 | Каркас программы A1–C2: уровни, треки, модули (по can-do концепту из journal) | next | 0.3 done — можно начинать |
+| П.2 | Программа A1–A2 полностью: темы, цели, критерии, prerequisites, типовые ошибки (модули A1.1–A2.8 сконцептированы) | planned | после П.1 |
 | П.3 | Policies генерации уроков: как агент строит упражнения и диалоги по теме | planned | после П.2; informed by 0.1 |
-| П.4 | Учебный лексикон A1–A2: отбор слов, chunks, phrasal verbs, неправильных глаголов по категориям | planned | после П.1; формат из 0.3; ждёт OPEN-6 |
+| П.4 | Учебный лексикон A1–A2: отбор по категориям из CEFR-J + NGSL + wordfreq; ATTRIBUTIONS.md | planned | после П.1; формат из 0.3 |
 
 ## Фаза 1 — kernel и каркас
 
@@ -60,6 +60,7 @@ Listening/speaking модальности · полный TOEFL-симулято
 
 ## История изменений
 
+- **2026-07-19 (8)**: 0.3 done — Curriculum Contract по одобренному концепту Codex (can-do граф, 8 треков с informal, OPEN-6 закрыт: CEFR-J + NGSL + wordfreq); next → П.1.
 - **2026-07-19 (7)**: flow «placement» принят — 0.8 done (все три flows); next → 0.3 Curriculum Contract.
 - **2026-07-19 (6)**: 0.9 Lexical System Requirements done (дизайн пользователя); добавлена П.4 — отбор лексикона A1–A2; OPEN-6 (frequency source).
 - **2026-07-19 (5)**: flow «continuation» (`wiki/flows/continuation.md`) принят; в 0.8 остался placement.

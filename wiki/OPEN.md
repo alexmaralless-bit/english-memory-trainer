@@ -12,7 +12,6 @@
 | OPEN-1 | Точная scoring-формула и thresholds | бриф §7 задаёт принципы, формулы нет | Evidence, Scoring & Review Contract |
 | OPEN-2 | Структура Obsidian vault и политика ручных заметок ученика | vault генерится движком; можно ли туда писать руками? | Obsidian Vault Contract |
 | OPEN-3 | Способ интеграции с Obsidian: файлы напрямую, CLI или плагин | Obsidian CLI пока не устанавливался | Obsidian Vault Contract |
-| OPEN-6 | Frequency source и лицензирование лексических данных | кандидаты: CEFR-J profiles, OpenVLT (см. бриф §16) — проверить лицензии | финализацию 0.3 и отбор лексикона П.4 |
 
 ## Решённые
 
@@ -30,8 +29,11 @@
 | — | Flow «continuation»: session notes опциональные, tutor briefing одним JSON в манифесте/resume (Obsidian не нужен агенту), без блокировок сессий — событие AGENT_ATTACHED, lease post-mvp | [PD-2026-07-19], [[flows/continuation]] |
 | — | Лексическая система трёхслойная: учебный лексикон с категориями приоритета, lexeme с формами (не отдельные слова), личный словарь с критериями входа и не-boolean владением | [PD-2026-07-19], [[product/lexical-system]] |
 | — | Flow «placement»: evidence получают только реально проверенные темы/LexicalItem (остальные NEW), placement рекомендован с правом отказа (very-low-confidence старт), формы фиксированные авторские | [PD-2026-07-19], [[flows/placement]] |
+| OPEN-6 | Источники лексикона: CEFR-J profiles + NGSL/NAWL/BSL + wordfreq; CEFR-SP и данные OpenVLT не импортируются; ATTRIBUTIONS.md при первом импорте | [PD-2026-07-19], [[modules/curriculum]] §3 |
+| — | Программа — can-do граф с 8 треками (включая Everyday/Online & Informal English); концепт Codex одобрен, модули A1/A2 — в journal как вход для П.2 | [PD-2026-07-19], [[modules/curriculum]] |
 
 ## История изменений
 
+- **2026-07-19 (3)**: решён OPEN-6 (источники лексикона, лицензии проверены); зафиксирован can-do концепт программы.
 - **2026-07-19 (2)**: решены OPEN-4 и OPEN-5 + зафиксированы контент-модель и re-entry протокол (Concept Gate по 0.1).
 - **2026-07-19**: создан; перенесены открытые вопросы из design-direction §6.

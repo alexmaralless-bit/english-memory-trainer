@@ -16,7 +16,13 @@
 - **Сессия** — одно занятие. Жизненный цикл: `STARTED → IN_PROGRESS → FINISHED | ABANDONED`; внутренняя структура свободная, обязательна только фиксация результатов при завершении. `ABANDONED` сохраняет и учитывает всё зафиксированное [PD-2026-07-19].
 - **Тема (Topic)** — единица curriculum со стабильным ID вида `grammar.present-perfect.result`.
 - **Skill dimension** — измерение владения темой: recognition, controlled production, transfer, spontaneous written production (текстовые модальности MVP).
-- **Curriculum graph** — DAG тем с prerequisites. В нашей модели — карта и источник рекомендаций, не система замков ([PD-2026-07-19]: prerequisites рекомендательные).
+- **Curriculum graph** — DAG тем с prerequisites. В нашей модели — карта и источник рекомендаций, не система замков ([PD-2026-07-19]: prerequisites рекомендательные, сила — strong/soft).
+- **Can-do** — формулировка темы как наблюдаемого умения («Report a completed action that matters now»); обязательна у каждой темы [PD-2026-07-19].
+- **Track** — сквозной трек программы через уровни; их восемь, включая Everyday, Online & Informal English и TOEFL R&W (с B1).
+- **Usage policy** — политика употребления informal-единицы: `safe_to_use / context_dependent / recognition_only / avoid`; понимать ≠ употреблять.
+- **Currency** — актуальность изменчивой единицы (мем, сленг): `current / dated / obsolete`, с датами наблюдения и проверки.
+- **Stable core / living layer** — каталоги лексикона: спроектированный заранее / пополняемый из обучения (мемы, сленг) с provenance.
+- **Informal Online Competence** — отдельный профиль владения неформальным письменным английским; не двигает CEFR напрямую.
 - **Chunk** — устойчивое выражение/фраза, изучаемая как целое.
 - **LexicalItem** — единица учебного лексикона со стабильным ID: слово, chunk, phrasal verb или lexeme. Приоритет — категории `CORE → HIGH → USEFUL → SPECIALIZED → INCIDENTAL` [PD-2026-07-19].
 - **Lexeme** — LexicalItem с формами (`go / went / gone` — один lexeme, не три слова); владение отслеживается по формам раздельно.

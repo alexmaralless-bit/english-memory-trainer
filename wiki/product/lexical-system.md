@@ -2,7 +2,7 @@
 
 > **Status**: current
 > **Last updated**: 2026-07-19
-> **Sources**: дизайн пользователя 2026-07-19 (Concept Gate, зафиксирован в journal) · [[learning-model]] §3–§4, §7 · все решения [PD-2026-07-19]
+> **Sources**: дизайн пользователя 2026-07-19 (Concept Gate, зафиксирован в journal) · концепт Codex по informal-треку (`staging/journal/2026-07-19-codex-curriculum-concept.md`) · [[learning-model]] §3–§4, §7 · все решения [PD-2026-07-19]
 > **Роль**: продуктовый контракт словарной системы (roadmap 0.9). Определяет три слоя лексики и их связь со scoring. Формат данных и frequency source — Curriculum Contract (0.3); проекция — Obsidian Vault Contract (0.6); отбор лексикона A1–A2 — работа П.4.
 
 ---
@@ -74,6 +74,31 @@ frequency_band: core
 - **MUST NOT**: записывать каждое случайно встретившееся слово.
 - **MUST**: лексические единицы участвуют в повторениях и re-entry на общих основаниях ([[learning-model]] §7): review-цели манифеста могут указывать на LexicalItem так же, как на тему.
 
+## 3b. Informal-слой (Everyday, Online & Informal English)
+
+Письменный разговорный английский — чаты, форумы, GitHub, Discord, Reddit — полноправная часть лексикона [PD-2026-07-19]. Это не оценка speaking.
+
+- **MUST**: informal-единицы — те же `LexicalItem` с расширенными полями:
+
+```yaml
+id: slang.my-bad
+type: informal_chunk        # + abbreviation | meme_template
+register: casual            # шкала: formal → neutral → casual → slang → potentially-offensive
+usage_policy: safe_to_use   # safe_to_use | context_dependent | recognition_only | avoid
+meaning_ru: моя ошибка / виноват
+neutral_equivalent: That was my mistake.
+communities: [general, work-chat]
+frequency_band: high
+currency: stable
+```
+
+- **MUST**: у каждой informal-единицы есть `usage_policy`. Понимать ≠ употреблять: `recognition_only` и `avoid` изучаются только на распознавание и никогда не рекомендуются к production.
+- **MUST**: для изменчивого сленга и мемов (`meme_template`) дополнительно: `first_observed_at`, `last_verified_at`, `currency: current / dated / obsolete`, источник/сообщество. Мем хранит нейтральное объяснение и связь с культурным контекстом; собирать «все мемы заранее» не нужно — living layer пополняется из обучения.
+- **MUST**: оценка informal-владения проверяет: понимание значения, распознавание тона (helpful/dismissive/sarcastic/hostile), выбор допустимого контекста, перевод в нейтральный английский, естественный ответ, перенос между регистрами.
+- **MUST**: знание мемов и жаргона не повышает CEFR-уровни напрямую — оно формирует отдельный профиль **Informal Online Competence**; владение регистром и письменным взаимодействием может давать evidence для writing и transfer ([[learning-model]] §5).
+
+Каталоги: **stable core** (проектируется заранее) / **living layer** (встреченное в обучении, через maintain-workflow с provenance) / **learner lexicon** (личный словарь, §3). Источники частот и CEFR-разметки — контракт [[../modules/curriculum]] §3.
+
 ## 4. Obsidian-проекция
 
 Генерённые страницы (детали — контракт 0.6):
@@ -112,4 +137,5 @@ memory/current/vocabulary-review.md
 
 ## История изменений
 
+- **2026-07-19 (2)**: добавлен §3b — informal-слой (типы informal_chunk/abbreviation/meme_template, usage_policy, currency, каталоги stable core / living layer, профиль Informal Online Competence) по одобренному концепту Codex.
 - **2026-07-19**: создана по дизайну пользователя: три слоя, композитный приоритет с категориями, lexeme с формами, не-boolean личный словарь с критериями входа. Все решения [PD-2026-07-19].
