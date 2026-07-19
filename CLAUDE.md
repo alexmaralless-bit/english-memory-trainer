@@ -52,7 +52,7 @@ Run `trainer doctor` first when diagnosing a local setup. Agent-facing CLI comma
 
 - Read learner state only through the CLI. Never directly edit SQLite rows, event logs, scores, or generated memory/Obsidian files.
 - Every assessment needs stored evidence; merely mentioning a topic is not evidence. Never fabricate scores for uncovered modalities.
-- Finish sessions only through `trainer lesson finish`; change curriculum only through the `maintain-english-curriculum` workflow, then run the relevant validations.
+- Finish sessions only through `trainer session finish` (CLI namespace is `session`, not the brief's `lesson` — [PD-2026-07-19]); change curriculum only through the `maintain-english-curriculum` workflow, then run the relevant validations.
 - Style: four-space indentation, type annotations, `snake_case` functions/modules, `PascalCase` classes, stable lowercase dotted topic IDs (`grammar.present-perfect.result`), UTC timestamps, versioned schemas for external inputs, Ruff for lint/format.
 - Never commit SQLite WAL/SHM files, secrets, or incidental generated data.
 

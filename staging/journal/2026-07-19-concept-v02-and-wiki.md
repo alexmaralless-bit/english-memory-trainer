@@ -39,3 +39,5 @@ Roadmap 0.1 — Learning Model Requirements: концепт → «ок» → с�
 Также: пересоздан `.venv` на Python 3.12.10 (часть 1.1; pyproject/ruff/pytest — при scaffold), ссылка на HTML-роадмап добавлена в `wiki/roadmap.md`.
 
 Финал Concept Gate: пользователь дал «ок» на спеку и решил **[PD-2026-07-19] XP/streak остаются** — без штрафов, прерванный streak лишь обнуляет счётчик. Написана и принята спека `wiki/product/learning-model.md` (0.1 done). Ключевое решение внутри спеки: состояние темы отражает только знание (LOCKED исключён), рекомендации — отдельный атрибут. Next → 0.8 сквозные flows.
+
+Flow «сессия» (`wiki/flows/session.md`) — Concept Gate из трёх развилок, все решены [PD-2026-07-19]: (1) конфликт `start` при незавершённой сессии → CLI возвращает выбор resume/abandon, решает ученик; (2) finish-postconditions средние — каждая review-цель обязана иметь исход, выполнять все не обязательно; (3) CLI-именование `trainer session ...` вместо `lesson` из брифа. В lifecycle сессии добавлен `ABANDONED` (сохраняет и учитывает зафиксированное). CLAUDE.md обновлён на `trainer session finish`.

@@ -13,7 +13,7 @@
 
 ## Обучение
 
-- **Сессия** — одно занятие. Жизненный цикл: `STARTED → IN_PROGRESS → FINISHED`; внутренняя структура свободная, обязательна только фиксация результатов при завершении.
+- **Сессия** — одно занятие. Жизненный цикл: `STARTED → IN_PROGRESS → FINISHED | ABANDONED`; внутренняя структура свободная, обязательна только фиксация результатов при завершении. `ABANDONED` сохраняет и учитывает всё зафиксированное [PD-2026-07-19].
 - **Тема (Topic)** — единица curriculum со стабильным ID вида `grammar.present-perfect.result`.
 - **Skill dimension** — измерение владения темой: recognition, controlled production, transfer, spontaneous written production (текстовые модальности MVP).
 - **Curriculum graph** — DAG тем с prerequisites. В нашей модели — карта и источник рекомендаций, не система замков ([PD-2026-07-19]: prerequisites рекомендательные).
