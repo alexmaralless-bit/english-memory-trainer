@@ -29,6 +29,7 @@
 | — | Flow «сессия»: конфликт start решается выбором ученика (resume / abandon+new), finish-postconditions средние (каждая цель имеет исход), CLI-именование `trainer session` вместо `lesson` | [PD-2026-07-19], [[flows/session]] |
 | — | Flow «continuation»: session notes опциональные, tutor briefing одним JSON в манифесте/resume (Obsidian не нужен агенту), без блокировок сессий — событие AGENT_ATTACHED, lease post-mvp | [PD-2026-07-19], [[flows/continuation]] |
 | — | Лексическая система трёхслойная: учебный лексикон с категориями приоритета, lexeme с формами (не отдельные слова), личный словарь с критериями входа и не-boolean владением | [PD-2026-07-19], [[product/lexical-system]] |
+| — | Flow «placement»: evidence получают только реально проверенные темы/LexicalItem (остальные NEW), placement рекомендован с правом отказа (very-low-confidence старт), формы фиксированные авторские | [PD-2026-07-19], [[flows/placement]] |
 
 ## История изменений
 
