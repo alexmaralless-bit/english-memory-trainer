@@ -20,7 +20,7 @@ HTML-версия (пересобирается по запросу из это�
 | 0.5 | Lesson Lifecycle & Completion Contract | `wiki/modules/lessons.md` | planned | после 0.1, 0.4 |
 | 0.6 | Obsidian Vault Contract | `wiki/modules/memory.md` | planned | OPEN-2, OPEN-3 |
 | 0.7 | CLI и Agent Skills contracts | `wiki/modules/cli.md` + `adapters.md` | planned | после 0.5 |
-| 0.8 | Сквозные flows (сессия, продолжение другим агентом, placement) | `wiki/flows/` | in-progress | flow «сессия» done; остались continuation и placement |
+| 0.8 | Сквозные flows (сессия, продолжение другим агентом, placement) | `wiki/flows/` | in-progress | flows «сессия» и «continuation» done; остался placement |
 
 ## Фаза П — учебная программа (после 0.3, параллельно фазе 1)
 
@@ -58,6 +58,7 @@ Listening/speaking модальности · полный TOEFL-симулято
 
 ## История изменений
 
+- **2026-07-19 (5)**: flow «continuation» (`wiki/flows/continuation.md`) принят; в 0.8 остался placement.
 - **2026-07-19 (4)**: 0.8 in-progress — flow «сессия» (`wiki/flows/session.md`) принят; остались continuation и placement.
 - **2026-07-19 (3)**: 0.1 done — спека `wiki/product/learning-model.md` принята; next → 0.8 flows (flow-first).
 - **2026-07-19 (2)**: добавлена фаза П — учебная программа проектируется заранее [PD-2026-07-19]; 2.1 переориентирована на загрузку готовой программы; ссылка на HTML-версию.

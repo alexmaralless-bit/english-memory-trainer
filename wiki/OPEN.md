@@ -26,6 +26,7 @@
 | — | Вместо штрафов — re-entry протокол: после длительного перерыва сессия начинается с быстрого повторения или короткого теста остаточных знаний (по Retrievability), без жёстких гейтов | [PD-2026-07-19] |
 | — | XP и streak остаются как лёгкая механика без штрафов: списаний нет, прерванный streak лишь обнуляет счётчик | [PD-2026-07-19], [[product/learning-model]] §8 |
 | — | Flow «сессия»: конфликт start решается выбором ученика (resume / abandon+new), finish-postconditions средние (каждая цель имеет исход), CLI-именование `trainer session` вместо `lesson` | [PD-2026-07-19], [[flows/session]] |
+| — | Flow «continuation»: session notes опциональные, tutor briefing одним JSON в манифесте/resume (Obsidian не нужен агенту), без блокировок сессий — событие AGENT_ATTACHED, lease post-mvp | [PD-2026-07-19], [[flows/continuation]] |
 
 ## История изменений
 
