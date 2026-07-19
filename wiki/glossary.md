@@ -101,13 +101,20 @@
 - **Session Manifest** — сформированный движком план сессии: tutor briefing, рекомендации тем, ReviewAssignment'ы, required skills с версиями; pin-ит версии curriculum/policy.
 - **Tutor briefing** — полная картина ученика одним JSON в манифесте/resume. Генерится из состояния движка, не из Markdown.
 - **Session notes** — опциональные короткие заметки агента (`--note`). **Untrusted non-evidence**: экранируются в briefing, не интерпретируются как state.
-- **Event log** — append-only JSONL журнал всех значимых действий; источник для replay.
+- **Event log** — append-only JSONL журнал DomainEvents; источник истины для learning-состояния и replay ([[platform/foundation]]).
+- **Command / DomainEvent envelope** — конверт мутации/факта: `id, type, occurred_at (UTC), actor/provider, correlation_id, causation_id, idempotency_key, pinned_versions, payload_hash` ([[platform/foundation]] §3.3).
+- **pinned_versions** — зафиксированные в конверте версии policy (curriculum/scoring/scheduler/generation/rubric), под которыми создан факт; replay резолвит по ним, не по active. Safety (`production_eligible`) — исключение, резолвится по active.
+- **Unit of Work** — атомарный commit authoritative state + events + outbox одной транзакцией.
+- **Transactional outbox** — надёжная post-commit доставка проекций (Obsidian, внешние) с retry/rebuild; сбой проекции не откатывает commit.
+- **Policy registry** — реестр иммутабельных версионируемых policy-снимков, адресуемых по id.
+- **Snapshot** — резервная копия SQLite (после checkpoint) + generated Markdown; операционное состояние не rebuildable из событий, поэтому бэкапится.
 - **Learner-память** — генерируемая движком Obsidian-проекция состояния (`memory/`). Читаемая проекция, не источник scoring. Не путать с вики разработки.
 - **SourceArtifact** — запись о внешнем источнике данных (id, версия, url, sha256, license, attribution, notices); импортированные единицы ссылаются на него ([[OPEN]] OPEN-15).
 - **Skill (агентский)** — процедурная инструкция для агента в `agent-skills/`, синхронизируется в `.agents/skills/` и `.claude/skills/`.
 
 ## История изменений
 
+- **2026-07-19 (4)**: добавлены kernel-термины (0.2): Command/DomainEvent envelope, pinned_versions, Unit of Work, transactional outbox, Policy registry, Snapshot; Event log уточнён как источник истины learning-части.
 - **2026-07-19 (3)**: rereview — три оси состояния (enrollment / knowledge_state / review_status), REVIEW_DUE устранён (D-R1); AT_RISK синхронизирован (D-R2); AttemptAssessment vs ReviewOutcome (A-R1); confidence machine-enum + self_reported_level per-skill (F-R1/A-R3); frequency_band только numeric+нейтральные bands (E-R5); production_eligible, LexicalMasteryProfile; объяснение агента не evidence (C-R2); trusted-reporter (C-R3).
 - **2026-07-19 (2)**: red-team триаж (F-1…F-8) — нормативные knowledge states и review outcomes; XP без штрафов + Season как период; machine-ID dimensions; LearningTarget; ReviewAssignment/Attempt/Summary/Confidence/Working level/core skill; разделены corpus_frequency/curriculum_priority/learner_priority и volatility/currency; contribution_scope; CurriculumVersion/Level/Module; SourceArtifact.
 - **2026-07-19**: создан, начальный словарь из брифа и design-direction v0.2.

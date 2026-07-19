@@ -66,9 +66,12 @@ OPEN-7…OPEN-18 заведены 2026-07-19 по итогам red-team ревь
 | — | **Самооценка при отказе от placement:** хранится отдельно (`self_reported_level`); **scope замещения — per-skill** (перестаёт влиять на конкретный skill после его первого допустимого evidence/confidence floor, provenance сохраняется, rereview A-R3) | [PD-2026-07-19], [[flows/placement]] |
 | — | **Safety-overlay (G-R1):** safety (production-eligibility из usage_policy+currency) НЕ пинится — всегда проверяется по active policy при доставке; прошлое evaluation/replay детерминировано по pinned scoring. Ставший `avoid`/`obsolete` item отменяется/заменяется append-only event с обеими версиями (механизм — OPEN-14) | [PD-2026-07-19], [[modules/curriculum]] §5, [[product/lexical-system]] §3b |
 | — | **Trust model (C-R3):** для MVP агент — **trusted reporter** raw_answer; допущение зафиксировано, границы — через Tutor Compliance Score; untrusted-захват user-turn на adapter boundary — post-mvp | [PD-2026-07-19], [[product/learning-model]] §3 |
+| — | **Источник истины (0.2):** гибрид — learning-состояние (evidence/scores/XP) event-sourced (event log = истина, scoring replay точный); операционное (сессии/очереди) SQLite-authoritative; Obsidian — post-commit проекция | [PD-2026-07-19], [[platform/foundation]] §2 |
+| — | **Storage-стек (0.2):** тонкий `sqlite3` + forward-only мигратор за Repository/UnitOfWork; без ORM; замена движка возможна за интерфейсом | [PD-2026-07-19], [[platform/foundation]] §3.9 |
 
 ## История изменений
 
+- **2026-07-19 (6)**: 0.2 Application Foundation — 2 PD-решения (гибрид event-sourcing, тонкий sqlite3); OPEN-9/10/11 получили спеку-носитель (инварианты в [[platform/foundation]], механизм → 1.2/1.3).
 - **2026-07-19 (5)**: rereview триаж — добавлена owner-матрица (J-R1); расширены OPEN-7/8/9/10/12/13/14/15/17, заведён OPEN-18 (scheduler-policy); 3 PD-решения (safety-overlay G-R1, trusted-reporter C-R3, per-skill self-report A-R3).
 - **2026-07-19 (4)**: red-team триаж — заведены OPEN-7…17, OPEN-1 сужен, OPEN-6 уточнён, 5 PD-решений.
 - **2026-07-19 (3)**: решён OPEN-6 (источники лексикона); зафиксирован can-do концепт программы.
