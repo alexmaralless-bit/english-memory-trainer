@@ -22,6 +22,7 @@ HTML-версия (пересобирается по запросу из это�
 | 0.7 | CLI и Agent Skills contracts | `wiki/modules/cli.md` + `adapters.md` | planned | после 0.5 |
 | 0.8 | Сквозные flows (сессия, продолжение другим агентом, placement) | `wiki/flows/` | done | session · continuation · placement приняты [PD-2026-07-19] |
 | 0.9 | Lexical System Requirements | `wiki/product/lexical-system.md` | done | дизайн пользователя [PD-2026-07-19]; OPEN-6 открыт |
+| 0.10 | Red-team ревью шести концептов внешним ревьювером | `staging/reviews/` | next | промпт готов; гейт перед П.1; триаж находок → правки спек / OPEN |
 
 ## Фаза П — учебная программа (после 0.3, параллельно фазе 1)
 
@@ -29,7 +30,7 @@ HTML-версия (пересобирается по запросу из это�
 
 | # | Работа | Статус | Зависимости |
 |---|---|---|---|
-| П.1 | Каркас программы A1–C2: уровни, треки, модули (по can-do концепту из journal) | next | 0.3 done — можно начинать |
+| П.1 | Каркас программы A1–C2: уровни, треки, модули (по can-do концепту из journal) | planned | после 0.10 (ревью концептов) |
 | П.2 | Программа A1–A2 полностью: темы, цели, критерии, prerequisites, типовые ошибки (модули A1.1–A2.8 сконцептированы) | planned | после П.1 |
 | П.3 | Policies генерации уроков: как агент строит упражнения и диалоги по теме | planned | после П.2; informed by 0.1 |
 | П.4 | Учебный лексикон A1–A2: отбор по категориям из CEFR-J + NGSL + wordfreq; ATTRIBUTIONS.md | planned | после П.1; формат из 0.3 |
@@ -60,6 +61,7 @@ Listening/speaking модальности · полный TOEFL-симулято
 
 ## История изменений
 
+- **2026-07-19 (9)**: добавлен гейт 0.10 — red-team ревью шести концептов (промпт в `staging/reviews/`); П.1 ждёт итогов ревью.
 - **2026-07-19 (8)**: 0.3 done — Curriculum Contract по одобренному концепту Codex (can-do граф, 8 треков с informal, OPEN-6 закрыт: CEFR-J + NGSL + wordfreq); next → П.1.
 - **2026-07-19 (7)**: flow «placement» принят — 0.8 done (все три flows); next → 0.3 Curriculum Contract.
 - **2026-07-19 (6)**: 0.9 Lexical System Requirements done (дизайн пользователя); добавлена П.4 — отбор лексикона A1–A2; OPEN-6 (frequency source).
