@@ -26,7 +26,8 @@ Kernel даёт детерминизм, аудит и целостность, б
 ### 2.1 Event store — единый транзакционный носитель [PD-2026-07-20, ревью A-1/E-1]
 
 - **MUST**: authoritative event log — **append-only таблица событий в SQLite**. Она коммитится в **той же** транзакции, что operational state и outbox-записи — один ресурс, ACID выполним.
-- **MUST**: **JSONL — derived, rebuildable export** event-таблицы (для аудита, git, чтения человеком, сверки replay), **не** источник истины. Экспорт идемпотентен и полностью пересоздаётся из event-таблицы; расхождение JSONL ↔ event-таблица = ошибка (`database check`).
+- **MUST**: **JSONL — derived, rebuildable export** event-таблицы (для аудита, git, чтения человеком, сверки replay), **не** источник истины. Экспорт идемпотентен и полностью пересоздаётся из event-таблицы.
+- **MUST — lag ≠ ошибка** [rereview E-1]: JSONL-export отстаёт от commit'а по контракту (post-commit через outbox, at-least-once). `database check` сверяет JSONL только **до acknowledged export offset / high-water mark**; отставание за offset — это `pending`/outbox-health, **не** integrity-error. Ошибка — только divergence *после* catch-up либо невалидный content/hash. Recovery: догон export'а из event-таблицы по offset.
 - **MUST**: файловые проекции (Obsidian, JSONL-export) — **только post-commit** через outbox (rereview E-R1); их сбой не откатывает authoritative commit.
 
 ### 2.2 Projection/truth boundary (нормативно) [ревью A-2/A-3/A-4/H-1]
@@ -38,8 +39,8 @@ Kernel даёт детерминизм, аудит и целостность, б
 |---|---|---|
 | evidence, review outcome, scores, XP-ledger, `practice_day` | event-sourced | rebuildable из event-таблицы |
 | `exposure_decision`/вес, применённый к placement-evidence | **захвачен в evidence-событие** (не из очереди) | rebuildable |
-| `prior_steady_state` | производно от событий (детерминированно) | rebuildable |
-| `self_reported_level` (provisional, per-skill) | operational (не влияет на scoring; влияет на briefing) | snapshot |
+| `prior_steady_state` | **явное поле проекции**, детерминированно материализуемое из событий (rereview A-1) | rebuildable |
+| `self_reported_level` (provisional, per-skill) | operational; не влияет на scoring, но **влияет на provisional working estimate / briefing / рекомендации** (rereview A-1) | snapshot + recovery |
 | ReviewAssignment (queue) | operational; **минимальный snapshot assignment захвачен в outcome-событие** | queue snapshot; outcome rebuildable |
 | exposure-очередь/cooldown (не-scoring) | operational | snapshot |
 
@@ -58,7 +59,7 @@ Kernel даёт детерминизм, аудит и целостность, б
 - **MUST**: event-таблица append-only; перезапись/удаление запрещены (deprecation/коррекции — только новыми append-only событиями, §3.6).
 
 ### 3.4 Идемпотентность и compound-команды
-- **MUST — cached/error ветки**: повтор с тем же `idempotency_key` и тем же `payload_hash` возвращает **прежний результат** (cached response); тот же ключ с другим payload — стабильная ошибка. `payload_hash`, cached-result schema и retention фиксированы в kernel.
+- **MUST — cached/error ветки**: повтор с тем же `idempotency_key` и тем же `payload_hash` возвращает **прежний результат** (cached response); тот же ключ с другим payload — стабильная ошибка. Точные `payload_hash`-алгоритм, cached-result schema и retention/eviction **должны быть зафиксированы в 1.2** по [[../OPEN]] OPEN-11/OPEN-20 (rereview H-1 — здесь заявлены как обязательные, но не специфицированы).
 - **MUST — key namespace задан в 0.2**: kernel фиксирует generic namespace ключа (`{aggregate_type, aggregate_id, command_type}` + пользовательский суффикс). **Продуктовая гранулярность scope** (per-learner/global/…) для конкретных команд — открытый вопрос ([[../OPEN]] OPEN-11); контракт **не** утверждает, что она уже выбрана (устранено C-3).
 - **MUST — compound-команда** [ревью C-1]: `session start --abandon-active` разложен на **две независимые идемпотентные команды** (`session abandon`, затем `session start`), не одну атомарную. Recovery определён и benign: crash между ними оставляет старую сессию `ABANDONED` и **нет** активной; следующий `start` создаёт новую. (Атомарный compound-envelope — `[post-mvp]`, если понадобится.)
 
@@ -72,6 +73,7 @@ Kernel даёт детерминизм, аудит и целостность, б
 - **MUST — retention pinned snapshots** [ревью F-1]: все версии/snapshots/tombstones, на которые есть pinned-ссылка, хранятся иммутабельно и не удаляются (retention ≠ immutability). Если версия не резолвится — hard error `PinnedPolicyUnavailable` (не тихий фолбэк на active/alias); recovery/export — [[../OPEN]] OPEN-9.
 - **MUST — safety-overlay hook** [PD-2026-07-19]: kernel даёт и pinned-резолв (replay/оценка), и **active-резолв** (`production_eligible` при доставке) + correction-события. Правило «safety не пинится» — П.3/0.4/0.5 ([[../modules/curriculum]] §5).
 - **MUST — generic correction envelope** [ревью C-2]: correction — событие с `corrects_event_id`, семантикой (replacement/compensation), позицией в `sequence` и idempotency. Reducer идемпотентен под цепочками corrections; replay **не** засчитывает и исходный, и исправленный эффект. Generic envelope и reducer-контракт — kernel; конкретная бизнес-семантика — 0.4/0.5 ([[../OPEN]] OPEN-11).
+- **MUST — safety-correction хранит обе версии** [rereview C-1]: для safety-overlay отмены/замены (§3.6 active-резолв) correction-событие несёт `original_pinned_versions` и `active_safety_version` — чтобы audit/replay объяснял, по какой active safety-policy и вместо какого pinned-decision выполнена отмена. Это сохраняет инвариант «с обеими версиями» ([[../modules/curriculum]] §5). Правило eligibility остаётся у П.3/0.4/0.5.
 
 ### 3.7 Unit of Work и transactional outbox
 - **MUST**: Unit of Work — атомарный commit event-таблицы + operational state + outbox одной SQLite-транзакцией.
@@ -95,7 +97,10 @@ Kernel определяет **конверт** (§3.3), append/replay и correct
 
 - **MUST**: одинаковые события + pinned policy-версии ⇒ одинаковое learning-состояние (byte-идентичность по значимым полям), при применении строго по `sequence` (§3.3), canonical encoding и детерминированных числовых правилах scoring (0.4).
 - **MUST**: `scoring replay` пересобирает scores из event-таблицы; результат сверяется с проекцией (расхождение = ошибка).
-- **MUST — replay-тесты**: fixed-clock; **shuffled insertion order и события с равным `occurred_at`** дают тот же результат; разные process hash-seed не меняют исход; crash-recovery (до/после commit event-store, до/после JSONL-export, дубль/переупорядочивание outbox не теряют и не дублируют данные).
+- **MUST — replay-тесты** (rereview B-1, два разных теста):
+  1. **order-independence чтения**: при неизменных event payload + `sequence` replay инвариантен к физическому storage/query order (перестановка строк/выборки не меняет результат);
+  2. **детерминированный append-order**: concurrent/equal-`occurred_at` append получает детерминированный total order (`sequence` с tie-break), и этот **записанный** order воспроизводится при replay.
+- **MUST**: fixed-clock; разные process hash-seed не меняют исход; crash-recovery (до/после commit event-store, до/после JSONL-export; дубль/переупорядочивание outbox не теряют и не дублируют данные).
 
 ## 6. CLI-поверхность (kernel-facing)
 
@@ -136,5 +141,6 @@ Agent-facing вывод — JSON в stdout, диагностика в stderr, с
 
 ## История изменений
 
+- **2026-07-20 (2)**: foundation-rereview (PASS-with-findings) — JSONL lag ≠ integrity error, сверка до high-water mark (E-1); `prior_steady_state` явное поле проекции, `self_reported_level` влияет на working estimate/рекомендации (A-1); safety-correction хранит обе версии (C-1); replay-тесты разделены на order-independence + детерминированный append-order (B-1); cached-schema/retention «зафиксировать в 1.2» (H-1); `sequence` в глоссарий (I-1).
 - **2026-07-20**: foundation-review триаж — **event store: SQLite event-таблица authoritative, JSONL derived export** [PD-2026-07-20] (A-1/E-1 BLOCKER); capture-into-event и boundary-manifest (A-2/A-3/A-4/H-1); `sequence`/canonical encoding/hash (B-1); outbox delivery + rebuild protocol (B-2/E-2); compound-команда как две идемпотентные (C-1); generic correction envelope (C-2); idempotency scope — противоречие устранено (C-3); pinned retention + `PinnedPolicyUnavailable` (F-1); multi-aggregate CAS (G-1); command registry (G-2); CI-gate арх-чеков (H-2); kernel не перечисляет business-типы (D-1); lifecycle-wording (D-2). Заведены OPEN-19/20/21.
 - **2026-07-19**: создан (roadmap 0.2). Гибрид event-sourcing и тонкий sqlite3-слой — [PD-2026-07-19]. Kernel как механизм-носитель с owner-границей.
