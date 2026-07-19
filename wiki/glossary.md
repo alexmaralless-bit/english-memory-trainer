@@ -89,11 +89,11 @@
 
 ## Метрики
 
-- **Learning Score** — агрегированное владение программой (шкала — [[OPEN]] OPEN-12).
+- **Learning Score** — coverage-взвешенный средний Mastery тем текущего working-уровня, 0–100 («насколько твёрдо владею тем, где я есть»). Прогресс-к-следующему уровню — отдельно ([[modules/scoring]] §5).
 - **XP** — очки за практику: выполненные задания, evidence, закрытые повторения, re-entry. **Штрафов и списаний нет**; начисление award-once по уникальному source event ([[OPEN]] OPEN-12).
 - **Season** — период агрегации XP (отображение), не отдельная механика со штрафами.
 - **Streak** — счётчик подряд идущих дней практики по локальной календарной дате ученика; прерывание обнуляет счётчик, накопленный XP не сгорает.
-- **Tutor Compliance Score** — соблюдение программы AI-преподавателем (шкала — [[OPEN]] OPEN-12).
+- **Tutor Compliance Score** — 0–100, доля соблюдённых обязательств агента за недавние сессии: вызваны ли required skills нужных версий, соблюдён ли correction-протокол, не было ли forbidden actions (агент не выставлял оценки, соблюдены postconditions) ([[modules/scoring]] §5).
 
 ## Система
 
@@ -115,6 +115,7 @@
 
 ## История изменений
 
+- **2026-07-20 (6)**: 0.4 — Learning Score и Tutor Compliance получили конкретные определения (владение текущим уровнем / доля соблюдённых обязательств).
 - **2026-07-20 (5)**: foundation-rereview — добавлено обязательное поле `sequence` в конверт (I-1); Event log уточнён (SQLite-таблица authoritative, JSONL export).
 - **2026-07-19 (4)**: добавлены kernel-термины (0.2): Command/DomainEvent envelope, pinned_versions, Unit of Work, transactional outbox, Policy registry, Snapshot; Event log уточнён как источник истины learning-части.
 - **2026-07-19 (3)**: rereview — три оси состояния (enrollment / knowledge_state / review_status), REVIEW_DUE устранён (D-R1); AT_RISK синхронизирован (D-R2); AttemptAssessment vs ReviewOutcome (A-R1); confidence machine-enum + self_reported_level per-skill (F-R1/A-R3); frequency_band только numeric+нейтральные bands (E-R5); production_eligible, LexicalMasteryProfile; объяснение агента не evidence (C-R2); trusted-reporter (C-R3).

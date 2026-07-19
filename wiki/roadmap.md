@@ -16,8 +16,8 @@ HTML-версия (пересобирается по запросу из это�
 | 0.1 | Learning Model Requirements | `wiki/product/learning-model.md` | done | OPEN-4/5 решены; после триажа — остаточные OPEN-1/7/8/10/12/13 → 0.4 |
 | 0.2 | Application Foundation Contract (kernel) | `wiki/platform/foundation.md` | done-with-open | event-store: SQLite-таблица authoritative + JSONL export [PD-2026-07-20]; 2 прогона ревью пройдены (PASS-with-findings, все сняты); остаточные OPEN-9/10/11/19/20/21 → 1.2/1.3 |
 | 0.3 | Curriculum Contract | `wiki/modules/curriculum.md` | done-with-open | can-do граф, 8 треков; остаточные OPEN-9/14/15 |
-| 0.4 | Evidence, Scoring & Review Contract | `wiki/modules/evidence.md` + `scoring.md` + `scheduler.md` | next | после 0.1; носитель OPEN-1/7/8/12/13/18 + таблица переходов и scoring из OPEN-10/14 |
-| 0.5 | Lesson Lifecycle & Completion Contract (+ assessments) | `wiki/modules/lessons.md` + `assessments.md` | planned | после 0.1, 0.4; носитель OPEN-10/11(uniqueness)/17. `assessments.md` — named artifact для placement lifecycle |
+| 0.4 | Evidence, Scoring & Review Contract | `wiki/modules/evidence.md` + `scoring.md` + `scheduler.md` | done-with-open | две оси + целые bands + Learning Score [PD-2026-07-20]; закрыл OPEN-1/7/8/12/13/18 (модель); остаётся калибровка *tunable*-констант |
+| 0.5 | Lesson Lifecycle & Completion Contract (+ assessments) | `wiki/modules/lessons.md` + `assessments.md` | next | после 0.1, 0.4; носитель OPEN-10/11(uniqueness)/17. `assessments.md` — named artifact для placement lifecycle |
 | 0.6 | Obsidian Vault Contract | `wiki/modules/memory.md` | planned | OPEN-2, OPEN-3 |
 | 0.7 | CLI и Agent Skills contracts | `wiki/modules/cli.md` + `adapters.md` | planned | после 0.5 |
 | 0.8 | Сквозные flows (сессия, продолжение другим агентом, placement) | `wiki/flows/` | done | session · continuation · placement приняты [PD-2026-07-19] |
@@ -31,7 +31,7 @@ HTML-версия (пересобирается по запросу из это�
 | # | Работа | Статус | Зависимости |
 |---|---|---|---|
 | П.1 | Каркас программы A1–C2: уровни, треки, модули (по can-do концепту из journal) | next | 0.10 done — можно начинать (каркас не зависит от mastery_criteria) |
-| П.2 | Программа A1–A2 полностью: темы, цели, критерии, prerequisites, типовые ошибки | planned | после П.1 **и 0.4** (schema mastery_criteria, ревью E-1) |
+| П.2 | Программа A1–A2 полностью: темы, цели, критерии, prerequisites, типовые ошибки | planned | после П.1; 0.4 готов (mastery_criteria schema есть) — блокирует только П.1 |
 | П.3 | Policies генерации уроков + lifecycle банка | planned | после П.2; informed by 0.1; **закрывает OPEN-14/OPEN-16** (currency/safety-overlay, exercise-bank) |
 | П.4 | Учебный лексикон A1–A2: отбор из CEFR-J + NGSL + wordfreq | planned | после П.1; формат из 0.3; **сначала закрыть OPEN-15** (provenance/CC BY-SA/rights), затем импорт |
 
@@ -61,6 +61,7 @@ Listening/speaking модальности · полный TOEFL-симулято
 
 ## История изменений
 
+- **2026-07-20 (15)**: 0.4 Evidence/Scoring/Review принят (`wiki/modules/evidence.md`+`scoring.md`+`scheduler.md`) — две оси, целые CEFR-bands, Learning Score = владение текущим уровнем [PD-2026-07-20]; закрыты OPEN-1/7/8/12/13/18 (модель), OPEN-10/20 сужены. 0.4 → done-with-open; П.2 разблокирована по 0.4 (ждёт только П.1 от Codex). Next → 0.5.
 - **2026-07-20 (14)**: foundation-rereview — PASS-with-findings, новых BLOCKER нет; 4 MAJOR + 2 MINOR (JSONL lag, boundary-поля, safety-correction, replay-тесты, `sequence`) сняты в тексте. 0.2 подтверждён. Next → 0.4.
 - **2026-07-20 (13)**: foundation-review (BLOCKER A-1/E-1 + ~13 MAJOR, регрессия триажа чистая) — event-store переопределён: SQLite-таблица authoritative, JSONL derived export [PD-2026-07-20]; заведены OPEN-19/20/21; FAIL снят с 0.2. Next → 0.4.
 - **2026-07-19 (12)**: 0.2 Application Foundation Contract принят (`wiki/platform/foundation.md`) — гибрид event-sourcing + тонкий sqlite3 [PD-2026-07-19]; 0.2 → done-with-open (механизм OPEN-9/10/11 в 1.2/1.3); next → 0.4.
