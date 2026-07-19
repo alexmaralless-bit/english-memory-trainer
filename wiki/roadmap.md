@@ -21,6 +21,7 @@ HTML-версия (пересобирается по запросу из это�
 | 0.6 | Obsidian Vault Contract | `wiki/modules/memory.md` | planned | OPEN-2, OPEN-3 |
 | 0.7 | CLI и Agent Skills contracts | `wiki/modules/cli.md` + `adapters.md` | planned | после 0.5 |
 | 0.8 | Сквозные flows (сессия, продолжение другим агентом, placement) | `wiki/flows/` | in-progress | flows «сессия» и «continuation» done; остался placement |
+| 0.9 | Lexical System Requirements | `wiki/product/lexical-system.md` | done | дизайн пользователя [PD-2026-07-19]; OPEN-6 открыт |
 
 ## Фаза П — учебная программа (после 0.3, параллельно фазе 1)
 
@@ -31,6 +32,7 @@ HTML-версия (пересобирается по запросу из это�
 | П.1 | Каркас программы A1–C2: уровни, треки, модули | planned | после 0.3 |
 | П.2 | Программа A1–A2 полностью: темы, цели, критерии, prerequisites, типовые ошибки | planned | после П.1 |
 | П.3 | Policies генерации уроков: как агент строит упражнения и диалоги по теме | planned | после П.2; informed by 0.1 |
+| П.4 | Учебный лексикон A1–A2: отбор слов, chunks, phrasal verbs, неправильных глаголов по категориям | planned | после П.1; формат из 0.3; ждёт OPEN-6 |
 
 ## Фаза 1 — kernel и каркас
 
@@ -58,6 +60,7 @@ Listening/speaking модальности · полный TOEFL-симулято
 
 ## История изменений
 
+- **2026-07-19 (6)**: 0.9 Lexical System Requirements done (дизайн пользователя); добавлена П.4 — отбор лексикона A1–A2; OPEN-6 (frequency source).
 - **2026-07-19 (5)**: flow «continuation» (`wiki/flows/continuation.md`) принят; в 0.8 остался placement.
 - **2026-07-19 (4)**: 0.8 in-progress — flow «сессия» (`wiki/flows/session.md`) принят; остались continuation и placement.
 - **2026-07-19 (3)**: 0.1 done — спека `wiki/product/learning-model.md` принята; next → 0.8 flows (flow-first).

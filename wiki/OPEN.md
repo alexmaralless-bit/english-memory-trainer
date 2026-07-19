@@ -12,6 +12,7 @@
 | OPEN-1 | Точная scoring-формула и thresholds | бриф §7 задаёт принципы, формулы нет | Evidence, Scoring & Review Contract |
 | OPEN-2 | Структура Obsidian vault и политика ручных заметок ученика | vault генерится движком; можно ли туда писать руками? | Obsidian Vault Contract |
 | OPEN-3 | Способ интеграции с Obsidian: файлы напрямую, CLI или плагин | Obsidian CLI пока не устанавливался | Obsidian Vault Contract |
+| OPEN-6 | Frequency source и лицензирование лексических данных | кандидаты: CEFR-J profiles, OpenVLT (см. бриф §16) — проверить лицензии | финализацию 0.3 и отбор лексикона П.4 |
 
 ## Решённые
 
@@ -27,6 +28,7 @@
 | — | XP и streak остаются как лёгкая механика без штрафов: списаний нет, прерванный streak лишь обнуляет счётчик | [PD-2026-07-19], [[product/learning-model]] §8 |
 | — | Flow «сессия»: конфликт start решается выбором ученика (resume / abandon+new), finish-postconditions средние (каждая цель имеет исход), CLI-именование `trainer session` вместо `lesson` | [PD-2026-07-19], [[flows/session]] |
 | — | Flow «continuation»: session notes опциональные, tutor briefing одним JSON в манифесте/resume (Obsidian не нужен агенту), без блокировок сессий — событие AGENT_ATTACHED, lease post-mvp | [PD-2026-07-19], [[flows/continuation]] |
+| — | Лексическая система трёхслойная: учебный лексикон с категориями приоритета, lexeme с формами (не отдельные слова), личный словарь с критериями входа и не-boolean владением | [PD-2026-07-19], [[product/lexical-system]] |
 
 ## История изменений
 

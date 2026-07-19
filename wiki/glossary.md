@@ -18,6 +18,9 @@
 - **Skill dimension** — измерение владения темой: recognition, controlled production, transfer, spontaneous written production (текстовые модальности MVP).
 - **Curriculum graph** — DAG тем с prerequisites. В нашей модели — карта и источник рекомендаций, не система замков ([PD-2026-07-19]: prerequisites рекомендательные).
 - **Chunk** — устойчивое выражение/фраза, изучаемая как целое.
+- **LexicalItem** — единица учебного лексикона со стабильным ID: слово, chunk, phrasal verb или lexeme. Приоритет — категории `CORE → HIGH → USEFUL → SPECIALIZED → INCIDENTAL` [PD-2026-07-19].
+- **Lexeme** — LexicalItem с формами (`go / went / gone` — один lexeme, не три слова); владение отслеживается по формам раздельно.
+- **Личный словарь (LearnerLexicalState)** — индивидуальное состояние лексической единицы: evidence по recognition/production, ошибки, Mastery/Stability/Retrievability, статусы как у тем. «Выучено» — не boolean; вход только по критериям (цель упражнения, непонимание, значимая ошибка, целевое объяснение, полезность, просьба ученика).
 
 ## Оценивание
 
