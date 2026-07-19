@@ -13,14 +13,14 @@ HTML-версия (пересобирается по запросу из это�
 
 | # | Артефакт | Куда ложится | Статус | Зависимости |
 |---|---|---|---|---|
-| 0.1 | Learning Model Requirements | `wiki/product/learning-model.md` | next | OPEN-4, OPEN-5 решаются по ходу |
+| 0.1 | Learning Model Requirements | `wiki/product/learning-model.md` | done | OPEN-4, OPEN-5 решены [PD-2026-07-19] |
 | 0.2 | Application Foundation Contract (kernel) | `wiki/platform/foundation.md` | planned | informed by 0.1 |
 | 0.3 | Curriculum Contract | `wiki/modules/curriculum.md` | planned | после 0.1 |
 | 0.4 | Evidence, Scoring & Review Contract | `wiki/modules/evidence.md` + `scoring.md` + `scheduler.md` | planned | после 0.1; OPEN-1 |
 | 0.5 | Lesson Lifecycle & Completion Contract | `wiki/modules/lessons.md` | planned | после 0.1, 0.4 |
 | 0.6 | Obsidian Vault Contract | `wiki/modules/memory.md` | planned | OPEN-2, OPEN-3 |
 | 0.7 | CLI и Agent Skills contracts | `wiki/modules/cli.md` + `adapters.md` | planned | после 0.5 |
-| 0.8 | Сквозные flows (сессия, продолжение другим агентом, placement) | `wiki/flows/` | planned | пишутся до/вместе со спеками модулей (Принцип 5) |
+| 0.8 | Сквозные flows (сессия, продолжение другим агентом, placement) | `wiki/flows/` | next | flow-first: пишутся до спек модулей (Принцип 5), выводят контракты для 0.3–0.5 |
 
 ## Фаза П — учебная программа (после 0.3, параллельно фазе 1)
 
@@ -58,5 +58,6 @@ Listening/speaking модальности · полный TOEFL-симулято
 
 ## История изменений
 
+- **2026-07-19 (3)**: 0.1 done — спека `wiki/product/learning-model.md` принята; next → 0.8 flows (flow-first).
 - **2026-07-19 (2)**: добавлена фаза П — учебная программа проектируется заранее [PD-2026-07-19]; 2.1 переориентирована на загрузку готовой программы; ссылка на HTML-версию.
 - **2026-07-19**: создан; фазы 0–2 из design-direction §5 и build-prompt.
