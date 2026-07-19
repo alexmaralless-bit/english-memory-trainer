@@ -3,7 +3,7 @@
 > **Status**: living
 > **Last updated**: 2026-07-19
 
-Единственное место, где живёт «где мы сейчас». Статусы: `planned / next / in-progress / done / blocked`. Правится руками при каждом существенном сдвиге. Состав фаз — из `docs/design-direction.md` §5; при конфликте главнее этот файл.
+Единственное место, где живёт «где мы сейчас». Статусы: `planned / next / in-progress / done / done-with-open / blocked`. **`done-with-open`** = спека принята и не FAIL, но несёт остаточные OPEN, которые закрывает контракт-исполнитель (не блокирует зависимые работы, кроме явно указанных). Правится руками при каждом существенном сдвиге. Состав фаз — из `docs/design-direction.md` §5; при конфликте главнее этот файл. Owner-матрица OPEN → контракт — в [[OPEN]].
 
 HTML-версия (пересобирается по запросу из этого файла): <https://claude.ai/code/artifact/b2afa615-2340-417b-8aed-89efceb89bfa>
 
@@ -16,13 +16,13 @@ HTML-версия (пересобирается по запросу из это�
 | 0.1 | Learning Model Requirements | `wiki/product/learning-model.md` | done | OPEN-4/5 решены; после триажа — остаточные OPEN-1/7/8/10/12/13 → 0.4 |
 | 0.2 | Application Foundation Contract (kernel) | `wiki/platform/foundation.md` | next | informed by 0.1; носитель OPEN-9/10/11 (pinning, lifecycle, concurrency) |
 | 0.3 | Curriculum Contract | `wiki/modules/curriculum.md` | done-with-open | can-do граф, 8 треков; остаточные OPEN-9/14/15 |
-| 0.4 | Evidence, Scoring & Review Contract | `wiki/modules/evidence.md` + `scoring.md` + `scheduler.md` | next | после 0.1; носитель OPEN-1/7/8/12/13/16 |
-| 0.5 | Lesson Lifecycle & Completion Contract | `wiki/modules/lessons.md` | planned | после 0.1, 0.4; носитель OPEN-10/17 |
+| 0.4 | Evidence, Scoring & Review Contract | `wiki/modules/evidence.md` + `scoring.md` + `scheduler.md` | next | после 0.1; носитель OPEN-1/7/8/12/13/18 + таблица переходов и scoring из OPEN-10/14 |
+| 0.5 | Lesson Lifecycle & Completion Contract (+ assessments) | `wiki/modules/lessons.md` + `assessments.md` | planned | после 0.1, 0.4; носитель OPEN-10/11(uniqueness)/17. `assessments.md` — named artifact для placement lifecycle |
 | 0.6 | Obsidian Vault Contract | `wiki/modules/memory.md` | planned | OPEN-2, OPEN-3 |
 | 0.7 | CLI и Agent Skills contracts | `wiki/modules/cli.md` + `adapters.md` | planned | после 0.5 |
 | 0.8 | Сквозные flows (сессия, продолжение другим агентом, placement) | `wiki/flows/` | done | session · continuation · placement приняты [PD-2026-07-19] |
 | 0.9 | Lexical System Requirements | `wiki/product/lexical-system.md` | done-with-open | дизайн пользователя; остаточные OPEN-13/14/15 |
-| 0.10 | Red-team ревью шести концептов + триаж 66 находок | `staging/reviews/` | done | 5 PD-решений, инварианты + OPEN-7…17, FAIL снят |
+| 0.10 | Red-team ревью (2 прогона) + триаж | `staging/reviews/` | done | 66 находок + rereview (BLOCKER G-R1 + 21 MAJOR); safety-overlay, owner-матрица, OPEN-7…18; FAIL снят повторно |
 
 ## Фаза П — учебная программа (после 0.3, параллельно фазе 1)
 
@@ -32,8 +32,8 @@ HTML-версия (пересобирается по запросу из это�
 |---|---|---|---|
 | П.1 | Каркас программы A1–C2: уровни, треки, модули (по can-do концепту из journal) | next | 0.10 done — можно начинать (каркас не зависит от mastery_criteria) |
 | П.2 | Программа A1–A2 полностью: темы, цели, критерии, prerequisites, типовые ошибки | planned | после П.1 **и 0.4** (schema mastery_criteria, ревью E-1) |
-| П.3 | Policies генерации уроков: как агент строит упражнения и диалоги по теме | planned | после П.2; informed by 0.1 |
-| П.4 | Учебный лексикон A1–A2: отбор по категориям из CEFR-J + NGSL + wordfreq; ATTRIBUTIONS.md | planned | после П.1; формат из 0.3 |
+| П.3 | Policies генерации уроков + lifecycle банка | planned | после П.2; informed by 0.1; **закрывает OPEN-14/OPEN-16** (currency/safety-overlay, exercise-bank) |
+| П.4 | Учебный лексикон A1–A2: отбор из CEFR-J + NGSL + wordfreq | planned | после П.1; формат из 0.3; **сначала закрыть OPEN-15** (provenance/CC BY-SA/rights), затем импорт |
 
 ## Фаза 1 — kernel и каркас
 
@@ -61,6 +61,7 @@ Listening/speaking модальности · полный TOEFL-симулято
 
 ## История изменений
 
+- **2026-07-19 (11)**: rereview-триаж (BLOCKER G-R1 + 21 MAJOR) — safety-overlay «safety не пинится» разрешил единственный BLOCKER; добавлены owner-матрица OPEN→контракт и OPEN-18; расширены OPEN-7…17; определён статус `done-with-open`; П.3 закрывает OPEN-14/16, П.4 сначала OPEN-15; assessments.md добавлен к 0.5. FAIL повторно снят со всех спек.
 - **2026-07-19 (10)**: red-team триаж 66 находок (`staging/reviews/`) — 0.10 done, FAIL снят; правки шести спек + перестройка OPEN (OPEN-7…17); 0.3/0.9 → done-with-open; П.2 теперь зависит от 0.4 (schema mastery_criteria); П.1 разблокирована; 0.2 и 0.4 подняты в next (носители отложенных BLOCKER).
 - **2026-07-19 (9)**: добавлен гейт 0.10 — red-team ревью шести концептов (промпт в `staging/reviews/`); П.1 ждёт итогов ревью.
 - **2026-07-19 (8)**: 0.3 done — Curriculum Contract по одобренному концепту Codex (can-do граф, 8 треков с informal, OPEN-6 закрыт: CEFR-J + NGSL + wordfreq); next → П.1.

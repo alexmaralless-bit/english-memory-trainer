@@ -14,10 +14,10 @@
 ## 1. Слой 1 — учебный лексикон программы
 
 - **MUST**: curriculum заранее содержит отобранные лексические единицы: слова, устойчивые выражения и chunks, phrasal verbs, неправильные глаголы, рабочую лексику AI/AEC/SaaS.
-- **MUST — три раздельные величины** [ревью E-7/F-6]: не смешивать частоту, педагогический приоритет и персональный приоритет:
-  - `frequency_band` — **корпусная** частота (из источников данных: `core | high | useful | specialized | incidental`), только corpus statistic;
-  - `curriculum_priority_band` — педагогический приоритет в программе: `CORE → HIGH → USEFUL → SPECIALIZED → INCIDENTAL` (policy output);
-  - `learner_priority` — персональный приоритет ученика; **вычисляется** движком (учитывает личную потребность), не хранится глобальным полем. Формула — 0.4 ([[../OPEN]] OPEN-8).
+- **MUST — три раздельные величины** [ревью E-7/F-6, rereview E-R5]: не смешивать частоту, педагогический приоритет и персональный приоритет:
+  - `frequency_score` + `frequency_band` — **только** корпусная частота: numeric Zipf/source score + нейтральные bands `very_high | high | mid | low | rare` по versioned thresholds. **Никаких** педагогических/доменных категорий здесь;
+  - `curriculum_priority_band` — педагогический приоритет: `CORE → HIGH → USEFUL → SPECIALIZED → INCIDENTAL` (сюда ушли utility/domain-категории вроде useful/specialized/incidental);
+  - `learner_priority` — персональный приоритет; **вычисляется** движком, не хранится глобально. Формула — 0.4 ([[../OPEN]] OPEN-8).
 - **MUST**: каждая единица — сущность `LexicalItem` со стабильным ID. Минимальные поля:
 
 ```yaml
@@ -25,15 +25,19 @@ id: chunk.follow-up-on
 type: chunk               # word | chunk | phrasal-verb | lexeme | informal_chunk | abbreviation | meme_template
 title: follow up on
 cefr: A2
-frequency_band: high      # корпусная частота (source)
+frequency_score: 4.2      # numeric (Zipf/source)
+frequency_band: mid       # very_high | high | mid | low | rare (по versioned thresholds)
 curriculum_priority_band: HIGH   # педагогический приоритет
 register: neutral
 domains: [work, project-management]
 meaning_ru: уточнить или вернуться к вопросу
-source_refs: [ngsl@1.01]  # ссылки на SourceArtifact (provenance)
+source_refs: [ngsl@1.01]
+transformations: [identity]   # журнал изменений при импорте (rereview I-R3)
 examples:
   - I'll follow up on this tomorrow.
 ```
+
+- **MUST — mastery-профиль** [rereview E-R3]: у каждого LexicalItem (в т.ч. обычного word/chunk) есть versioned `LexicalMasteryProfile` — required dimensions и mastery-критерии по type/usage_policy, разрешимый из curriculum; validator проверяет наличие профиля. Схема — 0.4 ([[../OPEN]] OPEN-13).
 
 - Источники данных и лицензии — решены (OPEN-6): CEFR-J + NGSL + wordfreq, build-time режим; схема provenance и notices — [[../OPEN]] OPEN-15, детали — [[../modules/curriculum]] §3.
 
@@ -48,7 +52,7 @@ forms:
   base: go
   past: went
   participle: gone
-frequency_band: core
+frequency_band: very_high
 ```
 
 - **MUST**: `go`, `went`, `gone` не считаются тремя выученными словами — владение привязано к одному lexeme, но движок отдельно видит evidence по каждой форме (умеет ли ученик использовать past, participle).
@@ -67,15 +71,15 @@ frequency_band: core
   - Mastery, Stability, Retrievability;
   - последняя проверка и следующий review;
   - состояние.
-- **MUST**: состояния — та же машина, что у тем ([[learning-model]] §4): попадание в личный словарь = `INTRODUCED`, далее `LEARNING / ACTIVE / MASTERED / REVIEW_DUE / AT_RISK`. Отдельной машины для лексики нет. LexicalItem — LearningTarget наравне с Topic ([[../glossary]]).
-- **MUST — enrollment ≠ знание** [ревью D-6]: `INTRODUCED` — это enrollment/tracking (Mastery 0), не доказательство знания. Критерии входа 5–6 ниже (полезность, просьба запомнить) — enrollment-события, дают INTRODUCED, но **не evidence** и сами по себе не двигают состояние выше; критерии 1–4 могут порождать evidence.
-- **MUST**: единица попадает в личный словарь, только если выполнен хотя бы один критерий:
+- **MUST**: три оси состояния — те же, что у тем ([[learning-model]] §4, [[../glossary]]): enrollment (`tracked`), knowledge state (`NEW → LEARNING → ACTIVE → MASTERED` + `AT_RISK`), review status (`not_due/due/overdue`). Отдельной машины для лексики нет. LexicalItem — LearningTarget наравне с Topic.
+- **MUST — вход даёт только enrollment** [ревью D-6, rereview C-R2]: попадание в личный словарь = `tracked`, knowledge state `NEW`. **Ни один из критериев входа сам по себе не создаёт evidence.** Evidence появляется только при отдельном сохранённом learner response; целенаправленное объяснение единицы агентом (критерий 4) — enrollment, но не доказательство знания.
+- **MUST**: единица попадает в личный словарь (enrollment), только если выполнен хотя бы один критерий:
   1. была целью упражнения;
   2. ученик её не понял;
   3. допустил значимую ошибку;
   4. агент целенаправленно её объяснил;
-  5. выражение отмечено как особенно полезное (enrollment);
-  6. ученик попросил её запомнить (enrollment).
+  5. выражение отмечено как особенно полезное;
+  6. ученик попросил её запомнить.
 - **MUST NOT**: записывать каждое случайно встретившееся слово.
 - **MUST**: лексические единицы участвуют в повторениях и re-entry на общих основаниях ([[learning-model]] §7): review-цели манифеста могут указывать на LexicalItem так же, как на тему.
 
@@ -97,20 +101,24 @@ communities: [general, work-chat]
 frequency_band: high
 volatility: stable          # stable | changing
 currency: current           # current | dated | obsolete  (для changing)
+cultural_context: "..."     # для meme_template — обязателен (rereview H-R1)
 first_observed_at: 2026-07-19
 last_verified_at: 2026-07-19
 source_refs: [...]
 ```
 
-- **MUST — usage_policy у каждой единицы.** Понимать ≠ употреблять: `recognition_only` и `avoid` изучаются только на распознавание и никогда не рекомендуются к production.
-- **MUST — assessable dimensions по policy** [ревью H-2]: набор оцениваемых dimensions и `mastery_criteria` зависят от `usage_policy`. Для `recognition_only`/`avoid` production-dimensions не требуются (единица не «застревает» перед MASTERED и scheduler не требует запрещённого production); natural-response проверяется только для разрешённого production. Правила — [[../OPEN]] OPEN-13.
-- **MUST — context_dependent имеет enforcement** [ревью H-4]: `context_dependent` задаёт `allowed_contexts`/disallowed; вне разрешённого контекста единица трактуется как `recognition_only` (safe default). `communities` — метаданные, не правило допуска.
-- **MUST — currency lifecycle** [ревью D-8/H-5]: для `volatility: changing` обязательны `first_observed_at`, `last_verified_at`, `currency`, источник/сообщество; валидатор проверяет полный набор (не только наличие одного поля). Переходы `current → dated → obsolete`, владелец, TTL/reverification и update-event — [[../OPEN]] OPEN-14. `meme_template` хранит нейтральное объяснение и культурный контекст; «все мемы заранее» собирать не нужно — living layer пополняется из обучения.
-- **MUST — stale-safety банка** [ревью H-3]: банк упражнений и placement-формы хранят lexical refs + snapshot usage_policy; при обновлении policy несовместимые items (`safe_to_use → recognition_only/avoid/obsolete`) инвалидируются или ре-валидируются против active version перед повторным использованием в production. Механизм — [[../OPEN]] OPEN-14.
+- **MUST — usage_policy и `requires_usage_policy`** [rereview H-R1]: `requires_usage_policy` — вычисляемый predicate по type/register (не только по флагу «informal-единица»): рискованный `type: word`/register тоже обязан иметь usage_policy. Понимать ≠ употреблять: `recognition_only`/`avoid` — только на распознавание.
+- **MUST — `production_eligible`** [rereview H-R1]: вычисляемый из active `usage_policy` + `currency`; `avoid`, `recognition_only` **и `obsolete`** → `production_eligible=false`. Единица с `safe_to_use` + `obsolete` не проходит свежую generation/scheduler.
+- **MUST — assessable dimensions по policy** [ревью H-2]: dimensions и `mastery_criteria` зависят от `usage_policy`; для `recognition_only`/`avoid`/`obsolete` production не требуется (не «застревает» перед MASTERED). Правила — [[../OPEN]] OPEN-13.
+- **MUST — context_dependent enforcement** [ревью H-4]: `context_dependent` задаёт `allowed_contexts`/disallowed; вне разрешённого контекста — `recognition_only` (safe default). `communities` — метаданные, не правило допуска.
+- **MUST — currency lifecycle** [ревью D-8/H-5]: для `volatility: changing` обязательны `first_observed_at`, `last_verified_at`, `currency`, источник/сообщество; для `meme_template` — ещё `cultural_context`. Валидатор проверяет полный набор. Переходы `current → dated → obsolete`, владелец, TTL/update-event — [[../OPEN]] OPEN-14.
+- **MUST — safety-overlay, safety не пинится** [PD-2026-07-19, rereview G-R1]: `production_eligible` всегда проверяется по **active** policy в момент доставки, а не по pinned-версии. Прошлое evaluation/replay остаётся детерминированным по pinned scoring; но live manifest / review assignment / банк / placement-форма перед доставкой production сверяются с active safety, и ставший `avoid`/`obsolete`/вне-контекста item **отменяется или заменяется** append-only event, хранящим обе версии. Owner механизма — [[../OPEN]] OPEN-14 (+0.5 для live delivery).
 - **MUST**: оценка informal-владения проверяет: понимание значения, распознавание тона (helpful/dismissive/sarcastic/hostile), выбор допустимого контекста, перевод в нейтральный английский, естественный ответ (для разрешённого production), перенос между регистрами.
 - **MUST — Informal ↔ CEFR через contribution_scope** [PD-2026-07-19, ревью C-5/H-1]: recognition сленга/мемов **никогда** не в CEFR. Письменное производство в реальном рабочем контексте может давать компонент writing/transfer через `contribution_scope`-тег evidence, с dedup и cap (один source-span — не одновременно в informal-профиль и CEFR сверх cap). Informal-владение ведётся отдельным профилем **Informal Online Competence** с собственной шкалой ([[learning-model]] §5, механизм — [[../OPEN]] OPEN-13).
 
-Каталоги: **stable core** (проектируется заранее) / **living layer** (встреченное в обучении, через maintain-workflow с provenance; rights_basis — [[../OPEN]] OPEN-15) / **learner lexicon** (личный словарь, §3). Источники частот и CEFR-разметки — контракт [[../modules/curriculum]] §3.
+Каталоги: **stable core** (проектируется заранее) / **living layer** (встреченное в обучении, через maintain-workflow с provenance) / **learner lexicon** (личный словарь, §3). Источники частот и CEFR-разметки — контракт [[../modules/curriculum]] §3.
+
+- **MUST NOT — до закрытия OPEN-15** [rereview I-R2]: living layer **не хранит сторонние excerpts** (текст forum post/example) — provenance URL не даёт права копирования. Разрешено: source-метаданные, короткая единица и собственный нейтральный парафраз. Право на excerpts (`rights_basis`) решается в [[../OPEN]] OPEN-15.
 
 ## 4. Obsidian-проекция
 
@@ -155,6 +163,7 @@ memory/current/vocabulary-review.md
 
 ## История изменений
 
+- **2026-07-19 (4)**: rereview — frequency_band только numeric+нейтральные bands (E-R5); generic LexicalMasteryProfile (E-R3); вход даёт только enrollment, объяснение агента ≠ evidence (C-R2); production_eligible + obsolete + requires_usage_policy + cultural_context (H-R1); safety-overlay «safety не пинится» (G-R1); living layer без сторонних excerpts до OPEN-15 (I-R2); transformations в схеме (I-R3); три оси состояния.
 - **2026-07-19 (3)**: red-team триаж — разделены frequency_band/curriculum_priority_band/learner_priority (E-7/F-6) и volatility/currency (A-5/F-7); агрегация форм lexeme (D-7); enrollment≠знание (D-6); assessable dimensions по usage_policy (H-2); context_dependent enforcement (H-4); currency lifecycle и полная валидация (D-8/H-5); stale-safety банка (H-3); Informal→CEFR через contribution_scope (C-5). Механизмы → OPEN-13/14/15.
 - **2026-07-19 (2)**: добавлен §3b — informal-слой по одобренному концепту Codex.
 - **2026-07-19**: создана по дизайну пользователя: три слоя, композитный приоритет, lexeme с формами, не-boolean личный словарь. Все решения [PD-2026-07-19].

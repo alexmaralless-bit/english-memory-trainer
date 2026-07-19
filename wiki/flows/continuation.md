@@ -79,14 +79,16 @@ sequenceDiagram
 | `evidence` (0.4) | приём опциональной `--note` (untrusted) при фиксациях; выдача notes хронологически, отдельно от state |
 | `audit` | событие `AGENT_ATTACHED {provider, session}`; след смены агентов для Tutor Compliance |
 | `cli` (0.7) | briefing в ответах `session start`/`resume` с trust boundary (state vs notes); стабильная схема briefing JSON |
-| `kernel` (0.2) | optimistic session revision; уникальный терминальный outcome на review-assignment; correction protocol (OPEN-11) |
+| `kernel` (0.2) | envelopes, idempotency scope, **CAS/optimistic revision** (механизм), correction protocol (OPEN-11) — без бизнес-логики |
+| `lessons` (0.5) | **уникальность терминального outcome на ReviewAssignment** — бизнес-правило (rereview J-R1), поверх kernel CAS |
 | `adapters`/skills (0.7) | cold-start протокол: один вызов CLI → полная картина; запрет восстановления из сторонних источников; notes не трактуются как state |
 
 ## Открытые вопросы
 
-Механизм — [[../OPEN]] OPEN-11 (idempotency scope, optimistic concurrency двух агентов, correction protocol). Lease на сессию — `[post-mvp]`.
+Механизм — [[../OPEN]] OPEN-11 (idempotency scope, optimistic concurrency; kernel даёт CAS, uniqueness-правило — 0.5). Lease на сессию — `[post-mvp]`.
 
 ## История изменений
 
+- **2026-07-19 (3)**: rereview — boundary J-R1: kernel даёт CAS/optimistic revision (механизм), уникальность терминального outcome на ReviewAssignment — бизнес-правило 0.5 (README: platform без бизнес-логики).
 - **2026-07-19 (2)**: red-team триаж — session notes untrusted non-evidence с trust boundary в briefing (C-8); optimistic session revision и уникальный терминальный outcome против двух агентов (G-8).
 - **2026-07-19**: создан по Concept Gate: опциональные session notes, tutor briefing в манифесте, без блокировок с событием AGENT_ATTACHED. Все решения [PD-2026-07-19].

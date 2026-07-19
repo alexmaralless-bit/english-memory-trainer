@@ -30,6 +30,9 @@
 - **MUST NOT**: считать упоминание темы, пассивное согласие или пересказ правила за evidence.
 - **MUST — семантическая идентичность и multi-credit** [PD-2026-07-19, ревью C-3]: idempotency key защищает только транспорт; помимо него evidence имеет семантическую идентичность (hash source-span ответа/цитаты, item-exposure ID упражнения). Один source-span засчитывается **не более чем раз** на пару (LearningTarget, dimension); переотправка того же ответа/цитаты/упражнения с новыми ключами и session ID не создаёт нового evidence. Правила admissibility, независимости (новый prompt/контекст/интервал) и multi-credit allocation — механизм в 0.4/0.2 ([[../OPEN]] OPEN-7).
 - **MUST — классификацию считает движок** [ревью A-1/C-1]: агент передаёт только проверяемые наблюдения (raw answer, контекст, hints, rubric-observations); итоговый review outcome вычисляет движок по versioned policy. Клиентская готовая классификация запрещена.
+- **MUST — observation ссылается на span, не готовый вердикт** [rereview C-R1]: rubric-observation обязана ссылаться на конкретный rubric-criterion и на span/error в raw answer, а не быть булевым флагом `criterion_satisfied=true`. Определены machine-checkable часть (проверяется кодом), subjective часть (под cap/trust) и consistency-check; observation, не подтверждаемая raw answer, отклоняется или помечается. Точная schema — 0.4 ([[../OPEN]] OPEN-7).
+- **Trust model [PD-2026-07-19, rereview C-R3]**: в MVP агент — **trusted reporter** raw_answer (агент и есть интерфейс; единственный ученик — сам пользователь). Допущение зафиксировано явно; границы аудита — через Tutor Compliance Score. Untrusted-захват user-turn на adapter boundary (`provider_message_id` + content hash + span) — `[post-mvp]`, не ломающий evidence-модель.
+- **MUST — объяснение агента ≠ evidence** [rereview C-R2]: evidence появляется только при отдельном сохранённом learner response. Целенаправленное объяснение единицы агентом даёт enrollment, но не evidence знания.
 - Источники evidence:
   1. **объективные задания** — проверяются кодом (выбор, трансформация, порядок слов, cloze) `[mvp]`;
   2. **rubric-оценки письма** — агент даёт rubric-observations по versioned rubric; scoring считает движок `[mvp]`;
@@ -51,46 +54,44 @@
 - **MUST**: Mastery и уровень не зависят от дисциплины (пропусков, streak) — знание и мотивация разделены.
 - **MUST**: scoring детерминирован и воспроизводим replay'ем событий.
 
-### Состояния темы
+### Состояния темы — три независимые оси
 
-Knowledge state отражает только знание (определения — [[../glossary]]). Рекомендации движка («стоит ли браться») — отдельный вычисляемый атрибут, не состояние [PD-2026-07-19: замков нет].
+Состояние разложено на три оси (определения — [[../glossary]], rereview D-R1); один enum их не смешивает:
 
-**Два раздельных слоя [PD-2026-07-19, ревью D-3]:**
-- **knowledge state** — меняется только движком по evidence;
-- **review status** (`due`/`overdue`) — служебный scheduling-слой, управляется часами и scheduler. Просрочка — это review status; переход knowledge state в `AT_RISK` из-за долгой просрочки применяет движок по versioned policy (clock-триггер разрешён явно, это не evidence-переход).
+- **enrollment**: `not_tracked` / `tracked` — взят ли элемент в отслеживание (не знание);
+- **knowledge state**: `NEW → LEARNING → ACTIVE → MASTERED` + `AT_RISK` — меняется только движком по evidence;
+- **review status**: `not_due` / `due` / `overdue` — служебная scheduling-ось, управляется часами и scheduler.
 
-`REVIEW_DUE` в диаграмме ниже — knowledge state темы, к которой scheduler выставил review status `due`; при этом сохраняется предыдущее устойчивое состояние (ACTIVE или MASTERED), чтобы подтверждение его восстанавливало.
+`REVIEW_DUE` как knowledge state **устранён** (rereview D-R1): наступление интервала — это review status `due`, а не отдельное знание-состояние. Устойчивое состояние сохраняется в `prior_steady_state` ∈ {ACTIVE, MASTERED}, чтобы подтверждение его восстанавливало. Диаграмма показывает knowledge state; аннотации в скобках — какой review outcome / scheduler-событие инициирует переход.
 
 ```mermaid
 stateDiagram-v2
     [*] --> NEW
-    NEW --> INTRODUCED: enrollment / первое знакомство
-    INTRODUCED --> LEARNING: первые попытки (evidence)
-    LEARNING --> ACTIVE: устойчивые результаты
+    NEW --> LEARNING: первые попытки (evidence)
+    LEARNING --> ACTIVE: устойчивые результаты (CONFIRMED)
     ACTIVE --> MASTERED: mastery-критерии + retention
-    ACTIVE --> REVIEW_DUE: scheduler: due (prior=ACTIVE)
-    MASTERED --> REVIEW_DUE: scheduler: due (prior=MASTERED)
-    REVIEW_DUE --> ACTIVE: CONFIRMED / RECOVERED (prior=ACTIVE)
-    REVIEW_DUE --> MASTERED: CONFIRMED (prior=MASTERED)
-    REVIEW_DUE --> LEARNING: REGRESSION
-    REVIEW_DUE --> AT_RISK: overdue сверх порога
-    AT_RISK --> ACTIVE: RECOVERED
-    AT_RISK --> LEARNING: REGRESSION подтверждён
+    ACTIVE --> LEARNING: REGRESSION (подтверждён)
+    MASTERED --> ACTIVE: REGRESSION (подтверждён)
+    ACTIVE --> AT_RISK: overdue сверх порога (scheduler)
+    MASTERED --> AT_RISK: overdue сверх порога (scheduler)
+    AT_RISK --> MASTERED: CONFIRMED (prior=MASTERED)
+    AT_RISK --> ACTIVE: RECOVERED / CONFIRMED (prior=ACTIVE)
+    AT_RISK --> LEARNING: REGRESSION (подтверждён)
     LEARNING --> LEARNING: PROGRESS / INSUFFICIENT_EVIDENCE
-    ACTIVE --> LEARNING: REGRESSION
 ```
 
-- **MUST**: переходы knowledge state выполняет только движок; `LOCKED` из брифа исключён — вместо него флаг рекомендации `recommended / early` (раннее знакомство допустимо всегда).
-- **MUST — restore-on-confirm** [ревью D-1]: `REVIEW_DUE`, пришедший из `MASTERED`, при `CONFIRMED` возвращается в `MASTERED` (не демотируется). Движок хранит prior steady state.
-- **MUST — тотальность** [ревью D-2]: для каждой пары `(knowledge state, review outcome)` определён исход, включая no-op (`INSUFFICIENT_EVIDENCE` обычно оставляет состояние). Полная таблица переходов — контракт 0.4 ([[../OPEN]] OPEN-10); диаграмма показывает основные ветки.
-- **MUST — INTRODUCED = enrollment** [ревью D-6]: `INTRODUCED` означает взятие в отслеживание (Mastery 0), не доказательство знания. Enrollment-триггеры (просьба запомнить, пометка «полезно») дают INTRODUCED, но не evidence и не двигают выше.
+- **MUST**: переходы knowledge state выполняет только движок; `LOCKED` из брифа исключён — вместо него флаг рекомендации `recommended / early`.
+- **MUST — restore-on-confirm** [ревью D-1]: при `CONFIRMED` элемент возвращается в `prior_steady_state` (в т.ч. `MASTERED`), не демотируется. `prior_steady_state` — явное поле.
+- **MUST — AT_RISK** [rereview D-R2]: в `AT_RISK` переводят только **подтверждённый** REGRESSION или просрочка сверх порога ([[../OPEN]] OPEN-18); лёгкий/неподтверждённый regression опускает в `LEARNING`. Glossary, диаграмма и таблица 0.4 синхронны.
+- **MUST — тотальность** [ревью D-2]: для каждой пары `(knowledge state, review outcome)` определён исход, включая no-op. Полная таблица — контракт 0.4 ([[../OPEN]] OPEN-10); диаграмма показывает основные ветки.
+- **MUST — enrollment ≠ знание** [ревью D-6]: `tracked` (Mastery 0, knowledge state `NEW`) означает взятие в отслеживание, не знание. Enrollment-триггеры дают только `tracked`, не evidence.
 
 ## 5. Рабочий уровень (CEFR)
 
-- **MUST**: отдельные уровни по core skills (Grammar, Vocabulary, Reading, Writing); общий working estimate вычисляется консервативно — не выше самого слабого core-навыка более чем на полступени.
+- **MUST**: отдельные уровни по core skills (Grammar, Vocabulary, Reading, Writing); общий working estimate вычисляется консервативно относительно слабейшего core-навыка. Представление уровня (целые CEFR-bands vs ordinal/sublevel для «полступени») определяет 0.4 ([[../OPEN]] OPEN-8, rereview E-R4): текущая Level-schema (`A1…C2`) не выражает полступени, поэтому численное правило фиксируется вместе со шкалой, а не приблизительно.
 - **MUST**: уровень меняет только движок по накопленному evidence тем соответствующего уровня.
 - **MUST — coverage, не выборка** [PD-2026-07-19, ревью C-4]: повышение CEFR-уровня требует покрытия, а не нескольких лёгких тем: минимальное число независимых тем и ширина dimensions уровня, confidence floor. Непроверенная область трактуется как **unknown**, а не как отсутствие слабости; unknown не поднимает уровень. Матрица покрытия и пороги — контракт 0.4 ([[../OPEN]] OPEN-8).
-- **MUST — самооценка отдельно** [PD-2026-07-19, ревью A-2]: самооценка (например при отказе от placement) хранится как `self_reported_level` и даёт только provisional working estimate; измеренный CEFR требует evidence. Самооценка не смешивается с измеренным уровнем и полностью перекрывается первым допустимым evidence.
+- **MUST — самооценка отдельно, per-skill** [PD-2026-07-19, ревью A-2/A-R3]: самооценка хранится как `self_reported_level` отдельно от измеренного уровня и даёт только provisional working estimate. Замещение измерением идёт **по каждому навыку отдельно** — self-report перестаёт влиять на конкретный skill после его первого допустимого evidence/confidence floor (не глобально от одного attempt); provenance сохраняется.
 - **MAY**: добровольный CEFR boundary gate как подтверждение перехода — по инициативе ученика или рекомендации движка; непройденный gate ничего не блокирует, результат идёт в evidence.
 - **MUST**: оценка позиционируется как внутренняя CEFR-aligned, не сертификация.
 - **MUST — Informal ↔ CEFR** [PD-2026-07-19, ревью C-5/H-1]: evidence помечается `contribution_scope` ([[../glossary]]). Recognition сленга/мемов/жаргона **никогда** не засчитывается в CEFR. Уместное письменное **производство** в реальном рабочем контексте (Slack/GitHub/переписка) может давать компонент writing/transfer через `contribution_scope`, но с dedup и cap — один source-span не засчитывается одновременно в informal-профиль и CEFR сверх cap. Владение informal ведётся отдельным профилем **Informal Online Competence** с собственной шкалой ([[lexical-system]] §3b, механизм — [[../OPEN]] OPEN-13).
@@ -111,7 +112,7 @@ stateDiagram-v2
 - **MUST**: повторение бывает явным (тест/упражнение), подмешанным (`review_id` в Session Manifest) и скрытым (conversation evidence).
 - **MUST NOT**: блокировать темы из-за overdue backlog; backlog влияет только на рекомендации и состав Session Manifest.
 - **Re-entry протокол [PD-2026-07-19]**:
-  - **MUST**: после перерыва длиннее порога (policy, значение в 0.4) или при падении средней Retrievability приоритетных тем ниже порога движок формирует re-entry рекомендацию: начать сессию с быстрого повторения или короткого теста остаточных знаний;
+  - **MUST**: после перерыва длиннее порога или при падении средней Retrievability приоритетных тем ниже порога движок формирует re-entry рекомендацию. Оба порога (длина перерыва и Retrievability) — scheduler-policy, владелец 0.4 scheduler ([[../OPEN]] OPEN-18, rereview J-R3), не суженный OPEN-1;
   - **MUST**: агент обязан предложить re-entry блок первым шагом сессии;
   - **MUST**: отказ ученика допустим, ничего не блокирует и не штрафуется; результат re-entry обновляет Retrievability и план повторений.
 
@@ -119,7 +120,8 @@ stateDiagram-v2
 
 - **MUST**: XP начисляется за практику: выполненные задания, evidence, закрытые повторения, re-entry блоки. **Штрафов и списаний XP нет** (Season — только период агрегации отображения, [[../glossary]]).
 - **MUST — award-once** [ревью A-6/C-7/E-6]: XP начисляется через immutable award-event с уникальным source ID; один source event даёт начисление ровно один раз, независимо от replay; определены единицы, eligibility (в т.ч. для ABANDONED) и caps. XP-ledger, шкалы Learning Score и Tutor Compliance Score — контракт 0.4 ([[../OPEN]] OPEN-12). «Выполнено»/«закрыто» опираются на review outcome и finalization, не на факт вызова.
-- **MUST**: streak — счётчик подряд идущих дней практики по **локальной календарной дате** ученика; прерывание обнуляет счётчик, накопленный XP и достижения не сгорают.
+- **MUST**: streak — счётчик подряд идущих дней практики по **локальной календарной дате** ученика; прерывание обнуляет счётчик, накопленный XP не сгорает.
+- **MUST — day attribution** [rereview G-R3]: практический день фиксируется как immutable `practice_day`, выведенный из `occurred_at` + snapshot таймзоны на момент события; при смене таймзоны прошлые дни не пересчитываются; определены dedup дня, сессия через полночь и retry после полуночи. Механизм — [[../OPEN]] OPEN-12.
 - **MUST**: XP/streak не влияют на Mastery, уровень и рекомендации тем.
 - Показатели раздельны: `Learning Score` (владение программой), `XP/streak` (практика), `Tutor Compliance Score` (соблюдение программы агентом).
 
@@ -150,14 +152,16 @@ stateDiagram-v2
 Механизмы, зафиксированные как инварианты выше, достраиваются в контрактах (единый реестр — [[../OPEN]]):
 
 - **OPEN-1**: численная scoring-формула и пороги Mastery/Stability/Retrievability → 0.4.
-- **OPEN-7**: anti-gaming (семантическая уникальность, independence, multi-credit) → 0.4/0.2.
-- **OPEN-8**: CEFR coverage-матрица, confidence-policy, консервативные рекомендации → 0.4.
-- **OPEN-10**: полная таблица переходов, Attempt lifecycle → 0.5/0.2.
-- **OPEN-12**: XP-ledger, шкалы Learning Score / Tutor Compliance → 0.4.
-- **OPEN-13**: Informal Online Competence — шкала, contribution_scope, dedup/cap → 0.4.
+- **OPEN-7**: anti-gaming + observation schema (span-ссылка, machine-checkable часть) → 0.4.
+- **OPEN-8**: coverage-матрица, confidence-policy, ordinal/sublevel уровня → 0.4.
+- **OPEN-10**: AttemptAssessment vs terminal ReviewOutcome, таблица переходов, Attempt lifecycle → 0.5/0.4.
+- **OPEN-12**: XP-ledger, шкалы, day-attribution streak → 0.4.
+- **OPEN-13**: Informal Online Competence + generic LexicalMasteryProfile → 0.4.
+- **OPEN-18**: scheduler-policy — re-entry trigger, overdue→AT_RISK порог → 0.4 scheduler.
 
 ## История изменений
 
+- **2026-07-19 (5)**: rereview — три оси состояния, REVIEW_DUE устранён (D-R1); AT_RISK только подтверждённый/overdue (D-R2); AttemptAssessment vs ReviewOutcome (A-R1); observation ссылается на span (C-R1); trusted-reporter модель (C-R3); объяснение агента ≠ evidence (C-R2); half-step → OPEN-8 (E-R4); per-skill self-report (A-R3); day-attribution streak (G-R3); re-entry порог → OPEN-18 (J-R3).
 - **2026-07-19 (4)**: red-team триаж — evidence семантическая идентичность и вычисление классификации движком (C-1/C-3); restore-on-confirm, review-status слой и тотальность переходов (D-1/D-2/D-3); CEFR coverage и unknown-as-unknown (C-4); Informal→CEFR через contribution_scope с cap (C-5); self_reported_level отдельно (A-2); placement потолок ACTIVE и SHOULD по времени (D-9/E-9); UTC+IANA и streak по локальной дате (G-10); XP award-once (A-6/C-7/E-6); `strong/soft`, mastery_criteria→0.4, банк SHOULD (A-4/E-1/E-4).
 - **2026-07-19 (3)**: в §5 добавлен профиль Informal Online Competence (informal-трек, концепт Codex).
 - **2026-07-19 (2)**: в §9 добавлен связанный лексикон темы (появилась [[lexical-system]]).

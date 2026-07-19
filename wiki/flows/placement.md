@@ -21,9 +21,22 @@
 - **MUST**: placement-формы — фиксированные авторские наборы items в curriculum/assessments (версионируемые), не генерённые на лету. Причина: сравнимость результатов между формами и повторными прохождениями.
 - **MUST — exposure history** [ревью C-6]: движок хранит историю показанных items/форм; при повторном прохождении применяются rotation/cooldown, а вес повторно увиденных items понижается или обнуляется — заученную форму нельзя «сдать» повторно как свежий evidence. Механизм — [[../OPEN]] OPEN-17.
 
-## Жизненный цикл placement [ревью G-1]
+## Жизненный цикл placement [ревью G-1, rereview D-R3]
 
-`STARTED → IN_PROGRESS → SUBMITTED → SCORED | ABANDONED`. Ответы фиксируются инкрементально с checkpoint; после обрыва чата placement **resume**-абелен с сохранённой секции. `submit` идемпотентен и терминален (один терминальный submit на форму); scoring допустим только в `SUBMITTED`. Expiry/recover и точная схема — контракт assessments/lessons ([[../OPEN]] OPEN-17). Так placement переживает потерю чата так же, как учебная сессия.
+```mermaid
+stateDiagram-v2
+    [*] --> STARTED
+    STARTED --> IN_PROGRESS: первый answer (checkpoint)
+    STARTED --> ABANDONED: placement abandon
+    IN_PROGRESS --> ABANDONED: placement abandon
+    IN_PROGRESS --> SUBMITTED: submit (терминальный, идемпотентный)
+    SUBMITTED --> SCORED: scoring
+```
+
+- Ответы фиксируются инкрементально (`answer --checkpoint`, событие `PLACEMENT_CHECKPOINT`); после обрыва placement **resume**-абелен с сохранённой секции.
+- `abandon` доступен из `STARTED` и `IN_PROGRESS` (команда `placement abandon`, событие `PLACEMENT_ABANDONED`); **после `SUBMITTED`/`SCORED` abandon запрещён**.
+- `submit` идемпотентен и терминален (один на форму); scoring допустим только в `SUBMITTED`.
+- Expiry/recover, exposure/cooldown и точная схема — контракт assessments ([[../OPEN]] OPEN-17). Placement переживает потерю чата так же, как учебная сессия.
 
 ## Сценарий
 
@@ -59,7 +72,8 @@ sequenceDiagram
 
 - **MUST**: агент предъявляет items дословно — без подсказок, упрощений и переформулировок; это диагностика, не обучение.
 - **MUST**: объективные секции оценивает только код; по writing агент даёт rubric-observations, outcome и cap считает движок ([[../product/learning-model]] §3).
-- **MUST**: placement-items, проверяющие лексику, создают записи личного словаря по критерию «была целью упражнения» ([[../product/lexical-system]] §3).
+- **MUST**: placement-items, проверяющие лексику, создают записи личного словаря (enrollment) по критерию «была целью упражнения»; evidence знания — только по learner response ([[../product/lexical-system]] §3).
+- **MUST — self-report per-skill** [rereview A-R3]: `self_reported_level` при decline хранится отдельно и замещается измерением **по каждому навыку** после его первого evidence, не глобально ([[../product/learning-model]] §5).
 - **MUST**: отказ от placement фиксируется событием и ничего не блокирует. «Консервативные рекомендации» при `very-low-confidence` определены наблюдаемо (fallback range, unknown не трактуется как mastered) — versioned policy, [[../OPEN]] OPEN-8 (не «максимально консервативно» на глаз, ревью E-8).
 - **MUST**: rolling-уточнение — обычный механизм evidence первых сессий, не отдельный тест; движок повышает confidence по versioned policy.
 - **MUST**: результаты placement (и отказ, и `self_reported_level`) попадают в tutor briefing ([[continuation]]).
@@ -74,9 +88,9 @@ sequenceDiagram
 | `learner` | уровни + confidence; `self_reported_level` отдельно; consume rolling-evidence |
 | `evidence` (0.4) | placement-attempts как обычный evidence с семантической идентичностью (OPEN-7); вход лексики в личный словарь |
 | `scoring` (0.4) | cap вклада rubric-writing; versioned confidence-policy и потолок состояния (OPEN-8) |
-| `cli` (0.7) | `trainer placement start/answer/submit/decline/resume`; JSON форм и результатов |
+| `cli` (0.7) | `trainer placement start/answer/submit/decline/resume/abandon`; JSON форм и результатов |
 | `adapters`/skills (0.7) | skill `run-placement-assessment`: дословное предъявление, запрет подсказок |
-| `audit` | события PLACEMENT_STARTED / SUBMITTED / SCORED / DECLINED / RESUMED |
+| `audit` | события PLACEMENT_STARTED / CHECKPOINT / SUBMITTED / SCORED / DECLINED / RESUMED / ABANDONED |
 
 ## Открытые вопросы
 
@@ -84,5 +98,6 @@ sequenceDiagram
 
 ## История изменений
 
+- **2026-07-19 (3)**: rereview — формальная state diagram с `STARTED|IN_PROGRESS → ABANDONED`, командой `placement abandon`, событиями checkpoint/abandon; запрет abandon после SUBMITTED (D-R3); self-report per-skill (A-R3).
 - **2026-07-19 (2)**: red-team триаж — placement lifecycle с checkpoint/resume/одним терминальным submit (G-1); потолок ACTIVE, никогда MASTERED (D-9); `self_reported_level` отдельно (A-2); exposure history и cooldown (C-6); консервативные рекомендации и confidence → versioned policy (E-8); ~30–40 мин → SHOULD (E-9); rubric-observations вместо готовой оценки.
 - **2026-07-19**: создан по Concept Gate: evidence только проверенным темам, placement рекомендован с правом отказа. Все решения [PD-2026-07-19]. Закрывает 0.8.
