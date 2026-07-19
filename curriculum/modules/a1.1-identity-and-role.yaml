@@ -1,0 +1,11 @@
+id: a1.1-identity-and-role
+level: A1
+can_do: "Introduce yourself, your company, and your responsibilities in simple written messages."
+tracks: [grammar-engine, written-interaction, us-tech-english]
+topics:
+  - grammar.be.identity
+  - grammar.pronouns.possessives
+  - grammar.basic-word-order
+  - grammar.articles.identity
+  - written-interaction.self-introduction
+  - us-tech.role-responsibilities

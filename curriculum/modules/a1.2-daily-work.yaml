@@ -1,0 +1,11 @@
+id: a1.2-daily-work
+level: A1
+can_do: "Describe a usual workday, routine processes, and times in simple written updates."
+tracks: [grammar-engine, written-production-mediation, us-tech-english]
+topics:
+  - grammar.present-simple.routines
+  - grammar.do-questions
+  - grammar.frequency-adverbs
+  - grammar.time-dates
+  - written-production.daily-work-update
+  - us-tech.work-process-routine

@@ -1,0 +1,293 @@
+# TODO(review): minimal A2 topic inventory inferred from the approved module descriptions.
+topics:
+  - id: grammar.past-continuous.incident-context
+    cefr: A2
+    track: grammar-engine
+    module: a2.1-events-and-incidents
+    can_do: "Set the background of an incident with the Past Continuous."
+    advisory_prerequisites:
+      strong: [grammar.past-simple.events]
+  - id: grammar.when-while.sequence
+    cefr: A2
+    track: grammar-engine
+    module: a2.1-events-and-incidents
+    can_do: "Connect a background action and an event with when and while."
+    advisory_prerequisites:
+      strong: [grammar.past-continuous.incident-context, grammar.past-time-sequencing]
+  - id: grammar.past-irregular-events
+    cefr: A2
+    track: grammar-engine
+    module: a2.1-events-and-incidents
+    can_do: "Use a wider set of irregular past forms in an incident account."
+    advisory_prerequisites:
+      strong: [grammar.past-irregular-basics]
+  - id: written-production.incident-timeline
+    cefr: A2
+    track: written-production-mediation
+    module: a2.1-events-and-incidents
+    can_do: "Write a chronological incident timeline with background and events."
+    advisory_prerequisites:
+      strong: [grammar.when-while.sequence, grammar.past-irregular-events]
+  - id: us-tech.incident-report-basics
+    cefr: A2
+    track: us-tech-english
+    module: a2.1-events-and-incidents
+    can_do: "Write a basic incident report for a technology problem."
+    advisory_prerequisites:
+      strong: [written-production.incident-timeline]
+  - id: grammar.present-perfect.result
+    cefr: A2
+    track: grammar-engine
+    module: a2.2-results-and-experience
+    can_do: "Report a completed action that matters now."
+    advisory_prerequisites:
+      strong: [grammar.have-has.objects, grammar.past-participle.forms]
+      soft: [grammar.past-simple.events]
+  - id: grammar.past-participle.forms
+    cefr: A2
+    track: grammar-engine
+    module: a2.2-results-and-experience
+    can_do: "Use common past participles in result-focused statements."
+    advisory_prerequisites:
+      strong: [grammar.past-irregular-basics]
+  - id: grammar.present-perfect-past-simple.choice
+    cefr: A2
+    track: grammar-engine
+    module: a2.2-results-and-experience
+    can_do: "Choose Present Perfect for a current result and Past Simple for a finished past event."
+    advisory_prerequisites:
+      strong: [grammar.present-perfect.result, grammar.past-simple.events]
+  - id: written-interaction.result-update
+    cefr: A2
+    track: written-interaction
+    module: a2.2-results-and-experience
+    can_do: "Write a short update about a completed result that matters now."
+    advisory_prerequisites:
+      strong: [grammar.present-perfect.result]
+  - id: us-tech.deployment-result
+    cefr: A2
+    track: us-tech-english
+    module: a2.2-results-and-experience
+    can_do: "Report a deployment or completed technology task and its current result."
+    advisory_prerequisites:
+      strong: [written-interaction.result-update]
+  - id: grammar.future-forms.planning
+    cefr: A2
+    track: grammar-engine
+    module: a2.3-planning-and-delivery
+    can_do: "Choose a basic future form for an intention, decision, or arranged plan."
+    advisory_prerequisites:
+      strong: [grammar.going-to.plans, grammar.will.basic-decisions, grammar.present-continuous.status]
+  - id: grammar.future-expressions.deadlines
+    cefr: A2
+    track: grammar-engine
+    module: a2.3-planning-and-delivery
+    can_do: "State future deadlines and delivery times clearly."
+    advisory_prerequisites:
+      strong: [grammar.future-time-expressions]
+  - id: grammar.sequencing.delivery
+    cefr: A2
+    track: grammar-engine
+    module: a2.3-planning-and-delivery
+    can_do: "Sequence planned delivery steps in a clear order."
+    advisory_prerequisites:
+      strong: [grammar.future-forms.planning]
+  - id: written-production.delivery-plan
+    cefr: A2
+    track: written-production-mediation
+    module: a2.3-planning-and-delivery
+    can_do: "Write a short delivery plan with steps and deadlines."
+    advisory_prerequisites:
+      strong: [grammar.future-forms.planning, grammar.future-expressions.deadlines, grammar.sequencing.delivery]
+  - id: us-tech.scope-change-update
+    cefr: A2
+    track: us-tech-english
+    module: a2.3-planning-and-delivery
+    can_do: "Report a simple scope or delivery-plan change in a technology project."
+    advisory_prerequisites:
+      strong: [written-production.delivery-plan]
+  - id: grammar.modals.requirements
+    cefr: A2
+    track: grammar-engine
+    module: a2.4-requirements-and-options
+    can_do: "State requirements, advice, permission, and possibility with basic modals."
+    advisory_prerequisites:
+      strong: [grammar.can-cant.ability-requests]
+  - id: grammar.comparatives.options
+    cefr: A2
+    track: grammar-engine
+    module: a2.4-requirements-and-options
+    can_do: "Compare two simple options."
+    advisory_prerequisites:
+      strong: [grammar.articles.identity]
+  - id: grammar.superlatives.selection
+    cefr: A2
+    track: grammar-engine
+    module: a2.4-requirements-and-options
+    can_do: "Identify the best or most suitable option in a simple set."
+    advisory_prerequisites:
+      strong: [grammar.comparatives.options]
+  - id: grammar.quantifiers.requirements
+    cefr: A2
+    track: grammar-engine
+    module: a2.4-requirements-and-options
+    can_do: "State simple quantity requirements for a task or option."
+    advisory_prerequisites:
+      strong: [grammar.quantifiers.basic]
+  - id: written-interaction.requirement-question
+    cefr: A2
+    track: written-interaction
+    module: a2.4-requirements-and-options
+    can_do: "Ask a clear written question about a requirement or option."
+    advisory_prerequisites:
+      strong: [grammar.modals.requirements, grammar.basic-questions.clarification]
+  - id: written-production.option-comparison
+    cefr: A2
+    track: written-production-mediation
+    module: a2.4-requirements-and-options
+    can_do: "Write a short comparison and recommendation for simple options."
+    advisory_prerequisites:
+      strong: [grammar.comparatives.options, grammar.modals.requirements]
+      soft: [grammar.superlatives.selection]
+  - id: grammar.connectors.cause-contrast
+    cefr: A2
+    track: grammar-engine
+    module: a2.5-processes-and-troubleshooting
+    can_do: "Connect a cause, result, and contrast with because, so, and although."
+    advisory_prerequisites:
+      strong: [grammar.basic-word-order]
+  - id: grammar.zero-conditional.processes
+    cefr: A2
+    track: grammar-engine
+    module: a2.5-processes-and-troubleshooting
+    can_do: "Describe a regular process or rule with the zero conditional."
+    advisory_prerequisites:
+      strong: [grammar.present-simple.routines]
+  - id: grammar.first-conditional.troubleshooting
+    cefr: A2
+    track: grammar-engine
+    module: a2.5-processes-and-troubleshooting
+    can_do: "State a likely troubleshooting action and result with the first conditional."
+    advisory_prerequisites:
+      strong: [grammar.future-forms.planning, grammar.connectors.cause-contrast]
+  - id: grammar.passive.basic-process
+    cefr: A2
+    track: grammar-engine
+    module: a2.5-processes-and-troubleshooting
+    can_do: "Describe a basic process when the action is more important than the actor."
+    advisory_prerequisites:
+      strong: [grammar.be.identity, grammar.past-participle.forms]
+  - id: written-production.troubleshooting-explanation
+    cefr: A2
+    track: written-production-mediation
+    module: a2.5-processes-and-troubleshooting
+    can_do: "Write a short explanation of a problem, cause, and troubleshooting step."
+    advisory_prerequisites:
+      strong: [grammar.connectors.cause-contrast, grammar.first-conditional.troubleshooting]
+      soft: [grammar.passive.basic-process]
+  - id: us-tech.process-troubleshooting
+    cefr: A2
+    track: us-tech-english
+    module: a2.5-processes-and-troubleshooting
+    can_do: "Explain a simple technology process and troubleshooting path."
+    advisory_prerequisites:
+      strong: [written-production.troubleshooting-explanation]
+  - id: written-interaction.polite-request
+    cefr: A2
+    track: written-interaction
+    module: a2.6-collaboration
+    can_do: "Make a polite written request for help, action, or information."
+    advisory_prerequisites:
+      strong: [written-interaction.request-clarification, grammar.modals.requirements]
+  - id: written-interaction.suggestion-feedback
+    cefr: A2
+    track: written-interaction
+    module: a2.6-collaboration
+    can_do: "Offer a simple suggestion and give constructive written feedback."
+    advisory_prerequisites:
+      strong: [grammar.modals.requirements]
+  - id: written-interaction.respectful-disagreement
+    cefr: A2
+    track: written-interaction
+    module: a2.6-collaboration
+    can_do: "Disagree respectfully and give a simple reason in writing."
+    advisory_prerequisites:
+      strong: [written-interaction.suggestion-feedback, grammar.connectors.cause-contrast]
+  - id: written-interaction.follow-up
+    cefr: A2
+    track: written-interaction
+    module: a2.6-collaboration
+    can_do: "Write a follow-up message that confirms an action or asks for a response."
+    advisory_prerequisites:
+      strong: [written-interaction.polite-request]
+  - id: everyday-online-informal.casual-neutral-request
+    cefr: A2
+    track: everyday-online-informal
+    module: a2.6-collaboration
+    can_do: "Recognize and choose a simple casual or neutral form for a chat request."
+    advisory_prerequisites:
+      strong: [everyday-online-informal.basic-chat-response]
+      soft: [written-interaction.polite-request]
+  - id: reading.documentation-scan
+    cefr: A2
+    track: reading
+    module: a2.7-reading-and-mediation
+    can_do: "Scan a short documentation excerpt or ticket for needed information."
+    advisory_prerequisites:
+      strong: [reading.ticket-basics]
+  - id: reading.main-idea-details
+    cefr: A2
+    track: reading
+    module: a2.7-reading-and-mediation
+    can_do: "Separate the main idea from supporting details in a short work text."
+    advisory_prerequisites:
+      strong: [reading.documentation-scan]
+  - id: written-production.paraphrase-summary
+    cefr: A2
+    track: written-production-mediation
+    module: a2.7-reading-and-mediation
+    can_do: "Paraphrase the main point of a short ticket or documentation excerpt."
+    advisory_prerequisites:
+      strong: [reading.main-idea-details]
+  - id: written-production.fact-inference
+    cefr: A2
+    track: written-production-mediation
+    module: a2.7-reading-and-mediation
+    can_do: "Distinguish a stated fact from a simple inference in a short work text."
+    advisory_prerequisites:
+      strong: [reading.main-idea-details]
+  - id: us-tech.ticket-mediation
+    cefr: A2
+    track: us-tech-english
+    module: a2.7-reading-and-mediation
+    can_do: "Communicate the key information from a short technology ticket to a teammate."
+    advisory_prerequisites:
+      strong: [written-production.paraphrase-summary, written-production.fact-inference]
+  - id: written-production.project-update
+    cefr: A2
+    track: written-production-mediation
+    module: a2.8-integrated-project-update
+    can_do: "Write a project update that reports a result, current status, and next step."
+    advisory_prerequisites:
+      strong: [written-interaction.result-update, written-production.delivery-plan]
+  - id: written-production.bug-report
+    cefr: A2
+    track: written-production-mediation
+    module: a2.8-integrated-project-update
+    can_do: "Write a concise bug report with event, impact, and observed details."
+    advisory_prerequisites:
+      strong: [us-tech.incident-report-basics, written-production.troubleshooting-explanation]
+  - id: written-interaction.follow-up-recommendation
+    cefr: A2
+    track: written-interaction
+    module: a2.8-integrated-project-update
+    can_do: "Write a follow-up that recommends a next action after a project update."
+    advisory_prerequisites:
+      strong: [written-interaction.follow-up, written-production.option-comparison]
+  - id: us-tech.integrated-project-update
+    cefr: A2
+    track: us-tech-english
+    module: a2.8-integrated-project-update
+    can_do: "Communicate a complete basic project update in a technology work context."
+    advisory_prerequisites:
+      strong: [written-production.project-update, written-production.bug-report, written-interaction.follow-up-recommendation]

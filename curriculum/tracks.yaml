@@ -1,0 +1,26 @@
+tracks:
+  - id: grammar-engine
+    title: "Grammar Engine"
+    from_level: A1
+  - id: vocabulary-chunks
+    title: "Vocabulary & Chunks"
+    from_level: A1
+  - id: reading
+    title: "Reading"
+    from_level: A1
+  - id: written-interaction
+    title: "Written Interaction"
+    from_level: A1
+  - id: written-production-mediation
+    title: "Written Production & Mediation"
+    from_level: A1
+  - id: us-tech-english
+    title: "US Tech English"
+    from_level: A1
+  - id: everyday-online-informal
+    title: "Everyday, Online & Informal English"
+    from_level: A1
+  - id: toefl-reading-writing
+    title: "TOEFL Reading & Writing"
+    from_level: B1
+    phase: "[post-mvp]"

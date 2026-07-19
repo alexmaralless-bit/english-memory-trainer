@@ -1,0 +1,312 @@
+# TODO(review): minimal A1 topic inventory inferred from the approved module descriptions.
+topics:
+  - id: grammar.be.identity
+    cefr: A1
+    track: grammar-engine
+    module: a1.1-identity-and-role
+    can_do: "State identity, role, and company with forms of be."
+    advisory_prerequisites: {}
+  - id: grammar.pronouns.possessives
+    cefr: A1
+    track: grammar-engine
+    module: a1.1-identity-and-role
+    can_do: "Refer to people, teams, and ownership with pronouns and possessives."
+    advisory_prerequisites:
+      strong: [grammar.be.identity]
+  - id: grammar.basic-word-order
+    cefr: A1
+    track: grammar-engine
+    module: a1.1-identity-and-role
+    can_do: "Write simple affirmative statements in a clear English word order."
+    advisory_prerequisites:
+      strong: [grammar.be.identity]
+  - id: grammar.articles.identity
+    cefr: A1
+    track: grammar-engine
+    module: a1.1-identity-and-role
+    can_do: "Use a, an, and the in simple descriptions of roles and objects."
+    advisory_prerequisites:
+      soft: [grammar.be.identity]
+  - id: written-interaction.self-introduction
+    cefr: A1
+    track: written-interaction
+    module: a1.1-identity-and-role
+    can_do: "Write a short introduction with a role, company, and responsibility."
+    advisory_prerequisites:
+      strong: [grammar.be.identity, grammar.pronouns.possessives, grammar.basic-word-order]
+      soft: [grammar.articles.identity]
+  - id: us-tech.role-responsibilities
+    cefr: A1
+    track: us-tech-english
+    module: a1.1-identity-and-role
+    can_do: "Describe a simple technology-related role and responsibility."
+    advisory_prerequisites:
+      strong: [written-interaction.self-introduction]
+  - id: grammar.present-simple.routines
+    cefr: A1
+    track: grammar-engine
+    module: a1.2-daily-work
+    can_do: "Describe a usual work routine with the Present Simple."
+    advisory_prerequisites:
+      strong: [grammar.basic-word-order]
+  - id: grammar.do-questions
+    cefr: A1
+    track: grammar-engine
+    module: a1.2-daily-work
+    can_do: "Ask and answer simple routine questions with do and does."
+    advisory_prerequisites:
+      strong: [grammar.present-simple.routines]
+  - id: grammar.frequency-adverbs
+    cefr: A1
+    track: grammar-engine
+    module: a1.2-daily-work
+    can_do: "State how often a routine action happens."
+    advisory_prerequisites:
+      strong: [grammar.present-simple.routines]
+  - id: grammar.time-dates
+    cefr: A1
+    track: grammar-engine
+    module: a1.2-daily-work
+    can_do: "State simple times, dates, and schedule points in a work message."
+    advisory_prerequisites: {}
+  - id: written-production.daily-work-update
+    cefr: A1
+    track: written-production-mediation
+    module: a1.2-daily-work
+    can_do: "Write a short update about a usual workday and routine tasks."
+    advisory_prerequisites:
+      strong: [grammar.present-simple.routines, grammar.time-dates]
+      soft: [grammar.frequency-adverbs]
+  - id: us-tech.work-process-routine
+    cefr: A1
+    track: us-tech-english
+    module: a1.2-daily-work
+    can_do: "Describe a recurring simple process in a technology work context."
+    advisory_prerequisites:
+      strong: [grammar.present-simple.routines]
+  - id: grammar.there-is-are.systems
+    cefr: A1
+    track: grammar-engine
+    module: a1.3-systems-objects-and-data
+    can_do: "Describe what exists in a simple system or interface."
+    advisory_prerequisites:
+      strong: [grammar.be.identity]
+  - id: grammar.have-has.objects
+    cefr: A1
+    track: grammar-engine
+    module: a1.3-systems-objects-and-data
+    can_do: "State what a system, team, or object has."
+    advisory_prerequisites:
+      strong: [grammar.basic-word-order]
+  - id: grammar.nouns-singular-plural
+    cefr: A1
+    track: grammar-engine
+    module: a1.3-systems-objects-and-data
+    can_do: "Refer to one or more objects, files, and records accurately."
+    advisory_prerequisites: {}
+  - id: grammar.demonstratives.references
+    cefr: A1
+    track: grammar-engine
+    module: a1.3-systems-objects-and-data
+    can_do: "Point to a specific object, field, or screen with demonstratives."
+    advisory_prerequisites:
+      strong: [grammar.nouns-singular-plural]
+  - id: grammar.quantifiers.basic
+    cefr: A1
+    track: grammar-engine
+    module: a1.3-systems-objects-and-data
+    can_do: "Describe simple quantities of objects or data."
+    advisory_prerequisites:
+      strong: [grammar.nouns-singular-plural]
+  - id: grammar.prepositions.location
+    cefr: A1
+    track: grammar-engine
+    module: a1.3-systems-objects-and-data
+    can_do: "Locate an object, field, or item in a simple system."
+    advisory_prerequisites: {}
+  - id: reading.interface-data-description
+    cefr: A1
+    track: reading
+    module: a1.3-systems-objects-and-data
+    can_do: "Find named objects and simple quantities in an interface or data description."
+    advisory_prerequisites:
+      soft: [grammar.there-is-are.systems, grammar.quantifiers.basic]
+  - id: us-tech.describe-system-data
+    cefr: A1
+    track: us-tech-english
+    module: a1.3-systems-objects-and-data
+    can_do: "Write a simple description of a system part or data item."
+    advisory_prerequisites:
+      strong: [grammar.there-is-are.systems, grammar.have-has.objects]
+      soft: [grammar.prepositions.location]
+  - id: grammar.present-continuous.status
+    cefr: A1
+    track: grammar-engine
+    module: a1.4-work-in-progress
+    can_do: "Report work that is happening now with the Present Continuous."
+    advisory_prerequisites:
+      strong: [grammar.be.identity, grammar.basic-word-order]
+  - id: grammar.present-simple-continuous.choice
+    cefr: A1
+    track: grammar-engine
+    module: a1.4-work-in-progress
+    can_do: "Choose Present Simple for routines and Present Continuous for current work."
+    advisory_prerequisites:
+      strong: [grammar.present-simple.routines, grammar.present-continuous.status]
+  - id: written-interaction.current-status
+    cefr: A1
+    track: written-interaction
+    module: a1.4-work-in-progress
+    can_do: "Write a short current-status message about work in progress."
+    advisory_prerequisites:
+      strong: [grammar.present-continuous.status]
+  - id: us-tech.work-in-progress
+    cefr: A1
+    track: us-tech-english
+    module: a1.4-work-in-progress
+    can_do: "Describe a work-in-progress item in a simple technology update."
+    advisory_prerequisites:
+      strong: [written-interaction.current-status]
+  - id: grammar.can-cant.ability-requests
+    cefr: A1
+    track: grammar-engine
+    module: a1.5-requests-and-clarification
+    can_do: "State simple ability, inability, and requests with can and can't."
+    advisory_prerequisites:
+      strong: [grammar.basic-word-order]
+  - id: grammar.imperatives.instructions
+    cefr: A1
+    track: grammar-engine
+    module: a1.5-requests-and-clarification
+    can_do: "Give a simple written instruction or request."
+    advisory_prerequisites: {}
+  - id: grammar.basic-questions.clarification
+    cefr: A1
+    track: grammar-engine
+    module: a1.5-requests-and-clarification
+    can_do: "Ask a basic question to clarify meaning or a task."
+    advisory_prerequisites:
+      strong: [grammar.do-questions]
+  - id: written-interaction.request-clarification
+    cefr: A1
+    track: written-interaction
+    module: a1.5-requests-and-clarification
+    can_do: "Write a short request for help or clarification."
+    advisory_prerequisites:
+      strong: [grammar.can-cant.ability-requests, grammar.basic-questions.clarification]
+      soft: [grammar.imperatives.instructions]
+  - id: everyday-online-informal.basic-chat-response
+    cefr: A1
+    track: everyday-online-informal
+    module: a1.5-requests-and-clarification
+    can_do: "Respond naturally to a simple chat request or acknowledgement."
+    advisory_prerequisites:
+      soft: [written-interaction.request-clarification]
+  - id: grammar.past-simple.events
+    cefr: A1
+    track: grammar-engine
+    module: a1.6-past-work
+    can_do: "Describe a completed past work event with the Past Simple."
+    advisory_prerequisites:
+      strong: [grammar.basic-word-order]
+  - id: grammar.past-simple.negatives-questions
+    cefr: A1
+    track: grammar-engine
+    module: a1.6-past-work
+    can_do: "Ask and answer simple past questions and negatives."
+    advisory_prerequisites:
+      strong: [grammar.past-simple.events]
+  - id: grammar.past-irregular-basics
+    cefr: A1
+    track: grammar-engine
+    module: a1.6-past-work
+    can_do: "Use common irregular past forms to report a simple event."
+    advisory_prerequisites:
+      strong: [grammar.past-simple.events]
+  - id: grammar.past-time-sequencing
+    cefr: A1
+    track: grammar-engine
+    module: a1.6-past-work
+    can_do: "Order simple past events with time markers."
+    advisory_prerequisites:
+      strong: [grammar.past-simple.events]
+  - id: written-production.past-work-report
+    cefr: A1
+    track: written-production-mediation
+    module: a1.6-past-work
+    can_do: "Write a short chronological report of completed work."
+    advisory_prerequisites:
+      strong: [grammar.past-simple.events, grammar.past-time-sequencing]
+      soft: [grammar.past-irregular-basics]
+  - id: us-tech.past-incident-basics
+    cefr: A1
+    track: us-tech-english
+    module: a1.6-past-work
+    can_do: "Describe a simple past problem in a technology work context."
+    advisory_prerequisites:
+      strong: [written-production.past-work-report]
+  - id: grammar.going-to.plans
+    cefr: A1
+    track: grammar-engine
+    module: a1.7-plans-and-next-steps
+    can_do: "State an intended plan with going to."
+    advisory_prerequisites:
+      strong: [grammar.be.identity]
+  - id: grammar.will.basic-decisions
+    cefr: A1
+    track: grammar-engine
+    module: a1.7-plans-and-next-steps
+    can_do: "State a simple decision or offer with will."
+    advisory_prerequisites:
+      strong: [grammar.basic-word-order]
+  - id: grammar.future-time-expressions
+    cefr: A1
+    track: grammar-engine
+    module: a1.7-plans-and-next-steps
+    can_do: "State a simple future time or deadline."
+    advisory_prerequisites:
+      soft: [grammar.time-dates]
+  - id: written-interaction.next-steps
+    cefr: A1
+    track: written-interaction
+    module: a1.7-plans-and-next-steps
+    can_do: "Write a short message that states a next step and deadline."
+    advisory_prerequisites:
+      strong: [grammar.going-to.plans, grammar.future-time-expressions]
+      soft: [grammar.will.basic-decisions]
+  - id: us-tech.plan-deadline
+    cefr: A1
+    track: us-tech-english
+    module: a1.7-plans-and-next-steps
+    can_do: "State a simple plan and deadline for a technology task."
+    advisory_prerequisites:
+      strong: [written-interaction.next-steps]
+  - id: reading.ticket-basics
+    cefr: A1
+    track: reading
+    module: a1.8-integrated-work-scenario
+    can_do: "Identify the task, status, and next step in a simple ticket."
+    advisory_prerequisites:
+      strong: [reading.interface-data-description]
+      soft: [grammar.present-simple.routines]
+  - id: written-production.integrated-status-update
+    cefr: A1
+    track: written-production-mediation
+    module: a1.8-integrated-work-scenario
+    can_do: "Write a simple status update with current work, a past event, and a next step."
+    advisory_prerequisites:
+      strong: [written-interaction.current-status, written-production.past-work-report, written-interaction.next-steps]
+  - id: written-interaction.integrated-work-handoff
+    cefr: A1
+    track: written-interaction
+    module: a1.8-integrated-work-scenario
+    can_do: "Write a short handoff message that asks for or gives the next action."
+    advisory_prerequisites:
+      strong: [written-interaction.request-clarification, written-interaction.next-steps]
+  - id: us-tech.integrated-work-scenario
+    cefr: A1
+    track: us-tech-english
+    module: a1.8-integrated-work-scenario
+    can_do: "Handle a simple written technology work scenario from ticket to next step."
+    advisory_prerequisites:
+      strong: [reading.ticket-basics, written-production.integrated-status-update, written-interaction.integrated-work-handoff]

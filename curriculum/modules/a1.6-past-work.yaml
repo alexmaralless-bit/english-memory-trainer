@@ -1,0 +1,11 @@
+id: a1.6-past-work
+level: A1
+can_do: "Describe a completed work event in a simple chronological written account."
+tracks: [grammar-engine, written-production-mediation, us-tech-english]
+topics:
+  - grammar.past-simple.events
+  - grammar.past-simple.negatives-questions
+  - grammar.past-irregular-basics
+  - grammar.past-time-sequencing
+  - written-production.past-work-report
+  - us-tech.past-incident-basics

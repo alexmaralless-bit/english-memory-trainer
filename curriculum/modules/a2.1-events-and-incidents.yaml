@@ -1,0 +1,10 @@
+id: a2.1-events-and-incidents
+level: A2
+can_do: "Describe an event or error sequentially, including its background and timing."
+tracks: [grammar-engine, written-production-mediation, us-tech-english]
+topics:
+  - grammar.past-continuous.incident-context
+  - grammar.when-while.sequence
+  - grammar.past-irregular-events
+  - written-production.incident-timeline
+  - us-tech.incident-report-basics

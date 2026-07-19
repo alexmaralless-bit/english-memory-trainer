@@ -1,0 +1,13 @@
+id: a1.3-systems-objects-and-data
+level: A1
+can_do: "Describe a simple interface, system, object, or data set and locate its parts."
+tracks: [grammar-engine, reading, us-tech-english]
+topics:
+  - grammar.there-is-are.systems
+  - grammar.have-has.objects
+  - grammar.nouns-singular-plural
+  - grammar.demonstratives.references
+  - grammar.quantifiers.basic
+  - grammar.prepositions.location
+  - reading.interface-data-description
+  - us-tech.describe-system-data

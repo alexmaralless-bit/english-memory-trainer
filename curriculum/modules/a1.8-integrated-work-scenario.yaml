@@ -1,0 +1,9 @@
+id: a1.8-integrated-work-scenario
+level: A1
+can_do: "Handle a simple work scenario: introduce yourself, read a ticket, report a past problem, and state a next step."
+tracks: [reading, written-interaction, written-production-mediation, us-tech-english]
+topics:
+  - reading.ticket-basics
+  - written-production.integrated-status-update
+  - written-interaction.integrated-work-handoff
+  - us-tech.integrated-work-scenario

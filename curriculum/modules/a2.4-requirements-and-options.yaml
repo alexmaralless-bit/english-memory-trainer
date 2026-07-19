@@ -1,0 +1,11 @@
+id: a2.4-requirements-and-options
+level: A2
+can_do: "State requirements and compare simple options before making a recommendation."
+tracks: [grammar-engine, written-interaction, written-production-mediation]
+topics:
+  - grammar.modals.requirements
+  - grammar.comparatives.options
+  - grammar.superlatives.selection
+  - grammar.quantifiers.requirements
+  - written-interaction.requirement-question
+  - written-production.option-comparison

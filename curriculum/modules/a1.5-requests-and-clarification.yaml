@@ -1,0 +1,11 @@
+# TODO(review): minimal P.1 topic split for the concept's requests/clarification module.
+id: a1.5-requests-and-clarification
+level: A1
+can_do: "Ask for help, give simple instructions, and clarify unfamiliar information in writing."
+tracks: [grammar-engine, written-interaction, everyday-online-informal]
+topics:
+  - grammar.can-cant.ability-requests
+  - grammar.imperatives.instructions
+  - grammar.basic-questions.clarification
+  - written-interaction.request-clarification
+  - everyday-online-informal.basic-chat-response

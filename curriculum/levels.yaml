@@ -1,0 +1,13 @@
+levels:
+  - id: A1
+    can_do: "Write simple messages about yourself, work, current activities, the past, and plans."
+  - id: A2
+    can_do: "Handle basic work correspondence confidently about results, problems, and processes."
+  - id: B1
+    can_do: "Explain decisions independently in tickets, summaries, and coherent project updates."
+  - id: B2
+    can_do: "Compare options, argue a position, write technical documents, and synthesize sources."
+  - id: C1
+    can_do: "Control style, nuance, complex argumentation, and professional register."
+  - id: C2
+    can_do: "Work with dense and ambiguous texts, shift style, and write with near-editorial precision."
