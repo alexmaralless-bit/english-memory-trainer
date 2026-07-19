@@ -1,0 +1,36 @@
+# Local environments and secrets
+.venv/
+.env
+.env.*
+!.env.example
+
+# Python bytecode and tooling caches
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.pyright/
+.coverage
+coverage.xml
+htmlcov/
+
+# Build and package artifacts
+build/
+dist/
+*.egg-info/
+
+# Runtime-only files
+*.log
+*.db-wal
+*.db-shm
+*.sqlite-wal
+*.sqlite-shm
+
+# Editor and operating-system metadata
+.obsidian/
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
