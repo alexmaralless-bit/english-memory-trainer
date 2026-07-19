@@ -5,7 +5,7 @@
 
 Продуктовые развилки и нерешённые вопросы. Решение принимает человек; принятое решение получает `[PD-YYYY-MM-DD]`, вносится в спеку, строка отсюда уходит в «Решённые». Любой OPEN, упомянутый в спеке, обязан иметь строку здесь. Каждый открытый OPEN указывает контракт-исполнитель, который его закрывает.
 
-OPEN-7…OPEN-18 заведены 2026-07-19 по итогам red-team ревью (первый прогон + rereview): это признанные дыры, механизм которых принадлежит будущим контрактам. Инвариант (что должно выполняться) зафиксирован в спеке; здесь — обязательство контракта достроить механизм. Владельца механизма определяет **owner-матрица** ниже (единый источник, ревью J-R1).
+OPEN-7…OPEN-21 заведены 2026-07-19/20 по итогам red-team ревью (первый прогон + rereview + foundation-review): это признанные дыры, механизм которых принадлежит будущим контрактам. Инвариант (что должно выполняться) зафиксирован в спеке; здесь — обязательство контракта достроить механизм. Владельца механизма определяет **owner-матрица** ниже (единый источник, ревью J-R1).
 
 ### Owner-матрица (компонент → контракт-владелец)
 
@@ -13,7 +13,7 @@ OPEN-7…OPEN-18 заведены 2026-07-19 по итогам red-team ревь
 
 | Компонент | Владелец |
 |---|---|
-| Command/event envelopes, idempotency scope, CAS/optimistic revision, Unit of Work, outbox | **0.2 kernel** |
+| Command/event envelopes, idempotency (namespace+scope), multi-aggregate CAS, Unit of Work, outbox delivery, event-store atomicity, correction envelope, determinism-контракт (sequence/encoding/hash) | **0.2 kernel** |
 | Evidence admissibility, семантическая идентичность, LearningTarget transition table, lexical scoring/mastery-профиль, agregation форм, XP-ledger, coverage/confidence | **0.4 evidence-scoring** |
 | Session + Attempt lifecycle, терминализация, uniqueness терминального outcome на ReviewAssignment | **0.5 lessons** |
 | Scheduler-policy: интервалы, re-entry trigger, overdue→AT_RISK порог | **0.4 scheduler** |
@@ -30,9 +30,9 @@ OPEN-7…OPEN-18 заведены 2026-07-19 по итогам red-team ревь
 | OPEN-3 | Способ интеграции с Obsidian: файлы напрямую, CLI или плагин | Obsidian CLI не устанавливался | 0.6 Obsidian Vault |
 | OPEN-7 | Целостность evidence: семантическая уникальность (source-span hash, item-exposure), multi-credit/independence, admissibility. **Observation schema** (rereview C-R1): наблюдение ссылается на rubric-criterion и конкретный span/error; machine-checkable часть отделена от subjective, есть consistency-check и реакция на observation, не подтверждённое raw answer | ревью C-2/C-3/C-6/C-7, C-R1 | 0.4 |
 | OPEN-8 | CEFR coverage: матрица, мин. темы/dimensions, confidence floor, unknown-as-unknown; confidence-policy; наблюдаемые консервативные рекомендации; формула learner_priority; **ordinal/sublevel-представление уровня и «полступени»** (rereview E-R4) | ревью C-4/E-3/E-7/E-8, E-R4 | 0.4 |
-| OPEN-9 | Version pinning и replay: pin **scoring/структуры/rubric** в evidence/session/manifest; активация не ретроактивна; deprecation 1:1/split/merge/retired append-only; бессмертие любого persistent reference. **Safety НЕ пинится** — см. OPEN-14 (rereview G-R1) | ревью G-2/G-3/G-5, G-R1 | 0.3 (+0.2 CAS/snapshot) |
+| OPEN-9 | Version pinning и replay: pin **scoring/структуры/rubric**; активация не ретроактивна; deprecation 1:1/split/merge/retired append-only; бессмертие persistent reference. **Retention pinned-версий/snapshots/tombstones + `PinnedPolicyUnavailable`** (foundation F-1). Safety НЕ пинится — см. OPEN-14 | ревью G-2/G-3/G-5, G-R1, F-1 | 0.3 (+0.2 CAS/snapshot) |
 | OPEN-10 | Lifecycle: Attempt state machine + finalize/recover; **AttemptAssessment vs единственный terminal ReviewOutcome и момент закрытия ReviewAssignment** (rereview A-R1); терминализация ABANDONED; crash attempt↔review. Полная LearningTarget transition table — в 0.4 (owner-матрица) | ревью D-2/E-2/G-4/G-6/G-9, A-R1 | 0.5 (+0.4 таблица) |
-| OPEN-11 | Idempotency и concurrency: envelope scope, same-key/different-payload, cached response, optimistic revision, correction protocol. Уникальность терминального outcome на ReviewAssignment — бизнес-правило 0.5, kernel даёт CAS | ревью G-7/G-8 | 0.2 kernel |
+| OPEN-11 | Idempotency и concurrency: namespace задан, **гранулярность scope** (per-learner/global/…) открыта; same-key/different-payload, cached response+retention; **multi-aggregate CAS** (foundation G-1); **compound-команда** `abandon+start` (две идемпотентные + recovery, foundation C-1); **generic correction envelope + reducer** (foundation C-2). Uniqueness терминального outcome — 0.5 | ревью G-7/G-8, C-1/C-2/G-1 | 0.2 kernel |
 | OPEN-12 | XP exactly-once ledger; шкалы Learning Score / Tutor Compliance. **Day-attribution streak** (rereview G-R3): immutable `practice_day` из `occurred_at` + snapshot timezone, day dedup, cross-midnight, без ретро-пересчёта при смене зоны | ревью A-6/C-7/E-6, G-R3 | 0.4 |
 | OPEN-13 | Informal Online Competence: шкала/dimensions/coverage/cap; `contribution_scope`; dedup; assessable_dimensions по usage_policy. **Generic `LexicalMasteryProfile`** по type/usage_policy для обычных word/chunk (rereview E-R3) | ревью C-5/H-1/H-2, E-R3 | 0.4 |
 | OPEN-14 | Currency и usage-policy lifecycle; `context_dependent`; агрегация форм lexeme. **Safety-overlay** (rereview G-R1/H-R1): вычисляемый `production_eligible` из active usage_policy+currency (`obsolete` исключает production); live manifest/review assignment проверяются active safety при доставке, несовместимое отменяется/заменяется append-only event с обеими версиями; `requires_usage_policy` predicate по type/register; `cultural_context` в validator | ревью D-7/D-8/H-3/H-4/H-5/H-6, G-R1/H-R1 | П.3 (+0.4 scoring, +0.5 live delivery) |
@@ -40,6 +40,9 @@ OPEN-7…OPEN-18 заведены 2026-07-19 по итогам red-team ревь
 | OPEN-16 | Lifecycle банка упражнений: `generated → accepted/rejected`, acceptance criteria, promotion/invalidation, dedup, provenance | ревью E-4 | П.3 |
 | OPEN-17 | Placement lifecycle: state machine с **`STARTED|IN_PROGRESS → ABANDONED`, командой `placement abandon`, событиями checkpoint/abandon** (rereview D-R3), incremental/resume/expiry, один терминальный submit; exposure history, cooldown/rotation | ревью G-1/C-6, D-R3 | assessments (+0.5) |
 | OPEN-18 | Scheduler-policy: адаптация интервалов; **re-entry trigger — порог длины перерыва + Retrievability** (rereview J-R3); **overdue→AT_RISK порог** (rereview D-R2/D-3) | ревью J-R3, D-R2 | 0.4 scheduler |
+| OPEN-19 | Атомарность event-store: SQLite event-таблица authoritative (commit с state+outbox в одной tx), JSONL — derived rebuildable export; crash-recovery/reconciliation, сверка event-таблица↔JSONL | foundation A-1/E-1 (BLOCKER решён), режим выбран | 0.2 kernel / 1.2 |
+| OPEN-20 | Детерминизм-контракт: монотонный `sequence` + tie-break для равных timestamps; canonical encoding (sorted keys, канонизация чисел/Unicode) + фиксированный `payload_hash`-алгоритм; sorted iteration/query; числовой interface (representation/rounding) к pinned scoring | foundation B-1 | 0.2 kernel (+0.4 numeric) |
+| OPEN-21 | Outbox + rebuild: message id/dedup/ack/ordering key, per-consumer inbox; protocol rebuild проекций (applied-offset/checkpoint, isolate-and-swap, high-water mark, ordered catch-up) | foundation B-2/E-2 | 0.2 kernel / 1.2 |
 
 ## Решённые
 
@@ -68,9 +71,11 @@ OPEN-7…OPEN-18 заведены 2026-07-19 по итогам red-team ревь
 | — | **Trust model (C-R3):** для MVP агент — **trusted reporter** raw_answer; допущение зафиксировано, границы — через Tutor Compliance Score; untrusted-захват user-turn на adapter boundary — post-mvp | [PD-2026-07-19], [[product/learning-model]] §3 |
 | — | **Источник истины (0.2):** гибрид — learning-состояние (evidence/scores/XP) event-sourced (event log = истина, scoring replay точный); операционное (сессии/очереди) SQLite-authoritative; Obsidian — post-commit проекция | [PD-2026-07-19], [[platform/foundation]] §2 |
 | — | **Storage-стек (0.2):** тонкий `sqlite3` + forward-only мигратор за Repository/UnitOfWork; без ORM; замена движка возможна за интерфейсом | [PD-2026-07-19], [[platform/foundation]] §3.9 |
+| — | **Event-store (0.2, foundation-review):** authoritative event log = **append-only таблица в SQLite** (commit с state+outbox одной tx); **JSONL — derived rebuildable export**, не источник истины. Разрешает BLOCKER A-1/E-1 | [PD-2026-07-20], [[platform/foundation]] §2.1 |
 
 ## История изменений
 
+- **2026-07-20 (7)**: foundation-review триаж — BLOCKER A-1/E-1 решён (event-store: SQLite-таблица authoritative, JSONL export, [PD-2026-07-20]); заведены OPEN-19/20/21; расширены OPEN-9/11 и owner-матрица (kernel); детерминизм/outbox/rebuild/correction/multi-CAS/pinned-retention зафиксированы инвариантами.
 - **2026-07-19 (6)**: 0.2 Application Foundation — 2 PD-решения (гибрид event-sourcing, тонкий sqlite3); OPEN-9/10/11 получили спеку-носитель (инварианты в [[platform/foundation]], механизм → 1.2/1.3).
 - **2026-07-19 (5)**: rereview триаж — добавлена owner-матрица (J-R1); расширены OPEN-7/8/9/10/12/13/14/15/17, заведён OPEN-18 (scheduler-policy); 3 PD-решения (safety-overlay G-R1, trusted-reporter C-R3, per-skill self-report A-R3).
 - **2026-07-19 (4)**: red-team триаж — заведены OPEN-7…17, OPEN-1 сужен, OPEN-6 уточнён, 5 PD-решений.

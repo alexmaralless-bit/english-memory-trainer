@@ -101,7 +101,7 @@
 - **Session Manifest** — сформированный движком план сессии: tutor briefing, рекомендации тем, ReviewAssignment'ы, required skills с версиями; pin-ит версии curriculum/policy.
 - **Tutor briefing** — полная картина ученика одним JSON в манифесте/resume. Генерится из состояния движка, не из Markdown.
 - **Session notes** — опциональные короткие заметки агента (`--note`). **Untrusted non-evidence**: экранируются в briefing, не интерпретируются как state.
-- **Event log** — append-only JSONL журнал DomainEvents; источник истины для learning-состояния и replay ([[platform/foundation]]).
+- **Event log** — append-only журнал DomainEvents. Authoritative носитель — **таблица в SQLite** (коммитится с state+outbox одной транзакцией); **JSONL — derived rebuildable export** (аудит/git/сверка replay), не источник истины ([[platform/foundation]] §2.1).
 - **Command / DomainEvent envelope** — конверт мутации/факта: `id, type, occurred_at (UTC), actor/provider, correlation_id, causation_id, idempotency_key, pinned_versions, payload_hash` ([[platform/foundation]] §3.3).
 - **pinned_versions** — зафиксированные в конверте версии policy (curriculum/scoring/scheduler/generation/rubric), под которыми создан факт; replay резолвит по ним, не по active. Safety (`production_eligible`) — исключение, резолвится по active.
 - **Unit of Work** — атомарный commit authoritative state + events + outbox одной транзакцией.

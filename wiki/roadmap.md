@@ -14,7 +14,7 @@ HTML-версия (пересобирается по запросу из это�
 | # | Артефакт | Куда ложится | Статус | Зависимости |
 |---|---|---|---|---|
 | 0.1 | Learning Model Requirements | `wiki/product/learning-model.md` | done | OPEN-4/5 решены; после триажа — остаточные OPEN-1/7/8/10/12/13 → 0.4 |
-| 0.2 | Application Foundation Contract (kernel) | `wiki/platform/foundation.md` | done-with-open | гибрид event-sourcing + тонкий sqlite3 [PD-2026-07-19]; инварианты OPEN-9/10/11, механизм → 1.2/1.3 |
+| 0.2 | Application Foundation Contract (kernel) | `wiki/platform/foundation.md` | done-with-open | event-store: SQLite-таблица authoritative + JSONL export [PD-2026-07-20]; foundation-review пройдено; остаточные OPEN-9/10/11/19/20/21 → 1.2/1.3 |
 | 0.3 | Curriculum Contract | `wiki/modules/curriculum.md` | done-with-open | can-do граф, 8 треков; остаточные OPEN-9/14/15 |
 | 0.4 | Evidence, Scoring & Review Contract | `wiki/modules/evidence.md` + `scoring.md` + `scheduler.md` | next | после 0.1; носитель OPEN-1/7/8/12/13/18 + таблица переходов и scoring из OPEN-10/14 |
 | 0.5 | Lesson Lifecycle & Completion Contract (+ assessments) | `wiki/modules/lessons.md` + `assessments.md` | planned | после 0.1, 0.4; носитель OPEN-10/11(uniqueness)/17. `assessments.md` — named artifact для placement lifecycle |
@@ -61,6 +61,7 @@ Listening/speaking модальности · полный TOEFL-симулято
 
 ## История изменений
 
+- **2026-07-20 (13)**: foundation-review (BLOCKER A-1/E-1 + ~13 MAJOR, регрессия триажа чистая) — event-store переопределён: SQLite-таблица authoritative, JSONL derived export [PD-2026-07-20]; заведены OPEN-19/20/21; FAIL снят с 0.2. Next → 0.4.
 - **2026-07-19 (12)**: 0.2 Application Foundation Contract принят (`wiki/platform/foundation.md`) — гибрид event-sourcing + тонкий sqlite3 [PD-2026-07-19]; 0.2 → done-with-open (механизм OPEN-9/10/11 в 1.2/1.3); next → 0.4.
 - **2026-07-19 (11)**: rereview-триаж (BLOCKER G-R1 + 21 MAJOR) — safety-overlay «safety не пинится» разрешил единственный BLOCKER; добавлены owner-матрица OPEN→контракт и OPEN-18; расширены OPEN-7…17; определён статус `done-with-open`; П.3 закрывает OPEN-14/16, П.4 сначала OPEN-15; assessments.md добавлен к 0.5. FAIL повторно снят со всех спек.
 - **2026-07-19 (10)**: red-team триаж 66 находок (`staging/reviews/`) — 0.10 done, FAIL снят; правки шести спек + перестройка OPEN (OPEN-7…17); 0.3/0.9 → done-with-open; П.2 теперь зависит от 0.4 (schema mastery_criteria); П.1 разблокирована; 0.2 и 0.4 подняты в next (носители отложенных BLOCKER).

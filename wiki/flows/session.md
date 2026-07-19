@@ -9,7 +9,7 @@
 
 ## Решения этого flow [PD-2026-07-19]
 
-1. **Конфликт активной сессии**: `start` при существующей незавершённой сессии возвращает конфликт с вариантами — `resume` или закрыть старую как `ABANDONED` и начать новую. Выбор делает ученик через агента; CLI сам ничего не бросает и не продолжает.
+1. **Конфликт активной сессии**: `start` при существующей незавершённой сессии возвращает конфликт с вариантами — `resume` или закрыть старую как `ABANDONED` и начать новую. Выбор делает ученик через агента; CLI сам ничего не бросает и не продолжает. **`abandon_and_start` — это две независимые идемпотентные команды** (`session abandon`, затем `session start`), не одна атомарная (foundation C-1): crash между ними оставляет старую `ABANDONED` и нет активной сессии; следующий `start` создаёт новую — benign ([[../platform/foundation]] §3.4).
 2. **Finish-postconditions средние**: каждый записанный attempt финализирован; каждая review-цель манифеста имеет явный исход (выполнена / отклонена учеником / не успели → `INSUFFICIENT_EVIDENCE` с причиной); summary создан. Выполнять все цели не обязательно — обязательно честно зафиксировать исход каждой.
 3. **CLI-именование**: `trainer session ...` (не `lesson` из брифа) — консистентно с [[../glossary]]. Бриф и build-prompt в этой части superseded.
 
@@ -104,6 +104,7 @@ sequenceDiagram
 
 ## История изменений
 
+- **2026-07-20 (4)**: foundation-review — `abandon_and_start` уточнён как две независимые идемпотентные команды с benign recovery (C-1).
 - **2026-07-19 (3)**: rereview — FINISHED требует пустой pending-set, ABANDONED преобразует pending (A-R2); Obsidian post-commit через outbox, не в ACID (E-R1); AttemptAssessment vs terminal ReviewOutcome (A-R1); причины отклонения finish разделены на бизнес vs lifecycle/concurrency (G-R2); safety при доставке production из live-манифеста (G-R1).
 - **2026-07-19 (2)**: red-team триаж — агент фиксирует наблюдения, движок вычисляет классификацию (A-1/C-1); engine-generated summary без цикличности (E-2); атомарная терминализация FINISHED/ABANDONED, закрытие pending целей, запрет обхода (C-2/G-4/G-6); `STARTED → ABANDONED` и команда `session abandon` (D-4/D-5); finalized attempt и recover (G-9); pinned versions в манифесте.
 - **2026-07-19**: создан по Concept Gate: конфликт start через выбор, средние finish-postconditions, CLI-именование `session`. Все решения [PD-2026-07-19].
