@@ -22,10 +22,10 @@ import io
 import re
 import sys
 import urllib.request
-from decimal import Decimal, ROUND_HALF_EVEN
+from collections.abc import Iterable
+from decimal import ROUND_HALF_EVEN, Decimal
 from math import log10
 from pathlib import Path
-from typing import Iterable
 
 import yaml
 
@@ -149,9 +149,19 @@ def enrich_line(
     body = re.sub(r", frequency_score: [^,}]+", "", body)
     body = re.sub(r", frequency_band: [^,}]+", "", body)
     body = re.sub(r", source_refs: \[[^\]]*\]", "", body)
-    body = re.sub(r"(transformations: \[)([^\]]*)\]", lambda m: m.group(1) + ", ".join(
-        t for t in (x.strip() for x in m.group(2).split(",")) if t not in {"corpus-enriched", "lemma-form-sum"}
-    ) + "]", body)
+    body = re.sub(
+        r"(transformations: \[)([^\]]*)\]",
+        lambda m: (
+            m.group(1)
+            + ", ".join(
+                t
+                for t in (x.strip() for x in m.group(2).split(","))
+                if t not in {"corpus-enriched", "lemma-form-sum"}
+            )
+            + "]"
+        ),
+        body,
+    )
 
     lemma = title.lower()
     covered = item_type in covered_types and " " not in lemma and ";" not in lemma
@@ -191,7 +201,9 @@ def enrich_line(
     )
     body = re.sub(
         r"(transformations: \[)([^\]]*)\]",
-        lambda m: f"source_refs: [{', '.join(refs)}], {m.group(1)}{m.group(2)}, {', '.join(extra_transformations)}]",
+        lambda m: (
+            f"source_refs: [{', '.join(refs)}], {m.group(1)}{m.group(2)}, {', '.join(extra_transformations)}]"
+        ),
         body,
         count=1,
     )
@@ -207,7 +219,9 @@ def main() -> int:
     parser.add_argument("--cache", required=True, type=Path, help="download cache, must be outside the repo")
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--apply", action="store_true", help="rewrite the lexicon in place")
-    mode.add_argument("--check", action="store_true", help="fail if committed values differ from a fresh derivation")
+    mode.add_argument(
+        "--check", action="store_true", help="fail if committed values differ from a fresh derivation"
+    )
     args = parser.parse_args()
 
     if REPO_ROOT in args.cache.resolve().parents or args.cache.resolve() == REPO_ROOT:
@@ -215,8 +229,10 @@ def main() -> int:
 
     try:
         from wordfreq import word_frequency, zipf_frequency
-    except ImportError:
-        raise SystemExit("wordfreq is not installed. Install the pinned wheel recorded in _provenance.yaml.")
+    except ImportError as err:
+        raise SystemExit(
+            "wordfreq is not installed. Install the pinned extra: pip install -e '.[corpus]'"
+        ) from err
 
     manifest = yaml.safe_load(PROVENANCE.read_text(encoding="utf-8"))
     artifacts = {spec["id"]: Artifact(spec) for spec in manifest["source_artifacts"]}

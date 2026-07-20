@@ -1,0 +1,74 @@
+[project]
+name = "english-memory-trainer"
+version = "0.0.0"
+description = "Local-first CLI trainer for American English with interchangeable AI tutors"
+requires-python = ">=3.12"
+license = { text = "Proprietary" }
+
+# Runtime dependencies of code that actually exists today. The application
+# itself is not scaffolded yet (docs-first phase, roadmap 0.x), so typer /
+# pydantic / SQLAlchemy from the build prompt are deliberately NOT listed here:
+# they land when the module that needs them lands.
+dependencies = [
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+# Corpus enrichment for the lexicon (P.4b). wordfreq is pinned to an exact
+# version on purpose: curriculum/lexicon/_provenance.yaml records the sha256 of
+# this exact wheel, and tools/enrich_lexicon.py refuses to run against a
+# different artifact. Bumping the version here without updating the manifest
+# will fail the check, which is the intended behaviour.
+corpus = [
+    "wordfreq==3.1.1",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
+    "mypy>=1.11",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+# There is no importable package yet: wiki/, curriculum/ and staging/ are data,
+# not Python packages. Installing this project only resolves dependencies.
+# The `trainer` package and its console script arrive with the application.
+packages = []
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+target-version = "py312"
+line-length = 110
+indent-width = 4
+extend-exclude = [".venv", "staging"]
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle
+    "F",    # pyflakes
+    "I",    # import sorting
+    "UP",   # pyupgrade
+    "B",    # bugbear
+    "SIM",  # simplify
+    "RUF",
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+exclude = ["^\\.venv/"]

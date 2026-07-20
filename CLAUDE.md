@@ -32,12 +32,22 @@ Key v0.2 corrections that override the brief: learning is a flexible conversatio
 
 ## Commands
 
-No executable toolchain is committed yet. Target: Python 3.12+ with `uv` where available (the existing `.venv` is 3.11.9 and should be recreated). Once the application is scaffolded, the validation baseline is:
+Dependencies live in `pyproject.toml`; Python 3.12+, `uv` where available. The application is not scaffolded yet — only data-build tooling exists, so `typer`/`pydantic`/SQLAlchemy are deliberately not declared until the module that needs them lands.
 
 ```bash
-pytest
+pip install -e ".[corpus]" --group dev   # or: uv sync --extra corpus
+pytest                                   # lexicon data invariants (no network)
 ruff check .
 ruff format --check .
+
+# Reproduce the corpus frequencies from the pinned artifacts (needs network).
+# The cache must live outside the repo: raw datasets are never committed.
+python tools/enrich_lexicon.py --cache <dir> --check
+```
+
+The three lines above already pass. Everything below arrives with the application:
+
+```bash
 trainer curriculum validate
 trainer skills validate
 trainer adapters compare
