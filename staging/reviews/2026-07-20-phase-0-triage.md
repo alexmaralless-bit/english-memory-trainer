@@ -73,13 +73,17 @@
 | # | Что осталось несинхронным | Исправлено |
 |---|---|---|
 | R-2 | `RECOVERED` объявлен «после AT_RISK/REGRESSION», но после P0-1 regression в AT_RISK не ведёт → outcome стал недостижимым | `RECOVERED` только из `AT_RISK`; рост после regression — обычные `PROGRESS`/`CONFIRMED` |
-| R-3 | flow continuation по-прежнему назначал `AGENT_ATTACHED` модулю audit, а cold resume не мог передать провайдера | владелец — lessons; `resume --provider` фиксирует подключение атомарно |
+| R-3 | flow continuation по-прежнему назначал `AGENT_ATTACHED` модулю audit, а cold resume не мог передать провайдера; `SessionNote` объявлен, но записать и прочитать его было нечем | владелец — lessons; `--provider` обязателен у `start`/`resume` и фиксирует подключение в той же UoW (отдельной `session attach` намеренно нет — она позволила бы объявить агента подключённым к незагруженной сессии); `--note` у `attempt record`/`observed record`, чтение — `list_notes`, включается в ответ `resume` |
 | R-4 | lessons включал `finish` в closure triggers рядом с MUST, который это запрещает; evidence звал несуществующую `review record` | триггер — только `abandon`; точные имена команд |
 | R-5 | команда `placement decline` появилась, а payload остался скаляром `A2` на четыре навыка | versioned schema-объект по core-skill ID; скаляр и broadcast запрещены |
 | R-6 | §5 описал гибридный источник страниц, а public API девятью строками ниже снова обещал rebuild только из событий | `rebuild()` описан как гибридный по page-source manifest |
 | R-7 | flow требовал сохранения observed-фактов и явного отказа от re-entry, а команд для них не существовало | `trainer observed record`, `trainer reentry decline` |
 
 MINOR R-8/R-9: закрытые OPEN-13 и OPEN-8 всё ещё стояли в разделах «Открытые вопросы» своих спек — перенесены. QUESTION R-Q1: ось `type` не переопределяет required dimensions, а управляет пост-обработкой (агрегация форм lexeme); порядок разрешения записан явно.
+
+### Замечание о собственном процессе
+
+Первый проход по R-3 я закрыл не полностью: поправил таблицу derived contracts во flow и не довёл `--provider` и `--note` до самих команд. То есть повторил тот самый класс дефекта, о котором всё повторное ревью и написано — «исправлено у владельца, устарело у соседа». Обнаружено самопроверкой по списку перед тем, как отчитаться; доделано.
 
 ## Осталось
 

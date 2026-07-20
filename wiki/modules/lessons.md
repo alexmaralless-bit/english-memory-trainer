@@ -73,6 +73,7 @@ stateDiagram-v2
 | `AGENT_ATTACHED` | publishes | к сессии подключился агент: провайдер, версии skills, момент ([[../flows/continuation]]) | `[mvp]` |
 
 - **MUST — владелец `AGENT_ATTACHED` — lessons** [P0-5]: событие сессионное, поэтому живёт здесь, а не в audit; audit его только читает. Flow [[../flows/continuation]] требовал события, но ни один owner его не публиковал — обязательство flow без владельца не исполнимо.
+- **MUST — подключение фиксируется теми же командами, что и вход в сессию** [R-3]: `--provider` обязателен у `session start` и `session resume`, и `attach_agent` вызывается **в той же UoW**, что и сама операция. Отдельной CLI-команды `session attach` **нет** намеренно: она позволила бы объявить агента подключённым к сессии, которую он не загрузил, и создать состояние, где `AGENT_ATTACHED` есть, а briefing агент не получал. Смена агента на холодную — это `resume` с новым `--provider`.
 - **MUST — session notes untrusted** [P0-5]: заметка агента (`--note` при любой фиксации) — свободный текст с автором и меткой времени; она **не evidence**, не влияет на scoring и не участвует в mastery. Схему и хранение владеет [[evidence]] §3 вместе с attempt; здесь — только факт, что фиксация может её нести.
 
 ## 6. CLI-поверхность
@@ -80,10 +81,10 @@ stateDiagram-v2
 | Команда | Что делает |
 |---|---|
 | `trainer session start [--duration N] [--provider X] --format json` | старт или конфликт с `allowed_actions` |
-| `trainer session resume --session ID --format json` | состояние + briefing |
+| `trainer session resume --session ID --provider X --format json` | состояние + briefing + notes; фиксирует `AGENT_ATTACHED` |
 | `trainer session abandon --session ID` | идемпотентная терминализация |
 | `trainer session finish --session ID [--summary-draft FILE]` | завершение с postconditions |
-| `trainer attempt record --session ID --input FILE` | фиксация attempt + наблюдений |
+| `trainer attempt record --session ID --input FILE [--note "..."]` | фиксация attempt + наблюдений; `--note` — untrusted-заметка ([[evidence]] §3) |
 
 Ошибки: `error_code` + причины + `allowed_actions` + `next_action`; отдельно бизнес-postconditions и lifecycle/concurrency/idempotency ([[../flows/session]]).
 

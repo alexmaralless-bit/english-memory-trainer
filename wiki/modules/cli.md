@@ -113,13 +113,13 @@ Envelope **тотален**: успех и отказ имеют одну фор
 |---|---|---|---|
 | `trainer session start` | lessons | да | открывает сессию, публикует манифест с `required_skills` |
 | `trainer session next` | lessons | нет | детерминированно выбирает следующий шаг из состояния, curriculum, due-reviews и policies |
-| `trainer session resume` | lessons | да | возобновляет `IN_PROGRESS` после потери чата |
+| `trainer session resume` | lessons | да | возобновляет `IN_PROGRESS` после потери чата; `--provider` обязателен и атомарно фиксирует `AGENT_ATTACHED` |
 | `trainer session finish` | lessons | да | **единственный** способ завершить сессию; требует persisted evidence |
 | `trainer session abandon` | lessons | да | явный отказ от сессии |
-| `trainer attempt record` | evidence | да | фиксирует попытку ученика и наблюдение агента как evidence |
+| `trainer attempt record` | evidence | да | фиксирует попытку ученика и наблюдение агента как evidence; `--note` — необязательная untrusted-заметка |
 | `trainer review due` | scheduler | нет | что подлежит повторению |
 | `trainer review close` | evidence | да | вычисляет терминальный ReviewOutcome по накопленному evidence; идемпотентен, повтор возвращает прежний исход |
-| `trainer observed record` | evidence | да | фиксирует наблюдённый факт (ошибка, слово, chunk), замеченный в свободном ответе, — вход `record_observed` ([[evidence]] §3) |
+| `trainer observed record` | evidence | да | фиксирует наблюдённый факт (ошибка, слово, chunk), замеченный в свободном ответе, — вход `record_observed` ([[evidence]] §3); принимает `--note` |
 | `trainer reentry decline` | scheduler | да | ученик отказался от предложенного re-entry: факт сохраняется, ничего не блокирует и не штрафуется ([[scheduler]] §4) |
 | `trainer gate begin` \| `submit` \| `evaluate` | gates | да | рекомендательный гейт по теме |
 

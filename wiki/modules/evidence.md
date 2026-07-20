@@ -35,6 +35,10 @@ Evidence event-sourced ([[../platform/foundation]] §2); Attempt operational (fi
 | `finalize_attempt(id)` / `recover` | API | финализация draft-attempt (idempotent) | `[mvp]` |
 | `close_review(review_id)` | API | вычисление единственного ReviewOutcome | `[mvp]` |
 | `SessionNote` | сущность | untrusted-заметка агента при фиксации: `session_id`, `author_provider`, `created_at`, `text`; **не evidence**, в scoring не участвует ([[../flows/continuation]], P0-5) | `[mvp]` |
+| `list_notes(session_id)` | API | заметки сессии в хронологическом порядке, отдельным блоком от state | `[mvp]` |
+
+- **MUST — у заметки есть путь записи и путь чтения** [R-3]: `--note "..."` — необязательный параметр `trainer attempt record` и `trainer observed record`; чтение — `list_notes`, которое [[lessons]] включает в ответ `session resume` отдельным блоком. Объявить сущность без обеих сторон означало бы контракт, по которому заметку нельзя ни сохранить, ни получить.
+- **MUST — заметка не влияет на исход**: её наличие, отсутствие и содержание не меняют ни admissibility фиксации, ни scoring. Автор (`author_provider`) сохраняется, чтобы при смене тьютора было видно, кто что записал.
 | `record_observed(kind, ...)` | API | error/vocabulary/chunk observed | `[mvp]` |
 | `ATTEMPT_RECORDED` / `EVIDENCE_ADDED` / `REVIEW_OUTCOME` / `ERROR_OBSERVED` | publishes | append-only факты | `[mvp]` |
 
