@@ -17,8 +17,15 @@ tracks:
   - id: us-tech-english
     title: "US Tech English"
     from_level: A1
+  # Domain track: what everyday life is about (food, home, transport, health,
+  # money, city, weather, family, leisure, small talk). Distinct from the track
+  # below, which is a register/channel track: how people write online.
+  # [PD-2026-07-20]
+  - id: everyday-life
+    title: "Everyday Life"
+    from_level: A1
   - id: everyday-online-informal
-    title: "Everyday, Online & Informal English"
+    title: "Online & Informal Register"
     from_level: A1
   - id: toefl-reading-writing
     title: "TOEFL Reading & Writing"

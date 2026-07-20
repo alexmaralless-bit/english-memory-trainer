@@ -88,7 +88,7 @@ mastery_criteria:
   | `grammar-engine` | Grammar | Grammar | Grammar | Grammar (w<1) |
   | `vocabulary-chunks` | Vocabulary | Vocabulary | Vocabulary | Vocabulary (w<1) |
   | `reading` | Reading | Reading | — | Reading (w<1) |
-  | `written-interaction`, `written-production-mediation` | Reading (w<1) | Writing | Writing | Writing (w<1) |
+  | `written-interaction`, `written-production-mediation`, `everyday-life` | Reading (w<1) | Writing | Writing | Writing (w<1) |
   | `us-tech-english`, `everyday-online-informal` | Reading (w<1) | Writing (w<1) | Writing (w<1) | Writing (w<1) |
 
   `transfer` всегда засчитывается в тот же core skill, что и production данного трека, но с **пониженным весом и отдельным cap** (перенос подтверждает владение, но не заменяет прямое производство). Веса/cap — *tunable*; карта versioned и адресуема, coverage считается по ней, не по track напрямую.

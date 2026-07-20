@@ -13,7 +13,20 @@
 
 ## 1. Слой 1 — учебный лексикон программы
 
-- **MUST**: curriculum заранее содержит отобранные лексические единицы: слова, устойчивые выражения и chunks, phrasal verbs, неправильные глаголы, рабочую лексику AI/AEC/SaaS.
+- **MUST**: curriculum заранее содержит отобранные лексические единицы: слова, устойчивые выражения и chunks, phrasal verbs, идиомы, неправильные глаголы, бытовую и рабочую лексику AI/AEC/SaaS.
+
+### 1a. Ось прозрачности [PD-2026-07-20]
+
+Регистр отвечает на вопрос «уместно ли это здесь», домен — «о чём это», а **прозрачность** — «можно ли понять это по словам». Это независимая ось, и до П.4c её в модели не было: все авторские chunks оказались прозрачными продуктивными заготовками, тогда как в реальной речи ученика подстерегают выражения, дословный перевод которых даёт неверный смысл.
+
+- **MUST — поле `transparency`**: `transparent | semi_opaque | opaque` у каждой многословной единицы (`chunk`, `phrasal-verb`, `idiom`, `informal_chunk`); у однословных допустимо и по умолчанию `transparent`.
+  - `transparent` — смысл выводится из слов (`we've completed`, `the delivery date is`);
+  - `semi_opaque` — выводится с усилием или частично (`find out`, `back up`, `run into`);
+  - `opaque` — не выводится (`put up with`, `off the top of my head`, `call it a day`, `cut corners`).
+- **MUST — прозрачность задаёт порядок dimensions**: у `opaque` единицы `recognition` — **обязательный** dimension, а `controlled_production` не может быть required (производить идиому необязательно, понимать — обязательно); у `semi_opaque` required — `recognition`, затем `controlled_production`; у `transparent` производство может требоваться сразу. Разрешение профиля — по `(type, transparency, usage_policy)`.
+- **MUST NOT — не смешивать с `usage_policy`**: `usage_policy` отвечает за безопасность и уместность (не прозвучит ли грубо), `transparency` — за декодируемость. `piece of cake` абсолютно безопасно и при этом непрозрачно; `yeah, right` прозрачно по словам и при этом рискованно из-за сарказма. Это разные вопросы, и склейка их повторила бы ошибку, уже исправленную для частоты и приоритета.
+- **MUST — тип `idiom`**: фиксированное неразложимое выражение — отдельный `type`, а не `chunk`. `chunk` — это **заготовка со слотом**, которую ученик достраивает своим содержанием; идиома — целое, которое не достраивают. Разные структуры и разные учебные цели.
+- **MUST — `literal_trap_ru` у `opaque`**: непрозрачная единица несёт явную запись о том, какой **неверный** дословный смысл она провоцирует (`call it a day` → «не „назвать это днём“»). Это не украшение: именно эта ловушка — учебная цель, и упражнение на узнавание строится как выбор между дословным и настоящим смыслом. Проверяется валидатором.
 - **MUST — три раздельные величины** [ревью E-7/F-6, rereview E-R5]: не смешивать частоту, педагогический приоритет и персональный приоритет:
   - `frequency_score` + `frequency_band` — **только** корпусная частота: numeric Zipf/source score + нейтральные bands `very_high | high | mid | low | rare` по versioned thresholds. **Никаких** педагогических/доменных категорий здесь;
   - `curriculum_priority_band` — педагогический приоритет: `CORE → HIGH → USEFUL → SPECIALIZED → INCIDENTAL` (сюда ушли utility/domain-категории вроде useful/specialized/incidental);
@@ -30,7 +43,7 @@
 
 ```yaml
 id: word.delivery
-type: word                # word | chunk | phrasal-verb | lexeme | informal_chunk | abbreviation | meme_template
+type: word                # word | chunk | idiom | phrasal-verb | lexeme | informal_chunk | abbreviation | meme_template
 title: delivery
 cefr: A2
 frequency_score: 4.59     # numeric (Zipf), из pinned-источника
@@ -54,11 +67,30 @@ title: follow-up message
 cefr: A2
 curriculum_priority_band: USEFUL
 register: neutral
+transparency: transparent
 domains: [work, communication]
 meaning_ru: последующее сообщение
 transformations: [authored]
 examples:
   - I sent a follow-up message on Tuesday.
+```
+
+Непрозрачная единица — дословный перевод даёт неверный смысл, поэтому обязателен `recognition`, а производство необязательно:
+
+```yaml
+id: idiom.call-it-a-day
+type: idiom
+title: call it a day
+cefr: A2
+curriculum_priority_band: HIGH
+register: casual
+transparency: opaque
+domains: [everyday-life, work]
+meaning_ru: закончить на сегодня, свернуть работу
+literal_trap_ru: "не «назвать это днём»"
+transformations: [authored]
+examples:
+  - It's almost eight, let's call it a day.
 ```
 
 - **MUST — mastery-профиль** [rereview E-R3]: у каждого LexicalItem (в т.ч. обычного word/chunk) есть versioned `LexicalMasteryProfile` — required dimensions и mastery-критерии по type/usage_policy, разрешимый из curriculum; validator проверяет наличие профиля. Схема — 0.4 ([[../OPEN]] OPEN-13).

@@ -52,6 +52,10 @@ OPEN-7…OPEN-22 заведены 2026-07-19/20 по итогам red-team ре�
 | — | Flow «placement»: evidence только реально проверенным темам/LexicalItem, отказ возможен, формы фиксированные | [PD-2026-07-19], [[flows/placement]] |
 | OPEN-6 | Источники лексикона: CEFR-J + NGSL/NAWL/BSL + wordfreq; CEFR-SP и данные OpenVLT не импортируются. Режим — **build-time/pinned, сырые частотные данные в репо не коммитятся** (ShareAlike минимизирован). Схема notices/provenance — остаётся в OPEN-15 | [PD-2026-07-19], [[modules/curriculum]] §3 |
 | — | Программа — can-do граф с 8 треками (включая Informal); концепт Codex одобрен | [PD-2026-07-19], [[modules/curriculum]] |
+| — | **Трек `everyday-life`** заведён отдельно от `everyday-online-informal`: первый — домен (еда, дом, транспорт, здоровье, деньги, город, досуг, small talk), второй — регистр/канал (как пишут онлайн). Склейка домена с регистром повторила бы ошибку, уже исправленную для частоты/приоритета | [PD-2026-07-20], `curriculum/tracks.yaml` |
+| — | **Паритет бытового и рабочего пласта**: бытовой домен — полноценный второй, с продуктивными целями, а не только на понимание (~45 тем A1–A2). Цена — сдвиг П.2 | [PD-2026-07-20], [[roadmap]] П.1c |
+| — | **Ось `transparency`** (`transparent/semi_opaque/opaque`) + тип `idiom` + `literal_trap_ru` у непрозрачных. Прозрачность задаёт порядок dimensions: у `opaque` recognition обязателен, production — нет | [PD-2026-07-20], [[product/lexical-system]] §1a |
+| — | **Living layer в MVP не строится**: поля (`volatility`, `currency`, `first_observed_at`) остаются и заполняются при авторинге, но maintain-workflow и авто-устаревание откладываются. Отбираем только устойчивый сленг; `meme_template` не авторим | [PD-2026-07-20], [[product/lexical-system]] §4 |
 | — | **Informal→CEFR:** письменное производство в рабочем контексте даёт компонент writing/transfer через `contribution_scope`-тег с dedup и cap; recognition сленга/мемов — никогда не в CEFR (механизм — OPEN-13) | [PD-2026-07-19], [[product/learning-model]] §5 |
 | — | **Потолок placement:** никогда не MASTERED; объективно проверенные темы — максимум ACTIVE; writing из одного rubric — provisional (полный уровень — ≥2 независимых items) | [PD-2026-07-19], [[flows/placement]] |
 | — | **Режим частотных данных:** build-time/pinned; в репо только отобранный лексикон с source_refs | [PD-2026-07-19], [[modules/curriculum]] §3 |
@@ -83,6 +87,7 @@ OPEN-7…OPEN-22 заведены 2026-07-19/20 по итогам red-team ре�
 
 ## История изменений
 
+- **2026-07-20 (17)**: П.4b выявил перекос лексикона в рабочий регистр (casual 24 из 290, бытовая лексика — ноль). 4 PD: отдельный трек `everyday-life`; паритет бытового и рабочего; ось `transparency` + тип `idiom`; living layer в MVP не строится. Заведены П.1c и П.4c.
 - **2026-07-20 (16)**: П.4b (корпусный проход) — заведён **OPEN-22**: формула `learner_priority` числилась закрытой в OPEN-8, но в 0.4 её нет; вдобавок она обязана определить поведение при отсутствующей частоте (56% инвентаря). Строка OPEN-8 исправлена. Открытых вопросов стало 8.
 - **2026-07-20 (15)**: 0.6 Obsidian Vault принят — закрыты **OPEN-2** (две зоны + структура) и **OPEN-3** (обычные файлы). Открытых вопросов осталось 7.
 - **2026-07-20 (14)**: 0.5 Lesson Lifecycle + assessments принят — закрыты **OPEN-10** (Attempt machine, closure trigger, терминализация), **OPEN-17** (placement lifecycle/exposure) и бизнес-часть **OPEN-11** (uniqueness поверх CAS). 3 PD: авто-abandon stale-сессии событием, `draft→recorded→assessed`, окно resume placement.

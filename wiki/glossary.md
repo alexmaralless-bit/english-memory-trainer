@@ -71,14 +71,16 @@
 
 ## Лексика
 
-- **Chunk** — устойчивое выражение/фраза, изучаемая как целое.
-- **LexicalItem** — единица учебного лексикона со стабильным ID: слово, chunk, phrasal verb или lexeme. Тип informal-единицы: `informal_chunk` / `abbreviation` / `meme_template`.
+- **Chunk** — многословная **заготовка со слотом**, которую ученик достраивает своим содержанием (`the main advantage is …`). Изучается как целое, но остаётся продуктивным шаблоном.
+- **Idiom** — фиксированное **неразложимое** выражение, которое не достраивают (`call it a day`). Отдельный `type`, а не chunk: другая структура и другая учебная цель [PD-2026-07-20].
+- **transparency** — декодируемость многословной единицы: `transparent | semi_opaque | opaque`. Ось, независимая от регистра и домена, и **не** тождественная `usage_policy`: та отвечает за уместность, эта — за то, выводится ли смысл из слов. У `opaque` обязателен `recognition` и запись `literal_trap_ru` о ложном дословном прочтении [PD-2026-07-20].
+- **LexicalItem** — единица учебного лексикона со стабильным ID: слово, chunk, idiom, phrasal verb или lexeme. Тип informal-единицы: `informal_chunk` / `abbreviation` / `meme_template`.
 - **Lexeme** — LexicalItem с формами (`go / went / gone` — один lexeme); владение агрегируется из evidence по required forms детерминированно ([[OPEN]] OPEN-14).
 - **corpus_frequency / `frequency_band`** — **только** корпусная частота: numeric score (Zipf/source) + нейтральные band'ы `very_high | high | mid | low | rare` по versioned thresholds. Не содержит педагогических/доменных категорий (rereview E-R5).
 - **curriculum_priority_band** — педагогический приоритет в программе: `CORE → HIGH → USEFUL → SPECIALIZED → INCIDENTAL`. Policy output, не частота (сюда ушли utility/domain-категории).
 - **learner_priority** — персональный приоритет для конкретного ученика (учитывает личную потребность); вычисляется, не хранится как глобальное поле.
 - **production_eligible** — вычисляемый признак «можно ли предъявлять как production сейчас» из active `usage_policy` + `currency` (`avoid`/`recognition_only`/`obsolete` → false). Всегда по active policy, не пинится (safety-overlay, [[OPEN]] OPEN-14).
-- **LexicalMasteryProfile** — versioned профиль required dimensions и mastery-критериев для LexicalItem по type/usage_policy (обычный word/chunk тоже; [[OPEN]] OPEN-13).
+- **LexicalMasteryProfile** — versioned профиль required dimensions и mastery-критериев для LexicalItem по `(type, transparency, usage_policy)` (обычный word/chunk тоже; [[OPEN]] OPEN-13).
 - **volatility** — устойчивость единицы: `stable` / `changing`. Отделена от currency.
 - **currency** — актуальность изменчивой единицы: `current` / `dated` / `obsolete`, с датами наблюдения/проверки и владельцем reverification ([[OPEN]] OPEN-14).
 - **usage_policy** — политика употребления: `safe_to_use` / `context_dependent` / `recognition_only` / `avoid`. Понимать ≠ употреблять; assessable dimensions зависят от policy.
