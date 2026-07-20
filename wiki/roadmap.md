@@ -1,7 +1,7 @@
 # Roadmap
 
 > **Status**: living
-> **Last updated**: 2026-07-19
+> **Last updated**: 2026-07-20
 
 Единственное место, где живёт «где мы сейчас». Статусы: `planned / next / in-progress / done / done-with-open / blocked`. **`done-with-open`** = спека принята и не FAIL, но несёт остаточные OPEN, которые закрывает контракт-исполнитель (не блокирует зависимые работы, кроме явно указанных). Правится руками при каждом существенном сдвиге. Состав фаз — из `docs/design-direction.md` §5; при конфликте главнее этот файл. Owner-матрица OPEN → контракт — в [[OPEN]].
 
@@ -19,7 +19,7 @@ HTML-версия (пересобирается по запросу из это�
 | 0.4 | Evidence, Scoring & Review Contract | `wiki/modules/evidence.md` + `scoring.md` + `scheduler.md` | done-with-open | две оси + целые bands + Learning Score [PD-2026-07-20]; 2 прогона ревью (FAIL→PASS-with-findings, все находки сняты); остаётся калибровка констант + триггер терминализации в 0.5 (OPEN-10) |
 | 0.5 | Lesson Lifecycle & Completion Contract (+ assessments) | `wiki/modules/lessons.md` + `assessments.md` | done-with-open | Attempt `draft→recorded→assessed`, stale/expiry как replayable события, closure trigger, uniqueness [PD-2026-07-20]; закрыл OPEN-10/17 + бизнес-часть OPEN-11; остаётся калибровка порогов |
 | 0.6 | Obsidian Vault Contract | `wiki/modules/memory.md` | done | две зоны `memory/`+`notes/`, обычные файлы, страница-на-сущность + дашборды [PD-2026-07-20]; закрыл OPEN-2/OPEN-3 |
-| 0.7 | CLI и Agent Skills contracts | `wiki/modules/cli.md` + `adapters.md` | planned | после 0.5 |
+| 0.7 | CLI и Agent Skills contracts | `wiki/modules/cli.md` + `adapters.md` | done-with-open | Тотальный envelope, закрытые exit codes, обязательный idempotency-key, паритет над эффектами. Заведены OPEN-23/24 |
 | 0.8 | Сквозные flows (сессия, продолжение другим агентом, placement) | `wiki/flows/` | done | session · continuation · placement приняты [PD-2026-07-19] |
 | 0.9 | Lexical System Requirements | `wiki/product/lexical-system.md` | done-with-open | дизайн пользователя; остаточные OPEN-13/14/15 |
 | 0.10 | Red-team ревью (2 прогона) + триаж | `staging/reviews/` | done | 66 находок + rereview (BLOCKER G-R1 + 21 MAJOR); safety-overlay, owner-матрица, OPEN-7…18; FAIL снят повторно |
@@ -66,6 +66,7 @@ Listening/speaking модальности · полный TOEFL-симулято
 
 ## История изменений
 
+- **2026-07-20 (28)**: 0.7 CLI + Agent Skills принят (`wiki/modules/cli.md`, `adapters.md`) — **фаза 0 закрыта, все восемь контрактов написаны**. Тотальный envelope (успех и отказ одной формы), закрытый набор из 7 exit codes с различением `CONFLICT`/`PRECONDITION_FAILED`, обязательный `--idempotency-key` у мутирующих команд (мотив — падение между commit и печатью ответа), запрет команды, принимающей оценку. Skills объявлены подсказкой, а не принуждением: их события не evidence, версия иммутабельна и пинится манифестом, паритет адаптеров определён над наблюдаемыми эффектами, а не над текстом. Попутно закрыт разрыв — `required_skills` в Session Manifest требовался брифом, но не был объявлен нигде ([[modules/lessons]] §4b). Заведены OPEN-23/24.
 - **2026-07-20 (27)**: замер после П.4b показал перекос: `register` casual 24 из 290, домены `work` 139 / `technology` 47, **бытовой лексики ноль**, сленга ноль, а в каркасе informal — 8 тем из 91. Корень не в лексиконе: П.4 отбирал слова под темы, а темы спроектированы вокруг работы. 4 PD [PD-2026-07-20]: (1) отдельный трек `everyday-life` — домен, отдельно от `everyday-online-informal` — регистра; (2) **паритет** бытового и рабочего пласта; (3) новая ось **`transparency`** + тип `idiom` + `literal_trap_ru` — «не тупить, переводя дословно» стало явной учебной целью; (4) living layer в MVP не строится, поля остаются. Заведены **П.1c** и **П.4c**; **П.2 сдвинута** за них.
 - **2026-07-20 (26)**: П.4b done-with-open — частоты выведены из трёх pinned-артефактов (wordfreq@3.1.1, NGSL/BSL@1.2, sha256 сверяются), thresholds v1, воспроизводимость через `tools/enrich_lexicon.py --check`, заведён `ATTRIBUTIONS.md`. **Покрыто только 44%**: корпус слов не измеряет фразы, а композитная оценка по токенам не зависит от порядка слов — присвоение её chunks было бы фабрикацией. Корпус подтвердил ручную разметку (0 конфликтов CORE/HIGH) и поймал 5 занижённых лексем. Вскрыт over-claim: `learner_priority` числился закрытым в OPEN-8, но в 0.4 отсутствует → **OPEN-22**. Словарь `transformations` закрыт в контракте. **П.4 закрыта, открывается П.2.**
 - **2026-07-20 (25)**: П.4a-bis done — лексикон 204→290 единиц, chunks 33→116. Удалены 7 грамматических псевдо-chunks (дублировали темы → двойной scoring-таргет) и 2 малополезных; 3 наречных оборота → `type: word`. Добавлены 95 рабочих фреймов, включая все 9 из концепта. Multi-word 34%→55%, CORE 59%→29%, задействованы SPECIALIZED/INCIDENTAL. Advisory-links 60→254 (все chunks + все CORE/HIGH). Следующий — П.4b (корпус), затем открывается П.2. Новый TODO: стяжения внутри фреймов пересекаются с `informal.contraction-*` — риск того же двойного учёта.

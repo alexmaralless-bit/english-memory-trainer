@@ -50,11 +50,20 @@ stateDiagram-v2
 - **MUST — атомарность**: одной SQLite-транзакцией коммитятся authoritative state + events + outbox; `summary` — engine-generated в той же UoW (агент может передать `--summary-draft`); **Obsidian-проекция post-commit через outbox** (foundation §3.7). Различие FINISHED/ABANDONED — только полнота summary и способ закрытия pending.
 - **MUST**: терминализация FINISHED и ABANDONED одинаково пересчитывает производные (scores, расписание, XP, проекция) — рассогласованных производных не остаётся.
 
+## 4b. Session Manifest [0.7]
+
+Манифест — то, что сессия закрепила в момент старта; он делает поведение внутри сессии воспроизводимым, даже если между стартом и завершением активная конфигурация изменилась.
+
+- **MUST — содержимое**: `session_id`, `provider`, `pinned_versions` (curriculum, scoring, scheduler, generation, rubric) и **`required_skills[]`** — пары `{skill_name, version}`.
+- **MUST — `required_skills` явные** [0.7, бриф §11]: требуемые навыки перечисляются в манифесте, а не подбираются средой по описанию. Implicit invocation делает поведение невоспроизводимым между Codex и Claude Code и лишает [[scoring]] §5 базы для Tutor Compliance: обязательство «вызван нужный skill нужной версии» проверяемо только против явного списка.
+- **MUST — разрешимость при старте**: `start` падает, если затребованная версия skill неразрешима ([[adapters]] §4.2). Обнаружить это в середине занятия хуже, чем на входе.
+- **MUST — safety не пинится**: манифест закрепляет структуру и scoring, но не safety; `production_eligible` проверяется по active policy при доставке ([[../OPEN]] OPEN-14).
+
 ## 5. Публичный API и события
 
 | Операция / Событие | Тип | Что делает | Фаза |
 |---|---|---|---|
-| `start(duration?, provider)` | API | создаёт сессию + Session Manifest (pinned versions) | `[mvp]` |
+| `start(duration?, provider)` | API | создаёт сессию + Session Manifest (pinned versions + `required_skills`) | `[mvp]` |
 | `resume(session_id)` | API | полное состояние сессии + tutor briefing ([[../flows/continuation]]) | `[mvp]` |
 | `abandon(session_id)` | API | идемпотентная терминализация без summary | `[mvp]` |
 | `finish(session_id, summary_draft?)` | API | проверка postconditions → атомарная терминализация | `[mvp]` |
@@ -85,4 +94,5 @@ stateDiagram-v2
 
 ## История изменений
 
+- **2026-07-20 (0.7)**: добавлен §4b — содержимое Session Manifest и **`required_skills`** с версиями. Поле требовалось брифом §11 и [[adapters]], но нигде не было объявлено: манифест упоминался только как «pinned versions». Без него Tutor Compliance ([[scoring]] §5) не имеет базы для обязательства «вызван нужный skill нужной версии».
 - **2026-07-20**: создан (контракт 0.5, часть 1). Attempt `draft→recorded→assessed` и stale-сессия как replayable событие [PD-2026-07-20]; closure trigger, uniqueness поверх CAS, атомарная терминализация с post-commit проекцией.
