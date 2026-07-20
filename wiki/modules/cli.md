@@ -112,7 +112,7 @@ Envelope **тотален**: успех и отказ имеют одну фор
 | Команда | Владелец | Мутирует | Что делает |
 |---|---|---|---|
 | `trainer session start` | lessons | да | открывает сессию, публикует манифест с `required_skills` |
-| `trainer session next` | lessons | нет | детерминированно выбирает следующий шаг из состояния, curriculum, due-reviews и policies |
+| `trainer session next` | lessons | нет | следующий шаг занятия. Команда принадлежит lessons, **алгоритм композиции — [[control]]** §3 |
 | `trainer session resume` | lessons | да | возобновляет `IN_PROGRESS` после потери чата; `--provider` обязателен и атомарно фиксирует `AGENT_ATTACHED` |
 | `trainer session finish` | lessons | да | **единственный** способ завершить сессию; требует persisted evidence |
 | `trainer session abandon` | lessons | да | явный отказ от сессии |
@@ -146,6 +146,11 @@ Envelope **тотален**: успех и отказ имеют одну фор
 | Команда | Владелец | Мутирует | Что делает |
 |---|---|---|---|
 | `trainer skills sync` \| `validate` | adapters | `sync` — да | синхронизация и drift-check канонических skills ([[adapters]]) |
+| `trainer why` | control | нет | почему выбран этот шаг: decision trace ([[control]] §4.6) |
+| `trainer signal KIND` | control | да | сигнал ученика о форме занятий; `too_easy` запрашивает пробу, оценку не меняет |
+| `trainer availability show` \| `set` | control | `set` — да | объявленный и наблюдаемый ритм занятий |
+| `trainer tunables list` | control | нет | каталог настроек: владелец, диапазон, режим изменения |
+| `trainer metrics` | control | нет | метрики качества политики + аварийные признаки |
 | `trainer adapters compare` | adapters | нет | паритет тьюторов по фикстурам ([[adapters]]) |
 
 - **MUST — `--format json` у всех agent-facing команд** `[mvp]`. Команды, не предназначенные агенту (`doctor`, `init`), тоже его поддерживают: их зовут в автоматике диагностики.
