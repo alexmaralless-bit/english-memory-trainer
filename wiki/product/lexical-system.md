@@ -50,10 +50,12 @@ id: lexeme.go
 lemma: go
 forms:
   base: go
-  past: went
+  past: went          # слот может быть списком: be → past: [was, were]
   participle: gone
 frequency_band: very_high
 ```
+
+- **MUST — слот формы допускает несколько поверхностных форм** [content-review П.4a]: значение слота — одна форма **или список** (`be` → `past: [was, were]`). Валидатор принимает оба вида. «Знать слот» = продемонстрировать **все** перечисленные в нём поверхностные формы, если policy не помечает часть как опциональные; точная агрегация слот→lexeme — [[../OPEN]] OPEN-14.
 
 - **MUST**: `go`, `went`, `gone` не считаются тремя выученными словами — владение привязано к одному lexeme, но движок отдельно видит evidence по каждой форме (умеет ли ученик использовать past, participle).
 - **MUST — агрегация форм** [ревью D-7]: у lexeme определены form dimensions и **required set** форм; состояние lexeme детерминированно агрегируется из evidence по формам (знание только `go` не делает lexeme ACTIVE/MASTERED при незнании `went/gone`). Правила required forms и агрегации — [[../OPEN]] OPEN-14.
@@ -163,6 +165,7 @@ memory/current/vocabulary-review.md
 
 ## История изменений
 
+- **2026-07-20**: content-review П.4a — слот формы lexeme допускает список поверхностных форм (`be → past: [was, were]`); «знать слот» = все перечисленные, если policy не пометит опциональными; агрегация слот→lexeme → OPEN-14.
 - **2026-07-19 (4)**: rereview — frequency_band только numeric+нейтральные bands (E-R5); generic LexicalMasteryProfile (E-R3); вход даёт только enrollment, объяснение агента ≠ evidence (C-R2); production_eligible + obsolete + requires_usage_policy + cultural_context (H-R1); safety-overlay «safety не пинится» (G-R1); living layer без сторонних excerpts до OPEN-15 (I-R2); transformations в схеме (I-R3); три оси состояния.
 - **2026-07-19 (3)**: red-team триаж — разделены frequency_band/curriculum_priority_band/learner_priority (E-7/F-6) и volatility/currency (A-5/F-7); агрегация форм lexeme (D-7); enrollment≠знание (D-6); assessable dimensions по usage_policy (H-2); context_dependent enforcement (H-4); currency lifecycle и полная валидация (D-8/H-5); stale-safety банка (H-3); Informal→CEFR через contribution_scope (C-5). Механизмы → OPEN-13/14/15.
 - **2026-07-19 (2)**: добавлен §3b — informal-слой по одобренному концепту Codex.
