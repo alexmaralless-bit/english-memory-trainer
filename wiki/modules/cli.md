@@ -118,7 +118,7 @@ Envelope **тотален**: успех и отказ имеют одну фор
 | `trainer session resume` | lessons | да | возобновляет `IN_PROGRESS` после потери чата; `--provider` обязателен и атомарно фиксирует `AGENT_ATTACHED` |
 | `trainer session finish` | lessons | да | **единственный** способ завершить сессию; требует persisted evidence |
 | `trainer session abandon` | lessons | да | явный отказ от сессии |
-| `trainer attempt record` | evidence | да | фиксирует попытку ученика и наблюдение агента как evidence; `--note` — необязательная untrusted-заметка |
+| `trainer attempt record` | evidence | да | фиксирует попытку по **выданному шагу** (`--step`); target/dimension/mode и `origin` движок берёт из плана, клиент их не передаёт. `--note` — необязательная untrusted-заметка |
 | `trainer review due` | scheduler | нет | что подлежит повторению |
 | `trainer review close` | evidence | да | вычисляет терминальный ReviewOutcome по накопленному evidence; идемпотентен, повтор возвращает прежний исход |
 | `trainer observed record` | evidence | да | фиксирует наблюдённый факт (ошибка, слово, chunk), замеченный в свободном ответе, — вход `record_observed` ([[evidence]] §3); принимает `--note` |

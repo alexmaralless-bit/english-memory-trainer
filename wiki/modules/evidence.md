@@ -17,7 +17,7 @@
 
 | Сущность | Назначение | Ключевые поля |
 |---|---|---|
-| `Attempt` | одна попытка ученика | id, target, dimension, mode, raw_answer, span, hints, draft/finalized |
+| `Attempt` | одна попытка ученика | id, **`step_id`** (выданный шаг, [RR2-3]), target, dimension, mode, raw_answer, span, hints, draft/finalized |
 | `Observation` | наблюдение агента по attempt | rubric_criterion_ref, span_ref, machine-checkable часть, subjective часть |
 | `Evidence` | сохранённый факт владения | id, target, dimension, origin, primary_scope, contributions[], source_span_hash, item_exposure_id, pinned_versions, AttemptAssessment |
 | `CreditAllocation` | как span зачтён по target/dimension | target, dimension, contribution, used\|rejected, reason |
@@ -34,6 +34,7 @@ Evidence event-sourced ([[../platform/foundation]] §2); Attempt operational (fi
 | `record_attempt(target, dimension, mode, raw_answer, observations, hints)` | API | приём attempt + наблюдений, вычисление AttemptAssessment | `[mvp]` |
 | `finalize_attempt(id)` / `recover` | API | финализация draft-attempt (idempotent) | `[mvp]` |
 | `close_review(review_id)` | API | вычисление единственного ReviewOutcome | `[mvp]` |
+| `record_attempt(step_id, raw_answer, observations, hints)` | API | фиксация попытки **по выданному шагу**; target/dimension/mode и `origin` движок берёт из `PlannedStep`, клиент их не задаёт [RR2-3] | `[mvp]` |
 | `SessionNote` | сущность | untrusted-заметка агента при фиксации: `session_id`, `author_provider`, `created_at`, `text`; **не evidence**, в scoring не участвует ([[../flows/continuation]], P0-5) | `[mvp]` |
 | `list_notes(session_id)` | API | заметки сессии в хронологическом порядке, отдельным блоком от state | `[mvp]` |
 
@@ -66,7 +67,9 @@ Evidence event-sourced ([[../platform/foundation]] §2); Attempt operational (fi
 - **MUST — граница закрытия** [rereview R-5]: ReviewOutcome вычисляется **ровно один раз** в момент закрытия ReviewAssignment. Закрытие наступает по **первому** из:
   1. явный `close_review` (агент отмечает цель выполненной/отклонённой ученицей) — доступен агенту как `trainer review close` ([[cli]] §5);
   2. **`abandon` сессии** — преобразует оставшиеся pending цели в `INSUFFICIENT_EVIDENCE(reason=abandoned)` ([[lessons]] 0.5 владеет этим триггером);
-  3. **`replan`** — непредъявленный review-шаг, выпавший из новой ревизии плана, закрывается `INSUFFICIENT_EVIDENCE(reason=replanned)` в той же UoW ([[control]] §4.2, R-3). Без этого триггера пересборка плана оставляла бы pending-сироту, блокирующую `finish` навсегда.
+  3. **`replan`** — непредъявленный review-шаг, выпавший из новой ревизии, получает терминальную **отмену** `CANCELLED(reason=replanned)` в той же UoW ([[control]] §4.2).
+
+  - **MUST — отмена не является ReviewOutcome** [RR2-4]: `CANCELLED` закрывает ReviewAssignment для проверки pending-set при `finish`, но **не** является учебным исходом: [[scheduler]] не назначает по нему retry, [[scoring]] не применяет переход состояния, и в метрики исходов он не попадает. Ученик не пытался и не дал недостаточного evidence — цель убрала сама система. Закрывать это как `INSUFFICIENT_EVIDENCE` значило бы породить долг повторения из внутреннего перепланирования и загрязнить статистику системными отменами.
 
   **`finish` целей не закрывает** [P0-2]: он **требует** уже пустой pending-set и отклоняется бизнес-ошибкой, если тот непуст ([[lessons]] §4). Прежняя формулировка «finish/abandon закрывает все pending» противоречила owner-спеке: при ней сессию можно было завершить, не получив исходов, то есть обойти персистентность evidence — ровно то, что finish обязан не допускать.
   После закрытия ReviewAssignment **терминален**: дальнейшие attempts на тот же `review_id` записываются как non-contributing (audit) либо относятся к **новому** assignment, назначенному scheduler. Повторный `close_review` идемпотентен (возвращает прежний outcome).
@@ -80,7 +83,8 @@ Evidence event-sourced ([[../platform/foundation]] §2); Attempt operational (fi
 
 ### 4.5 capture-into-event [rereview A-2]
 - **MUST**: любое operational значение, влияющее на scoring (вес exposure placement, snapshot ReviewAssignment, `origin`), фиксируется **в самом evidence-событии** с версией policy — не читается из operational store при replay.
-- **MUST — origin** [ревью 0.4-4, CTRL-10]: evidence несёт immutable `origin` (`session | placement | re_entry | control_probe`); scoring применяет placement-ceiling по нему ([[scoring]] §4b) и правило no-negative для `control_probe` ([[scoring]] §4b, [[control]] §4.7).
+- **MUST — attempt ссылается на выданный шаг** [RR2-3]: `record_attempt` принимает `step_id` шага, выданного **в текущей сессии и текущей ревизии плана**; ссылка валидируется. Отсюда движок выводит target, dimension, mode и `origin` — клиент их не передаёт. Без этой связи агент мог бы объявить обычный провал пробой и получить no-negative, то есть вернуть себе власть над оценкой через payload.
+- **MUST — origin** [ревью 0.4-4, CTRL-10, RR2-3]: evidence несёт immutable `origin` — **единый закрытый enum** `session | placement | re_entry | control_probe`, одинаковый во всех спеках; scoring применяет placement-ceiling по нему ([[scoring]] §4b) и правило no-negative для `control_probe` ([[scoring]] §4b, [[control]] §4.7).
 
 ## 5. CLI-поверхность
 

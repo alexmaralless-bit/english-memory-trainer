@@ -26,7 +26,7 @@ Review_status — **не** knowledge state ([[scoring]] §3); operational, уп�
 
 ## 3. Модель интервалов [mvp]
 
-- **MUST**: базовая последовательность `1 → 3 → 7 → 14 → 30 → 60 → 120 → 180` дней (*tunable*), адаптируется по outcome: CONFIRMED/RECOVERED — шаг вперёд; REGRESSION — шаг назад/сброс; PROGRESS — удержание; **`INSUFFICIENT_EVIDENCE` — hold** (интервал не сдвигается, назначается короткий retry `retry_days`, *tunable* дефолт 1) [ревью 0.4-7]. Интервал по **прошедшему времени** (elapsed 24h), не по календарю.
+- **MUST**: базовая последовательность `1 → 3 → 7 → 14 → 30 → 60 → 120 → 180` дней (*tunable*), адаптируется по outcome: CONFIRMED/RECOVERED — шаг вперёд; REGRESSION — шаг назад/сброс; PROGRESS — удержание; **`INSUFFICIENT_EVIDENCE` — hold** (интервал не сдвигается, назначается короткий retry `retry_days`, *tunable* дефолт 1) [ревью 0.4-7]; **`CANCELLED` — не исход**: расписание не трогается вовсе, retry не назначается [RR2-4]. Интервал по **прошедшему времени** (elapsed 24h), не по календарю.
 - **MUST — интерфейс отделён от формулы**: scheduler потребляет Retrievability/Stability из [[scoring]] и `target_recall` (*tunable*, дефолт 0.9); конкретная формула next-review за интерфейсом, FSRS — `[post-mvp]` без смены модели.
 - **MUST**: `due` когда `now ≥ next_review_at`; `overdue` когда просрочка > `overdue_factor × interval` (*tunable*).
 

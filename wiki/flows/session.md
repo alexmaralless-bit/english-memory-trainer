@@ -55,12 +55,25 @@ sequenceDiagram
         A->>T: результат re-entry блока или явный отказ (без последствий)
     end
 
-    loop разговор — структура свободная
-        A->>L: диалог / упражнение / подмешанная review-цель
+    Note over T: план занятия собран в той же UoW, что и старт ([[../modules/control]] §4.2)
+
+    loop разговор идёт по плану, но формулировки свободны
+        opt агент хочет посмотреть, не расходуя шаг
+            A->>T: session peek
+            T-->>A: следующий шаг (ничего не меняется)
+        end
+        A->>T: session next --idempotency-key K
+        T->>T: пометить шаг выданным + STEP_PRESENTED (в одной UoW)
+        T-->>A: PlannedStep {step_id, kind, target/review_assignment_id, …}
+        A->>L: диалог / упражнение / повторение — по этому шагу
         L-->>A: ответ (текст)
-        A->>T: attempt record + observations (raw answer, span-ссылки, hints, rubric-obs) — сразу
-        T->>T: AttemptAssessment (не терминальна); ReviewOutcome закрывается в определённый момент
-        A->>T: error / vocabulary / chunk observed (по ходу)
+        A->>T: attempt record --step STEP_ID + observations (raw answer, span, hints, rubric-obs)
+        T->>T: AttemptAssessment (не терминальна); origin выводится из kind шага
+        A->>T: review close (когда цель отработана) · observed record (по ходу)
+        opt план устарел: сигнал ученика, safety-исключение, шаги кончились
+            A->>T: session replan --session ID
+            T->>T: revision+1; выпавшие невыданные цели отменяются (не learning outcome)
+        end
     end
 
     A->>T: session finish [--summary-draft]

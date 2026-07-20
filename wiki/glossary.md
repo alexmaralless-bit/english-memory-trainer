@@ -66,7 +66,7 @@
 - **Core skill** — базовые навыки, ограничивающие общий уровень: Grammar, Vocabulary, Reading, Writing.
 - **Session Summary** — итог сессии, генерируется движком после commit finish (агент может передать `summary_draft`).
 - **Gate** — добровольная формальная проверка готовности (topic/module/CEFR boundary). Рекомендация, не барьер.
-- **SessionPlan / PlannedStep** — сохранённый состав занятия и его шаг. Собирается в UoW старта, версионируется `composition_revision`; `session next` его только читает ([[modules/control]] §4.2).
+- **SessionPlan / PlannedStep** — сохранённый состав занятия и его шаг. Собирается в UoW старта, версионируется `composition_revision`; `session next` **выдаёт** шаг: помечает его предъявленным и публикует `STEP_PRESENTED`; для просмотра без выдачи есть read-only `session peek` ([[modules/control]] §4.2).
 - **SessionBudget** — распределение времени занятия по четырём **непересекающимся** корзинам `review / growth / integration / choice`. Единица — целые секунды ([[modules/control]] §4.3).
 - **UrgencyClass** — класс review-кандидата: `critical | important | normal | maintenance | deferrable`. Назначается тотальной упорядоченной таблицей; `critical` требует **одновременно** сигнала риска и сигнала ставки ([[modules/control]] §4.5).
 - **SaturationState** — признаки перепоказа цели (показы в окне, серия успехов, однообразие контекстов). Влияет на план, **не** на знание ([[modules/control]] §4.6).
