@@ -1,7 +1,7 @@
 # Лексическая система
 
 > **Status**: current
-> **Last updated**: 2026-07-19
+> **Last updated**: 2026-07-20
 > **Sources**: дизайн пользователя 2026-07-19 (Concept Gate, зафиксирован в journal) · концепт Codex по informal-треку (`staging/journal/2026-07-19-codex-curriculum-concept.md`) · [[learning-model]] §3–§4, §7 · все решения [PD-2026-07-19]
 > **Роль**: продуктовый контракт словарной системы (roadmap 0.9). Определяет три слоя лексики и их связь со scoring. Формат данных и frequency source — Curriculum Contract (0.3); проекция — Obsidian Vault Contract (0.6); отбор лексикона A1–A2 — работа П.4.
 
@@ -93,9 +93,9 @@ examples:
   - It's almost eight, let's call it a day.
 ```
 
-- **MUST — mastery-профиль** [rereview E-R3]: у каждого LexicalItem (в т.ч. обычного word/chunk) есть versioned `LexicalMasteryProfile` — required dimensions и mastery-критерии по type/usage_policy, разрешимый из curriculum; validator проверяет наличие профиля. Схема — 0.4 ([[../OPEN]] OPEN-13).
+- **MUST — mastery-профиль** [rereview E-R3, P0-3]: у каждого LexicalItem (в т.ч. обычного word/chunk) есть versioned `LexicalMasteryProfile` — required dimensions и mastery-критерии по кортежу `(type, transparency, usage_policy)`, разрешимый из curriculum; validator проверяет наличие профиля. Таблица разрешения и precedence — [[../modules/scoring]] §6 (OPEN-13 закрыт).
 
-- Источники данных и лицензии — решены (OPEN-6): CEFR-J + NGSL + wordfreq, build-time режим; схема provenance и notices — [[../OPEN]] OPEN-15, детали — [[../modules/curriculum]] §3.
+- Источники данных и лицензии — решены (OPEN-6): CEFR-J + NGSL + wordfreq, build-time режим; правовая позиция, provenance и notices — OPEN-15 закрыт, детали — [[../modules/curriculum]] §3.1–3.2.
 
 ## 2. Слой 2 — lexemes и формы
 
@@ -217,10 +217,11 @@ memory/current/vocabulary-review.md
 - **OPEN-13**: Informal Online Competence — шкала, contribution_scope, assessable dimensions по policy → 0.4.
 - **OPEN-14**: currency/usage-policy lifecycle, context_dependent enforcement, stale-safety банка, агрегация форм lexeme → curriculum detail / П.3.
 - ~~OPEN-15~~ **закрыт** [PD-2026-07-20]: правовая позиция, состав данных и provenance — [[../modules/curriculum]] §3.1–§3.2.
-- **OPEN-8**: формула learner_priority → 0.4.
+- **OPEN-22**: формула learner_priority (OPEN-8 закрыт только в части CEFR-уровня; формула переоткрыта) → 0.4 scoring.
 
 ## История изменений
 
+- **2026-07-20 (P0-триаж)**: ранее в этот день добавлены ось `transparency`, тип `idiom`, `literal_trap_ru` и правила покрытия частотой (П.4b/П.4c); здесь — ссылка на OPEN-22 вместо закрытого OPEN-8 (P0-12).
 - **2026-07-20**: content-review П.4a — слот формы lexeme допускает список поверхностных форм (`be → past: [was, were]`); «знать слот» = все перечисленные, если policy не пометит опциональными; агрегация слот→lexeme → OPEN-14.
 - **2026-07-19 (4)**: rereview — frequency_band только numeric+нейтральные bands (E-R5); generic LexicalMasteryProfile (E-R3); вход даёт только enrollment, объяснение агента ≠ evidence (C-R2); production_eligible + obsolete + requires_usage_policy + cultural_context (H-R1); safety-overlay «safety не пинится» (G-R1); living layer без сторонних excerpts до OPEN-15 (I-R2); transformations в схеме (I-R3); три оси состояния.
 - **2026-07-19 (3)**: red-team триаж — разделены frequency_band/curriculum_priority_band/learner_priority (E-7/F-6) и volatility/currency (A-5/F-7); агрегация форм lexeme (D-7); enrollment≠знание (D-6); assessable dimensions по usage_policy (H-2); context_dependent enforcement (H-4); currency lifecycle и полная валидация (D-8/H-5); stale-safety банка (H-3); Informal→CEFR через contribution_scope (C-5). Механизмы → OPEN-13/14/15.

@@ -46,7 +46,7 @@ stateDiagram-v2
 | `SKILL_REQUIRED` | publishes | манифест сессии затребовал skill определённой версии | `[mvp]` |
 | `SKILL_STARTED` / `SKILL_COMPLETED` / `SKILL_FAILED` | publishes | ход исполнения skill, как его сообщил агент | `[mvp]` |
 
-- **MUST — события skill'ов не доверенные** `[mvp]`: `SKILL_STARTED`/`COMPLETED`/`FAILED` сообщает агент, поэтому они годятся для Tutor Compliance и аудита, но **не являются evidence** и не влияют на Mastery. `SKILL_COMPLETED` без соответствующих доменных событий означает, что агент отчитался о работе, которой не было.
+- **MUST — события skill'ов не доверенные** `[mvp]` [P0-Q3]: `SKILL_STARTED`/`COMPLETED`/`FAILED` сообщает агент. Они **не являются evidence**, не влияют на Mastery и **сами по себе не закрывают obligation** Tutor Compliance: obligation засчитывается только при наличии наблюдаемых движком эффектов — вызовов [[cli]] и доменных событий ([[scoring]] §5). Ценность самоотчёта — в корреляции и аудите: `SKILL_COMPLETED` без доменных эффектов означает, что агент отчитался о работе, которой не было, и это само по себе диагностический сигнал.
 
 ## 4. Поведение
 
@@ -94,14 +94,14 @@ stateDiagram-v2
 | Команда | Что делает | Ответ |
 |---|---|---|
 | `trainer skills sync --format json` | раскладывает канон в `.agents/skills/` и `.claude/skills/`, пишет манифест | список изменённых файлов, хеши |
-| `trainer skills validate --format json` | структура skills, разрешимость `cli_calls`, drift | список нарушений; `3` при невалидности, `5` при drift |
+| `trainer skills validate --format json` | структура skills, разрешимость `cli_calls`, drift | список нарушений. Коды по [[cli]] §4.2: `3 INVALID_INPUT` — сломанная структура skill или неразрешимый `cli_call`; `6 PRECONDITION_FAILED` + `next_action: skills.sync` — drift. Drift **не** `5 CONFLICT`: это не гонка состояний и повтором `validate` не лечится, требуется другое действие |
 | `trainer adapters compare --format json` | прогон фикстур по адаптерам | по фикстуре: пройдено/расхождения |
 
 ## 6. Границы
 
 - **depends on**: [[cli]] (реестр команд), [[lessons]] (Session Manifest), storage (манифест синка)
 - **events published**: `SKILL_REQUIRED`, `SKILL_STARTED`, `SKILL_COMPLETED`, `SKILL_FAILED`
-- **events consumed**: `SESSION_STARTED` (← [[lessons]]) — для проверки, что затребованные skills разрешимы
+- **events consumed**: `SESSION_STARTED` (← [[lessons]]) — **пост-фактум аудит** уже обеспеченного инварианта. Сама разрешимость проверяется синхронно через `resolve()` до commit ([[lessons]] §4b, P0-Q1)
 
 Модуль не знает, чему учат: он не содержит методики. Методика — в содержимом skills и в policies ([[curriculum]], П.3).
 

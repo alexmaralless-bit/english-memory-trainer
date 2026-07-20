@@ -46,7 +46,7 @@
 
 ¹ при threshold required dimensions + independence + repeatability (по `mastery_criteria` §3b). ² при `mastery_criteria` + retention (Stability ≥ `mastered_stability_days`, *tunable*). ³ restore в `prior_steady_state` ∈ {ACTIVE, MASTERED}. ⁴ `RECOVERED` для NEW/LEARNING семантически невозможен (нет prior AT_RISK) → **no-op**, не error; corrupted/late outcome с невозможной парой — no-op с audit-записью (не меняет state, не бросает).
 
-- **MUST — вход AT_RISK только через факт** [ревью 0.4-2]: `AT_RISK` возникает от подтверждённого REGRESSION **или** от события `OVERDUE_AT_RISK_TRIGGERED` (append-only, эмитит scheduler при crossing, [[scheduler]] §4). Scoring применяет `STATE_TRANSITION` из этого события — **не из текущего wall-clock**; replay применяет тот же факт.
+- **MUST — вход AT_RISK только из overdue-события** [ревью 0.4-2, P0-1]: `AT_RISK` возникает **только** от события `OVERDUE_AT_RISK_TRIGGERED`. REGRESSION в `AT_RISK` **не переводит никогда** — он понижает состояние по таблице выше (`ACTIVE → LEARNING`, `MASTERED → ACTIVE`, `AT_RISK → LEARNING`). Разделение смысловое: `AT_RISK` — «знал, рискует забыть от простоя», REGRESSION — «продемонстрировал, что не владеет», и это разные факты с разными последствиями. Прежняя формулировка «AT_RISK от подтверждённого REGRESSION» противоречила тотальной таблице, в которой такой ветки нет, и требовала несуществующего поля «тяжесть regression». Событие `OVERDUE_AT_RISK_TRIGGERED` — append-only, эмитится scheduler при crossing ([[scheduler]] §4); scoring применяет `STATE_TRANSITION` из этого события, **не из текущего wall-clock**, и replay применяет тот же факт.
 - **MUST — STATE_TRANSITION pin-ит scoring policy** [rereview R-1]: результирующий `STATE_TRANSITION` фиксирует версию scoring policy, по которой переход применён, и связан `causation_id` с триггером; trigger и применение — в одной UoW. Иначе активация policy между sweep и apply дала бы разные исходы из одного факта.
 - **MUST**: review_status (`not_due/due/overdue`) — ось scheduler, не knowledge state; переход выполняет только движок.
 
@@ -104,13 +104,24 @@ mastery_criteria:
 ## 5. Агрегаты (OPEN-12/13)
 
 - **Learning Score** [PD-2026-07-20, rereview R-7]: coverage-взвешенный средний Mastery тем **`measured_working_level`** (именно измеренного, §4 — не provisional/self-report), 0–100. Если `measured_working_level` = unknown (нет допустимого evidence) → Learning Score = `no-data`, не 0. Прогресс-к-следующему — отдельно в roadmap-progress-проекции.
-- **Tutor Compliance Score** [ревью 0.4-9]: 0–100, `honored_obligations / total_obligations` за **measurement window** (*tunable*, дефолт последние 10 сессий). **Obligations registry** (versioned): required-skill вызван нужной версии; correction-протокол соблюдён; нет forbidden actions (агент не классифицировал сам, соблюдены finish-postconditions). Каждое obligation берётся из audit-события (raw input — событийный лог, не текст агента). Нет данных в окне → `no-data`, не 0.
+- **Tutor Compliance Score** [ревью 0.4-9]: 0–100, `honored_obligations / total_obligations` за **measurement window** (*tunable*, дефолт последние 10 сессий). **Obligations registry** (versioned): required-skill вызван нужной версии; correction-протокол соблюдён; нет forbidden actions (агент не классифицировал сам, соблюдены finish-postconditions). Каждое obligation вычисляется из **наблюдаемых движком** эффектов — вызовов [[cli]] и порождённых доменных событий, — а не из самоотчёта агента [P0-Q3]. `SKILL_COMPLETED` untrusted ([[adapters]] §3) и сам по себе obligation не закрывает: он засчитывается только при наличии соответствующих доменных эффектов. Иначе агент оценивал бы собственное соблюдение и мог бы отчитаться о работе, которой не было. Нет данных в окне → `no-data`, не 0.
 - **Informal Online Competence** (OPEN-13): отдельный 0–100 профиль по informal LexicalItems/навыкам; **не двигает CEFR напрямую**. Informal production через `contribution_scope` даёт компонент writing/transfer с dedup/cap.
 - **MUST**: агрегаты — производные проекции; не влияют обратно на per-target Mastery (нет циклов).
 
 ## 6. LexicalMasteryProfile (OPEN-13)
 
-- **MUST**: у каждого LexicalItem versioned `LexicalMasteryProfile` — required dimensions и mastery-критерии по `type`/`usage_policy`: `recognition_only`/`avoid`/`obsolete` → только recognition (production не требуется и не «застревает»); `safe_to_use`/разрешённый `context_dependent` → + production. Lexeme агрегирует состояние из required forms детерминированно.
+- **MUST — разрешение по трём осям** [P0-3]: у каждого LexicalItem versioned `LexicalMasteryProfile`; lookup **тотален** по кортежу `(type, transparency, usage_policy)` ([[../product/lexical-system]] §1a). Прежний lookup по `type`/`usage_policy` не учитывал ось прозрачности и оставлял mastery непрозрачных единиц неопределённой.
+- **MUST — precedence: ограничение сильнее разрешения** [P0-3]: `recognition` требуется всегда. `controlled_production` попадает в required, **только если разрешают обе** оси — и `transparency`, и `usage_policy`. Конфликт разрешается в сторону запрета, а не разрешения.
+
+| | `usage_policy` разрешает production (`safe_to_use`, разрешённый `context_dependent`) | `usage_policy` запрещает (`recognition_only`, `avoid`, `obsolete`) |
+|---|---|---|
+| `transparent` | recognition + controlled_production | только recognition |
+| `semi_opaque` | recognition → затем controlled_production | только recognition |
+| `opaque` | **только recognition** (production не required никогда) | только recognition |
+
+Ключевая клетка — `opaque` + `safe_to_use`: производить идиому безопасно, но требовать этого нельзя. Понимать `call it a day` обязательно, употреблять — нет; обратное требование наказывало бы ученика за то, что он выражается проще.
+- **MUST**: production, не попавший в required, не «застревает» — единица достигает MASTERED по своим required dimensions.
+- **MUST**: lexeme агрегирует состояние из required forms детерминированно.
 
 ## 7. XP-ledger (OPEN-12)
 

@@ -1,7 +1,7 @@
 # Модуль: curriculum
 
 > **Status**: current
-> **Last updated**: 2026-07-19
+> **Last updated**: 2026-07-20
 > **Sources**: концепт Codex (одобрен, `staging/journal/2026-07-19-codex-curriculum-concept.md`) · red-team триаж (`staging/journal/2026-07-19-concept-review-triage.md`) · [[../product/learning-model]] §9 · [[../product/lexical-system]] · flows [[../flows/session]], [[../flows/placement]] · лицензии проверены 2026-07-19 ([PD-2026-07-19])
 > **Bounded context**: `src/english_trainer/curriculum/`
 
@@ -62,15 +62,17 @@ explanation_language: ru-allowed   # когда допустим русский
 | 4 | Written Interaction (чат, email, переписка) | A1 |
 | 5 | Written Production & Mediation | A1 |
 | 6 | US Tech English (AI/AEC/SaaS) | A1 |
-| 7 | Everyday, Online & Informal English | A1 |
-| 8 | TOEFL Reading & Writing | B1 `[post-mvp]` |
+| 7 | Everyday Life (`everyday-life`) — **домен**: быт, еда, дом, транспорт, здоровье, деньги, досуг | A1 |
+| 8 | Online & Informal Register (`everyday-online-informal`) — **регистр и канал**: чат, форумы, сокращения, распознавание тона | A1 |
+| 9 | TOEFL Reading & Writing | B1 `[post-mvp]` |
 
+- **Девять треков; `everyday-life` отделён от `everyday-online-informal`** [PD-2026-07-20, P0-8]: первый задаёт **домен** (о чём речь), второй — **регистр и канал** (как пишут онлайн). Смешение домена с регистром повторило бы склейку, уже распутанную для частоты и педагогического приоритета. Бытовой пласт паритетен рабочему.
 - **Vocabulary & Chunks — lexicon-layer трек** [PD-2026-07-20, content-review C-1]: не несёт отдельных Topic'ов; реализуется как `LexicalItem` (chunks/слова), привязанные к темам через `topic.lexicon`, и отслеживается через LearnerLexicalState ([[../product/lexical-system]]). Пустой topic-инвентарь этого трека — намеренно, не пробел.
 
 ### Каталоги лексикона
 
 - **stable core** — проектируется заранее (П.4) из источников ниже;
-- **living layer** — мемы, сленг и форумные единицы, встреченные во время обучения; добавляются через `maintain-english-curriculum` workflow с provenance (`first_observed_at`, источник, `currency`);
+- **living layer** `[post-mvp]` [PD-2026-07-20, P0-9] — мемы, сленг и форумные единицы, встреченные во время обучения; добавляются через `maintain-english-curriculum` workflow с provenance (`first_observed_at`, источник, `currency`). **Механизм в MVP не строится**: workflow, lifecycle и авто-устаревание откладываются. Поля (`volatility`, `currency`, `first_observed_at`) и постоянный запрет сторонних excerpts остаются в target-контракте и заполняются при авторинге — их отмена потребовала бы миграции данных;
 - **learner lexicon** — личный словарь; живёт в модуле learner, не здесь.
 
 ## 3. Данные и лицензии [PD-2026-07-19]
@@ -118,7 +120,7 @@ explanation_language: ru-allowed   # когда допустим русский
 | `validate(version_or_candidate)` | API | валидация **кандидата или версии** до активации (rereview E-R2) | `[mvp]` |
 | `activate(version, expected_active)` | API | атомарная активация: требует успешный validate + CAS по expected_active, публикует событие | `[mvp]` |
 | `CURRICULUM_VERSION_ACTIVATED` | publishes | активация новой версии (эмитится `activate`) | `[mvp]` |
-| `LEXICAL_ITEM_ADDED` | publishes | пополнение living layer | `[mvp]` |
+| `LEXICAL_ITEM_ADDED` | publishes | пополнение living layer | `[post-mvp]` |
 
 ## 5. Поведение
 
@@ -128,14 +130,14 @@ explanation_language: ru-allowed   # когда допустим русский
 - **MUST — deprecation и replay** [ревью G-3]: изменение ID — только deprecation через append-only alias/migration events с явной семантикой `1:1 | split | merge | retired`; исходная версия сохраняется в snapshot, historical evidence не перепривязывается. Перезапись event log запрещена (append-only). Механизм — [[../OPEN]] OPEN-9.
 - **MUST — бессмертие ссылок** [ревью G-5]: стабильный ID бессмертен, если на него ссылается **любой** persistent reference (evidence, manifest, review queue, банк, assessment), не только evidence; tombstones сохраняются; cross-validator проверяет разрешимость ссылок в learner state, манифестах, очереди, банке и assessments.
 - **MUST — safety не пинится (safety-overlay)** [PD-2026-07-19, rereview G-R1]: пинятся только scoring/структура/rubric. `production_eligible` (из active usage_policy+currency) проверяется по **active** policy в момент доставки, не по pinned-версии. Прошлое evaluation/replay детерминировано по pinned; но live manifest / review assignment / банк / placement-форма перед доставкой production сверяются с active safety, и ставший `avoid`/`obsolete`/вне-контекста item отменяется/заменяется append-only event с обеими версиями. Scope stale-safety **включает live manifests**, владельцы — [[../OPEN]] OPEN-14 (+0.5 live delivery).
-- **MUST — enforcement активации** [ревью E-5]: `validate`/`activate` энфорсят schema, provenance и целостность **независимо от способа правки файла**; невалидная версия не активируется. (Отдельный attestation-протокол в MVP не вводится — осознанный отказ от gate-машинерии, [[README]].)
+- **MUST — enforcement активации** [ревью E-5]: `validate`/`activate` энфорсят schema, provenance и целостность **независимо от способа правки файла**; невалидная версия не активируется. (Отдельный attestation-протокол в MVP не вводится — осознанный отказ от gate-машинерии, [[../README]].)
 - **MUST**: изменения программы проходят `maintain-english-curriculum` workflow с последующей валидацией.
 - **MUST — `production_eligible` и predicate** [rereview H-R1]: production/scheduler используют вычисляемый `production_eligible`; `obsolete` исключает production и новые assignments. `requires_usage_policy` — predicate по type/register, а не только по «informal-единица»: рискованный `type: word`/register тоже обязан иметь usage_policy.
 - **MUST**: валидация ловит: циклы advisory-графа; битые ссылки prerequisites/lexicon/module/track/source_refs; дубли ID; prerequisite с CEFR выше уровня темы; пустые dimensions или отсутствие `mastery_criteria`/`LexicalMasteryProfile` на required dimension; отсутствие can_do; единицу, для которой `requires_usage_policy=true`, без `usage_policy`; `context_dependent` без `allowed_contexts`; `volatility: changing` без полного набора (`first_observed_at`/`last_verified_at`/`currency`/источник); `meme_template` без нейтрального объяснения **или `cultural_context`** (rereview H-R1); импортированную единицу без `source_refs`/SourceArtifact **или без `transformations`** (rereview I-R3); сторонние excerpts в living layer (постоянное правило).
 - **MUST NOT — living layer excerpts** [PD-2026-07-20, rereview I-R2]: **постоянно** запрещено хранить сторонние excerpts (текст forum post/example) — мотив ToS площадок и персональные данные, независимо от лицензий. Разрешены: source-метаданные, короткая сама единица (выражение/сокращение) и **собственный** нейтральный парафраз/объяснение.
 - **MUST**: informal-единицы с `usage_policy: avoid`/`recognition_only`/`currency: obsolete` не попадают в production и не рекомендуются — только на понимание; банк/формы/live manifests ре-валидируются против active policy ([[../product/lexical-system]] §3b, [[../OPEN]] OPEN-14).
 - **MUST**: TOEFL-трек не порождает тем ниже B1.
-- **SHOULD**: каждая тема связана хотя бы с одним рабочим контекстом (AI/AEC/SaaS/переписка/форум).
+- **SHOULD** [P0-8]: каждая тема связана хотя бы с одним реальным контекстом — **рабочим** (AI/AEC/SaaS/переписка/форум) **или бытовым** (быт, здоровье, поездки, досуг). Требование «только рабочий» противоречило принятому паритету бытового домена.
 
 ## 6. CLI-поверхность
 
@@ -162,6 +164,7 @@ OPEN-6 решён (источники + build-time режим). Остаточн
 
 ## История изменений
 
+- **2026-07-20 (P0-триаж)**: добавлен трек `everyday-life` в нормативную таблицу (девять треков, P0-8); living layer и `LEXICAL_ITEM_ADDED` помечены `[post-mvp]` согласно принятому PD (P0-9); SHOULD «рабочий контекст» расширен до «рабочий или бытовой»; ранее в этот же день — манифест provenance, закрытый словарь `transformations`, валидация `transparency` (П.4b/П.4c).
 - **2026-07-20**: OPEN-15 закрыт [PD-2026-07-20] — правовая позиция «приватное личное использование, без распространения/продажи» + publication trigger (§3.1); состав данных (свои поля + собственный производный band + source_refs) и provenance по технической мотивации (§3.2); living-layer excerpts запрещены постоянно; ATTRIBUTIONS.md → SHOULD (заготовка). П.4 разблокирована. Также добавлен Vocabulary&Chunks как lexicon-layer трек (content-review C-1).
 - **2026-07-19 (3)**: rereview — safety-overlay «safety не пинится» + live manifests в scope stale-safety (G-R1); candidate `validate`/`activate` API (E-R2); license-таблица разделена CEFR-J/Octanove + полные CC BY-SA obligations (I-R1); валидатор проверяет `transformations` (I-R3), `cultural_context` и `production_eligible`/`requires_usage_policy` (H-R1); living layer без сторонних excerpts до OPEN-15 (I-R2).
 - **2026-07-19 (2)**: red-team триаж — единый enum `strong/soft` (A-4); pinning/не-ретроактивность и deprecation replay (G-2/G-3); бессмертие любого persistent reference (G-5); build-time режим данных (I-1/Q3); SourceArtifact provenance (I-2/I-3); полное имя BSL (I-4); исправлено утверждение о wordfreq Reddit/Twitter (I-5); enforcement активации без attestation (E-5); `mastery_criteria` → 0.4; расширена валидация. Механизмы → OPEN-9/14/15.

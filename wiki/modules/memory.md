@@ -64,7 +64,16 @@ memory/
 ## 5. Обновление, rebuild и drift
 
 - **MUST**: проекция обновляется **post-commit через outbox** ([[../platform/foundation]] §3.7) — не внутри ACID-транзакции. Сбой записи файлов не откатывает authoritative commit.
-- **MUST**: доставка идемпотентна и упорядочена (per-consumer inbox/dedup, applied-offset); полный **rebuild** — isolate-and-swap до high-water mark, затем ordered catch-up (OPEN-21). Проекция полностью восстановима из event-store: потеря `memory/` не теряет данных.
+- **MUST**: доставка идемпотентна и упорядочена (per-consumer inbox/dedup, applied-offset); полный **rebuild** — isolate-and-swap до high-water mark, затем ordered catch-up (OPEN-21).
+- **MUST — источник страницы объявлен, rebuild гибридный** [P0-7]: состояние в системе гибридное ([[../platform/foundation]] §2), поэтому «rebuild из event-store» верно не для всех страниц:
+
+| Страницы | Источник | Протокол восстановления |
+|---|---|---|
+| topics, errors, vocabulary, chunks, gates-исходы, прогресс | event-sourced learning state | replay event-store |
+| sessions, reviews-очередь, plans, exposure/cooldown, черновики | **SQLite-authoritative** operational state | render из authoritative SQLite (при утрате — из snapshot) |
+
+  Утверждение «проекция полностью восстановима из event-store» было неверным: foundation прямо запрещает считать operational state event-sourced и не обещает capture-complete событий для него. Потеря `memory/` по-прежнему не теряет данных — но восстановление идёт двумя протоколами, а не одним.
+- **MUST — drift-проверка сверяет с объявленным источником** [P0-7]: страница сверяется с тем источником, который указан в таблице выше и продублирован в её `source_ids`; сверять operational-страницу с event-store бессмысленно.
 - **MUST — drift**: `trainer memory check` сверяет `memory/` с authoritative state и **завершается ошибкой** при расхождении (после catch-up; отставание в пределах offset — не ошибка, а pending, как с JSONL-export, foundation §2.1).
 
 ## 6. Публичный API и события

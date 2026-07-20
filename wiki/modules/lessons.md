@@ -56,7 +56,7 @@ stateDiagram-v2
 
 - **MUST — содержимое**: `session_id`, `provider`, `pinned_versions` (curriculum, scoring, scheduler, generation, rubric) и **`required_skills[]`** — пары `{skill_name, version}`.
 - **MUST — `required_skills` явные** [0.7, бриф §11]: требуемые навыки перечисляются в манифесте, а не подбираются средой по описанию. Implicit invocation делает поведение невоспроизводимым между Codex и Claude Code и лишает [[scoring]] §5 базы для Tutor Compliance: обязательство «вызван нужный skill нужной версии» проверяемо только против явного списка.
-- **MUST — разрешимость при старте**: `start` падает, если затребованная версия skill неразрешима ([[adapters]] §4.2). Обнаружить это в середине занятия хуже, чем на входе.
+- **MUST — разрешимость при старте, синхронно до commit** [P0-Q1]: порядок строгий — `resolve` всех `required_skills` → открытие UoW → commit → `SESSION_STARTED`. `start` падает **до** создания сессии, если хоть одна затребованная версия неразрешима ([[adapters]] §4.2). Post-commit consumer `SESSION_STARTED` в [[adapters]] — только аудит уже обеспеченного инварианта, а не сама проверка: проверка по событию произошла бы после создания сессии и нарушила бы это MUST.
 - **MUST — safety не пинится**: манифест закрепляет структуру и scoring, но не safety; `production_eligible` проверяется по active policy при доставке ([[../OPEN]] OPEN-14).
 
 ## 5. Публичный API и события
@@ -69,6 +69,11 @@ stateDiagram-v2
 | `finish(session_id, summary_draft?)` | API | проверка postconditions → атомарная терминализация | `[mvp]` |
 | `SESSION_STARTED` / `FINISHED` / `ABANDONED` / `SESSION_STALE_ABANDONED` | publishes | lifecycle-факты | `[mvp]` |
 | `ATTEMPT_STATE_CHANGED` | publishes | draft/recorded/assessed | `[mvp]` |
+| `attach_agent(session_id, provider, skills)` | API | фиксирует подключение агента к сессии | `[mvp]` |
+| `AGENT_ATTACHED` | publishes | к сессии подключился агент: провайдер, версии skills, момент ([[../flows/continuation]]) | `[mvp]` |
+
+- **MUST — владелец `AGENT_ATTACHED` — lessons** [P0-5]: событие сессионное, поэтому живёт здесь, а не в audit; audit его только читает. Flow [[../flows/continuation]] требовал события, но ни один owner его не публиковал — обязательство flow без владельца не исполнимо.
+- **MUST — session notes untrusted** [P0-5]: заметка агента (`--note` при любой фиксации) — свободный текст с автором и меткой времени; она **не evidence**, не влияет на scoring и не участвует в mastery. Схему и хранение владеет [[evidence]] §3 вместе с attempt; здесь — только факт, что фиксация может её нести.
 
 ## 6. CLI-поверхность
 

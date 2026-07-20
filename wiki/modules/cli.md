@@ -118,6 +118,7 @@ Envelope **тотален**: успех и отказ имеют одну фор
 | `trainer session abandon` | lessons | да | явный отказ от сессии |
 | `trainer attempt record` | evidence | да | фиксирует попытку ученика и наблюдение агента как evidence |
 | `trainer review due` | scheduler | нет | что подлежит повторению |
+| `trainer review close` | evidence | да | вычисляет терминальный ReviewOutcome по накопленному evidence; идемпотентен, повтор возвращает прежний исход |
 | `trainer gate begin` \| `submit` \| `evaluate` | gates | да | рекомендательный гейт по теме |
 
 ### Placement
@@ -125,6 +126,7 @@ Envelope **тотален**: успех и отказ имеют одну фор
 | Команда | Владелец | Мутирует | Что делает |
 |---|---|---|---|
 | `trainer placement start` \| `answer` \| `submit` \| `resume` \| `abandon` | assessments | да | жизненный цикл placement ([[assessments]]) |
+| `trainer placement decline` | assessments | да | отказ от placement с опциональным **per-skill** self-report ([[assessments]] §4) |
 
 ### Данные и проверки
 

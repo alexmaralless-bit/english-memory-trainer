@@ -34,6 +34,7 @@ Evidence event-sourced ([[../platform/foundation]] §2); Attempt operational (fi
 | `record_attempt(target, dimension, mode, raw_answer, observations, hints)` | API | приём attempt + наблюдений, вычисление AttemptAssessment | `[mvp]` |
 | `finalize_attempt(id)` / `recover` | API | финализация draft-attempt (idempotent) | `[mvp]` |
 | `close_review(review_id)` | API | вычисление единственного ReviewOutcome | `[mvp]` |
+| `SessionNote` | сущность | untrusted-заметка агента при фиксации: `session_id`, `author_provider`, `created_at`, `text`; **не evidence**, в scoring не участвует ([[../flows/continuation]], P0-5) | `[mvp]` |
 | `record_observed(kind, ...)` | API | error/vocabulary/chunk observed | `[mvp]` |
 | `ATTEMPT_RECORDED` / `EVIDENCE_ADDED` / `REVIEW_OUTCOME` / `ERROR_OBSERVED` | publishes | append-only факты | `[mvp]` |
 
@@ -41,7 +42,7 @@ Evidence event-sourced ([[../platform/foundation]] §2); Attempt operational (fi
 
 ### 4.1 Допустимость и уникальность (OPEN-7)
 - **MUST**: клиентская готовая классификация запрещена; движок вычисляет AttemptAssessment и ReviewOutcome по versioned policy.
-- **MUST — observation schema**: наблюдение ссылается на конкретный `rubric_criterion` и `span/error` в raw_answer, не булев флаг `criterion_satisfied`. Разделены machine-checkable часть (проверяется кодом) и subjective (под cap/trust); observation, не подтверждаемая raw_answer, отклоняется или помечается.
+- **MUST — observation schema**: наблюдение ссылается на конкретный `rubric_criterion` и `span/error` в raw_answer, не булев флаг `criterion_satisfied`. Разделены machine-checkable часть (проверяется кодом) и subjective (под cap/trust); observation, не подтверждаемая raw_answer, **отклоняется** (единственная ветка, см. ниже).
 - **MUST — семантическая идентичность**: evidence имеет `source_span_hash` (canonical hash ответа/цитаты) и `item_exposure_id`. Один source-span засчитывается **не более раза** на пару (target, dimension); переотправка того же span с новыми ключами/session id нового evidence не создаёт.
 - **MUST — независимость**: rubric/informal-повышение состояния требует ≥2 независимых сессий; независимость определяется по **новому prompt/контексту/интервалу**, «другая сессия» сама по себе не считается.
 - **MUST — multi-credit allocation** [ревью 0.4-5]: один span, релевантный нескольким target/dimension, зачитывается по **детерминированному алгоритму**, результат фиксируется как `CreditAllocation[]` в evidence-событии: для каждой пары (target, dimension) — `contribution` (вес) и `used | rejected` с `reason`. Primary получает полный вес, дополнительные — сниженный `multi_credit_weight` (*tunable*) с cap на сумму; двойного полного зачёта нет.
@@ -59,8 +60,10 @@ Evidence event-sourced ([[../platform/foundation]] §2); Attempt operational (fi
 ### 4.3 AttemptAssessment vs ReviewOutcome (OPEN-10 evidence-часть)
 - **MUST**: на один `review_id` возможно несколько attempts; per-attempt AttemptAssessment **не терминальна**.
 - **MUST — граница закрытия** [rereview R-5]: ReviewOutcome вычисляется **ровно один раз** в момент закрытия ReviewAssignment. Закрытие наступает по **первому** из:
-  1. явный `close_review` (агент отмечает цель выполненной/отклонённой ученицей);
-  2. **терминализация сессии** — finish/abandon закрывает все pending цели ([[lessons]] 0.5 владеет этим триггером).
+  1. явный `close_review` (агент отмечает цель выполненной/отклонённой ученицей) — доступен агенту как `trainer review close` ([[cli]] §5);
+  2. **`abandon` сессии** — преобразует оставшиеся pending цели в `INSUFFICIENT_EVIDENCE(reason=abandoned)` ([[lessons]] 0.5 владеет этим триггером).
+
+  **`finish` целей не закрывает** [P0-2]: он **требует** уже пустой pending-set и отклоняется бизнес-ошибкой, если тот непуст ([[lessons]] §4). Прежняя формулировка «finish/abandon закрывает все pending» противоречила owner-спеке: при ней сессию можно было завершить, не получив исходов, то есть обойти персистентность evidence — ровно то, что finish обязан не допускать.
   После закрытия ReviewAssignment **терминален**: дальнейшие attempts на тот же `review_id` записываются как non-contributing (audit) либо относятся к **новому** assignment, назначенному scheduler. Повторный `close_review` идемпотентен (возвращает прежний outcome).
 - **MUST — correction ≠ второй outcome**: исправление уже терминального исхода идёт **только** через correction-событие (`corrects_event_id`, [[../platform/foundation]] §3.6), которое замещает эффект; второго ReviewOutcome на assignment не возникает.
 - Владение таймингом: правило закрытия — здесь (0.4); **триггер терминализации сессии — 0.5** ([[../OPEN]] OPEN-10).

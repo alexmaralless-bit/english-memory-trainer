@@ -35,7 +35,7 @@
 - `LEARNING` — есть первые попытки, владение формируется.
 - `ACTIVE` — устойчивые результаты по required dimensions.
 - `MASTERED` — критерии mastery выполнены и подтверждены retention во времени.
-- `AT_RISK` — подтверждённый REGRESSION **или** просрочка вышла за порог ([[OPEN]] OPEN-18). Лёгкий/неподтверждённый regression опускает в `LEARNING`, не в `AT_RISK` (rereview D-R2).
+- `AT_RISK` — **только** просрочка вышла за порог ([[OPEN]] OPEN-18); вход через событие `OVERDUE_AT_RISK_TRIGGERED`. REGRESSION в `AT_RISK` не переводит никогда — он понижает состояние по тотальной таблице ([[modules/scoring]] §3). Различие: `AT_RISK` — риск забыть от простоя, REGRESSION — продемонстрированная потеря (P0-1).
 
 `REVIEW_DUE` устранён из knowledge state (rereview D-R1): наступление интервала выражается осью review status. Восстановление после подтверждения хранит `prior_steady_state` ∈ {ACTIVE, MASTERED} (learning-model §4).
 
@@ -62,7 +62,7 @@
 - **Review** — процесс повторения LearningTarget; исход — ReviewOutcome.
 - **Confidence** — уверенность движка в оценке; machine-ID enum `very_low | low | medium | high` (отдельно от UI-подписей вида «low-confidence»). Повышается rolling-уточнением.
 - **self_reported_level** — самооценка ученика (напр. при отказе от placement). Provisional working estimate, хранится **отдельно** от измеренного уровня; замещается измерением **per-skill** после первого допустимого evidence/confidence floor этого навыка; provenance сохраняется ([[OPEN]] resolved A-R3).
-- **Working level** — вычисленный рабочий CEFR-уровень (по навыкам и общий), консервативно относительно слабейшего core-навыка; ordinal/sublevel-представление — [[OPEN]] OPEN-8.
+- **Working level** — вычисленный рабочий CEFR-уровень: **целые bands** `A1…C2` по каждому core-навыку плюс общий, не выше слабейшего из них. Подуровней и «полступеней» нет (OPEN-8 закрыт, [[modules/scoring]] §4). Различают `measured_working_level` (только из evidence) и `provisional_working_estimate` (с self-report, помечен provisional).
 - **Core skill** — базовые навыки, ограничивающие общий уровень: Grammar, Vocabulary, Reading, Writing.
 - **Session Summary** — итог сессии, генерируется движком после commit finish (агент может передать `summary_draft`).
 - **Gate** — добровольная формальная проверка готовности (topic/module/CEFR boundary). Рекомендация, не барьер.

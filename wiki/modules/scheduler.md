@@ -53,6 +53,7 @@ Review_status — **не** knowledge state ([[scoring]] §3); operational, уп�
 
 - **depends on**: scoring (Retrievability/Stability/состояния), curriculum (target refs/pinned policy), kernel (Clock, elapsed-время).
 - **events published**: `REVIEW_SCHEDULED`, `REVIEW_DUE`, `RE_ENTRY_RECOMMENDED`, `OVERDUE_AT_RISK_TRIGGERED`.
+- **MUST — `REVIEW_DUE` это идемпотентное уведомление, не источник истины** [P0-Q2]: `due` — **вычисляемый** статус (`now ≥ next_review_at`), и потребители обязаны выводить его из расписания и Clock, а не из факта получения события. Событие несёт `boundary_at` (детерминированный момент пересечения, не wall-clock рассылки) и идемпотентно по ключу `(target_id, dimension_id, schedule_epoch)`: повторная рассылка не создаёт второго факта. Трактовать его как истину означало бы два источника статуса с разной задержкой. Ср. `OVERDUE_AT_RISK_TRIGGERED` — тот, наоборот, **является** фактом: он меняет knowledge state и потому append-only и replayable ([[scoring]] §3).
 - **consumed by**: lessons (манифест), evidence (закрытие цели → перепланирование), memory (проекция next-review).
 
 ## 8. Открытые вопросы
