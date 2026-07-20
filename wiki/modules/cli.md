@@ -112,7 +112,8 @@ Envelope **тотален**: успех и отказ имеют одну фор
 | Команда | Владелец | Мутирует | Что делает |
 |---|---|---|---|
 | `trainer session start` | lessons | да | открывает сессию; композиция плана — в той же UoW; `--mode` задаёт режим занятия |
-| `trainer session next` | lessons | нет | читает следующий непредъявленный шаг из сохранённого плана; ничего не вычисляет ([[control]] §4.2) |
+| `trainer session next` | lessons | **да** | выдаёт следующий шаг: атомарно помечает предъявленным и публикует `STEP_PRESENTED`; идемпотентна ([[control]] §4.2) |
+| `trainer session peek` | lessons | нет | показывает следующий шаг, ничего не помечая — диагностика отделена от выдачи |
 | `trainer session replan` | lessons | да | пересобирает план: `composition_revision + 1`, CAS, новое `SESSION_COMPOSED` |
 | `trainer session resume` | lessons | да | возобновляет `IN_PROGRESS` после потери чата; `--provider` обязателен и атомарно фиксирует `AGENT_ATTACHED` |
 | `trainer session finish` | lessons | да | **единственный** способ завершить сессию; требует persisted evidence |
@@ -152,6 +153,7 @@ Envelope **тотален**: успех и отказ имеют одну фор
 | `trainer availability show` \| `set` | control | `set` — да | объявленный и наблюдаемый ритм занятий |
 | `trainer tunables list` | control | нет | каталог настроек: владелец, диапазон, режим изменения |
 | `trainer metrics` | control | нет | метрики качества политики + аварийные признаки |
+| `trainer calibration list` \| `confirm ID` | control | `confirm` — да | предложения калибровки; активацию выполняет владелец параметра ([[control]] §4.9) |
 | `trainer adapters compare` | adapters | нет | паритет тьюторов по фикстурам ([[adapters]]) |
 
 - **MUST — `--format json` у всех agent-facing команд** `[mvp]`. Команды, не предназначенные агенту (`doctor`, `init`), тоже его поддерживают: их зовут в автоматике диагностики.

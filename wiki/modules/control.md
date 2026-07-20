@@ -18,7 +18,7 @@
 | Сущность | Назначение | Ключевые поля |
 |---|---|---|
 | `SessionPlan` | сохранённый состав занятия | `session_id`, `composition_revision`, `steps[]`, `budget`, `pinned_control_policy`, `created_at` |
-| `PlannedStep` | один шаг занятия | `step_id`, `bucket`, `target_ref?`, `step_type`, `expected_seconds`, `is_first_exposure`, `urgency_class?`, `decision_id` |
+| `PlannedStep` | один шаг занятия — **tagged union по `kind`** (§4.3a) | общие: `step_id`, `decision_id`, `kind`, `bucket`, `step_type`, `expected_seconds`, `order_index`, `presented_at?` |
 | `SessionBudget` | распределение времени | `total_seconds`, `allocated{review, growth, integration, choice}`, `mode` |
 | `UrgencyClass` | класс review-кандидата | `critical \| important \| normal \| maintenance \| deferrable` |
 | `SaturationState` | признаки перепоказа цели | `target_ref`, `exposures_in_window`, `consecutive_independent_successes`, `distinct_contexts`, `last_transfer_check_at` |
@@ -57,11 +57,12 @@ control_policy:
       integration_task: 420
       gate_item: 180
       free_conversation: 300
-    shares:                              # доли от total_seconds
-      review_max: 0.45
-      growth_min: 0.25
-      integration_min: 0.15
-      choice_min: 0.10
+    # Доли — целые basis points (1 bp = 1/10000). Двоичный float запрещён
+    # на всём пути: allocation = floor(total_seconds * bp / 10000) [R-12].
+    shares_bp_by_mode:
+      balanced:    {review_max: 4500, growth_min: 2500, integration_min: 1500, choice_min: 1000}
+      maintenance: {review_max: 10000, growth_min: 0, integration_min: 0, choice_min: 1000}
+      re_entry:    {review_max: 8000, growth_min: 0, integration_min: 0, choice_min: 2000}
   classification:
     critical_floor_retrievability: 0.50
     maintenance_floor_retrievability: 0.85
@@ -84,16 +85,37 @@ control_policy:
   availability:
     divergence_tolerance: 0.30
     divergence_window_sessions: 6
-  alerts:
-    review_share_high: 0.42
-    review_share_high_consecutive: 3
-    growth_rate_low: 0.10
-    growth_rate_low_consecutive: 3
+  alerts:                                # только для mode=balanced [R-8]
+    review_share_enter_bp: 4200
+    review_share_exit_bp: 3500
+    review_share_consecutive: 3
+    growth_rate_enter_bp: 1000
+    growth_rate_exit_bp: 1800
+    growth_rate_consecutive: 3
 ```
 
 - **MUST — policy тотальна и исполнима** `[mvp]`: каждая ветка §4 имеет конкретное значение здесь. Диапазонов нет; `allowed_range` живёт в каталоге (§4.9) и ограничивает будущие версии, а не заменяет значение.
-- **MUST — выполнимость долей** `[mvp]`: `growth_min + integration_min + choice_min ≤ 1 − 0` и `review_max + growth_min ≤ 1`. Версия, нарушающая это, не активируется. При v1: `0.25 + 0.15 + 0.10 = 0.50`, `0.45 + 0.25 = 0.70` — выполнимо.
-- **MUST — время в целых секундах** `[mvp]`: все расчёты бюджета — целые секунды; доли применяются как `floor(total_seconds × share)`. Никаких float. Это исключает расхождение реализаций на округлении.
+- **MUST — выполнимость долей проверяется на каждый mode** `[mvp]`: для любого режима `growth_min + integration_min + choice_min ≤ 10000` и `review_max + growth_min ≤ 10000`. Версия, нарушающая это хотя бы в одном режиме, не активируется.
+- **MUST — целочисленная арифметика** `[mvp]` [R-12]: доли хранятся как целые basis points, время — как целые секунды, аллокация считается как `floor(total_seconds * share_bp // 10000)`. Двоичный float запрещён на всём пути: YAML-загрузчик обязан читать `shares_bp` как int. Это то же требование побитовой воспроизводимости, что и Decimal-контекст [[scoring]] §2.1.
+
+## 3b. Публичный API и события
+
+| Операция / Событие | Тип | Что делает | Фаза |
+|---|---|---|---|
+| `compose_session(session_id, mode, total_seconds)` | API (sync, в UoW старта) | собирает `SessionPlan` revision 1; ошибки `BUDGET_TOO_SMALL`, `NO_CANDIDATES` | `[mvp]` |
+| `replan(session_id, expected_revision)` | API (mutating, CAS) | новая ревизия; закрывает или переносит assignments (§4.2) | `[mvp]` |
+| `claim_next_step(session_id, idempotency_key)` | API (mutating) | атомарно помечает следующий шаг предъявленным и публикует `STEP_PRESENTED` | `[mvp]` |
+| `classify(candidates)` | API (pure) | `UrgencyClass` по §4.5; детерминирована, без побочных эффектов | `[mvp]` |
+| `record_signal(signal)` | API | сигнал ученика; `too_easy` порождает probe-шаг | `[mvp]` |
+| `explain(step_id)` | API | `DecisionTrace` | `[mvp]` |
+| `availability_get()` / `availability_set(declared)` | API | §4.11 | `[mvp]` |
+| `metrics()` / `catalogue()` | API | §4.10, §4.9 | `[mvp]` |
+| `propose_calibration()` / `confirm_calibration(id)` | API | §4.9; активацию делает владелец параметра | `[post-mvp]` |
+| `SESSION_COMPOSED {session_id, composition_revision, steps[], budget, pinned_versions, active_safety_version}` | publishes | план создан или пересобран | `[mvp]` |
+| `STEP_PRESENTED {step_id, session_id, composition_revision, target_ref?, dimension?, context_id, predicted_retrievability?, presented_at}` | publishes | шаг **фактически выдан** | `[mvp]` |
+| `LEARNER_SIGNAL_RECORDED`, `SIGNAL_CONSUMED` | publishes | сигнал зафиксирован / израсходован | `[mvp]` |
+| `PROBE_REQUESTED {probe_id, target_ref, dimension, requested_difficulty, avoid_context}` | publishes | запрошена проба; `probe_id` выдаёт **движок** | `[mvp]` |
+| `AVAILABILITY_UPDATED`, `CALIBRATION_PROPOSED`, `CALIBRATION_APPLIED` | publishes | — | `[mvp]` / `[post-mvp]` |
 
 ## 4. Поведение
 
@@ -110,8 +132,10 @@ control_policy:
 ### 4.2 Жизненный цикл композиции [CTRL-2]
 
 - **MUST — композиция происходит в UoW старта** `[mvp]`: `lessons.start` синхронно вызывает `compose_session` **до** commit, в той же транзакции сохраняет `SessionPlan` с `composition_revision = 1` и включает его в Session Manifest. `SESSION_COMPOSED` публикуется через outbox той же UoW. Крэш между стартом и композицией невозможен: их нет как двух шагов.
-- **MUST — `session next` остаётся read-only** `[mvp]`: команда возвращает следующий непредъявленный шаг из сохранённого `SessionPlan`. Она ничего не вычисляет и ничего не публикует ([[cli]] §4.4).
-- **MUST — переплан только явной командой** `[mvp]`: `trainer session replan` — **мутирующая** идемпотентная команда с CAS по `composition_revision`. Она создаёт `revision + 1`, публикует новый `SESSION_COMPOSED` и не отменяет уже предъявленные шаги. Триггеры, при которых агенту следует её звать: сигнал ученика, изменивший relevance; исчерпание плана до конца бюджета; safety-исключение при доставке.
+- **MUST — выдача шага это мутация** `[mvp]` [R-1]: `trainer session next` **мутирующая** и идемпотентная. Она атомарно помечает следующий непредъявленный шаг выданным, публикует `STEP_PRESENTED` и возвращает шаг; повтор с тем же `--idempotency-key` отдаёт тот же ответ, не выдавая следующий. Прежняя формулировка «read-only next» делала переход «непредъявлен → предъявлен» невыразимым: шаг никогда не становился предъявленным, `is_first_exposure`, saturation и starvation не двигались, а повторный вызов вечно возвращал одно и то же.
+- **MUST — просмотр без выдачи** `[mvp]`: `trainer session peek` — read-only, показывает следующий шаг, ничего не помечая и ничего не публикуя. Диагностика и выдача разделены, чтобы посмотреть план можно было, не потратив шаг.
+- **MUST — переплан только явной командой** `[mvp]`: `trainer session replan` — мутирующая идемпотентная команда с CAS по `composition_revision`. Создаёт `revision + 1`, публикует новый `SESSION_COMPOSED`, не отменяет уже предъявленные шаги.
+- **MUST — replan не оставляет сирот** `[mvp]` [R-3]: непредъявленный review-шаг, выпавший из новой ревизии, **в той же UoW** получает терминальный исход своего ReviewAssignment — `INSUFFICIENT_EVIDENCE(reason=replanned)` ([[evidence]] §4.3). Иначе assignment остался бы pending, а `finish` — навсегда отклонённым ([[lessons]] §4). Предъявленные шаги сохраняются вместе со своими assignments.
 - **MUST — ровно один действующий план** `[mvp]`: на сессию в любой момент действует план последней ревизии; `SESSION_COMPOSED` может быть несколько, но `(session_id, composition_revision)` уникален. Идемпотентность `replan` — по этому ключу.
 - **MUST — `step_id` стабилен** `[mvp]`: `step_id` не меняется между ревизиями для сохранённых шагов; `decision_id` ссылается на trace, породивший шаг.
 
@@ -128,6 +152,23 @@ control_policy:
   | `choice` | свободный разговор или тема, выбранная учеником |
 
 - **MUST — `is_first_exposure` определяется по факту доставки** `[mvp]`: цель считается новой, если по ней **нет ни одного** `STEP_PRESENTED` (§4.6). `knowledge_state = NEW` для этого не годится: предъявление и объяснение не являются evidence, и цель остаётся `NEW` после нескольких показов.
+- **MUST — не более одного growth-шага на цель в плане** `[mvp]` [R-13]: иначе оба шага получили бы `is_first_exposure = true` при композиции, а после выдачи первого второй стал бы ложно считаться новым и в бюджете, и в телеметрии. Повторное обращение к той же цели в том же занятии — шаг `integration` или `review`, не `growth`.
+
+### 4.3a Схема `PlannedStep` — tagged union [R-3]
+
+Общие поля: `step_id`, `decision_id`, `kind`, `bucket`, `step_type`, `expected_seconds`, `order_index`, `presented_at?`.
+
+| `kind` | Обязательные поля |
+|---|---|
+| `review` | `review_assignment_id`, `target_ref`, `dimension`, `criteria_ref`, `urgency_class` |
+| `growth` | `target_ref`, `dimension`, `is_first_exposure: true` |
+| `integration` | `targets[]` из `{target_ref, dimension, role: new \| learned}`, минимум по одному каждой роли |
+| `choice` | `target_ref?` либо `topic_hint` |
+| `gate` | `gate_scope`, `scope_ref` |
+| `probe` | `probe_id` (выдан движком), `target_ref`, `dimension`, `requested_difficulty`, `avoid_context?` |
+
+- **MUST — review-шаг несёт `review_assignment_id`** `[mvp]`: без него выданное задание невозможно корректно закрыть через `trainer review close`, а `finish` не может проверить пустоту pending-set.
+- **MUST — integration выражает пару** `[mvp]`: одиночный `target_ref` не способен описать задание «новая цель поверх освоенной», ради которого корзина и введена.
 - **MUST — доли считаются по корзинам** `[mvp]`: `review_share = allocated.review / total_seconds`; `growth_rate = allocated.growth / total_seconds`. `integration` и `choice` не входят ни в одну из этих двух долей — двойного учёта нет.
 - **MUST — вклад integration в цели** `[mvp]`: шаг `integration` может дать evidence нескольким целям, но с dedup и cap по [[evidence]] §4.1. На бюджет он относится целиком к своей корзине.
 
@@ -139,7 +180,7 @@ control_policy:
 2. **Исключение по safety** — по active policy; исключённое фиксируется в trace.
 3. **Классификация** review-кандидатов — §4.5.
 4. **Сортировка внутри класса** — `(retrievability asc, stake_rank asc, deferral_count desc, expected_seconds asc, target_id asc, dimension_id asc)`.
-5. **Заполнение полов** в фиксированном порядке: `growth` → `integration` → `choice`, каждая до своего `*_min`.
+5. **Резервирование полов** в фиксированном порядке `growth → integration → choice` до `*_min` **текущего режима** (§3). Пол — **резервируемая ёмкость, а не обязательная загрузка** [R-2]: если кандидатов корзины нет, фиксируется детерминированный waiver (`NO_GROWTH_CANDIDATE`, `NO_INTEGRATION_CANDIDATE`, `NO_CHOICE_CANDIDATE`) в trace, и освободившиеся секунды переходят следующей корзине по тому же порядку. Это делает исполнимыми первое занятие ученика (освоенных целей ещё нет, значит нет и integration-пар), исчерпание нового материала и режимы `maintenance`/`re_entry`, где `growth_min = 0`.
 6. **Резерв против голодания** — §4.5.
 7. **Review** по классам `critical → important → normal → maintenance`, пока не достигнут `review_max` или бюджет.
 8. **Добор остатка** теми же правилами, не нарушая ни одного потолка.
@@ -147,7 +188,9 @@ control_policy:
 10. **Порядок предъявления** — чередование modes при равных прочих, затем `step_id asc`.
 
 - **MUST — first-fit, не best-fit** `[mvp]`: шаг, не помещающийся в остаток корзины, **пропускается**, и берётся следующий кандидат в каноническом порядке. Best-fit запрещён: он даёт другой набор при том же входе.
-- **MUST — неразрешимый бюджет** `[mvp]`: если `total_seconds < min_total_minutes × 60`, композиция отклоняется ошибкой `BUDGET_TOO_SMALL` с `next_action`. План из нуля шагов не создаётся.
+- **MUST — неразрешимый бюджет** `[mvp]`: если `total_seconds < min_total_minutes × 60`, композиция отклоняется ошибкой `BUDGET_TOO_SMALL`.
+- **MUST — пустой план это ошибка, а не результат** `[mvp]` [R-2]: если после waiver'ов не набрался ни один шаг, композиция отклоняется `NO_CANDIDATES` с `next_action`. Сессия с планом из нуля шагов не создаётся.
+- **MUST — waiver виден в телеметрии** `[mvp]`: доля занятия, отданная по waiver другой корзине, попадает в trace и в метрики. Иначе систематическая невозможность набрать новый материал выглядела бы как здоровое занятие.
 
 ### 4.5 Классификация: тотальная упорядоченная таблица [CTRL-4]
 
@@ -155,11 +198,13 @@ control_policy:
 
 | # | Условие | Класс |
 |---|---|---|
-| 1 | `saturated` (§4.6) | `deferrable` |
-| 2 | `retrievability ≥ maintenance_floor_retrievability` | `maintenance` |
-| 3 | `risk ∧ stake` | `critical` |
-| 4 | `risk ∧ ¬stake` | `important` |
+| 1 | `risk ∧ stake` | `critical` |
+| 2 | `risk ∧ ¬stake` | `important` |
+| 3 | `saturated` (§4.6) | `deferrable` |
+| 4 | `retrievability ≥ maintenance_floor_retrievability` | `maintenance` |
 | 5 | иначе | `normal` |
+
+**Риск проверяется первым** [R-4]. В прежнем порядке `saturated` стояло первым, и три показа с тремя **провалами** удовлетворяли предикату насыщения, отправляя критичную цель в `deferrable`; а повторяющаяся живая ошибка при Retrievability 0.90 попадала в `maintenance` раньше проверки риска — то есть ровно тот сигнал, который вводился для исправления ошибочного прогноза модели, этим прогнозом и подавлялся.
 
 **`risk`** = `knowledge_state = AT_RISK` **∨** повторяющаяся ошибка (≥ `recurring_error_min_occurrences` в последних `recurring_error_window_sessions`) **∨** `retrievability < critical_floor_retrievability`.
 
@@ -173,12 +218,15 @@ control_policy:
 где **leverage** = цель является `strong`-prerequisite не менее чем `prereq_leverage_min_dependents` тем, **relevance** = цель связана с активной `goal` или записью личного словаря ([[learner]] §4). У `Topic` поля `curriculum_priority_band` нет, и вводить его сюда не требуется: для тем ставка выражается через leverage.
 
 - **MUST — резерв против голодания** `[mvp]` [CTRL-7]: до заполнения review-корзины по классам в план **безусловно** включается до `reserved_steps_per_session` целей, отложенных системой не менее `deferrals_to_qualify` раз подряд, в порядке `deferral_count desc`. Это даёт **верхнюю границу ожидания**, а не только бонус к приоритету: прежняя формулировка «рост приоритета с потолком» гарантии не давала — при постоянном притоке более важных целей периферийная проигрывала бы бесконечно.
-- **MUST — `deferral_count` считается только по системным отказам** `[mvp]`: перенос по решению ученика (`snooze`) его не увеличивает.
+- **MUST — `stake_rank` закрыт** `[mvp]` [R-4]: `0` — relevance (цель связана с активной `goal` или личным словарём); `1` — `curriculum_priority_band ∈ {CORE, HIGH}` (LexicalItem) либо leverage ≥ `prereq_leverage_min_dependents` (любой вид цели); `2` — ставки нет. Сортировка по возрастанию. Без закрытого enum порядок внутри класса снова зависел бы от реализации.
+- **MUST — жизненный цикл `deferral_count`** `[mvp]` [R-6]: увеличивается на 1, когда цель была кандидатом ревизии и **не вошла** в план по решению системы; **обнуляется** при `STEP_PRESENTED` по этой цели. Перенос по решению ученика (`snooze`) его не увеличивает. Порядок отбора в резерв — `(deferral_count desc, retrievability asc, target_id asc, dimension_id asc)`.
+- **MUST — граница ожидания и её предпосылка** `[mvp]` [R-6]: резерв даёт верхнюю границу **при конечном множестве eligible-целей**: цель с максимальным `deferral_count` попадает в резерв не позже, чем через `|eligible| / reserved_steps_per_session` занятий. Если зарезервированный шаг не помещается в остаток бюджета, он вытесняет последний по приоритету review-шаг, а не пропускается, — иначе резерв не был бы гарантией. При бесконечно растущем backlog гарантии нет, и это ограничение названо здесь, а не подразумевается.
 
 ### 4.6 Доставка, насыщение, разнообразие [CTRL-6]
 
 - **MUST — факт доставки** `[mvp]`: `STEP_PRESENTED {step_id, session_id, target_ref?, presented_at}` публикуется, когда шаг **фактически выдан** ученику. `SESSION_COMPOSED` — план, не факт: в брошенной или перепланированной сессии шаг мог не показываться, и считать его предъявлением нельзя.
-- **MUST — `SaturationState` строится из событий** `[mvp]`: входы — `STEP_PRESENTED` (число показов, контексты), `ATTEMPT_ASSESSED`/`REVIEW_OUTCOME` из [[evidence]] (успех, independence). Поэтому control **потребляет** события evidence (§6).
+- **MUST — `SaturationState` строится из существующих событий** `[mvp]` [R-5]: входы — `STEP_PRESENTED` (число показов и `context_id`), `EVIDENCE_ADDED` и `REVIEW_OUTCOME` из [[evidence]] §3 (успех, independence), `ERROR_OBSERVED` (повторяющаяся живая ошибка для предиката `risk`). Событие с именем `ATTEMPT_ASSESSED` в каноне отсутствует и здесь не используется. Reducer применяет события в порядке канонического `sequence`, дедуп — по `event_id`.
+- **MUST — `context_id` в факте доставки** `[mvp]` [R-5]: `STEP_PRESENTED` несёт `context_id` — идентификатор смыслового контекста задания (домен + тип задания). Без него `distinct_contexts` невыводим, и «три успеха подряд» нельзя отличить от «три успеха в одном и том же шаблоне».
 - **MUST — предикат `saturated`** `[mvp]`: `exposures_in_window ≥ max_exposures_in_window` **∨** (`consecutive_independent_successes ≥ consecutive_success_threshold` **∧** `distinct_contexts < min_distinct_contexts`). Устойчивый успех в одном и том же контексте — признак знакомости, а не владения.
 - **MUST — насыщение не равно владению** `[mvp]`: понижение класса меняет только план; состояние знания меняет исключительно [[scoring]].
 - **MUST — квоты разнообразия** `[mvp]`: `max_steps_per_topic`, `max_consecutive_same_mode`, `max_similar_items`. «Похожие» = единицы, делящие `lemma`/базовый глагол phrasal-verb либо один `topic`.
@@ -196,11 +244,24 @@ control_policy:
   | `snooze` | `target_ref`, `until` | `until` |
   | `prefer_different_context` | `target_ref`, `avoid_context` | `expires_at` = +3 сессии |
 
-- **MUST — precedence и supersede** `[mvp]`: при конфликте более поздний сигнал того же `kind` на ту же цель замещает предыдущий (`superseded_by`). Истёкший сигнал перестаёт влиять и не удаляется — история сохраняется для аудита.
+- **MUST — два раздельных типа истечения** `[mvp]` [R-11]: `expires_at` (метка времени, для `snooze` и `not_relevant_now`) и `expires_after_session_seq` (номер сессии, для сигналов, чей срок задан в занятиях). Смешивать нельзя: «+3 сессии» невозможно записать в timestamp, а replay обязан воспроизвести ровно то же число занятий.
+- **MUST — одноразовый сигнал расходуется явно** `[mvp]`: `too_easy` закрывается событием `SIGNAL_CONSUMED` в момент создания probe-шага. Без этого он порождал бы пробу в каждой последующей композиции.
+- **MUST — precedence** `[mvp]` [R-11]: при конфликте более поздний сигнал того же `kind` на ту же цель замещает предыдущий (`superseded_by`). Между разными видами действует таблица, от сильного к слабому: `snooze` / `not_relevant_now` (исключают цель) → `need_more_practice` (повышает частоту) → `prefer_different_context` (ограничивает контекст) → `too_repetitive` (понижает класс) → `too_easy` (порождает пробу). Сигнал уровня `domain` слабее сигнала на конкретную цель. Истёкший сигнал перестаёт влиять, но не удаляется — история нужна аудиту.
 - **MUST — сигналы не evidence** `[mvp]`: в Mastery, уровень и XP не входят никогда.
-- **MUST — probe как отдельный origin** `[mvp]` [CTRL-10]: `too_easy` порождает `PROBE_REQUESTED {target_ref, requested_difficulty, avoid_context}`. Потребитель — агент, который через [[evidence]] фиксирует attempt с `origin = control_probe`.
-- **MUST — no-negative для probe** `[mvp]`: evidence с `origin = control_probe` **не может** дать `REGRESSION` и не понижает knowledge state; успех засчитывается обычным порядком. Это добровольная проверка выше требуемого уровня: наказание за неё научило бы ученика не сообщать о лёгкости, и инструмент честной картины начал бы её искажать. Прежняя формулировка «не штрафует, но с обычными последствиями» была внутренне противоречивой — обычные последствия включают понижение.
-- **MUST — бюджет проб** `[mvp]`: не более одного probe-шага на цель в сессии; probe относится к корзине `review`.
+- **MUST — `origin` выводится движком, а не заявляется агентом** `[mvp]` [R-7]: `too_easy` порождает `PROBE_REQUESTED` с **выданным движком** `probe_id` и соответствующий `PlannedStep{kind: probe}`. Attempt ссылается на `step_id`; `origin = control_probe` движок проставляет **сам**, по типу шага. CLI параметра `--origin` не имеет. Иначе агент мог бы помечать обычные провалы как пробу и отключать понижение — то есть получил бы через чёрный ход ровно ту власть над оценкой, которую контракт у него забирает ([[cli]] §4.4).
+- **MUST — no-negative покрывает все отрицательные эффекты** `[mvp]` [R-7]: evidence с `origin = control_probe` не может дать `REGRESSION`, не понижает knowledge state, **не уменьшает Mastery и Stability и не сдвигает расписание в сторону сокращения интервала**. Успех засчитывается обычным порядком в пределах общих cap'ов. Прежняя формулировка запрещала только смену состояния и оставляла отрицательную дельту возможной — то есть наказание всё равно наступало, просто тише.
+- **MUST — probe в своей корзине** `[mvp]` [R-7]: `too_easy` не требует, чтобы цель была due, поэтому probe-шаг **не** относится к `review` (та определена через due-backlog). Probe занимает `choice`: это шаг, инициированный учеником.
+- **MUST — бюджет проб** `[mvp]`: не более одного probe-шага на цель в занятии.
+
+### 4.7a Availability — алгоритм v1 [R-9]
+
+Сущность §2 без правил вычисления не задавала поведения; часть значений policy не использовалась ни одной веткой.
+
+- **MUST — схема `declared`** `[mvp]`: `sessions_per_week`, `typical_minutes`, `next_available_at?`, `blackout_until?`. Задаётся `trainer availability set`.
+- **MUST — источник `observed`** `[mvp]`: `sessions_per_week` — число терминализованных сессий за `divergence_window_sessions` последних календарных недель; `typical_minutes` — **медиана `planned` `total_seconds`** этих сессий, не разность `STARTED→FINISHED` (та включает сон и потерю чата, §4.2 CTRL-8).
+- **MUST — precedence бюджета** `[mvp]`: `total_seconds` берётся первым из непустого: `--duration` команды → `declared.typical_minutes` → `observed.typical_minutes` → `default_total_minutes`. Порядок фиксирован, чтобы две реализации не выбрали разное.
+- **MUST — расхождение** `[mvp]`: `divergence = |declared.sessions_per_week − observed.sessions_per_week| / max(declared, 1)`. При `divergence > divergence_tolerance` система **предлагает** уточнить (`AVAILABILITY_UPDATED` не публикуется до согласия ученика) и молча объявленное не переписывает.
+- **MUST — влияние на состав** `[mvp]`: при `blackout_until` в будущем либо `next_available_at`, отстоящем дальше медианного интервала, композиция повышает долю `critical` внутри `review_max` и понижает `growth` до его пола — но **не ниже**. Доступность меняет форму нагрузки и никогда не входит в scoring (§4.1).
 
 ### 4.8 Decision trace
 
@@ -223,7 +284,7 @@ trace_field: review_max
 ```
 
 - **MUST — реестр, не хранилище** `[mvp]`: значения живут в pinned policy у владельца; каталог хранит метаданные. Два хранилища одного числа разъедутся.
-- **MUST — полнота в обе стороны** `[mvp]`: каждый *tunable* любой спеки имеет строку каталога и наоборот; проверяется валидатором — механизм тот же, что `cli_calls` → `command_registry()` и `source_refs` → объявленные артефакты.
+- **MUST — каталог это обязательство реализации, а не существующий артефакт** `[mvp]` [R-10]: строк каталога в каноне ровно столько, сколько показано примером. Реализация обязана создать versioned catalogue-артефакт со строкой на **каждый** параметр `control_policy@1` и на ранее объявленные tunables соседей, и валидатор обязан проверять полноту в обе стороны. До появления артефакта запрет активации вне `allowed_range` **не действует** — проверять его нечем, и утверждать обратное было бы тем же over-claim, что и в OPEN-27.
 - **MUST — потолок автономии: propose_confirm** `[PD-2026-07-20]`: ни один параметр не объявляет режим выше. Автоприменение запрещено: при одном ученике шум неотличим от сигнала.
 - **MUST — применение делегируется владельцу** `[PD-2026-07-20]` [CTRL-Q2]: control владеет **только** workflow «предложил → подтвердили». Активацию новой версии выполняет **API модуля-владельца** параметра, с его CAS и его событием; control не мутирует чужой aggregate и не становится вторым владельцем policy. `CALIBRATION_APPLIED` фиксирует подтверждение и связан `causation_id` с событием активации у владельца.
 
@@ -241,8 +302,10 @@ trace_field: review_max
 | `lapse_rate_after_mastered` | доля целей, получивших REGRESSION в течение 90 дней после MASTERED | 90 дней | `no-data` при < 10 |
 | `transfer_gap` | успех на знакомом шаблоне − успех в новом контексте | 50 исходов каждого | `no-data` |
 
-- **MUST — прогноз фиксируется в момент выдачи** `[mvp]`: `calibration_error` сравнивает Retrievability, **записанную в trace при композиции**, с фактическим исходом. Пересчёт прогноза задним числом запрещён — иначе метрика измеряла бы себя.
-- **MUST — две аварии** `[mvp]`: `review_share ≥ review_share_high` подряд `review_share_high_consecutive` сессий **или** `growth_rate ≤ growth_rate_low` подряд `growth_rate_low_consecutive` — признак долговой спирали. Пороги входа и выхода — параметры каталога, не прилагательные.
+- **MUST — прогноз фиксируется в `STEP_PRESENTED`, а не при композиции** `[mvp]` [R-8]: `predicted_retrievability` записывается в момент **фактической выдачи**. Композиция и выдача расходятся во времени (сессию можно возобновить через день), а Retrievability убывает по реальному времени — сравнение с прогнозом из плана приписывало бы политике ошибку, созданную устаревшим планом. Пересчёт задним числом запрещён.
+- **MUST — разметка исходов** `[mvp]` [R-8]: в `calibration_error` `CONFIRMED` и `PROGRESS` → `1`; `REGRESSION` → `0`; `RECOVERED` → `1`; `INSUFFICIENT_EVIDENCE` → **исключается** из выборки, а не считается нулём. Исход из пяти значений нельзя молча свести к булеву.
+- **MUST — аварии считаются только по `balanced`-занятиям** `[mvp]` [R-8]: в режимах `maintenance`/`re_entry` нулевой рост законен, и включение их в окно давало бы ложную тревогу после трёх нормальных поддерживающих занятий.
+- **MUST — раздельные пороги входа и выхода** `[mvp]`: авария включается при пересечении `*_enter_bp` подряд `*_consecutive` занятий и выключается только при пересечении `*_exit_bp` — гистерезис не даёт метрике мигать у порога. Пороги — параметры каталога, а не прилагательные «устойчиво» и «близок».
 - **MUST — реакция: сообщить, не притормаживать** `[PD-2026-07-20]` [CTRL-Q1]: при аварии система **сообщает** и предлагает выбор (режим `maintenance`, больше времени, отказ от части целей). Автоматическое снижение притока нового материала **не вводится**: скрытое изменение программы без ведома ученика противоречит принципу «движок объясняет, а не решает молча».
 - **MUST — честность о статистике** `[mvp]`: при одном ученике большинство метрик долго остаются шумом; `no-data` — легитимный результат, а не ноль.
 
@@ -250,20 +313,20 @@ trace_field: review_max
 
 | Команда | Владелец | Мутирует | Что делает |
 |---|---|---|---|
-| `trainer why --step ID` | control | нет | `DecisionTrace` шага |
+| `trainer why --step ID` | control | нет | `DecisionTrace` шага (§4.8) |
 | `trainer signal KIND --target ID [payload]` | control | да | сигнал ученика; `too_easy` → `PROBE_REQUESTED` |
 | `trainer availability show` \| `set` | control | `set` — да | ритм: объявленный, наблюдаемый, расхождение |
 | `trainer tunables list [--owner X]` | control | нет | каталог настроек |
 | `trainer metrics` | control | нет | метрики + аварии |
 | `trainer calibration list` \| `confirm ID` | control | `confirm` — да | предложения; применение делегируется владельцу |
 
-`trainer session start --mode balanced\|maintenance\|re_entry` и `trainer session replan` принадлежат [[lessons]]; их поведение определяется здесь (§4.2).
+`trainer session start --mode`, `trainer session next` (мутирующая, §4.2), `trainer session peek` (read-only) и `trainer session replan` принадлежат [[lessons]]; их поведение определяется здесь.
 
 ## 6. Границы
 
-- **depends on**: [[scheduler]] (backlog, retrievability), [[scoring]] (состояния, прогнозы), [[curriculum]] (priority band, prerequisites, рекомендации), [[learner]] (`goals`, личный словарь → relevance), [[gates]] (рекомендация гейта как кандидат `choice`), [[lessons]] (UoW старта)
+- **depends on**: [[scheduler]] (backlog, retrievability), [[scoring]] (состояния, прогнозы), [[evidence]] (исходы, наблюдённые ошибки, ReviewAssignment), [[curriculum]] (priority band, prerequisites, рекомендации), [[learner]] (`goals`, личный словарь → relevance), [[gates]] (рекомендация гейта как кандидат `choice`), [[lessons]] (UoW старта, терминализация)
 - **events published**: `SESSION_COMPOSED`, `STEP_PRESENTED`, `LEARNER_SIGNAL_RECORDED`, `PROBE_REQUESTED`, `AVAILABILITY_UPDATED`, `CALIBRATION_PROPOSED`, `CALIBRATION_APPLIED`
-- **events consumed**: `REVIEW_SCHEDULED`, `OVERDUE_AT_RISK_TRIGGERED` (← scheduler), `STATE_TRANSITION` (← scoring), `ATTEMPT_ASSESSED`, `REVIEW_OUTCOME` (← evidence, для saturation и метрик), `SESSION_STARTED`/`FINISHED` (← lessons)
+- **events consumed**: `REVIEW_SCHEDULED`, `OVERDUE_AT_RISK_TRIGGERED` (← [[scheduler]]), `STATE_TRANSITION` (← [[scoring]]), `EVIDENCE_ADDED`, `REVIEW_OUTCOME`, `ERROR_OBSERVED` (← [[evidence]] §3 — saturation, recurring-error, метрики), `SESSION_STARTED`/`FINISHED`/`ABANDONED` (← [[lessons]])
 
 Модуль не меняет Mastery, Stability, knowledge state, CEFR и интервалы; содержимое заданий генерирует П.3.
 
@@ -275,5 +338,6 @@ trace_field: review_max
 
 ## История изменений
 
+- **2026-07-20 (3)**: триаж повторного ревью. Выдача шага стала **мутацией** (`session next` идемпотентно помечает шаг предъявленным и публикует `STEP_PRESENTED`; read-only просмотр вынесен в `session peek`) — прежде переход «непредъявлен → предъявлен» был невыразим [R-1]. Полы бюджета стали **резервируемой ёмкостью с waiver** и получили таблицу долей **по режимам**, иначе первое занятие и `maintenance` были неисполнимы [R-2]. `PlannedStep` стал tagged union с `review_assignment_id` и парой ролей у integration; replan закрывает выпавшие assignments в той же UoW, чтобы `finish` не блокировался сиротами [R-3]. Риск проверяется **раньше** насыщения и maintenance [R-4]. Имена потребляемых событий приведены к существующим, добавлен `context_id` [R-5]. У `deferral_count` появился жизненный цикл, у резерва — предпосылка и формула границы [R-6]. `origin=control_probe` выводится движком по типу шага, no-negative распространён на Mastery/Stability/расписание, probe перенесён в корзину `choice` [R-7]. Прогноз для калибровки фиксируется при выдаче, исходы размечены, аварии считаются только по `balanced` и получили гистерезис [R-8]. Описан алгоритм availability [R-9]. Каталог назван обязательством реализации, а не существующим артефактом [R-10]. Сигналы получили два типа истечения и межвидовую precedence [R-11]. Доли переведены в целые basis points [R-12]. Запрещён второй growth-шаг на цель [R-13]. Возвращён раздел Public API [R-14].
 - **2026-07-20 (2)**: переписан после red-team ревью (5 BLOCKER). Введена исполнимая `control_policy@1` с конкретными значениями (CTRL-5); корзины сделаны разбиением с независимым признаком `is_first_exposure` (CTRL-1); композиция происходит в UoW старта, `session next` остался read-only, переплан — отдельная мутирующая команда с CAS (CTRL-2); `control_policy` заведена в реестр политик и Manifest (CTRL-3); классификатор заменён тотальной упорядоченной таблицей с определением `stake` для обоих видов LearningTarget (CTRL-4); добавлен факт доставки `STEP_PRESENTED` и потребление событий evidence (CTRL-6); голодание получило резерв мест вместо необеспеченного обещания (CTRL-7); снято ошибочное утверждение, что `STARTED→FINISHED` измеряет учебное время (CTRL-8); сигналы стали discriminated union со сроками (CTRL-9); probe получил отдельный origin и правило no-negative (CTRL-10); зафиксирован канонический конвейер сборки с first-fit (CTRL-12); метрики получили формулы, окна и правила отсутствующих данных (CTRL-13); learner и gates добавлены в зависимости (CTRL-14). Развилки [PD-2026-07-20]: при долговой спирали система **сообщает**, а не притормаживает приток; калибровку чужого параметра применяет **владелец**, control владеет только workflow подтверждения.
 - **2026-07-20**: создан (контракт 0.12) после Concept Gate.

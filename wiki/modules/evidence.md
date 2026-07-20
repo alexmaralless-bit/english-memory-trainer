@@ -65,7 +65,8 @@ Evidence event-sourced ([[../platform/foundation]] §2); Attempt operational (fi
 - **MUST**: на один `review_id` возможно несколько attempts; per-attempt AttemptAssessment **не терминальна**.
 - **MUST — граница закрытия** [rereview R-5]: ReviewOutcome вычисляется **ровно один раз** в момент закрытия ReviewAssignment. Закрытие наступает по **первому** из:
   1. явный `close_review` (агент отмечает цель выполненной/отклонённой ученицей) — доступен агенту как `trainer review close` ([[cli]] §5);
-  2. **`abandon` сессии** — преобразует оставшиеся pending цели в `INSUFFICIENT_EVIDENCE(reason=abandoned)` ([[lessons]] 0.5 владеет этим триггером).
+  2. **`abandon` сессии** — преобразует оставшиеся pending цели в `INSUFFICIENT_EVIDENCE(reason=abandoned)` ([[lessons]] 0.5 владеет этим триггером);
+  3. **`replan`** — непредъявленный review-шаг, выпавший из новой ревизии плана, закрывается `INSUFFICIENT_EVIDENCE(reason=replanned)` в той же UoW ([[control]] §4.2, R-3). Без этого триггера пересборка плана оставляла бы pending-сироту, блокирующую `finish` навсегда.
 
   **`finish` целей не закрывает** [P0-2]: он **требует** уже пустой pending-set и отклоняется бизнес-ошибкой, если тот непуст ([[lessons]] §4). Прежняя формулировка «finish/abandon закрывает все pending» противоречила owner-спеке: при ней сессию можно было завершить, не получив исходов, то есть обойти персистентность evidence — ровно то, что finish обязан не допускать.
   После закрытия ReviewAssignment **терминален**: дальнейшие attempts на тот же `review_id` записываются как non-contributing (audit) либо относятся к **новому** assignment, назначенному scheduler. Повторный `close_review` идемпотентен (возвращает прежний outcome).
