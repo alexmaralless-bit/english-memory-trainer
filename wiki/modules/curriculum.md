@@ -65,6 +65,8 @@ explanation_language: ru-allowed   # когда допустим русский
 | 7 | Everyday, Online & Informal English | A1 |
 | 8 | TOEFL Reading & Writing | B1 `[post-mvp]` |
 
+- **Vocabulary & Chunks — lexicon-layer трек** [PD-2026-07-20, content-review C-1]: не несёт отдельных Topic'ов; реализуется как `LexicalItem` (chunks/слова), привязанные к темам через `topic.lexicon`, и отслеживается через LearnerLexicalState ([[../product/lexical-system]]). Пустой topic-инвентарь этого трека — намеренно, не пробел.
+
 ### Каталоги лексикона
 
 - **stable core** — проектируется заранее (П.4) из источников ниже;

@@ -30,10 +30,11 @@ HTML-версия (пересобирается по запросу из это�
 
 | # | Работа | Статус | Зависимости |
 |---|---|---|---|
-| П.1 | Каркас программы A1–C2: уровни, треки, модули | done | Codex: 6 уровней, 8 треков, 20 модулей, 85 тем A1–A2, DAG без циклов (0 dangling). `curriculum/` |
-| П.2 | Программа A1–A2 полностью: темы, цели, критерии, prerequisites, типовые ошибки | next | П.1 и 0.4 готовы; сначала content-review каркаса (advisory-граф, B1–C2) |
-| П.3 | Policies генерации уроков + lifecycle банка | planned | после П.2; informed by 0.1; **закрывает OPEN-14/OPEN-16** (currency/safety-overlay, exercise-bank) |
-| П.4 | Учебный лексикон A1–A2: отбор из CEFR-J + NGSL + wordfreq | planned | после П.1; формат из 0.3; **сначала закрыть OPEN-15** (provenance/CC BY-SA/rights), затем импорт |
+| П.1 | Каркас программы A1–C2: уровни, треки, модули | done | Codex: 6 уровней, 8 треков, 20 модулей, 85 тем A1–A2, 0 dangling. Content-review пройден. `curriculum/` |
+| П.1b | Патч каркаса: расширить informal-трек (A1 contractions/chat chunks; A2 abbreviations/forum replies/tone) | next | content-review C-2 [PD-2026-07-20]; делегируется Codex |
+| П.4 | Учебный лексикон A1–A2: отбор из CEFR-J + NGSL + wordfreq | next | **сначала закрыть OPEN-15** (provenance/CC BY-SA/rights) — критический путь; формат из 0.3 |
+| П.2 | Программа A1–A2: тела тем (mastery_criteria, typical_errors, examples, contexts, lexicon-refs) | planned | **после П.4** [PD-2026-07-20, C-3]; 0.4 schema готова |
+| П.3 | Policies генерации уроков + lifecycle банка | planned | после П.2; informed by 0.1; **закрывает OPEN-14/OPEN-16** |
 
 ## Фаза 1 — kernel и каркас
 
@@ -61,6 +62,7 @@ Listening/speaking модальности · полный TOEFL-симулято
 
 ## История изменений
 
+- **2026-07-20 (18)**: content-review каркаса П.1 пройден (`staging/reviews/2026-07-20-P1-content-review.md`) — хребет верен концепту; 3 PD: vocab = lexicon-layer (пустой topic-трек намеренно), informal расширяется патчем П.1b, **порядок изменён на OPEN-15 → П.4 → П.2**. OPEN-15 на критическом пути.
 - **2026-07-20 (17)**: 0.4-review (FAIL) обработан — 2 BLOCKER (Topic.mastery_criteria schema; overdue→AT_RISK replayable-событие) + 9 MAJOR сняты в спеках; схемы/протоколы определены, не отложены. FAIL снят с 0.4. П.2 теперь genuinely разблокирована (schema есть).
 - **2026-07-20 (16)**: П.1 каркас программы принят (Codex, `curriculum/`) — 6 уровней, 8 треков, 20 модулей, 85 тем A1–A2; независимая проверка: 0 dangling refs, формат по контракту, отложенное (mastery_criteria/лексикон/тела) корректно отсутствует. П.1 → done; П.2 разблокирована (сначала content-review каркаса).
 - **2026-07-20 (15)**: 0.4 Evidence/Scoring/Review принят (`wiki/modules/evidence.md`+`scoring.md`+`scheduler.md`) — две оси, целые CEFR-bands, Learning Score = владение текущим уровнем [PD-2026-07-20]; закрыты OPEN-1/7/8/12/13/18 (модель), OPEN-10/20 сужены. 0.4 → done-with-open; П.2 разблокирована по 0.4 (ждёт только П.1 от Codex). Next → 0.5.

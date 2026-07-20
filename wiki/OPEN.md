@@ -69,6 +69,9 @@ OPEN-7…OPEN-21 заведены 2026-07-19/20 по итогам red-team ре�
 | — | **Scoring-модель (0.4):** две оси — Mastery (качество, cap за сессию) + Stability/Retrievability=exp(−t/S); FSRS за scheduler-интерфейсом позже | [PD-2026-07-20], [[modules/scoring]] §2 |
 | — | **CEFR-шкала (0.4):** целые bands A1–C2 (без подуровней); working level не выше слабейшего core-навыка; прогресс — в Learning Score | [PD-2026-07-20], [[modules/scoring]] §4 |
 | — | **Learning Score (0.4):** coverage-взвешенный Mastery текущего working-уровня | [PD-2026-07-20], [[modules/scoring]] §5 |
+| — | **Vocabulary & Chunks — lexicon-layer трек (content-review C-1):** без отдельных Topic'ов; реализуется как LexicalItem через `topic.lexicon`. Пустой topic-инвентарь трека — намеренно | [PD-2026-07-20], [[modules/curriculum]] §2 |
+| — | **Informal-трек расширяется в каркасе (content-review C-2):** добавить A1 contractions/casual chat chunks и A2 abbreviations/forum replies/tone-recognition (патч П.1, делегирован Codex) | [PD-2026-07-20], [[roadmap]] П.1b |
+| — | **Порядок П.4 → П.2 (content-review C-3):** сначала закрыть **OPEN-15** (лицензии/provenance), затем П.4 (лексикон), затем П.2 (тела тем с `topic.lexicon` refs). OPEN-15 выходит на критический путь | [PD-2026-07-20], [[roadmap]] фаза П |
 | OPEN-1 | Scoring-модель **и schema** определены в 0.4 (Topic.mastery_criteria §3b, numeric-контекст §2, таблица тотальна §3); остаётся **калибровка** *tunable*-констант (итеративно, versioned) | [PD-2026-07-20], [[modules/scoring]] |
 | OPEN-7 | Правила admissibility/identity/independence/multi-credit/observation-schema — [[modules/evidence]] §4; численные cap'ы — [[modules/scoring]] | [PD-2026-07-20] |
 | OPEN-8 | CEFR coverage/confidence/уровень и learner_priority определены в 0.4 (целые bands, «полступени» снято) | [PD-2026-07-20], [[modules/scoring]] §4 |
@@ -78,6 +81,7 @@ OPEN-7…OPEN-21 заведены 2026-07-19/20 по итогам red-team ре�
 
 ## История изменений
 
+- **2026-07-20 (11)**: content-review каркаса П.1 — 3 PD (vocab = lexicon-layer без тем; расширить informal-трек; порядок OPEN-15 → П.4 → П.2). **OPEN-15 вышел на критический путь** (блокирует П.4, который теперь блокирует П.2).
 - **2026-07-20 (10)**: 0.4-review триаж (FAIL→снят) — 2 BLOCKER (Topic.mastery_criteria schema; overdue→AT_RISK как replayable-событие) + 9 MAJOR исправлены в спеках. Схемы/протоколы теперь **определены** (не просто отложены): mastery_criteria, core-skill map, placement-origin cap, XP award-schema, Tutor Compliance measurement, тотальная таблица, INSUFFICIENT_EVIDENCE-ветка, canonical tie-break, Decimal-контекст, CreditAllocation, contribution_scope cardinality, measured/provisional level. Новых OPEN не потребовалось. П.2 теперь **genuinely** разблокирована (schema есть на самом деле).
 - **2026-07-20 (9)**: 0.4 Evidence/Scoring/Review принят — закрыты OPEN-1/7/8/12/13/18 (модель определена, остаётся калибровка); OPEN-10 сужен до Attempt/Session lifecycle (таблица переходов в 0.4), OPEN-20 — до kernel encoding (numeric в 0.4). 3 PD-решения (две оси, целые bands, Learning Score).
 - **2026-07-20 (8)**: foundation-rereview (PASS-with-findings) — 4 MAJOR + 2 MINOR исправлены в тексте (JSONL lag ≠ error, prior_steady_state/self_reported_level, safety-correction обе версии, replay-тесты, cached-schema→1.2, `sequence` в глоссарий). Новых OPEN нет; OPEN-11 уточнён.
