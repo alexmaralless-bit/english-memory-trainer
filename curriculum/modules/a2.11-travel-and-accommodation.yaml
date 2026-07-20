@@ -1,0 +1,10 @@
+id: a2.11-travel-and-accommodation
+level: A2
+can_do: "Arrange accommodation, ask about facilities, change a travel plan, and report a stay-related problem."
+tracks: [everyday-life]
+topics:
+  - everyday-life.booking-accommodation
+  - everyday-life.checking-in-at-accommodation
+  - everyday-life.asking-about-facilities
+  - everyday-life.changing-a-travel-plan
+  - everyday-life.reporting-an-accommodation-problem

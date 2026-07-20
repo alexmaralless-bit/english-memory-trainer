@@ -323,3 +323,189 @@ topics:
     can_do: "Communicate a complete basic project update in a technology work context."
     advisory_prerequisites:
       strong: [written-production.project-update, written-production.bug-report, written-interaction.follow-up-recommendation]
+
+  # TODO(review): everyday-life topic boundaries and module placement are the minimal P.1c interpretation of the approved domain-parity decision.
+  - id: everyday-life.describing-symptoms
+    cefr: A2
+    track: everyday-life
+    module: a2.9-health-and-wellbeing
+    can_do: "Describe common symptoms, their location, and when they started."
+    advisory_prerequisites:
+      strong: [grammar.have-has.objects, grammar.present-continuous.status]
+      soft: [grammar.past-simple.events]
+  - id: everyday-life.asking-for-medical-help
+    cefr: A2
+    track: everyday-life
+    module: a2.9-health-and-wellbeing
+    can_do: "Ask a pharmacist or clinic worker for basic help with a health problem."
+    advisory_prerequisites:
+      strong: [everyday-life.describing-symptoms, written-interaction.polite-request]
+      soft: [grammar.can-cant.ability-requests]
+  - id: everyday-life.giving-basic-health-advice
+    cefr: A2
+    track: everyday-life
+    module: a2.9-health-and-wellbeing
+    can_do: "Give simple, non-diagnostic advice for a common minor health problem."
+    advisory_prerequisites:
+      strong: [grammar.modals.requirements, written-interaction.suggestion-feedback]
+      soft: [everyday-life.describing-symptoms]
+  - id: everyday-life.talking-about-wellbeing-habits
+    cefr: A2
+    track: everyday-life
+    module: a2.9-health-and-wellbeing
+    can_do: "Describe regular habits that support or reduce everyday wellbeing."
+    advisory_prerequisites:
+      strong: [grammar.present-simple.routines, grammar.frequency-adverbs]
+      soft: [grammar.zero-conditional.processes]
+  - id: everyday-life.understanding-pharmacy-instructions
+    cefr: A2
+    track: everyday-life
+    module: a2.9-health-and-wellbeing
+    can_do: "Understand the main action and timing in simple written pharmacy instructions."
+    advisory_prerequisites:
+      strong: [grammar.imperatives.instructions, grammar.modals.requirements]
+      soft: [reading.documentation-scan]
+  - id: everyday-life.understanding-a-bill
+    cefr: A2
+    track: everyday-life
+    module: a2.10-money-bills-and-services
+    can_do: "Find the total, due date, and main charges on a simple household bill."
+    advisory_prerequisites:
+      strong: [reading.documentation-scan, grammar.quantifiers.requirements]
+      soft: [reading.main-idea-details]
+  - id: everyday-life.asking-about-a-charge
+    cefr: A2
+    track: everyday-life
+    module: a2.10-money-bills-and-services
+    can_do: "Ask a clear, polite question about an unfamiliar or incorrect charge."
+    advisory_prerequisites:
+      strong: [written-interaction.requirement-question, grammar.quantifiers.requirements]
+      soft: [written-interaction.polite-request]
+  - id: everyday-life.confirming-a-payment
+    cefr: A2
+    track: everyday-life
+    module: a2.10-money-bills-and-services
+    can_do: "Confirm that a payment has been made and state its current status."
+    advisory_prerequisites:
+      strong: [written-interaction.result-update, grammar.present-perfect.result]
+      soft: [written-interaction.follow-up]
+  - id: everyday-life.resolving-a-service-problem
+    cefr: A2
+    track: everyday-life
+    module: a2.10-money-bills-and-services
+    can_do: "Explain a basic service problem and request a practical resolution."
+    advisory_prerequisites:
+      strong: [written-production.troubleshooting-explanation, written-interaction.polite-request]
+      soft: [us-tech.incident-report-basics]
+  - id: everyday-life.comparing-service-options
+    cefr: A2
+    track: everyday-life
+    module: a2.10-money-bills-and-services
+    can_do: "Compare two basic service plans and state which one is more suitable."
+    advisory_prerequisites:
+      strong: [written-production.option-comparison, grammar.comparatives.options]
+      soft: [grammar.superlatives.selection]
+  - id: everyday-life.booking-accommodation
+    cefr: A2
+    track: everyday-life
+    module: a2.11-travel-and-accommodation
+    can_do: "Request a basic accommodation booking with dates and key requirements."
+    advisory_prerequisites:
+      strong: [grammar.future-forms.planning, written-interaction.polite-request]
+      soft: [written-interaction.requirement-question]
+  - id: everyday-life.checking-in-at-accommodation
+    cefr: A2
+    track: everyday-life
+    module: a2.11-travel-and-accommodation
+    can_do: "Provide booking details and complete a simple accommodation check-in exchange."
+    advisory_prerequisites:
+      strong: [everyday-life.booking-accommodation, written-interaction.polite-request]
+      soft: [written-interaction.self-introduction]
+  - id: everyday-life.asking-about-facilities
+    cefr: A2
+    track: everyday-life
+    module: a2.11-travel-and-accommodation
+    can_do: "Ask whether an accommodation has a needed facility and where it is."
+    advisory_prerequisites:
+      strong: [grammar.there-is-are.systems, written-interaction.requirement-question]
+      soft: [reading.documentation-scan]
+  - id: everyday-life.changing-a-travel-plan
+    cefr: A2
+    track: everyday-life
+    module: a2.11-travel-and-accommodation
+    can_do: "Explain a simple travel-plan change and request a new date or time."
+    advisory_prerequisites:
+      strong: [grammar.future-forms.planning, written-interaction.polite-request]
+      soft: [everyday-life.booking-accommodation]
+  - id: everyday-life.reporting-an-accommodation-problem
+    cefr: A2
+    track: everyday-life
+    module: a2.11-travel-and-accommodation
+    can_do: "Describe a basic accommodation problem and ask for it to be corrected."
+    advisory_prerequisites:
+      strong: [written-production.troubleshooting-explanation, written-interaction.polite-request]
+      soft: [us-tech.past-incident-basics]
+  - id: everyday-life.talking-about-the-weekend
+    cefr: A2
+    track: everyday-life
+    module: a2.12-leisure-media-and-opinions
+    can_do: "Write a short, ordered account of what happened during the weekend."
+    advisory_prerequisites:
+      strong: [grammar.past-simple.events, grammar.past-time-sequencing]
+      soft: [grammar.past-irregular-basics]
+  - id: everyday-life.recommending-a-film-or-book
+    cefr: A2
+    track: everyday-life
+    module: a2.12-leisure-media-and-opinions
+    can_do: "Recommend a film or book and give one simple reason for the choice."
+    advisory_prerequisites:
+      strong: [written-interaction.suggestion-feedback, grammar.modals.requirements]
+      soft: [written-production.option-comparison]
+  - id: everyday-life.expressing-an-opinion-with-reasons
+    cefr: A2
+    track: everyday-life
+    module: a2.12-leisure-media-and-opinions
+    can_do: "State a simple opinion about media or leisure and support it with a reason."
+    advisory_prerequisites:
+      strong: [grammar.connectors.cause-contrast]
+      soft: [written-interaction.suggestion-feedback, written-interaction.respectful-disagreement]
+  - id: everyday-life.comparing-leisure-options
+    cefr: A2
+    track: everyday-life
+    module: a2.12-leisure-media-and-opinions
+    can_do: "Compare two leisure options and choose one for a stated preference."
+    advisory_prerequisites:
+      strong: [grammar.comparatives.options, written-production.option-comparison]
+      soft: [grammar.superlatives.selection]
+  - id: everyday-life.describing-a-household-problem
+    cefr: A2
+    track: everyday-life
+    module: a2.13-everyday-problems-and-help
+    can_do: "Describe what is wrong with a household item or service and its immediate effect."
+    advisory_prerequisites:
+      strong: [grammar.connectors.cause-contrast, grammar.there-is-are.systems]
+      soft: [grammar.passive.basic-process]
+  - id: everyday-life.requesting-a-repair
+    cefr: A2
+    track: everyday-life
+    module: a2.13-everyday-problems-and-help
+    can_do: "Request a repair or other practical help and state the desired action."
+    advisory_prerequisites:
+      strong: [everyday-life.describing-a-household-problem, written-interaction.polite-request]
+      soft: [grammar.first-conditional.troubleshooting]
+  - id: everyday-life.explaining-an-everyday-incident
+    cefr: A2
+    track: everyday-life
+    module: a2.13-everyday-problems-and-help
+    can_do: "Explain the sequence and background of a simple everyday incident."
+    advisory_prerequisites:
+      strong: [grammar.past-continuous.incident-context, grammar.when-while.sequence]
+      soft: [everyday-life.describing-a-household-problem]
+  - id: everyday-life.agreeing-on-the-next-step
+    cefr: A2
+    track: everyday-life
+    module: a2.13-everyday-problems-and-help
+    can_do: "Confirm an agreed next action, responsible person, and expected time."
+    advisory_prerequisites:
+      strong: [written-interaction.follow-up, grammar.future-forms.planning]
+      soft: [everyday-life.requesting-a-repair, written-interaction.suggestion-feedback]

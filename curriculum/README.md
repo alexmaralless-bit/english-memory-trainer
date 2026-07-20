@@ -5,8 +5,8 @@
 ## Раскладка
 
 - `levels.yaml` — шесть CEFR уровней с главным can-do.
-- `tracks.yaml` — восемь сквозных треков; `toefl-reading-writing` начинается с B1 и имеет `phase: post-mvp`.
-- `modules/` — один YAML на module. A1.1–A2.8 содержат список Topic ID; B1–C2 — только module-level sketches без тем.
+- `tracks.yaml` — девять сквозных треков; `everyday-life` — доменный (быт), `everyday-online-informal` — регистровый (онлайн); `toefl-reading-writing` начинается с B1 и имеет `phase: post-mvp`.
+- `modules/` — один YAML на module. A1.1–A2.8 (работа) и A1.9–A2.13 (быт) содержат список Topic ID; B1–C2 — только module-level sketches без тем.
 - `topics/a1.yaml`, `topics/a2.yaml` — минимальные Topic skeletons: ID, CEFR, track, module, can-do и advisory prerequisites.
 
 Все prerequisite-связи — рекомендации графа, не замки. Используются только `strong` и `soft`.

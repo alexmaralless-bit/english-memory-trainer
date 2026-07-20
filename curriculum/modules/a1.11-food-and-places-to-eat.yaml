@@ -1,0 +1,10 @@
+id: a1.11-food-and-places-to-eat
+level: A1
+can_do: "Discuss basic food preferences, understand a simple menu, order, ask questions, and pay."
+tracks: [everyday-life]
+topics:
+  - everyday-life.talking-about-food-preferences
+  - everyday-life.reading-a-simple-menu
+  - everyday-life.ordering-food
+  - everyday-life.asking-about-menu-items
+  - everyday-life.paying-at-a-cafe

@@ -1,8 +1,8 @@
 levels:
   - id: A1
-    can_do: "Write simple messages about yourself, work, current activities, the past, and plans."
+    can_do: "Write simple messages about yourself, everyday life, work, current activities, the past, and plans."
   - id: A2
-    can_do: "Handle basic work correspondence confidently about results, problems, and processes."
+    can_do: "Handle everyday situations and basic work correspondence confidently: results, problems, and processes."
   - id: B1
     can_do: "Explain decisions independently in tickets, summaries, and coherent project updates."
   - id: B2

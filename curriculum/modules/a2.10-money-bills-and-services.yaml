@@ -1,0 +1,10 @@
+id: a2.10-money-bills-and-services
+level: A2
+can_do: "Understand basic bills and payments, question a charge, and resolve a simple service issue."
+tracks: [everyday-life]
+topics:
+  - everyday-life.understanding-a-bill
+  - everyday-life.asking-about-a-charge
+  - everyday-life.confirming-a-payment
+  - everyday-life.resolving-a-service-problem
+  - everyday-life.comparing-service-options

@@ -325,3 +325,181 @@ topics:
     can_do: "Handle a simple written technology work scenario from ticket to next step."
     advisory_prerequisites:
       strong: [reading.ticket-basics, written-production.integrated-status-update, written-interaction.integrated-work-handoff]
+
+  # TODO(review): everyday-life topic boundaries and module placement are the minimal P.1c interpretation of the approved domain-parity decision.
+  - id: everyday-life.introducing-family-and-friends
+    cefr: A1
+    track: everyday-life
+    module: a1.9-people-and-close-relations
+    can_do: "Introduce a family member or friend with their name and relationship."
+    advisory_prerequisites:
+      strong: [grammar.be.identity, grammar.pronouns.possessives]
+      soft: [written-interaction.self-introduction]
+  - id: everyday-life.describing-people-basic
+    cefr: A1
+    track: everyday-life
+    module: a1.9-people-and-close-relations
+    can_do: "Write a simple description of a person's appearance or character."
+    advisory_prerequisites:
+      strong: [grammar.be.identity, grammar.articles.identity]
+      soft: [grammar.pronouns.possessives]
+  - id: everyday-life.talking-about-close-relationships
+    cefr: A1
+    track: everyday-life
+    module: a1.9-people-and-close-relations
+    can_do: "State how close people are related and share one simple fact about them."
+    advisory_prerequisites:
+      strong: [grammar.pronouns.possessives, grammar.have-has.objects]
+      soft: [written-interaction.self-introduction]
+  - id: everyday-life.sharing-personal-details
+    cefr: A1
+    track: everyday-life
+    module: a1.9-people-and-close-relations
+    can_do: "Share basic personal details such as age, home city, or household."
+    advisory_prerequisites:
+      strong: [grammar.be.identity, grammar.basic-word-order]
+      soft: [grammar.time-dates]
+  - id: everyday-life.describing-home
+    cefr: A1
+    track: everyday-life
+    module: a1.10-home-and-daily-life
+    can_do: "Describe the main rooms and features of a home in simple sentences."
+    advisory_prerequisites:
+      strong: [grammar.there-is-are.systems, grammar.articles.identity]
+      soft: [grammar.nouns-singular-plural]
+  - id: everyday-life.locating-household-items
+    cefr: A1
+    track: everyday-life
+    module: a1.10-home-and-daily-life
+    can_do: "State where a common household item is located."
+    advisory_prerequisites:
+      strong: [grammar.prepositions.location, grammar.demonstratives.references]
+      soft: [grammar.there-is-are.systems]
+  - id: everyday-life.talking-about-home-routines
+    cefr: A1
+    track: everyday-life
+    module: a1.10-home-and-daily-life
+    can_do: "Describe a simple morning or evening routine at home."
+    advisory_prerequisites:
+      strong: [grammar.present-simple.routines]
+      soft: [grammar.frequency-adverbs]
+  - id: everyday-life.sharing-household-chores
+    cefr: A1
+    track: everyday-life
+    module: a1.10-home-and-daily-life
+    can_do: "State who usually does basic household chores."
+    advisory_prerequisites:
+      strong: [grammar.present-simple.routines, grammar.pronouns.possessives]
+      soft: [grammar.frequency-adverbs]
+  - id: everyday-life.telling-time-in-daily-life
+    cefr: A1
+    track: everyday-life
+    module: a1.10-home-and-daily-life
+    can_do: "State when a routine activity starts or finishes."
+    advisory_prerequisites:
+      strong: [grammar.time-dates, grammar.present-simple.routines]
+      soft: [written-production.daily-work-update]
+  - id: everyday-life.talking-about-food-preferences
+    cefr: A1
+    track: everyday-life
+    module: a1.11-food-and-places-to-eat
+    can_do: "State simple food likes, dislikes, and dietary preferences."
+    advisory_prerequisites:
+      strong: [grammar.present-simple.routines, grammar.basic-word-order]
+      soft: [grammar.quantifiers.basic]
+  - id: everyday-life.reading-a-simple-menu
+    cefr: A1
+    track: everyday-life
+    module: a1.11-food-and-places-to-eat
+    can_do: "Find basic dishes, drinks, quantities, and prices on a simple menu."
+    advisory_prerequisites:
+      strong: [grammar.nouns-singular-plural, grammar.quantifiers.basic]
+      soft: [reading.interface-data-description]
+  - id: everyday-life.ordering-food
+    cefr: A1
+    track: everyday-life
+    module: a1.11-food-and-places-to-eat
+    can_do: "Order a simple meal and drink in a cafe or restaurant."
+    advisory_prerequisites:
+      strong: [grammar.can-cant.ability-requests, grammar.quantifiers.basic]
+      soft: [written-interaction.request-clarification]
+  - id: everyday-life.asking-about-menu-items
+    cefr: A1
+    track: everyday-life
+    module: a1.11-food-and-places-to-eat
+    can_do: "Ask a basic question about an unfamiliar menu item or ingredient."
+    advisory_prerequisites:
+      strong: [grammar.basic-questions.clarification, grammar.quantifiers.basic]
+      soft: [written-interaction.request-clarification]
+  - id: everyday-life.paying-at-a-cafe
+    cefr: A1
+    track: everyday-life
+    module: a1.11-food-and-places-to-eat
+    can_do: "Ask for the bill and confirm a simple payment at a cafe."
+    advisory_prerequisites:
+      strong: [grammar.can-cant.ability-requests, grammar.basic-questions.clarification]
+      soft: [everyday-online-informal.basic-chat-response]
+  - id: everyday-life.asking-for-directions
+    cefr: A1
+    track: everyday-life
+    module: a1.12-getting-around-and-shopping
+    can_do: "Ask how to reach a nearby place."
+    advisory_prerequisites:
+      strong: [grammar.basic-questions.clarification, grammar.prepositions.location]
+      soft: [grammar.can-cant.ability-requests]
+  - id: everyday-life.understanding-simple-directions
+    cefr: A1
+    track: everyday-life
+    module: a1.12-getting-around-and-shopping
+    can_do: "Follow a short sequence of simple written directions to a place."
+    advisory_prerequisites:
+      strong: [grammar.imperatives.instructions, grammar.prepositions.location]
+      soft: [grammar.demonstratives.references]
+  - id: everyday-life.buying-basic-items
+    cefr: A1
+    track: everyday-life
+    module: a1.12-getting-around-and-shopping
+    can_do: "Ask for and buy a basic item in a shop."
+    advisory_prerequisites:
+      strong: [grammar.can-cant.ability-requests, grammar.articles.identity]
+      soft: [grammar.quantifiers.basic]
+  - id: everyday-life.asking-about-price-and-quantity
+    cefr: A1
+    track: everyday-life
+    module: a1.12-getting-around-and-shopping
+    can_do: "Ask and understand a basic price or quantity for an item."
+    advisory_prerequisites:
+      strong: [grammar.basic-questions.clarification, grammar.quantifiers.basic]
+      soft: [grammar.nouns-singular-plural]
+  - id: everyday-life.starting-everyday-small-talk
+    cefr: A1
+    track: everyday-life
+    module: a1.13-small-talk-and-friends
+    can_do: "Start a short friendly exchange with a greeting and a simple everyday question."
+    advisory_prerequisites:
+      strong: [grammar.be.identity, grammar.basic-questions.clarification]
+      soft: [everyday-online-informal.basic-chat-response]
+  - id: everyday-life.talking-about-likes-and-free-time
+    cefr: A1
+    track: everyday-life
+    module: a1.13-small-talk-and-friends
+    can_do: "State simple likes and describe a usual free-time activity."
+    advisory_prerequisites:
+      strong: [grammar.present-simple.routines, grammar.do-questions]
+      soft: [grammar.frequency-adverbs]
+  - id: everyday-life.making-simple-plans-with-friends
+    cefr: A1
+    track: everyday-life
+    module: a1.13-small-talk-and-friends
+    can_do: "Suggest a simple activity with friends and state when it will happen."
+    advisory_prerequisites:
+      strong: [grammar.going-to.plans, grammar.future-time-expressions]
+      soft: [everyday-online-informal.basic-chat-response]
+  - id: everyday-life.accepting-or-declining-an-invitation
+    cefr: A1
+    track: everyday-life
+    module: a1.13-small-talk-and-friends
+    can_do: "Accept or politely decline a simple invitation and give a short response."
+    advisory_prerequisites:
+      strong: [grammar.will.basic-decisions]
+      soft: [everyday-online-informal.casual-acknowledgements]
