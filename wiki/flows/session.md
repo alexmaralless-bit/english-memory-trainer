@@ -93,7 +93,7 @@ sequenceDiagram
 | `evidence` (0.4) | запись attempt + observations с семантической идентичностью (OPEN-7); фиксация error/vocabulary/chunk |
 | `scoring` (0.4) | вычисление review outcome и пересчёт на терминализации (finish и abandon) по evidence |
 | `curriculum` (0.3) | рекомендации тем с флагом recommended/early; pinned versions в манифест |
-| `learner` | XP award-once, streak по локальной дате на терминализации (OPEN-12) |
+| `scoring` | XP award-once и streak по локальной дате на терминализации ([[../modules/scoring]] §7). `learner` их только читает для `trainer status` — расчёт в двух модулях разъехался бы |
 | `memory` (0.6) | обновление Obsidian-проекции на терминализации |
 | `cli` (0.7) | `trainer session start/resume/abandon/finish`, `attempt record`; JSON, `error_code` + `allowed_actions` + `next_action` |
 | `adapters`/skills (0.7) | session-skill по этому flow; протокол фиксации наблюдений (не оценок) |
