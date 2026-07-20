@@ -32,7 +32,7 @@ HTML-версия (пересобирается по запросу из это�
 |---|---|---|---|
 | П.1 | Каркас программы A1–C2: уровни, треки, модули | done | Codex: 6 уровней, 8 треков, 20 модулей, 85 тем A1–A2, 0 dangling. Content-review пройден. `curriculum/` |
 | П.1b | Патч каркаса: расширить informal-трек (A1 contractions/chat chunks; A2 abbreviations/forum replies/tone) | next | content-review C-2 [PD-2026-07-20]; делегируется Codex |
-| П.4 | Учебный лексикон A1–A2: отбор из CEFR-J + NGSL + wordfreq | next | **сначала закрыть OPEN-15** (provenance/CC BY-SA/rights) — критический путь; формат из 0.3 |
+| П.4 | Учебный лексикон A1–A2: отбор из CEFR-J + NGSL + wordfreq | next | **OPEN-15 закрыт** [PD-2026-07-20] — импорт разблокирован; свои поля + производный band + source_refs; формат из 0.3 |
 | П.2 | Программа A1–A2: тела тем (mastery_criteria, typical_errors, examples, contexts, lexicon-refs) | planned | **после П.4** [PD-2026-07-20, C-3]; 0.4 schema готова |
 | П.3 | Policies генерации уроков + lifecycle банка | planned | после П.2; informed by 0.1; **закрывает OPEN-14/OPEN-16** |
 
@@ -62,6 +62,7 @@ Listening/speaking модальности · полный TOEFL-симулято
 
 ## История изменений
 
+- **2026-07-20 (20)**: **OPEN-15 закрыт** [PD-2026-07-20] — репо приватный/личный, без публикации и продажи: обязательства CC BY-SA срабатывают на распространении и не наступают; provenance оставлен по технической мотивации; publication trigger зафиксирован как условие. **П.4 разблокирована**, критический путь свободен. П.1b передан Codex.
 - **2026-07-20 (19)**: 0.4-rereview — PASS-with-findings, новых BLOCKER нет; 5 MAJOR + 2 MINOR (schedule_epoch/policy-pin, tie-break по dimension, transfer в core-skill map, primary-target precedence, граница закрытия ReviewOutcome, schema_version, measured Learning Score) сняты. 0.4 подтверждён.
 - **2026-07-20 (18)**: content-review каркаса П.1 пройден (`staging/reviews/2026-07-20-P1-content-review.md`) — хребет верен концепту; 3 PD: vocab = lexicon-layer (пустой topic-трек намеренно), informal расширяется патчем П.1b, **порядок изменён на OPEN-15 → П.4 → П.2**. OPEN-15 на критическом пути.
 - **2026-07-20 (17)**: 0.4-review (FAIL) обработан — 2 BLOCKER (Topic.mastery_criteria schema; overdue→AT_RISK replayable-событие) + 9 MAJOR сняты в спеках; схемы/протоколы определены, не отложены. FAIL снят с 0.4. П.2 теперь genuinely разблокирована (schema есть).

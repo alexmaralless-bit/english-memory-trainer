@@ -118,7 +118,7 @@ source_refs: [...]
 
 Каталоги: **stable core** (проектируется заранее) / **living layer** (встреченное в обучении, через maintain-workflow с provenance) / **learner lexicon** (личный словарь, §3). Источники частот и CEFR-разметки — контракт [[../modules/curriculum]] §3.
 
-- **MUST NOT — до закрытия OPEN-15** [rereview I-R2]: living layer **не хранит сторонние excerpts** (текст forum post/example) — provenance URL не даёт права копирования. Разрешено: source-метаданные, короткая единица и собственный нейтральный парафраз. Право на excerpts (`rights_basis`) решается в [[../OPEN]] OPEN-15.
+- **MUST NOT — постоянное правило** [PD-2026-07-20, rereview I-R2]: living layer **не хранит сторонние excerpts** (текст forum post/example) — мотив ToS площадок и персональные данные. Разрешено: source-метаданные, короткая сама единица и **собственный** нейтральный парафраз. Правовая позиция целиком — [[../modules/curriculum]] §3.1.
 
 ## 4. Obsidian-проекция
 
@@ -158,7 +158,7 @@ memory/current/vocabulary-review.md
 
 - **OPEN-13**: Informal Online Competence — шкала, contribution_scope, assessable dimensions по policy → 0.4.
 - **OPEN-14**: currency/usage-policy lifecycle, context_dependent enforcement, stale-safety банка, агрегация форм lexeme → curriculum detail / П.3.
-- **OPEN-15**: SourceArtifact provenance, CC BY-SA notices, rights_basis living layer → 0.3 / П.4.
+- ~~OPEN-15~~ **закрыт** [PD-2026-07-20]: правовая позиция, состав данных и provenance — [[../modules/curriculum]] §3.1–§3.2.
 - **OPEN-8**: формула learner_priority → 0.4.
 
 ## История изменений

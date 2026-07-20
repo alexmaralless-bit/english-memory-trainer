@@ -75,7 +75,15 @@ explanation_language: ru-allowed   # когда допустим русский
 
 ## 3. Данные и лицензии [PD-2026-07-19]
 
-Источники и режим использования выбраны (OPEN-6 решён). Схема provenance и полнота CC BY-SA notices — [[../OPEN]] OPEN-15.
+Источники и режим использования выбраны (OPEN-6). Правовая позиция и схема provenance — решены [PD-2026-07-20], см. §3.1 (закрывает OPEN-15).
+
+### 3.1 Правовая позиция: приватное личное использование [PD-2026-07-20]
+
+- **Контекст**: репозиторий **приватный, для личного обучения одного ученика; не публикуется, не распространяется, не продаётся**. Обязательства CC BY-SA (attribution, license/notices, indication of changes, ShareAlike на Adapted Material) и требования цитирования срабатывают при **распространении** — при его отсутствии они не наступают. Поэтому **блокирующего лицензионного гейта перед первым импортом нет**.
+- **MUST — provenance сохраняется по технической причине**: `SourceArtifact`, `source_refs` и `transformations` остаются обязательными **не** ради лицензий, а ради воспроизводимости, повторного импорта, replay и аудита (§3.2). Их отмена лицензионной позицией не оправдана.
+- **MUST — publication trigger**: если репозиторий когда-либо публикуется/передаётся третьим лицам, **до** публикации обязана быть проведена ревизия: per-source notices (Octanove C1/C2, NGSL/NAWL/BSL, wordfreq data — все CC BY-SA), indication of changes, оценка «является ли отобранный лексикон Adapted Material» и граница ShareAlike. Это **условие**, а не открытый вопрос: пока распространения нет, работа не блокируется.
+- **MUST NOT**: сторонние excerpts в living layer (см. §5) — правило постоянное, мотивировано ToS площадок и персональными данными, а не только лицензиями.
+- Автор — не юрист; позиция задокументирована как продуктовое решение с явным триггером пересмотра.
 
 | Источник | Роль | Лицензия | Обязательства |
 |---|---|---|---|
@@ -85,10 +93,13 @@ explanation_language: ru-allowed   # когда допустим русский
 | wordfreq (rspeer) | численные частоты (агрегированный корпусный score) | код Apache-2.0, **данные CC BY-SA 4.0** | attribution + notices + change-marking; snapshot ~2021 |
 
 - **MUST — режим build-time** [PD-2026-07-19/Q3, ревью I-1]: частотные данные используются pinned на build-time/этапе отбора; **сырые частотные датасеты в репо не коммитятся**. В репо — только отобранный лексикон с `source_refs`.
-- **MUST — CC BY-SA obligations** [rereview I-R1]: отсутствие сырого dataset **само по себе не решает**, является ли распространяемый отобранный лексикон Adapted Material. Для каждого CC BY-SA источника (Octanove C1/C2, NGSL-семейство, wordfreq data) фиксируются author/copyright/license/disclaimer notices, ссылка на материал и лицензию, indication of changes и граница ShareAlike. Полная schema и решение «Adapted Material?» — [[../OPEN]] OPEN-15; **первый publish/import блокируется до закрытия OPEN-15**.
-- **MUST — provenance** [ревью I-2/I-3]: каждый импорт фиксирует `SourceArtifact` (exact_version, url, retrieved_at, sha256, license, attribution, notices); каждая импортированная запись несёт `source_refs` + `transformations` (для неизменённой — явное `transformations: [identity]`). Оба поля **проверяются валидатором** (rereview I-R3).
+### 3.2 Состав данных и provenance
+
+- **MUST — состав** [PD-2026-07-20]: в репо кладутся **собственные поля** единицы (id, title, meaning_ru, примеры, can_do-привязки) + **наш собственный** производный `frequency_score`/`frequency_band` (вычислен build-time из pinned-версий источников) + `source_refs`. Сырые датасеты источников не коммитятся (OPEN-6, build-time режим). Дословное копирование чужих таблиц не требуется и не делается.
+- **MUST — provenance schema** [ревью I-2/I-3]: каждый импорт фиксирует `SourceArtifact {id, exact_version, url, retrieved_at, sha256, license, attribution, notices}`; каждая импортированная запись несёт `source_refs` + `transformations` (для неизменённой — явное `transformations: [identity]`). Оба поля **проверяются валидатором** (rereview I-R3). Основание — воспроизводимость импорта, не лицензия.
+- Список per-source notices (для будущей публикации, §3.1 trigger) хранится вместе с `SourceArtifact`, чтобы ревизия перед публикацией была механической, а не археологической.
 - **Уточнение по wordfreq** [ревью I-5]: wordfreq даёт **агрегированную корпусную частоту** (домены, включая Reddit/Twitter, слиты в один score) — per-domain «присутствие в Reddit/Twitter» из API не запрашивается, а snapshot ~2021 не доказывает текущую currency. Источник informal-currency — отдельно, OPEN-14.
-- **MUST**: `ATTRIBUTIONS.md` (или data-license manifest) появляется вместе с первым импортом.
+- **SHOULD**: `ATTRIBUTIONS.md` ведётся с первого импорта — как готовая заготовка под publication trigger (§3.1), не как блокирующее условие приватного использования.
 - **MUST NOT**: импортировать данные CEFR-SP (лицензия не указана) и данные OpenVLT (лицензия данных не заявлена; только архитектурный reference).
 
 ## 4. Публичный API и события
@@ -115,8 +126,8 @@ explanation_language: ru-allowed   # когда допустим русский
 - **MUST — enforcement активации** [ревью E-5]: `validate`/`activate` энфорсят schema, provenance и целостность **независимо от способа правки файла**; невалидная версия не активируется. (Отдельный attestation-протокол в MVP не вводится — осознанный отказ от gate-машинерии, [[README]].)
 - **MUST**: изменения программы проходят `maintain-english-curriculum` workflow с последующей валидацией.
 - **MUST — `production_eligible` и predicate** [rereview H-R1]: production/scheduler используют вычисляемый `production_eligible`; `obsolete` исключает production и новые assignments. `requires_usage_policy` — predicate по type/register, а не только по «informal-единица»: рискованный `type: word`/register тоже обязан иметь usage_policy.
-- **MUST**: валидация ловит: циклы advisory-графа; битые ссылки prerequisites/lexicon/module/track/source_refs; дубли ID; prerequisite с CEFR выше уровня темы; пустые dimensions или отсутствие `mastery_criteria`/`LexicalMasteryProfile` на required dimension; отсутствие can_do; единицу, для которой `requires_usage_policy=true`, без `usage_policy`; `context_dependent` без `allowed_contexts`; `volatility: changing` без полного набора (`first_observed_at`/`last_verified_at`/`currency`/источник); `meme_template` без нейтрального объяснения **или `cultural_context`** (rereview H-R1); импортированную единицу без `source_refs`/SourceArtifact **или без `transformations`** (rereview I-R3); сторонние excerpts в living layer до закрытия OPEN-15 (rereview I-R2).
-- **MUST NOT — living layer excerpts** [rereview I-R2]: до закрытия OPEN-15 запрещено хранить сторонние excerpts (текст forum post/example); разрешены source-метаданные, короткая единица и собственный нейтральный парафраз.
+- **MUST**: валидация ловит: циклы advisory-графа; битые ссылки prerequisites/lexicon/module/track/source_refs; дубли ID; prerequisite с CEFR выше уровня темы; пустые dimensions или отсутствие `mastery_criteria`/`LexicalMasteryProfile` на required dimension; отсутствие can_do; единицу, для которой `requires_usage_policy=true`, без `usage_policy`; `context_dependent` без `allowed_contexts`; `volatility: changing` без полного набора (`first_observed_at`/`last_verified_at`/`currency`/источник); `meme_template` без нейтрального объяснения **или `cultural_context`** (rereview H-R1); импортированную единицу без `source_refs`/SourceArtifact **или без `transformations`** (rereview I-R3); сторонние excerpts в living layer (постоянное правило).
+- **MUST NOT — living layer excerpts** [PD-2026-07-20, rereview I-R2]: **постоянно** запрещено хранить сторонние excerpts (текст forum post/example) — мотив ToS площадок и персональные данные, независимо от лицензий. Разрешены: source-метаданные, короткая сама единица (выражение/сокращение) и **собственный** нейтральный парафраз/объяснение.
 - **MUST**: informal-единицы с `usage_policy: avoid`/`recognition_only`/`currency: obsolete` не попадают в production и не рекомендуются — только на понимание; банк/формы/live manifests ре-валидируются против active policy ([[../product/lexical-system]] §3b, [[../OPEN]] OPEN-14).
 - **MUST**: TOEFL-трек не порождает тем ниже B1.
 - **SHOULD**: каждая тема связана хотя бы с одним рабочим контекстом (AI/AEC/SaaS/переписка/форум).
@@ -142,10 +153,11 @@ OPEN-6 решён (источники + build-time режим). Остаточн
 
 - **OPEN-9**: version pinning, deterministic replay, deprecation split/merge/retired, бессмертие ссылок → 0.3 (+0.2 CAS/snapshot).
 - **OPEN-14**: currency/usage-policy lifecycle, `production_eligible`, safety-overlay для live manifests, stale-safety → П.3 (+0.4/+0.5).
-- **OPEN-15**: SourceArtifact schema, CC BY-SA notices/change-marking/ShareAlike, rights_basis living layer; блокирует первый publish/import → 0.3/П.4.
+- ~~OPEN-15~~ **закрыт** [PD-2026-07-20]: правовая позиция (приватное использование + publication trigger), состав данных и provenance-схема — §3.1/§3.2; living-layer rights — постоянное правило.
 
 ## История изменений
 
+- **2026-07-20**: OPEN-15 закрыт [PD-2026-07-20] — правовая позиция «приватное личное использование, без распространения/продажи» + publication trigger (§3.1); состав данных (свои поля + собственный производный band + source_refs) и provenance по технической мотивации (§3.2); living-layer excerpts запрещены постоянно; ATTRIBUTIONS.md → SHOULD (заготовка). П.4 разблокирована. Также добавлен Vocabulary&Chunks как lexicon-layer трек (content-review C-1).
 - **2026-07-19 (3)**: rereview — safety-overlay «safety не пинится» + live manifests в scope stale-safety (G-R1); candidate `validate`/`activate` API (E-R2); license-таблица разделена CEFR-J/Octanove + полные CC BY-SA obligations (I-R1); валидатор проверяет `transformations` (I-R3), `cultural_context` и `production_eligible`/`requires_usage_policy` (H-R1); living layer без сторонних excerpts до OPEN-15 (I-R2).
 - **2026-07-19 (2)**: red-team триаж — единый enum `strong/soft` (A-4); pinning/не-ретроактивность и deprecation replay (G-2/G-3); бессмертие любого persistent reference (G-5); build-time режим данных (I-1/Q3); SourceArtifact provenance (I-2/I-3); полное имя BSL (I-4); исправлено утверждение о wordfreq Reddit/Twitter (I-5); enforcement активации без attestation (E-5); `mastery_criteria` → 0.4; расширена валидация. Механизмы → OPEN-9/14/15.
 - **2026-07-19**: создан по одобренному концепту Codex (can-do граф, 8 треков, формат темы) + решение OPEN-6. Все решения [PD-2026-07-19].
