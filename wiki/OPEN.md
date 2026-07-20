@@ -69,7 +69,7 @@ OPEN-7…OPEN-21 заведены 2026-07-19/20 по итогам red-team ре�
 | — | **Scoring-модель (0.4):** две оси — Mastery (качество, cap за сессию) + Stability/Retrievability=exp(−t/S); FSRS за scheduler-интерфейсом позже | [PD-2026-07-20], [[modules/scoring]] §2 |
 | — | **CEFR-шкала (0.4):** целые bands A1–C2 (без подуровней); working level не выше слабейшего core-навыка; прогресс — в Learning Score | [PD-2026-07-20], [[modules/scoring]] §4 |
 | — | **Learning Score (0.4):** coverage-взвешенный Mastery текущего working-уровня | [PD-2026-07-20], [[modules/scoring]] §5 |
-| OPEN-1 | Scoring-формула-shape определена в 0.4; остаётся **калибровка** *tunable*-констант (итеративно, versioned, без смены модели) | [PD-2026-07-20], [[modules/scoring]] |
+| OPEN-1 | Scoring-модель **и schema** определены в 0.4 (Topic.mastery_criteria §3b, numeric-контекст §2, таблица тотальна §3); остаётся **калибровка** *tunable*-констант (итеративно, versioned) | [PD-2026-07-20], [[modules/scoring]] |
 | OPEN-7 | Правила admissibility/identity/independence/multi-credit/observation-schema — [[modules/evidence]] §4; численные cap'ы — [[modules/scoring]] | [PD-2026-07-20] |
 | OPEN-8 | CEFR coverage/confidence/уровень и learner_priority определены в 0.4 (целые bands, «полступени» снято) | [PD-2026-07-20], [[modules/scoring]] §4 |
 | OPEN-12 | XP-ledger, Learning Score/Tutor Compliance шкалы, day-attribution streak — [[modules/scoring]] §5/§7 | [PD-2026-07-20] |
@@ -78,6 +78,7 @@ OPEN-7…OPEN-21 заведены 2026-07-19/20 по итогам red-team ре�
 
 ## История изменений
 
+- **2026-07-20 (10)**: 0.4-review триаж (FAIL→снят) — 2 BLOCKER (Topic.mastery_criteria schema; overdue→AT_RISK как replayable-событие) + 9 MAJOR исправлены в спеках. Схемы/протоколы теперь **определены** (не просто отложены): mastery_criteria, core-skill map, placement-origin cap, XP award-schema, Tutor Compliance measurement, тотальная таблица, INSUFFICIENT_EVIDENCE-ветка, canonical tie-break, Decimal-контекст, CreditAllocation, contribution_scope cardinality, measured/provisional level. Новых OPEN не потребовалось. П.2 теперь **genuinely** разблокирована (schema есть на самом деле).
 - **2026-07-20 (9)**: 0.4 Evidence/Scoring/Review принят — закрыты OPEN-1/7/8/12/13/18 (модель определена, остаётся калибровка); OPEN-10 сужен до Attempt/Session lifecycle (таблица переходов в 0.4), OPEN-20 — до kernel encoding (numeric в 0.4). 3 PD-решения (две оси, целые bands, Learning Score).
 - **2026-07-20 (8)**: foundation-rereview (PASS-with-findings) — 4 MAJOR + 2 MINOR исправлены в тексте (JSONL lag ≠ error, prior_steady_state/self_reported_level, safety-correction обе версии, replay-тесты, cached-schema→1.2, `sequence` в глоссарий). Новых OPEN нет; OPEN-11 уточнён.
 - **2026-07-20 (7)**: foundation-review триаж — BLOCKER A-1/E-1 решён (event-store: SQLite-таблица authoritative, JSONL export, [PD-2026-07-20]); заведены OPEN-19/20/21; расширены OPEN-9/11 и owner-матрица (kernel); детерминизм/outbox/rebuild/correction/multi-CAS/pinned-retention зафиксированы инвариантами.

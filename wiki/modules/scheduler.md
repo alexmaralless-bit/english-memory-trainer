@@ -24,19 +24,20 @@ Review_status — **не** knowledge state ([[scoring]] §3); operational, уп�
 
 ## 3. Модель интервалов [mvp]
 
-- **MUST**: базовая последовательность `1 → 3 → 7 → 14 → 30 → 60 → 120 → 180` дней (*tunable*), адаптируется по outcome: успех (CONFIRMED/RECOVERED) — шаг вперёд; REGRESSION — шаг назад/сброс; PROGRESS — удержание. Интервал считается по **прошедшему времени** (elapsed 24h), не по календарю.
+- **MUST**: базовая последовательность `1 → 3 → 7 → 14 → 30 → 60 → 120 → 180` дней (*tunable*), адаптируется по outcome: CONFIRMED/RECOVERED — шаг вперёд; REGRESSION — шаг назад/сброс; PROGRESS — удержание; **`INSUFFICIENT_EVIDENCE` — hold** (интервал не сдвигается, назначается короткий retry `retry_days`, *tunable* дефолт 1) [ревью 0.4-7]. Интервал по **прошедшему времени** (elapsed 24h), не по календарю.
 - **MUST — интерфейс отделён от формулы**: scheduler потребляет Retrievability/Stability из [[scoring]] и `target_recall` (*tunable*, дефолт 0.9); конкретная формула next-review за интерфейсом, FSRS — `[post-mvp]` без смены модели.
 - **MUST**: `due` когда `now ≥ next_review_at`; `overdue` когда просрочка > `overdue_factor × interval` (*tunable*).
 
 ## 4. re-entry и overdue→AT_RISK (OPEN-18) [PD-2026-07-19]
 
 - **MUST — re-entry trigger**: движок формирует re-entry рекомендацию, если перерыв > `gap_threshold` дней **или** средняя Retrievability приоритетных тем < `retrievability_floor` (оба *tunable*, scheduler-policy). Агент предлагает re-entry первым шагом; отказ допустим, ничего не блокирует и не штрафуется; результат обновляет Retrievability и план.
-- **MUST — overdue→AT_RISK**: просрочка сверх `at_risk_overdue_threshold` (*tunable*) переводит knowledge state в `AT_RISK` по versioned policy (clock-триггер разрешён явно). Это единственный не-evidence вход в AT_RISK ([[scoring]] §3).
+- **MUST — overdue→AT_RISK как replayable факт** [ревью 0.4-2, BLOCKER]: при пересечении порога `at_risk_overdue_threshold` (*tunable*) scheduler-sweep эмитит **append-only событие** `OVERDUE_AT_RISK_TRIGGERED {target, dimension, boundary_at, next_review_at, pinned_scheduler_policy}`. `boundary_at` = детерминированный момент пересечения (из `next_review_at` + threshold), **не** wall-clock запуска sweep. Scoring применяет `STATE_TRANSITION` из этого события ([[scoring]] §3); **replay применяет событие, а не текущее время** → historical AT_RISK детерминирован.
+  - **MUST — идемпотентность sweep**: повторный sweep не эмитит второго `OVERDUE_AT_RISK_TRIGGERED` для того же (target, dimension, interval-эпохи); ключ идемпотентности — kernel (OPEN-11). Crash между эмиссией и применением — recover по outbox/UoW.
 
 ## 5. Backlog и подача в манифест
 
 - **MUST NOT — не блокировать**: overdue backlog влияет только на рекомендации и состав Session Manifest, **не** на доступность тем ([[../product/learning-model]] §1).
-- **MUST**: scheduler выдаёт в манифест due/overdue-цели как `ReviewAssignment` (review_id, target, dimension, режим, критерии, pinned versions) — приоритет по Retrievability, просрочке, слабым dimensions, prerequisites следующей темы, retention-гейтам.
+- **MUST — детерминированный порядок** [ревью 0.4-7]: scheduler выдаёт в манифест due/overdue-цели как `ReviewAssignment` (review_id, target, dimension, режим, критерии, pinned versions). Приоритет — **canonical tuple** с явным порядком ключей: `(overdue_days desc, retrievability asc, weakest_dimension_gap desc, is_prereq_of_next desc, target_id asc)`. Последний ключ `target_id` — стабильный tie-breaker: при равных значениях порядок не зависит от SQLite/query order (детерминизм kernel).
 - **MUST**: повторение бывает явным, подмешанным (`review_id`) и скрытым (conversation evidence) — все через [[evidence]].
 
 ## 6. CLI-поверхность
@@ -48,7 +49,7 @@ Review_status — **не** knowledge state ([[scoring]] §3); operational, уп�
 ## 7. Границы
 
 - **depends on**: scoring (Retrievability/Stability/состояния), curriculum (target refs/pinned policy), kernel (Clock, elapsed-время).
-- **events published**: `REVIEW_SCHEDULED`, `REVIEW_DUE`, `RE_ENTRY_RECOMMENDED`.
+- **events published**: `REVIEW_SCHEDULED`, `REVIEW_DUE`, `RE_ENTRY_RECOMMENDED`, `OVERDUE_AT_RISK_TRIGGERED`.
 - **consumed by**: lessons (манифест), evidence (закрытие цели → перепланирование), memory (проекция next-review).
 
 ## 8. Открытые вопросы
@@ -57,4 +58,5 @@ Review_status — **не** knowledge state ([[scoring]] §3); operational, уп�
 
 ## История изменений
 
-- **2026-07-20**: создан (контракт 0.4, часть 3). Интервальная модель с интерфейсом под FSRS; review_status; re-entry trigger и overdue→AT_RISK пороги [PD-2026-07-19]; backlog не блокирует. Закрывает OPEN-18 (модель), калибровка отдельно.
+- **2026-07-20 (2)**: 0.4-review триаж — overdue→AT_RISK стал replayable-событием `OVERDUE_AT_RISK_TRIGGERED` с идемпотентным sweep (BLOCKER 0.4-2); добавлена ветка `INSUFFICIENT_EVIDENCE` (hold+retry, 0.4-7); canonical priority tuple со стабильным tie-breaker `target_id` (0.4-7).
+- **2026-07-20**: создан (контракт 0.4, часть 3). Интервальная модель с интерфейсом под FSRS; review_status; re-entry trigger и overdue→AT_RISK пороги [PD-2026-07-19]; backlog не блокирует.

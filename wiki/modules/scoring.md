@@ -23,41 +23,81 @@
 - **MUST — cap за сессию**: прирост Mastery на target за сессию ≤ `session_cap` (*tunable*, дефолт 15). Одна попытка не переводит в MASTERED.
 - **MUST — rubric/informal cap**: вклад rubric- и informal-evidence в Mastery ограничен `rubric_cap` (*tunable*); повышение состояния по ним требует ≥2 независимых сессий ([[evidence]] §4.1).
 - **MUST — monotonicity**: при устойчивых успехах Mastery не убывает в пределах сессии; убывает только на подтверждённый REGRESSION.
-- **MUST — детерминизм чисел** [OPEN-20]: все вычисления — fixed-precision decimal с документированным rounding (не IEEE float); порядок агрегации канонический.
+- **MUST — детерминизм чисел** [ревью 0.4-8]: все вычисления — `Decimal` с **фиксированным контекстом**: precision 28 значащих цифр, rounding `ROUND_HALF_EVEN`; никакого IEEE float в scoring-пути. `exp` вычисляется методом `Decimal.exp()` в этом контексте (детерминированный, не platform-`math.exp`). Порядок агрегации канонический (по `sequence`/`target_id`). Контекст — часть pinned scoring policy; каждая versioned policy **total и executable** (никаких диапазонов).
 
 ### 2.2 Stability (дни) и Retrievability (0–1)
-- **MUST**: `Retrievability(t) = exp(-elapsed_days / Stability)`, elapsed по реальному времени (UTC, [[../product/learning-model]] §7), не по календарю.
-- **MUST**: начальная Stability из первого успешного evidence (*tunable*, дефолт 1–3 дня); успешный review умножает Stability на фактор от outcome-качества и текущей Stability (растёт медленнее у уже стабильных); REGRESSION уменьшает.
+- **MUST**: `Retrievability(t) = Decimal.exp(-elapsed_days / Stability)`, elapsed по реальному времени (UTC, [[../product/learning-model]] §7), не по календарю.
+- **MUST**: начальная Stability — **единственный** default policy-параметра `initial_stability_days = 2.0` (*tunable*, но конкретное значение в каждой версии, не диапазон); успешный review умножает Stability на фактор `f(outcome_quality, current_stability)` (растёт медленнее у стабильных); REGRESSION уменьшает по фактору. Все факторы — именованные policy-параметры с конкретными дефолтами.
 - **MUST**: Mastery и Stability обновляются раздельно из одного evidence; scheduler ([[scheduler]]) использует Retrievability для интервалов.
 
 ## 3. Knowledge state — полная таблица переходов (OPEN-10)
 
 Оси — [[../glossary]] (enrollment / knowledge_state / review_status). Таблица `(state, ReviewOutcome)`:
 
+Таблица **тотальна** — определена каждая пара (нет «—»):
+
 | state \ outcome | PROGRESS | CONFIRMED | REGRESSION(подтв.) | RECOVERED | INSUFFICIENT_EVIDENCE |
 |---|---|---|---|---|---|
-| NEW | LEARNING | LEARNING | NEW | — | NEW |
-| LEARNING | LEARNING | ACTIVE¹ | LEARNING | LEARNING | LEARNING |
-| ACTIVE | ACTIVE | MASTERED² | LEARNING | ACTIVE | ACTIVE |
-| MASTERED | MASTERED | MASTERED | ACTIVE | MASTERED | MASTERED |
-| AT_RISK | AT_RISK | prior_steady_state³ | LEARNING | prior_steady_state³ | AT_RISK |
+| NEW | LEARNING | LEARNING | NEW (no-op) | NEW (no-op)⁴ | NEW (no-op) |
+| LEARNING | LEARNING | ACTIVE¹ | LEARNING (no-op) | LEARNING (no-op) | LEARNING (no-op) |
+| ACTIVE | ACTIVE | MASTERED² | LEARNING | ACTIVE (no-op) | ACTIVE (no-op) |
+| MASTERED | MASTERED | MASTERED | ACTIVE | MASTERED (no-op) | MASTERED (no-op) |
+| AT_RISK | AT_RISK | prior_steady_state³ | LEARNING | prior_steady_state³ | AT_RISK (no-op) |
 
-¹ при достижении threshold required dimensions + independence + repeatability. ² при mastery-критериях + retention (Stability ≥ `mastered_stability`, *tunable*). ³ restore-on-confirm в `prior_steady_state` ∈ {ACTIVE, MASTERED}.
+¹ при threshold required dimensions + independence + repeatability (по `mastery_criteria` §3b). ² при `mastery_criteria` + retention (Stability ≥ `mastered_stability_days`, *tunable*). ³ restore в `prior_steady_state` ∈ {ACTIVE, MASTERED}. ⁴ `RECOVERED` для NEW/LEARNING семантически невозможен (нет prior AT_RISK) → **no-op**, не error; corrupted/late outcome с невозможной парой — no-op с audit-записью (не меняет state, не бросает).
 
-- **MUST**: `AT_RISK` вход — только подтверждённый REGRESSION или overdue сверх порога ([[scheduler]], OPEN-18). Review_status (`not_due/due/overdue`) — ось scheduler, не knowledge state.
-- **MUST**: переход выполняет только движок; тотальность гарантирована (каждая пара определена, INSUFFICIENT_EVIDENCE — обычно no-op).
+- **MUST — вход AT_RISK только через факт** [ревью 0.4-2]: `AT_RISK` возникает от подтверждённого REGRESSION **или** от события `OVERDUE_AT_RISK_TRIGGERED` (append-only, эмитит scheduler при crossing, [[scheduler]] §4). Scoring применяет `STATE_TRANSITION` из этого события — **не из текущего wall-clock**. Replay применяет тот же факт → historical state детерминирован независимо от времени запуска replay.
+- **MUST**: review_status (`not_due/due/overdue`) — ось scheduler, не knowledge state; переход выполняет только движок.
+
+### 3b. `Topic.mastery_criteria` — versioned schema [ревью 0.4-1]
+
+Schema, которой автор программы (П.2) описывает критерии темы; validator curriculum её проверяет ([[curriculum]] §5). Per required dimension:
+
+```yaml
+mastery_criteria:
+  version: 1                      # selector версии scoring policy
+  per_dimension:
+    recognition:
+      active_threshold: 70        # Mastery-порог для вклада в ACTIVE (tunable)
+      independent_attempts: 2     # мин. независимых (evidence §4.1)
+    controlled_production:
+      active_threshold: 75
+      independent_attempts: 2
+    spontaneous_production:       # required не у всех тем
+      active_threshold: 75
+      independent_attempts: 2
+  mastered:
+    all_required_active: true     # все required dimensions ≥ active
+    retention_stability_days: 30  # Stability ≥ для MASTERED (tunable)
+    retention_confirmations: 2    # подтверждений на разных интервалах
+```
+
+- **MUST**: `mastery_criteria` определяет только *структуру и связь* с transition table (§3); численные значения — *tunable* policy-константы. Отсутствие критерия на required dimension = ошибка валидации. Эта schema — то, что делает П.2 authoring-возможным (roadmap).
+- **MUST — relation к table**: `LEARNING → ACTIVE` при выполнении `per_dimension.active_threshold` + `independent_attempts` по всем required; `ACTIVE → MASTERED` при `mastered.*`.
+
+### 3c. `LexicalMasteryProfile` — см. §6.
 
 ## 4. Рабочий CEFR-уровень — целые bands (OPEN-8) [PD-2026-07-20]
 
-- **MUST**: уровни только целые (`A1…C2`), без подуровней. Per-skill (Grammar/Vocabulary/Reading/Writing) CEFR = наивысший band, где выполнено **coverage**: ≥ `min_topics` независимых тем band'а в состоянии ACTIVE+ по required dimensions, ширина dimensions, confidence ≥ `confidence_floor` (все *tunable*). Непроверенная область — **unknown**, не поднимает уровень.
-- **MUST**: overall working level = **не выше слабейшего core-навыка** (целый band; правило «полступени» снято, E-R4). Внутриуровневый прогресс отражает Learning Score, не уровень.
-- **MUST**: `self_reported_level` (provisional, per-skill) хранится отдельно, замещается измерением по каждому навыку после его первого evidence/confidence floor ([[../product/learning-model]] §5).
-- **MUST — confidence**: per-skill confidence (`very_low..high`) растёт по объёму/разбросу evidence; rolling-уточнение первых сессий — versioned policy, не «после 3–5» на глаз.
+- **MUST**: уровни только целые (`A1…C2`), без подуровней. Per-skill CEFR = наивысший band, где выполнено **coverage**: ≥ `min_topics` независимых тем band'а в состоянии ACTIVE+ по required dimensions, ширина dimensions, confidence ≥ `confidence_floor` (все *tunable*). Непроверенная область — **unknown**, не поднимает уровень.
+- **MUST — core-skill map** [ревью 0.4-3]: Track ≠ core skill; вклад темы в core-навык задаётся **versioned `core_skill_map`** (часть scoring policy) по `(track, dimension)` с весами и cap. Дефолт:
+  - `grammar-engine` → Grammar; `vocabulary-chunks` → Vocabulary; `reading` → Reading;
+  - `written-interaction` + `written-production-mediation` → Writing;
+  - `us-tech-english`, `everyday-online-informal` — вклад по dimension: recognition→Reading, production→Writing (с весом < 1, dedup со своим основным треком).
+  Карта versioned и адресуема; coverage считается по ней, а не по track напрямую.
+- **MUST**: overall working level (`measured_working_level`) = **не выше слабейшего core-навыка** (целый band; «полступени» снято, E-R4). Внутриуровневый прогресс отражает Learning Score, не уровень.
+- **MUST — measured vs provisional** [PD-2026-07-20, ревью 0.4-11]: движок отдаёт два раздельных поля — `measured_working_level` (только из evidence; неизмеренные навыки = unknown, трактуются консервативно) и `provisional_working_estimate` (measured где есть, иначе `self_reported_level`, помечено provisional). **Learning Score и gating используют `measured_working_level`**; briefing/рекомендации могут показывать provisional с флагом. `self_reported_level` замещается измерением per-skill после первого evidence/confidence floor.
+- **MUST — confidence**: per-skill confidence (`very_low | low | medium | high`) растёт по объёму/разбросу evidence; rolling-уточнение — versioned policy.
+
+### 4b. Origin и placement-cap [ревью 0.4-4]
+
+- **MUST**: evidence несёт immutable `origin` (`session | placement | re_entry`), захваченный в событие.
+- **MUST — placement ceiling**: evidence с `origin=placement` **не может поднять knowledge state выше `ACTIVE`** (никогда MASTERED — нет retention во времени). Rubric-writing из placement помечается provisional и не поднимает полный Writing CEFR-band (нужны ≥2 независимых non-placement items). Правило в scoring, покрыто replay-тестом.
 
 ## 5. Агрегаты (OPEN-12/13)
 
 - **Learning Score** [PD-2026-07-20]: coverage-взвешенный средний Mastery тем **текущего working-уровня**, 0–100 («насколько твёрдо владею тем, где я есть»). Прогресс-к-следующему — отдельно в roadmap-progress-проекции, не здесь.
-- **Tutor Compliance Score**: доля соблюдённых обязательств агента за недавние сессии — вызваны ли required skills нужных версий, соблюдён ли correction-протокол, не было ли forbidden actions (агент не выставлял оценки, соблюдены postconditions finish). 0–100.
+- **Tutor Compliance Score** [ревью 0.4-9]: 0–100, `honored_obligations / total_obligations` за **measurement window** (*tunable*, дефолт последние 10 сессий). **Obligations registry** (versioned): required-skill вызван нужной версии; correction-протокол соблюдён; нет forbidden actions (агент не классифицировал сам, соблюдены finish-postconditions). Каждое obligation берётся из audit-события (raw input — событийный лог, не текст агента). Нет данных в окне → `no-data`, не 0.
 - **Informal Online Competence** (OPEN-13): отдельный 0–100 профиль по informal LexicalItems/навыкам; **не двигает CEFR напрямую**. Informal production через `contribution_scope` даёт компонент writing/transfer с dedup/cap.
 - **MUST**: агрегаты — производные проекции; не влияют обратно на per-target Mastery (нет циклов).
 
@@ -67,7 +107,9 @@
 
 ## 7. XP-ledger (OPEN-12)
 
-- **MUST**: XP — immutable award-events с уникальным `source_id`; award-once независимо от replay. База за практику (выполненные задания, evidence, закрытые повторения, re-entry) + множители за independence/difficulty (*tunable*); daily cap. **Штрафов и списаний нет**; eligibility для ABANDONED определена. Streak — по локальному `practice_day` ([[../product/learning-model]] §8).
+- **MUST — award schema** [ревью 0.4-9]: XP-award — immutable событие `{source_id, award_kind, practice_day, amount}`. `source_id` уникален; **award-once** независимо от replay. **Awardable source event types** (закрытый список): finalized attempt, closed review, completed re-entry block — **mutually exclusive eligibility** (один source event даёт награду ровно одного kind, не двойной зачёт через категории). `amount` = base(kind) × multipliers(independence, difficulty) — все *tunable* policy-значения.
+- **MUST — cap/dedup order**: daily cap по ключу `(learner, practice_day)`; при превышении лишнее не начисляется (порядок применения детерминирован по `sequence`). Streak по локальному `practice_day` ([[../product/learning-model]] §8), day-dedup из kernel (OPEN-12/foundation).
+- **MUST**: ABANDONED eligibility — начисляется за уже зафиксированные finalized-источники брошенной сессии, но не за незакрытые цели. **Штрафов и списаний нет**.
 
 ## 8. CLI-поверхность
 
@@ -88,4 +130,5 @@
 
 ## История изменений
 
-- **2026-07-20**: создан (контракт 0.4, часть 2). Две оси Mastery/Stability-Retrievability [PD-2026-07-20]; полная таблица переходов; целые CEFR-bands; Learning Score = владение текущим уровнем; Tutor Compliance/Informal шкалы; LexicalMasteryProfile; XP-ledger; numeric-детерминизм. Закрывает OPEN-1/8/10/12/13 (модель), калибровка отдельно.
+- **2026-07-20 (2)**: 0.4-review триаж — добавлена **`Topic.mastery_criteria` schema** (§3b, BLOCKER 0.4-1); AT_RISK применяется из replayable-события, не clock (§3, BLOCKER 0.4-2); таблица переходов тотальна (NEW×RECOVERED, 0.4-6); core-skill map (§4, 0.4-3); origin+placement-cap (§4b, 0.4-4); measured vs provisional level (§4, 0.4-11); точный Decimal-контекст + конкретные дефолты (§2, 0.4-8); XP award-schema и Tutor Compliance measurement (§5/§7, 0.4-9).
+- **2026-07-20**: создан (контракт 0.4, часть 2). Две оси Mastery/Stability-Retrievability [PD-2026-07-20]; таблица переходов; целые CEFR-bands; Learning Score; Tutor Compliance/Informal; LexicalMasteryProfile; XP-ledger; numeric-детерминизм.

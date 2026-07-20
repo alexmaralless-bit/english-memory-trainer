@@ -19,7 +19,8 @@
 |---|---|---|
 | `Attempt` | одна попытка ученика | id, target, dimension, mode, raw_answer, span, hints, draft/finalized |
 | `Observation` | наблюдение агента по attempt | rubric_criterion_ref, span_ref, machine-checkable часть, subjective часть |
-| `Evidence` | сохранённый факт владения | id, target, dimension, contribution_scope, source_span_hash, item_exposure_id, pinned_versions, AttemptAssessment |
+| `Evidence` | сохранённый факт владения | id, target, dimension, origin, primary_scope, contributions[], source_span_hash, item_exposure_id, pinned_versions, AttemptAssessment |
+| `CreditAllocation` | как span зачтён по target/dimension | target, dimension, contribution, used\|rejected, reason |
 | `AttemptAssessment` | оценка отдельного attempt | score, independence, difficulty, mode-weight — **не терминальна** |
 | `ReviewOutcome` | единственный терминальный исход ReviewAssignment | `PROGRESS/CONFIRMED/REGRESSION/RECOVERED/INSUFFICIENT_EVIDENCE` |
 | `ObservedError` | зафиксированная ошибка | target, kind, severity, span |
@@ -43,7 +44,8 @@ Evidence event-sourced ([[../platform/foundation]] §2); Attempt operational (fi
 - **MUST — observation schema**: наблюдение ссылается на конкретный `rubric_criterion` и `span/error` в raw_answer, не булев флаг `criterion_satisfied`. Разделены machine-checkable часть (проверяется кодом) и subjective (под cap/trust); observation, не подтверждаемая raw_answer, отклоняется или помечается.
 - **MUST — семантическая идентичность**: evidence имеет `source_span_hash` (canonical hash ответа/цитаты) и `item_exposure_id`. Один source-span засчитывается **не более раза** на пару (target, dimension); переотправка того же span с новыми ключами/session id нового evidence не создаёт.
 - **MUST — независимость**: rubric/informal-повышение состояния требует ≥2 независимых сессий; независимость определяется по **новому prompt/контексту/интервалу**, «другая сессия» сама по себе не считается.
-- **MUST — multi-credit allocation**: один span, релевантный нескольким target/dimension, распределяется по явному правилу (не двойной полный зачёт).
+- **MUST — multi-credit allocation** [ревью 0.4-5]: один span, релевантный нескольким target/dimension, зачитывается по **детерминированному алгоритму**, а результат фиксируется как `CreditAllocation[]` в evidence-событии: для каждой пары (target, dimension) — `contribution` (доля/вес) и признак `used | rejected` с `reason`. Правило: primary target получает полный вес, дополнительные — сниженный по `multi_credit_weight` (*tunable*) с cap на сумму; двойного полного зачёта нет. Allocation воспроизводим при replay.
+- **MUST — непроверенная observation** [ревью 0.4-5]: observation, не подтверждаемая raw_answer, → **`rejected`** (не участвует в scoring), с audit-`reason`. Единственная ветка; «помечается» без участия в scoring исключено.
 
 ### 4.2 Trust model [PD-2026-07-19]
 - **MUST**: MVP — агент trusted reporter `raw_answer`; допущение зафиксировано, границы — Tutor Compliance ([[scoring]]). Untrusted-захват user-turn — `[post-mvp]`.
@@ -53,11 +55,13 @@ Evidence event-sourced ([[../platform/foundation]] §2); Attempt operational (fi
 - **MUST**: на один `review_id` возможно несколько attempts; per-attempt AttemptAssessment **не терминальна**. `close_review` вычисляет **ровно один** ReviewOutcome в определённый момент (последний attempt / recover / correction); момент фиксируется, не зависит от реализации.
 - **MUST**: ReviewOutcome и AttemptAssessment — раздельные записи; scoring применяет transition по ReviewOutcome ([[scoring]] §таблица).
 
-### 4.4 contribution_scope и informal (OPEN-13 evidence-часть)
-- **MUST**: каждое evidence помечено `contribution_scope` (informal-профиль / writing / transfer / core-CEFR). Recognition сленга/мемов **никогда** не в CEFR. Informal production в рабочем контексте даёт компонент writing/transfer с dedup и cap (один span — не в informal и CEFR сверх cap).
+### 4.4 contribution_scope — cardinality [ревью 0.4-10]
+- **MUST**: scope имеет **один `primary_scope`** (enum: `informal | writing | transfer | core_cefr`) + список `contributions[]` (по одному per-scope с весом и cap-allocation). Одно production-evidence может дать и `writing`, и `transfer` — оба как записи `contributions[]` с явными весами; cap применяется к пересечению informal↔core_cefr.
+- **MUST**: Recognition сленга/мемов **никогда** не в core_cefr. Informal production в рабочем контексте даёт компонент writing/transfer с dedup и cap (один span — не в informal и core_cefr сверх cap). Все веса фиксируются в event (см. `CreditAllocation`).
 
 ### 4.5 capture-into-event [rereview A-2]
-- **MUST**: любое operational значение, влияющее на scoring (вес exposure placement, snapshot ReviewAssignment), фиксируется **в самом evidence-событии** с версией policy — не читается из operational store при replay.
+- **MUST**: любое operational значение, влияющее на scoring (вес exposure placement, snapshot ReviewAssignment, `origin`), фиксируется **в самом evidence-событии** с версией policy — не читается из operational store при replay.
+- **MUST — origin** [ревью 0.4-4]: evidence несёт immutable `origin` (`session | placement | re_entry`); scoring применяет placement-ceiling по нему ([[scoring]] §4b).
 
 ## 5. CLI-поверхность
 
@@ -71,8 +75,9 @@ Evidence event-sourced ([[../platform/foundation]] §2); Attempt operational (fi
 
 ## 7. Открытые вопросы
 
-- **OPEN-7** закрывается этим контрактом на уровне правил (identity/independence/multi-credit/observation schema); численные cap'ы — [[scoring]]. Механика hash/exposure — kernel (OPEN-20).
+- **OPEN-7** закрыт: identity/independence/**multi-credit allocation record**/observation-disposition определены как единственные ветки; численные веса — *tunable*. Механика hash/exposure — kernel (OPEN-20).
 
 ## История изменений
 
+- **2026-07-20 (2)**: 0.4-review триаж — детерминированный `CreditAllocation` record и единственная ветка для непроверенной observation (`rejected`, 0.4-5); cardinality `contribution_scope` (primary + contributions[], 0.4-10); immutable `origin` для placement-ceiling (0.4-4).
 - **2026-07-20**: создан (контракт 0.4, часть 1). Наблюдения→движок, semantic identity, observation schema, AttemptAssessment vs ReviewOutcome, contribution_scope, capture-into-event. Решения из learning-model + review-триажей [PD-2026-07-19/20].

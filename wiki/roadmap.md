@@ -16,7 +16,7 @@ HTML-версия (пересобирается по запросу из это�
 | 0.1 | Learning Model Requirements | `wiki/product/learning-model.md` | done | OPEN-4/5 решены; после триажа — остаточные OPEN-1/7/8/10/12/13 → 0.4 |
 | 0.2 | Application Foundation Contract (kernel) | `wiki/platform/foundation.md` | done-with-open | event-store: SQLite-таблица authoritative + JSONL export [PD-2026-07-20]; 2 прогона ревью пройдены (PASS-with-findings, все сняты); остаточные OPEN-9/10/11/19/20/21 → 1.2/1.3 |
 | 0.3 | Curriculum Contract | `wiki/modules/curriculum.md` | done-with-open | can-do граф, 8 треков; остаточные OPEN-9/14/15 |
-| 0.4 | Evidence, Scoring & Review Contract | `wiki/modules/evidence.md` + `scoring.md` + `scheduler.md` | done-with-open | две оси + целые bands + Learning Score [PD-2026-07-20]; закрыл OPEN-1/7/8/12/13/18 (модель); остаётся калибровка *tunable*-констант |
+| 0.4 | Evidence, Scoring & Review Contract | `wiki/modules/evidence.md` + `scoring.md` + `scheduler.md` | done-with-open | две оси + целые bands + Learning Score [PD-2026-07-20]; ревью пройдено (2 BLOCKER + 9 MAJOR сняты: mastery_criteria schema, AT_RISK-событие, …); остаётся калибровка констант |
 | 0.5 | Lesson Lifecycle & Completion Contract (+ assessments) | `wiki/modules/lessons.md` + `assessments.md` | next | после 0.1, 0.4; носитель OPEN-10/11(uniqueness)/17. `assessments.md` — named artifact для placement lifecycle |
 | 0.6 | Obsidian Vault Contract | `wiki/modules/memory.md` | planned | OPEN-2, OPEN-3 |
 | 0.7 | CLI и Agent Skills contracts | `wiki/modules/cli.md` + `adapters.md` | planned | после 0.5 |
@@ -61,6 +61,7 @@ Listening/speaking модальности · полный TOEFL-симулято
 
 ## История изменений
 
+- **2026-07-20 (17)**: 0.4-review (FAIL) обработан — 2 BLOCKER (Topic.mastery_criteria schema; overdue→AT_RISK replayable-событие) + 9 MAJOR сняты в спеках; схемы/протоколы определены, не отложены. FAIL снят с 0.4. П.2 теперь genuinely разблокирована (schema есть).
 - **2026-07-20 (16)**: П.1 каркас программы принят (Codex, `curriculum/`) — 6 уровней, 8 треков, 20 модулей, 85 тем A1–A2; независимая проверка: 0 dangling refs, формат по контракту, отложенное (mastery_criteria/лексикон/тела) корректно отсутствует. П.1 → done; П.2 разблокирована (сначала content-review каркаса).
 - **2026-07-20 (15)**: 0.4 Evidence/Scoring/Review принят (`wiki/modules/evidence.md`+`scoring.md`+`scheduler.md`) — две оси, целые CEFR-bands, Learning Score = владение текущим уровнем [PD-2026-07-20]; закрыты OPEN-1/7/8/12/13/18 (модель), OPEN-10/20 сужены. 0.4 → done-with-open; П.2 разблокирована по 0.4 (ждёт только П.1 от Codex). Next → 0.5.
 - **2026-07-20 (14)**: foundation-rereview — PASS-with-findings, новых BLOCKER нет; 4 MAJOR + 2 MINOR (JSONL lag, boundary-поля, safety-correction, replay-тесты, `sequence`) сняты в тексте. 0.2 подтверждён. Next → 0.4.
