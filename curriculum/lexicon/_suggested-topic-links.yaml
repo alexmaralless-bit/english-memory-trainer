@@ -1,64 +1,293 @@
 # Advisory only: this file is not a source of truth for Topic.lexicon.
 # TODO(review): P.2 must review these proposals before copying links into versioned Topic bodies.
+# Coverage rule applied in P.4a-bis: every chunk, plus every CORE/HIGH item of any
+# other type, has at least one proposal. USEFUL/SPECIALIZED/INCIDENTAL items are
+# deliberately left unlinked unless P.4a already proposed a link for them.
 authority: advisory-only
 links:
-  - {lexical_item: chunk.i-work-as, topics: [written-interaction.self-introduction]}
+
+  # ===== a1.1 identity-and-role =====
+  - {lexical_item: chunk.i-work-as, topics: [grammar.be.identity, written-interaction.self-introduction]}
+  - {lexical_item: chunk.i-am-responsible-for, topics: [written-interaction.self-introduction, us-tech.role-responsibilities]}
+  - {lexical_item: chunk.my-name-is, topics: [grammar.be.identity, written-interaction.self-introduction]}
+  - {lexical_item: chunk.i-work-in-the-team, topics: [us-tech.role-responsibilities, grammar.articles.identity]}
+  - {lexical_item: chunk.im-part-of, topics: [us-tech.role-responsibilities]}
+  - {lexical_item: chunk.i-report-to, topics: [us-tech.role-responsibilities]}
+  - {lexical_item: chunk.my-main-task-is, topics: [written-interaction.self-introduction, grammar.pronouns.possessives]}
+  - {lexical_item: word.company, topics: [grammar.be.identity, us-tech.role-responsibilities]}
+  - {lexical_item: word.team, topics: [us-tech.role-responsibilities]}
   - {lexical_item: word.role, topics: [us-tech.role-responsibilities]}
-  - {lexical_item: chunk.i-am-responsible-for, topics: [written-interaction.self-introduction]}
+  - {lexical_item: word.job, topics: [written-interaction.self-introduction]}
+  - {lexical_item: word.responsible, topics: [us-tech.role-responsibilities]}
+  - {lexical_item: lexeme.be, topics: [grammar.be.identity]}
+
+  # ===== a1.2 daily-work =====
+  - {lexical_item: chunk.i-usually-start-by, topics: [grammar.present-simple.routines, us-tech.work-process-routine]}
+  - {lexical_item: chunk.how-often-do-you, topics: [grammar.do-questions, grammar.frequency-adverbs]}
+  - {lexical_item: chunk.on-a-typical-day, topics: [written-production.daily-work-update, grammar.present-simple.routines]}
+  - {lexical_item: chunk.first-thing-in-the-morning, topics: [grammar.time-dates, us-tech.work-process-routine]}
+  - {lexical_item: chunk.at-the-end-of-the-day, topics: [grammar.time-dates, written-production.daily-work-update]}
+  - {lexical_item: chunk.once-a-week, topics: [grammar.frequency-adverbs]}
+  - {lexical_item: chunk.i-spend-most-of-my-time, topics: [written-production.daily-work-update]}
+  - {lexical_item: word.task, topics: [us-tech.work-process-routine]}
+  - {lexical_item: word.day, topics: [grammar.time-dates]}
+  - {lexical_item: word.start, topics: [grammar.present-simple.routines]}
+  - {lexical_item: word.finish, topics: [grammar.present-simple.routines]}
   - {lexical_item: word.usually, topics: [grammar.frequency-adverbs]}
+  - {lexical_item: word.meeting, topics: [grammar.time-dates, written-production.daily-work-update]}
   - {lexical_item: word.schedule, topics: [grammar.time-dates]}
-  - {lexical_item: chunk.every-day, topics: [written-production.daily-work-update]}
-  - {lexical_item: chunk.there-is, topics: [grammar.there-is-are.systems]}
-  - {lexical_item: word.field, topics: [reading.interface-data-description]}
+  - {lexical_item: word.every-day, topics: [grammar.frequency-adverbs, written-production.daily-work-update]}
+  - {lexical_item: lexeme.do, topics: [grammar.do-questions]}
+
+  # ===== a1.3 systems-objects-and-data =====
+  - {lexical_item: chunk.this-field-contains, topics: [reading.interface-data-description, grammar.demonstratives.references]}
+  - {lexical_item: chunk.each-record-has, topics: [grammar.have-has.objects, us-tech.describe-system-data]}
+  - {lexical_item: chunk.its-stored-in, topics: [grammar.prepositions.location, us-tech.describe-system-data]}
+  - {lexical_item: chunk.you-can-find-it-under, topics: [grammar.prepositions.location, reading.interface-data-description]}
+  - {lexical_item: chunk.the-value-should-be, topics: [us-tech.describe-system-data]}
+  - {lexical_item: chunk.in-the-shared-folder, topics: [grammar.prepositions.location]}
+  - {lexical_item: chunk.by-default, topics: [us-tech.describe-system-data]}
+  - {lexical_item: word.system, topics: [us-tech.describe-system-data]}
+  - {lexical_item: word.file, topics: [us-tech.describe-system-data]}
   - {lexical_item: word.data, topics: [us-tech.describe-system-data]}
-  - {lexical_item: chunk.working-on, topics: [written-interaction.current-status]}
-  - {lexical_item: chunk.in-progress, topics: [us-tech.work-in-progress]}
+  - {lexical_item: word.field, topics: [reading.interface-data-description]}
+  - {lexical_item: word.record, topics: [us-tech.describe-system-data, grammar.nouns-singular-plural]}
+  - {lexical_item: word.value, topics: [reading.interface-data-description]}
+  - {lexical_item: lexeme.have, topics: [grammar.have-has.objects]}
+  - {lexical_item: phrasal-verb.log-in, topics: [us-tech.describe-system-data]}
+  - {lexical_item: phrasal-verb.fill-in, topics: [reading.interface-data-description]}
+
+  # ===== a1.4 work-in-progress =====
+  - {lexical_item: chunk.im-working-on, topics: [grammar.present-continuous.status, written-interaction.current-status]}
+  - {lexical_item: chunk.were-testing, topics: [grammar.present-continuous.status, us-tech.work-in-progress]}
+  - {lexical_item: chunk.in-progress, topics: [us-tech.work-in-progress, written-interaction.current-status]}
+  - {lexical_item: chunk.current-status-is, topics: [written-interaction.current-status]}
+  - {lexical_item: chunk.its-still-in-review, topics: [us-tech.work-in-progress, everyday-online-informal.written-contractions]}
+  - {lexical_item: chunk.were-waiting-on, topics: [grammar.present-continuous.status, written-interaction.current-status]}
+  - {lexical_item: chunk.this-is-blocked-by, topics: [us-tech.work-in-progress]}
+  - {lexical_item: chunk.im-almost-done-with, topics: [written-interaction.current-status, everyday-online-informal.written-contractions]}
+  - {lexical_item: word.currently, topics: [grammar.present-continuous.status]}
+  - {lexical_item: word.update, topics: [written-interaction.current-status]}
+  - {lexical_item: word.progress, topics: [us-tech.work-in-progress]}
+  - {lexical_item: word.waiting, topics: [grammar.present-continuous.status]}
+  - {lexical_item: word.testing, topics: [us-tech.work-in-progress]}
+  - {lexical_item: phrasal-verb.work-on, topics: [us-tech.work-in-progress, grammar.present-continuous.status]}
   - {lexical_item: informal.contraction-im, topics: [everyday-online-informal.written-contractions]}
-  - {lexical_item: chunk.can-you-help, topics: [written-interaction.request-clarification]}
+  - {lexical_item: informal.contraction-youre, topics: [everyday-online-informal.written-contractions]}
+  - {lexical_item: informal.contraction-were, topics: [everyday-online-informal.written-contractions]}
+  - {lexical_item: informal.contraction-cant, topics: [everyday-online-informal.written-contractions]}
+
+  # ===== a1.5 requests-and-clarification =====
+  - {lexical_item: chunk.can-you-help, topics: [grammar.can-cant.ability-requests, written-interaction.request-clarification]}
+  - {lexical_item: chunk.could-you-repeat, topics: [written-interaction.request-clarification]}
   - {lexical_item: chunk.what-does-mean, topics: [grammar.basic-questions.clarification]}
+  - {lexical_item: chunk.just-to-confirm, topics: [written-interaction.request-clarification]}
+  - {lexical_item: chunk.do-you-mean, topics: [grammar.basic-questions.clarification, written-interaction.request-clarification]}
+  - {lexical_item: chunk.im-not-sure-i-understand, topics: [written-interaction.request-clarification, everyday-online-informal.basic-chat-response]}
+  - {lexical_item: chunk.could-you-send-me, topics: [grammar.imperatives.instructions, written-interaction.request-clarification]}
+  - {lexical_item: word.help, topics: [grammar.can-cant.ability-requests, written-interaction.request-clarification]}
+  - {lexical_item: word.question, topics: [grammar.basic-questions.clarification]}
+  - {lexical_item: word.problem, topics: [us-tech.past-incident-basics]}
+  - {lexical_item: word.mean, topics: [grammar.basic-questions.clarification]}
+  - {lexical_item: word.explain, topics: [written-interaction.request-clarification]}
+  - {lexical_item: word.check, topics: [grammar.imperatives.instructions, us-tech.work-process-routine]}
+  - {lexical_item: phrasal-verb.look-for, topics: [grammar.imperatives.instructions]}
   - {lexical_item: informal.sounds-good, topics: [everyday-online-informal.basic-chat-response]}
+  - {lexical_item: informal.got-it, topics: [everyday-online-informal.basic-chat-response]}
+  - {lexical_item: informal.no-worries, topics: [everyday-online-informal.casual-acknowledgements]}
   - {lexical_item: informal.my-bad, topics: [everyday-online-informal.casual-acknowledgements]}
+
+  # ===== a1.6 past-work =====
+  - {lexical_item: chunk.the-problem-was, topics: [grammar.past-simple.events, written-production.past-work-report]}
+  - {lexical_item: chunk.the-first-thing-i-did-was, topics: [grammar.past-time-sequencing, written-production.past-work-report]}
+  - {lexical_item: chunk.it-stopped-working-after, topics: [grammar.past-simple.events, us-tech.past-incident-basics]}
+  - {lexical_item: chunk.it-worked-fine-until, topics: [grammar.past-time-sequencing, us-tech.past-incident-basics]}
+  - {lexical_item: chunk.we-fixed-it-by, topics: [grammar.past-simple.events, written-production.past-work-report]}
+  - {lexical_item: chunk.it-turned-out-that, topics: [written-production.past-work-report]}
+  - {lexical_item: chunk.we-could-not-reproduce-it, topics: [grammar.past-simple.negatives-questions, us-tech.past-incident-basics]}
   - {lexical_item: word.yesterday, topics: [grammar.past-simple.events]}
-  - {lexical_item: chunk.after-that, topics: [grammar.past-time-sequencing]}
-  - {lexical_item: lexeme.go, topics: [grammar.past-irregular-basics]}
   - {lexical_item: word.issue, topics: [us-tech.past-incident-basics]}
-  - {lexical_item: word.deadline, topics: [grammar.future-time-expressions]}
+  - {lexical_item: word.error, topics: [us-tech.past-incident-basics]}
+  - {lexical_item: word.fixed, topics: [written-production.past-work-report]}
+  - {lexical_item: word.happened, topics: [grammar.past-simple.events]}
+  - {lexical_item: word.after-that, topics: [grammar.past-time-sequencing]}
+  - {lexical_item: lexeme.go, topics: [grammar.past-irregular-basics]}
+  - {lexical_item: lexeme.come, topics: [grammar.past-irregular-basics]}
+  - {lexical_item: lexeme.get, topics: [grammar.past-irregular-basics]}
+  - {lexical_item: lexeme.make, topics: [grammar.past-irregular-basics]}
+  - {lexical_item: lexeme.take, topics: [grammar.past-irregular-basics]}
+  - {lexical_item: lexeme.give, topics: [grammar.past-irregular-basics]}
+  - {lexical_item: lexeme.see, topics: [grammar.past-irregular-basics]}
+  - {lexical_item: lexeme.say, topics: [grammar.past-irregular-basics]}
+  - {lexical_item: lexeme.find, topics: [grammar.past-irregular-basics]}
+  - {lexical_item: lexeme.know, topics: [grammar.past-irregular-basics]}
+  - {lexical_item: lexeme.write, topics: [grammar.past-irregular-basics, written-production.past-work-report]}
+  - {lexical_item: lexeme.read, topics: [grammar.past-irregular-basics, reading.documentation-scan]}
+
+  # ===== a1.7 plans-and-next-steps =====
   - {lexical_item: chunk.next-step-is, topics: [written-interaction.next-steps]}
+  - {lexical_item: chunk.were-planning-to, topics: [grammar.going-to.plans, us-tech.plan-deadline]}
+  - {lexical_item: chunk.ill-get-it-done-by, topics: [grammar.will.basic-decisions, us-tech.plan-deadline]}
+  - {lexical_item: chunk.by-the-end-of-the-week, topics: [grammar.future-time-expressions, us-tech.plan-deadline]}
+  - {lexical_item: chunk.ill-let-you-know-once, topics: [grammar.will.basic-decisions, written-interaction.next-steps]}
+  - {lexical_item: chunk.lets-push-it-to, topics: [written-interaction.next-steps]}
+  - {lexical_item: chunk.thats-the-plan-for-now, topics: [grammar.going-to.plans, written-interaction.next-steps]}
   - {lexical_item: word.plan, topics: [us-tech.plan-deadline]}
+  - {lexical_item: word.next, topics: [written-interaction.next-steps]}
+  - {lexical_item: word.step, topics: [written-interaction.next-steps]}
+  - {lexical_item: word.tomorrow, topics: [grammar.future-time-expressions]}
+  - {lexical_item: word.deadline, topics: [grammar.future-time-expressions, us-tech.plan-deadline]}
+
+  # ===== a1.8 integrated-work-scenario =====
+  - {lexical_item: chunk.here-is-a-short-update, topics: [written-production.integrated-status-update]}
+  - {lexical_item: chunk.the-open-items-are, topics: [written-production.integrated-status-update, reading.ticket-basics]}
+  - {lexical_item: chunk.handing-this-over-to, topics: [written-interaction.integrated-work-handoff, us-tech.integrated-work-scenario]}
+  - {lexical_item: chunk.everything-you-need-is-in, topics: [written-interaction.integrated-work-handoff]}
+  - {lexical_item: chunk.please-take-it-from-here, topics: [written-interaction.integrated-work-handoff]}
+  - {lexical_item: chunk.no-action-needed, topics: [written-production.integrated-status-update]}
+  - {lexical_item: chunk.let-me-know-if-anything-is-unclear, topics: [written-interaction.integrated-work-handoff, us-tech.integrated-work-scenario]}
   - {lexical_item: word.ticket, topics: [reading.ticket-basics]}
-  - {lexical_item: chunk.current-status-is, topics: [written-production.integrated-status-update]}
+  - {lexical_item: word.status, topics: [written-production.integrated-status-update]}
+  - {lexical_item: word.complete, topics: [written-production.integrated-status-update]}
+  - {lexical_item: word.handoff, topics: [written-interaction.integrated-work-handoff]}
   - {lexical_item: phrasal-verb.hand-over, topics: [written-interaction.integrated-work-handoff]}
+
+  # ===== a2.1 events-and-incidents =====
+  - {lexical_item: chunk.we-have-run-into-an-issue, topics: [us-tech.incident-report-basics, written-production.incident-timeline]}
+  - {lexical_item: chunk.we-ran-into, topics: [grammar.past-irregular-events, us-tech.incident-report-basics]}
+  - {lexical_item: chunk.the-issue-started-at, topics: [written-production.incident-timeline]}
+  - {lexical_item: chunk.it-only-happens-when, topics: [grammar.when-while.sequence, us-tech.incident-report-basics]}
+  - {lexical_item: chunk.steps-to-reproduce, topics: [us-tech.incident-report-basics]}
+  - {lexical_item: chunk.users-are-affected, topics: [written-production.incident-timeline]}
+  - {lexical_item: chunk.no-data-was-lost, topics: [written-production.incident-timeline, us-tech.incident-report-basics]}
   - {lexical_item: word.incident, topics: [us-tech.incident-report-basics]}
-  - {lexical_item: chunk.at-the-time, topics: [grammar.past-continuous.incident-context]}
+  - {lexical_item: word.during, topics: [grammar.when-while.sequence]}
   - {lexical_item: word.while, topics: [grammar.when-while.sequence]}
+  - {lexical_item: word.at-the-time, topics: [grammar.past-continuous.incident-context]}
   - {lexical_item: lexeme.begin, topics: [grammar.past-irregular-events]}
-  - {lexical_item: chunk.have-finished, topics: [grammar.present-perfect.result]}
-  - {lexical_item: word.already, topics: [written-interaction.result-update]}
+  - {lexical_item: lexeme.run, topics: [grammar.past-irregular-events]}
+  - {lexical_item: lexeme.think, topics: [grammar.past-irregular-events]}
+  - {lexical_item: phrasal-verb.run-into, topics: [us-tech.incident-report-basics]}
+
+  # ===== a2.2 results-and-experience =====
+  - {lexical_item: chunk.we-have-completed, topics: [grammar.present-perfect.result, written-interaction.result-update]}
+  - {lexical_item: chunk.i-have-already-checked, topics: [grammar.present-perfect.result, written-interaction.result-update]}
+  - {lexical_item: chunk.we-have-deployed, topics: [grammar.past-participle.forms, us-tech.deployment-result]}
+  - {lexical_item: chunk.it-has-been-fixed, topics: [grammar.past-participle.forms, us-tech.deployment-result]}
+  - {lexical_item: chunk.works-as-expected, topics: [us-tech.deployment-result]}
+  - {lexical_item: chunk.we-have-not-had-any-issues-since, topics: [grammar.present-perfect-past-simple.choice, written-interaction.result-update]}
+  - {lexical_item: chunk.i-have-experience-with, topics: [grammar.present-perfect.result]}
+  - {lexical_item: word.result, topics: [written-interaction.result-update]}
+  - {lexical_item: word.completed, topics: [grammar.present-perfect.result]}
   - {lexical_item: word.deployed, topics: [us-tech.deployment-result]}
+  - {lexical_item: word.experience, topics: [grammar.present-perfect.result]}
+  - {lexical_item: word.already, topics: [grammar.present-perfect.result, written-interaction.result-update]}
+  - {lexical_item: word.yet, topics: [grammar.present-perfect-past-simple.choice]}
+  - {lexical_item: word.since, topics: [grammar.present-perfect-past-simple.choice]}
   - {lexical_item: lexeme.build, topics: [grammar.past-participle.forms]}
+  - {lexical_item: lexeme.set, topics: [grammar.past-participle.forms]}
+  - {lexical_item: lexeme.send, topics: [grammar.past-irregular-events, us-tech.integrated-project-update]}
+
+  # ===== a2.3 planning-and-delivery =====
+  - {lexical_item: chunk.on-track, topics: [written-production.delivery-plan]}
+  - {lexical_item: chunk.the-delivery-date-is, topics: [grammar.future-expressions.deadlines, written-production.delivery-plan]}
+  - {lexical_item: chunk.were-aiming-for, topics: [grammar.future-forms.planning, written-production.delivery-plan]}
+  - {lexical_item: chunk.thats-out-of-scope, topics: [us-tech.scope-change-update]}
+  - {lexical_item: chunk.we-may-need-more-time, topics: [us-tech.scope-change-update, grammar.future-forms.planning]}
+  - {lexical_item: chunk.ahead-of-schedule, topics: [written-production.delivery-plan]}
+  - {lexical_item: chunk.behind-schedule, topics: [written-production.delivery-plan, us-tech.scope-change-update]}
   - {lexical_item: word.delivery, topics: [written-production.delivery-plan]}
   - {lexical_item: word.scope, topics: [us-tech.scope-change-update]}
-  - {lexical_item: chunk.by-friday, topics: [grammar.future-expressions.deadlines]}
-  - {lexical_item: chunk.on-track, topics: [written-production.delivery-plan]}
-  - {lexical_item: word.requirement, topics: [grammar.modals.requirements]}
+  - {lexical_item: word.estimate, topics: [written-production.delivery-plan]}
+  - {lexical_item: word.delay, topics: [us-tech.scope-change-update]}
+
+  # ===== a2.4 requirements-and-options =====
+  - {lexical_item: chunk.the-main-advantage-is, topics: [written-production.option-comparison, grammar.superlatives.selection]}
+  - {lexical_item: chunk.we-should-consider, topics: [grammar.modals.requirements, written-production.option-comparison]}
+  - {lexical_item: chunk.the-downside-is, topics: [written-production.option-comparison]}
+  - {lexical_item: chunk.it-depends-on, topics: [written-production.option-comparison]}
+  - {lexical_item: chunk.the-main-requirement-is, topics: [written-interaction.requirement-question, grammar.superlatives.selection]}
+  - {lexical_item: chunk.in-terms-of, topics: [grammar.comparatives.options, written-production.option-comparison]}
+  - {lexical_item: chunk.either-way, topics: [written-production.option-comparison]}
+  - {lexical_item: word.requirement, topics: [grammar.modals.requirements, written-interaction.requirement-question]}
+  - {lexical_item: word.option, topics: [written-production.option-comparison]}
   - {lexical_item: word.compare, topics: [grammar.comparatives.options]}
   - {lexical_item: word.recommend, topics: [written-production.option-comparison]}
-  - {lexical_item: chunk.must-have, topics: [written-interaction.requirement-question]}
+  - {lexical_item: word.priority, topics: [grammar.superlatives.selection]}
+  - {lexical_item: lexeme.choose, topics: [grammar.past-irregular-events, written-production.option-comparison]}
+  - {lexical_item: phrasal-verb.go-through, topics: [written-production.option-comparison]}
+
+  # ===== a2.5 processes-and-troubleshooting =====
+  - {lexical_item: chunk.the-root-cause-was, topics: [grammar.connectors.cause-contrast, written-production.troubleshooting-explanation]}
+  - {lexical_item: chunk.the-usual-process-is-to, topics: [grammar.zero-conditional.processes, us-tech.process-troubleshooting]}
+  - {lexical_item: chunk.make-sure-that, topics: [us-tech.process-troubleshooting]}
+  - {lexical_item: chunk.try-this-first, topics: [written-production.troubleshooting-explanation]}
+  - {lexical_item: chunk.if-that-does-not-help, topics: [grammar.first-conditional.troubleshooting, written-production.troubleshooting-explanation]}
+  - {lexical_item: chunk.as-a-workaround, topics: [us-tech.process-troubleshooting]}
+  - {lexical_item: chunk.the-same-thing-happened-before, topics: [grammar.connectors.cause-contrast, us-tech.process-troubleshooting]}
+  - {lexical_item: word.cause, topics: [grammar.connectors.cause-contrast]}
+  - {lexical_item: word.reason, topics: [grammar.connectors.cause-contrast]}
   - {lexical_item: word.because, topics: [grammar.connectors.cause-contrast]}
-  - {lexical_item: chunk.if-then, topics: [grammar.first-conditional.troubleshooting]}
+  - {lexical_item: word.if, topics: [grammar.first-conditional.troubleshooting, grammar.zero-conditional.processes]}
+  - {lexical_item: word.process, topics: [us-tech.process-troubleshooting]}
+  - {lexical_item: word.restart, topics: [us-tech.process-troubleshooting]}
+  - {lexical_item: word.solution, topics: [written-production.troubleshooting-explanation]}
+  - {lexical_item: phrasal-verb.find-out, topics: [us-tech.process-troubleshooting]}
+  - {lexical_item: phrasal-verb.deal-with, topics: [us-tech.process-troubleshooting]}
   - {lexical_item: phrasal-verb.back-up, topics: [us-tech.process-troubleshooting]}
   - {lexical_item: phrasal-verb.roll-back, topics: [written-production.troubleshooting-explanation]}
+
+  # ===== a2.6 collaboration =====
   - {lexical_item: chunk.could-you-please, topics: [written-interaction.polite-request]}
+  - {lexical_item: chunk.could-you-take-a-look-at, topics: [written-interaction.polite-request, everyday-online-informal.casual-neutral-request]}
+  - {lexical_item: chunk.i-suggest, topics: [written-interaction.suggestion-feedback]}
   - {lexical_item: chunk.i-see-your-point, topics: [written-interaction.respectful-disagreement]}
+  - {lexical_item: chunk.let-me-know, topics: [written-interaction.follow-up]}
+  - {lexical_item: chunk.thanks-for-the-update, topics: [written-interaction.follow-up]}
+  - {lexical_item: chunk.sorry-for-the-delay, topics: [written-interaction.follow-up, everyday-online-informal.casual-neutral-rephrasing]}
+  - {lexical_item: chunk.does-that-work-for-you, topics: [written-interaction.polite-request, everyday-online-informal.casual-neutral-request]}
+  - {lexical_item: chunk.follow-up-message, topics: [written-interaction.follow-up]}
+  - {lexical_item: word.feedback, topics: [written-interaction.suggestion-feedback]}
+  - {lexical_item: word.suggestion, topics: [written-interaction.suggestion-feedback]}
+  - {lexical_item: word.agree, topics: [written-interaction.respectful-disagreement]}
+  - {lexical_item: word.disagree, topics: [written-interaction.respectful-disagreement]}
+  - {lexical_item: word.request, topics: [written-interaction.polite-request]}
   - {lexical_item: phrasal-verb.follow-up, topics: [written-interaction.follow-up]}
-  - {lexical_item: abbreviation.imo, topics: [everyday-online-informal.common-abbreviations]}
+  - {lexical_item: informal.ill-get-back-to-you, topics: [everyday-online-informal.basic-chat-response, written-interaction.follow-up]}
+  - {lexical_item: informal.could-you-clarify, topics: [everyday-online-informal.casual-neutral-request]}
+  - {lexical_item: informal.quick-question, topics: [everyday-online-informal.casual-neutral-request]}
+  - {lexical_item: informal.just-a-heads-up, topics: [everyday-online-informal.casual-acknowledgements]}
+  - {lexical_item: informal.i-see-what-you-mean, topics: [everyday-online-informal.casual-neutral-rephrasing]}
   - {lexical_item: informal.not-sure-i-agree, topics: [everyday-online-informal.casual-neutral-rephrasing]}
-  - {lexical_item: word.documentation, topics: [reading.documentation-scan]}
+  - {lexical_item: abbreviation.imo, topics: [everyday-online-informal.common-abbreviations]}
+  - {lexical_item: abbreviation.fyi, topics: [everyday-online-informal.common-abbreviations]}
+  - {lexical_item: abbreviation.asap, topics: [everyday-online-informal.common-abbreviations]}
+
+  # ===== a2.7 reading-and-mediation =====
   - {lexical_item: chunk.main-point, topics: [reading.main-idea-details]}
+  - {lexical_item: chunk.the-key-point-is, topics: [reading.main-idea-details, written-production.paraphrase-summary]}
+  - {lexical_item: chunk.in-short, topics: [written-production.paraphrase-summary]}
+  - {lexical_item: chunk.to-summarize, topics: [written-production.paraphrase-summary]}
+  - {lexical_item: chunk.as-far-as-i-understand, topics: [written-production.fact-inference, everyday-online-informal.forum-thread-reply]}
+  - {lexical_item: chunk.it-says-that, topics: [reading.documentation-scan, us-tech.ticket-mediation]}
+  - {lexical_item: chunk.according-to, topics: [reading.documentation-scan, written-production.fact-inference]}
+  - {lexical_item: chunk.in-other-words, topics: [written-production.paraphrase-summary, us-tech.ticket-mediation]}
+  - {lexical_item: word.documentation, topics: [reading.documentation-scan]}
+  - {lexical_item: word.detail, topics: [reading.main-idea-details]}
   - {lexical_item: word.summary, topics: [written-production.paraphrase-summary]}
-  - {lexical_item: informal.yeah-right, topics: [everyday-online-informal.tone-recognition]}
+  - {lexical_item: phrasal-verb.set-up, topics: [reading.documentation-scan]}
+  - {lexical_item: informal.thanks-for-the-context, topics: [everyday-online-informal.forum-thread-reply]}
   - {lexical_item: informal.do-you-have-a-source, topics: [everyday-online-informal.forum-thread-reply]}
+  - {lexical_item: informal.yeah-right, topics: [everyday-online-informal.tone-recognition]}
+
+  # ===== a2.8 integrated-project-update =====
   - {lexical_item: chunk.project-update, topics: [written-production.project-update]}
+  - {lexical_item: chunk.overall-the-project-is, topics: [written-production.project-update, us-tech.integrated-project-update]}
+  - {lexical_item: chunk.the-main-risk-is, topics: [written-production.project-update]}
+  - {lexical_item: chunk.next-week-we-will-focus-on, topics: [written-production.project-update, written-interaction.follow-up-recommendation]}
   - {lexical_item: chunk.expected-result, topics: [written-production.bug-report]}
-  - {lexical_item: word.recommendation, topics: [written-interaction.follow-up-recommendation]}
-  - {lexical_item: lexeme.send, topics: [us-tech.integrated-project-update]}
+  - {lexical_item: chunk.actual-result, topics: [written-production.bug-report]}
+  - {lexical_item: chunk.no-blockers-at-the-moment, topics: [us-tech.integrated-project-update]}
+  - {lexical_item: word.expected, topics: [written-production.bug-report]}
+  - {lexical_item: word.actual, topics: [written-production.bug-report]}
+  - {lexical_item: word.bug, topics: [written-production.bug-report]}

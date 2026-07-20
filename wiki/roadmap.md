@@ -33,8 +33,8 @@ HTML-версия (пересобирается по запросу из это�
 | П.1 | Каркас программы A1–C2: уровни, треки, модули | done | Codex: 6 уровней, 8 треков, 20 модулей, 85 тем A1–A2, 0 dangling. Content-review пройден. `curriculum/` |
 | П.1b | Патч каркаса: расширение informal-трека | done | Codex: +6 тем (informal 2→8, всего 91); проверено — 0 dangling/инверсий/циклов, модули согласованы |
 | П.4a | Учебный лексикон A1–A2: авторский stable core | done-with-open | Codex: 204 единицы, 16/16 модулей; корпусный проход не делался (без выдумок). Content-review: chunks недобраны → П.4a-bis |
-| П.4a-bis | Добор chunks (~100 фреймов), чистка псевдо-chunks, перекалибровка bands | next | content-review [PD-2026-07-20]; делегируется Codex |
-| П.4b | Корпусный проход: pin источников, SourceArtifact, score→band | planned | после П.4a-bis; нужен доступ к CEFR-J/NGSL/wordfreq |
+| П.4a-bis | Добор chunks, чистка псевдо-chunks, перекалибровка bands | done | 290 единиц, chunks 33→116, multi-word 55%, CORE 59%→29%, ≥7 фреймов на каждый из 16 модулей, advisory-links 60→254. Отчёт `staging/handoff/2026-07-20-P4a-bis-report.md` |
+| П.4b | Корпусный проход: pin источников, SourceArtifact, score→band | next | нужен доступ к CEFR-J/NGSL/wordfreq |
 | П.2 | Программа A1–A2: тела тем (mastery_criteria, typical_errors, examples, contexts, lexicon-refs) | planned | **после П.4** [PD-2026-07-20, C-3]; 0.4 schema готова |
 | П.3 | Policies генерации уроков + lifecycle банка | planned | после П.2; informed by 0.1; **закрывает OPEN-14/OPEN-16** |
 
@@ -64,6 +64,7 @@ Listening/speaking модальности · полный TOEFL-симулято
 
 ## История изменений
 
+- **2026-07-20 (25)**: П.4a-bis done — лексикон 204→290 единиц, chunks 33→116. Удалены 7 грамматических псевдо-chunks (дублировали темы → двойной scoring-таргет) и 2 малополезных; 3 наречных оборота → `type: word`. Добавлены 95 рабочих фреймов, включая все 9 из концепта. Multi-word 34%→55%, CORE 59%→29%, задействованы SPECIALIZED/INCIDENTAL. Advisory-links 60→254 (все chunks + все CORE/HIGH). Следующий — П.4b (корпус), затем открывается П.2. Новый TODO: стяжения внутри фреймов пересекаются с `informal.contraction-*` — риск того же двойного учёта.
 - **2026-07-20 (24)**: П.4a принят с оговорками — 204 авторских единицы, корпусный проход честно не делался. Content-review нашёл перекос: 33 chunks (треть — грамматика, дублирующая темы), **все 9 фраз из концепта отсутствуют**, соотношение single/multi-word обратное цели, перекос bands (59% CORE). Решения [PD-2026-07-20]: добор до ~100 фреймов, удаление псевдо-chunks. Заведены П.4a-bis и П.4b. Схема форм lexeme уточнена (слот-список).
 - **2026-07-20 (23)**: 0.6 Obsidian Vault принят (`wiki/modules/memory.md`) — две зоны (`memory/` генерится, `notes/` твоя), обычные markdown-файлы без зависимости от Obsidian CLI, страница-на-сущность + дашборды [PD-2026-07-20]. Закрыты OPEN-2/OPEN-3. В фазе 0 остался только **0.7**.
 - **2026-07-20 (22)**: 0.5 Lesson Lifecycle + assessments принят (`wiki/modules/lessons.md`, `assessments.md`) — Attempt `draft→recorded→assessed`, авто-abandon stale-сессии и истечение placement как **replayable события** (`SESSION_STALE_ABANDONED`, `PLACEMENT_EXPIRED`), closure trigger, uniqueness поверх CAS [PD-2026-07-20]. Закрыты OPEN-10/17 + бизнес-часть OPEN-11. В фазе 0 остались 0.6 и 0.7. П.4a передан Codex.
