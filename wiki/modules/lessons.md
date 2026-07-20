@@ -54,7 +54,9 @@ stateDiagram-v2
 
 Манифест — то, что сессия закрепила в момент старта; он делает поведение внутри сессии воспроизводимым, даже если между стартом и завершением активная конфигурация изменилась.
 
-- **MUST — содержимое**: `session_id`, `provider`, `pinned_versions` (curriculum, scoring, scheduler, generation, rubric) и **`required_skills[]`** — пары `{skill_name, version}`.
+- **MUST — содержимое**: `session_id`, `provider`, `mode`, `pinned_versions` (curriculum, scoring, scheduler, **control**, generation, rubric), **`required_skills[]`** — пары `{skill_name, version}` — и **`session_plan`** с `composition_revision` ([[control]] §4.2).
+- **MUST — композиция в UoW старта** [CTRL-2]: `start` синхронно вызывает `control.compose_session` **до** commit и сохраняет план в той же транзакции. Отдельного шага композиции после старта не существует, поэтому и крэша между ними быть не может. `session next` только читает сохранённый план; переплан — отдельная мутирующая команда `session replan` с CAS по `composition_revision`.
+- **MUST — режим занятия** [CTRL-11]: `start` принимает `mode` (`balanced` по умолчанию). Режимы `maintenance`/`re_entry` — единственный путь к занятию без нового материала ([[control]] §4.1), и без параметра это нормативное исключение было недостижимо.
 - **MUST — `required_skills` явные** [0.7, бриф §11]: требуемые навыки перечисляются в манифесте, а не подбираются средой по описанию. Implicit invocation делает поведение невоспроизводимым между Codex и Claude Code и лишает [[scoring]] §5 базы для Tutor Compliance: обязательство «вызван нужный skill нужной версии» проверяемо только против явного списка.
 - **MUST — разрешимость при старте, синхронно до commit** [P0-Q1]: порядок строгий — `resolve` всех `required_skills` → открытие UoW → commit → `SESSION_STARTED`. `start` падает **до** создания сессии, если хоть одна затребованная версия неразрешима ([[adapters]] §4.2). Post-commit consumer `SESSION_STARTED` в [[adapters]] — только аудит уже обеспеченного инварианта, а не сама проверка: проверка по событию произошла бы после создания сессии и нарушила бы это MUST.
 - **MUST — safety не пинится**: манифест закрепляет структуру и scoring, но не safety; `production_eligible` проверяется по active policy при доставке ([[../OPEN]] OPEN-14).
@@ -63,7 +65,7 @@ stateDiagram-v2
 
 | Операция / Событие | Тип | Что делает | Фаза |
 |---|---|---|---|
-| `start(duration?, provider)` | API | создаёт сессию + Session Manifest (pinned versions + `required_skills`) | `[mvp]` |
+| `start(duration?, provider, mode?)` | API | создаёт сессию + Session Manifest (pinned versions + `required_skills` + план композиции) | `[mvp]` |
 | `resume(session_id)` | API | полное состояние сессии + tutor briefing ([[../flows/continuation]]) | `[mvp]` |
 | `abandon(session_id)` | API | идемпотентная терминализация без summary | `[mvp]` |
 | `finish(session_id, summary_draft?)` | API | проверка postconditions → атомарная терминализация | `[mvp]` |
@@ -80,7 +82,8 @@ stateDiagram-v2
 
 | Команда | Что делает |
 |---|---|
-| `trainer session start [--duration N] [--provider X] --format json` | старт или конфликт с `allowed_actions` |
+| `trainer session start [--duration N] --provider X [--mode balanced\|maintenance\|re_entry] --format json` | старт или конфликт с `allowed_actions` |
+| `trainer session replan --session ID --format json` | пересборка плана: `composition_revision + 1`, CAS ([[control]] §4.2) |
 | `trainer session resume --session ID --provider X --format json` | состояние + briefing + notes; фиксирует `AGENT_ATTACHED` |
 | `trainer session abandon --session ID` | идемпотентная терминализация |
 | `trainer session finish --session ID [--summary-draft FILE]` | завершение с postconditions |

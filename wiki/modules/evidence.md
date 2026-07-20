@@ -79,7 +79,7 @@ Evidence event-sourced ([[../platform/foundation]] §2); Attempt operational (fi
 
 ### 4.5 capture-into-event [rereview A-2]
 - **MUST**: любое operational значение, влияющее на scoring (вес exposure placement, snapshot ReviewAssignment, `origin`), фиксируется **в самом evidence-событии** с версией policy — не читается из operational store при replay.
-- **MUST — origin** [ревью 0.4-4]: evidence несёт immutable `origin` (`session | placement | re_entry`); scoring применяет placement-ceiling по нему ([[scoring]] §4b).
+- **MUST — origin** [ревью 0.4-4, CTRL-10]: evidence несёт immutable `origin` (`session | placement | re_entry | control_probe`); scoring применяет placement-ceiling по нему ([[scoring]] §4b) и правило no-negative для `control_probe` ([[scoring]] §4b, [[control]] §4.7).
 
 ## 5. CLI-поверхность
 

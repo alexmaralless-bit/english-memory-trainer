@@ -99,6 +99,7 @@ mastery_criteria:
 ### 4b. Origin и placement-cap [ревью 0.4-4]
 
 - **MUST**: evidence несёт immutable `origin` (`session | placement | re_entry`), захваченный в событие.
+- **MUST — no-negative для `control_probe`** [CTRL-10]: evidence с `origin=control_probe` **не может дать `REGRESSION`** и не понижает knowledge state; успех засчитывается обычным порядком в пределах общих cap-ов. Проба — добровольная проверка **выше** требуемого уровня, запрошенная сигналом «слишком легко» ([[control]] §4.7); наказание за неё научило бы не сообщать о лёгкости, и инструмент честной картины начал бы её искажать. Покрыто replay-тестом.
 - **MUST — placement ceiling**: evidence с `origin=placement` **не может поднять knowledge state выше `ACTIVE`** (никогда MASTERED — нет retention во времени). Rubric-writing из placement помечается provisional и не поднимает полный Writing CEFR-band (нужны ≥2 независимых non-placement items). Правило в scoring, покрыто replay-тестом.
 
 ## 5. Агрегаты (OPEN-12/13)

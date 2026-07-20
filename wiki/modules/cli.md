@@ -111,8 +111,9 @@ Envelope **тотален**: успех и отказ имеют одну фор
 
 | Команда | Владелец | Мутирует | Что делает |
 |---|---|---|---|
-| `trainer session start` | lessons | да | открывает сессию, публикует манифест с `required_skills` |
-| `trainer session next` | lessons | нет | следующий шаг занятия. Команда принадлежит lessons, **алгоритм композиции — [[control]]** §3 |
+| `trainer session start` | lessons | да | открывает сессию; композиция плана — в той же UoW; `--mode` задаёт режим занятия |
+| `trainer session next` | lessons | нет | читает следующий непредъявленный шаг из сохранённого плана; ничего не вычисляет ([[control]] §4.2) |
+| `trainer session replan` | lessons | да | пересобирает план: `composition_revision + 1`, CAS, новое `SESSION_COMPOSED` |
 | `trainer session resume` | lessons | да | возобновляет `IN_PROGRESS` после потери чата; `--provider` обязателен и атомарно фиксирует `AGENT_ATTACHED` |
 | `trainer session finish` | lessons | да | **единственный** способ завершить сессию; требует persisted evidence |
 | `trainer session abandon` | lessons | да | явный отказ от сессии |

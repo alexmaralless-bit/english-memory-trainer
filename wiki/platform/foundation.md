@@ -68,7 +68,7 @@ Kernel даёт детерминизм, аудит и целостность, б
 - **MUST — multi-aggregate условная запись** [ревью G-1]: одна UoW может атомарно проверить ожидаемые ревизии **нескольких** агрегатов (Session, ReviewAssignment, Attempt/queue, XP) и записать all-or-nothing; частичный success невозможен, stale-revision сообщается явно. Это механизм; бизнес-правило «уникальный терминальный outcome на ReviewAssignment» и выбор границ агрегатов — 0.5 (rereview J-R1).
 
 ### 3.6 Versioned policy registry, pinning, correction-события
-- **MUST — OPEN-9**: реестр версионируемых policy (curriculum, scoring, scheduler, generation, rubric). Каждая версия — иммутабельный snapshot, адресуемый по id.
+- **MUST — OPEN-9**: реестр версионируемых policy (curriculum, scoring, scheduler, **control**, generation, rubric). Каждая версия — иммутабельный snapshot, адресуемый по id. `control` добавлена контрактом 0.12 [CTRL-3]: без строки в реестре её версию нельзя ни запинить, ни воспроизвести, и `PinnedPolicyUnavailable` для неё недостижим.
 - **MUST**: команды/сессии/evidence **pin-ят** версии, под которыми созданы. Replay и resume резолвят policy по pinned-версии, не по current active. Активация не ретроактивна.
 - **MUST — retention pinned snapshots** [ревью F-1]: все версии/snapshots/tombstones, на которые есть pinned-ссылка, хранятся иммутабельно и не удаляются (retention ≠ immutability). Если версия не резолвится — hard error `PinnedPolicyUnavailable` (не тихий фолбэк на active/alias); recovery/export — [[../OPEN]] OPEN-9.
 - **MUST — safety-overlay hook** [PD-2026-07-19]: kernel даёт и pinned-резолв (replay/оценка), и **active-резолв** (`production_eligible` при доставке) + correction-события. Правило «safety не пинится» — П.3/0.4/0.5 ([[../modules/curriculum]] §5).
