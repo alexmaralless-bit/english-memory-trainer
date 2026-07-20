@@ -123,6 +123,7 @@ links:
   - {lexical_item: lexeme.know, topics: [grammar.past-irregular-basics]}
   - {lexical_item: lexeme.write, topics: [grammar.past-irregular-basics, written-production.past-work-report]}
   - {lexical_item: lexeme.read, topics: [grammar.past-irregular-basics, reading.documentation-scan]}
+  - {lexical_item: lexeme.tell, topics: [grammar.past-irregular-basics]}
 
   # ===== a1.7 plans-and-next-steps =====
   - {lexical_item: chunk.next-step-is, topics: [written-interaction.next-steps]}
@@ -167,6 +168,8 @@ links:
   - {lexical_item: lexeme.begin, topics: [grammar.past-irregular-events]}
   - {lexical_item: lexeme.run, topics: [grammar.past-irregular-events]}
   - {lexical_item: lexeme.think, topics: [grammar.past-irregular-events]}
+  - {lexical_item: lexeme.leave, topics: [grammar.past-irregular-events]}
+  - {lexical_item: lexeme.bring, topics: [grammar.past-irregular-events]}
   - {lexical_item: phrasal-verb.run-into, topics: [us-tech.incident-report-basics]}
 
   # ===== a2.2 results-and-experience =====

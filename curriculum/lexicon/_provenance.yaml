@@ -1,0 +1,86 @@
+# Provenance manifest for the corpus pass (P.4b).
+#
+# Raw datasets are NOT committed (build-time mode, curriculum contract 3.1).
+# This file pins exactly what was consulted, so `tools/enrich_lexicon.py --check`
+# can re-derive every frequency_score in the lexicon and fail on drift.
+#
+# Notices are collected here so the publication trigger (curriculum contract 3.1)
+# is a mechanical review, not an archaeological one. Nothing here is a licence
+# gate for the current private, non-distributed use.
+schema_version: 1
+
+source_artifacts:
+  - id: wordfreq@3.1.1
+    role: numeric frequency (aggregated corpus Zipf score)
+    exact_version: "3.1.1"
+    url: https://files.pythonhosted.org/packages/24/61/62835c475d69872d30689f284497853fe33fe1d6dd18f57346d13305861d/wordfreq-3.1.1-py3-none-any.whl
+    retrieved_at: 2026-07-20T02:23:00Z
+    sha256: 4b1c6ecffc6198be3396d5cf871c4423ca71c907c231348d352dd54d62b97473
+    license: "code Apache-2.0; bundled frequency data CC BY-SA 4.0"
+    attribution: "wordfreq, Robyn Speer et al."
+    notices:
+      - "Data snapshot is approximately 2021; it does not establish current currency of informal usage."
+      - "Frequencies are aggregated across domains (including Reddit and Twitter); per-domain presence is not queried."
+      - "Package is archived upstream; 3.1.1 is the final release."
+
+  - id: ngsl@1.2
+    role: general-English core membership (validation of curriculum_priority_band)
+    exact_version: "1.2 (April 2023), NGSL_12_lemmatized_for_teaching.csv"
+    url: https://www.newgeneralservicelist.com/s/NGSL_12_lemmatized_for_teaching.csv
+    retrieved_at: 2026-07-20T02:52:10Z
+    sha256: b54e297244988237457e04f823aa8dca68e3d646938dc76d383e099f04cb7666
+    license: CC BY-SA 4.0
+    attribution: "New General Service List by Browne, C., Culligan, B., and Phillips, J."
+    notices:
+      - "CC BY-SA 4.0 requires attribution, licence notice, indication of changes and ShareAlike on Adapted Material upon distribution."
+      - "2809 lemma families; membership only is used, no table is reproduced."
+      - >-
+        The lemma-family file is used rather than the rank file so that membership is
+        tested across inflections: on surface forms alone, `completed` and `meeting`
+        falsely read as absent because NGSL lists `complete` and `meet`.
+      - "File is prefixed by ## comment lines; parsing must skip them."
+
+  - id: bsl@1.2
+    role: business-English core membership (validation of curriculum_priority_band)
+    exact_version: "1.2, BSL_120_lemmatized_for_teaching.csv"
+    url: https://www.newgeneralservicelist.com/s/BSL_120_lemmatized_for_teaching.csv
+    retrieved_at: 2026-07-20T02:52:10Z
+    sha256: 0073a91b4186dc0bba0960f2ed9486bd117177403f4e0ac9f3738474f2b2a3c9
+    license: CC BY-SA 4.0
+    attribution: "Business Service List by Browne, C. and Culligan, B."
+    notices:
+      - "CC BY-SA 4.0; attribution omits Phillips for BSL, unlike NGSL."
+      - "1744 lemma families; membership only is used, no table is reproduced."
+      - "No header row and no comment lines, unlike the NGSL file."
+
+# Versioned score -> band thresholds. Bands are neutral corpus frequency, never
+# pedagogical priority (that is curriculum_priority_band).
+frequency_thresholds:
+  version: 1
+  scale: "wordfreq Zipf, log10 occurrences per billion words"
+  bands:
+    - {band: very_high, min_zipf: 5.5}
+    - {band: high, min_zipf: 4.5}
+    - {band: mid, min_zipf: 3.5}
+    - {band: low, min_zipf: 2.5}
+    - {band: rare, min_zipf: null}   # everything below `low`
+  rounding: "frequency_score is the Zipf value rounded to 2 decimals, ROUND_HALF_EVEN"
+
+# Coverage rule, enforced by the tool. See the P.4b report for the evidence.
+coverage_policy:
+  covered_types: [word, lexeme, abbreviation]
+  rule: >-
+    Only single-token units receive frequency_score / frequency_band. wordfreq
+    returns a value for multi-token input, but that value is composed from token
+    frequencies under an independence assumption and is NOT an observed phrase
+    frequency: reversing the word order leaves it unchanged, and a nonsense
+    string of common words outscores a real mid-frequency word. Assigning it to
+    chunks and phrasal verbs would fabricate corpus data.
+  lexeme_rule: >-
+    A lexeme's frequency is the sum of the probabilities of all its surface
+    forms (flattening list-valued slots such as be -> past: [was, were]),
+    converted back to Zipf. Marked with the lemma-form-sum transformation.
+  uncovered: >-
+    chunk, phrasal-verb, informal_chunk, multi-word word entries, and any unit
+    absent from the corpus keep no frequency fields at all. Absence is the
+    honest signal; policies keyed on frequency_band must define a fallback.

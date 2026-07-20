@@ -17,24 +17,48 @@
 - **MUST — три раздельные величины** [ревью E-7/F-6, rereview E-R5]: не смешивать частоту, педагогический приоритет и персональный приоритет:
   - `frequency_score` + `frequency_band` — **только** корпусная частота: numeric Zipf/source score + нейтральные bands `very_high | high | mid | low | rare` по versioned thresholds. **Никаких** педагогических/доменных категорий здесь;
   - `curriculum_priority_band` — педагогический приоритет: `CORE → HIGH → USEFUL → SPECIALIZED → INCIDENTAL` (сюда ушли utility/domain-категории вроде useful/specialized/incidental);
-  - `learner_priority` — персональный приоритет; **вычисляется** движком, не хранится глобально. Формула — 0.4 ([[../OPEN]] OPEN-8).
+  - `learner_priority` — персональный приоритет; **вычисляется** движком, не хранится глобально. Формула — [[../OPEN]] OPEN-22 (в 0.4 не написана, см. там).
+
+- **MUST — частота есть не у всех единиц** [П.4b]: `frequency_score`/`frequency_band` проставляются **только** там, где pinned-источник действительно покрывает единицу. Корпус слов не покрывает многословные единицы: `chunk`, `phrasal-verb` и `informal_chunk` частоты **не получают** — это 56% инвентаря. Отсутствие поля — нормальное состояние, а не пробел данных; валидатор не требует частоту и не подставляет значение по умолчанию.
+- **MUST — запрет композитных подделок** [П.4b]: нельзя получать частоту многословной единицы, комбинируя частоты её токенов. Проверено на pinned-источнике: такая оценка не зависит от порядка слов (`run into` = `into run`), а бессмысленная цепочка частых слов обгоняет реальное слово средней частоты. Это не наблюдаемая частота фразы, и записывать её в `frequency_score` — фабрикация.
+- **MUST — каждый потребитель определяет fallback** [П.4b]: любая policy, читающая `frequency_band` (learner_priority, отбор в повторения, lexicon_query), обязана явно определить поведение при отсутствии поля. Молчаливая трактовка «нет частоты = редкое» запрещена: она вытеснила бы из обучения именно рабочие фреймы, ради которых лексикон и строился.
+- **MUST — согласованность с педагогическим приоритетом** [П.4b]: единица с `frequency_band` `very_high`/`high` не может иметь `curriculum_priority_band: INCIDENTAL` (что исключило бы её из повторений). Педагогический приоритет вправе отставать от частоты, но не вправе вычёркивать частотное ядро языка. Проверяется валидатором.
+
 - **MUST**: каждая единица — сущность `LexicalItem` со стабильным ID. Минимальные поля:
 
+Однословная единица, покрытая корпусом:
+
 ```yaml
-id: chunk.follow-up-on
-type: chunk               # word | chunk | phrasal-verb | lexeme | informal_chunk | abbreviation | meme_template
-title: follow up on
+id: word.delivery
+type: word                # word | chunk | phrasal-verb | lexeme | informal_chunk | abbreviation | meme_template
+title: delivery
 cefr: A2
-frequency_score: 4.2      # numeric (Zipf/source)
-frequency_band: mid       # very_high | high | mid | low | rare (по versioned thresholds)
+frequency_score: 4.59     # numeric (Zipf), из pinned-источника
+frequency_band: high      # very_high | high | mid | low | rare (по versioned thresholds)
 curriculum_priority_band: HIGH   # педагогический приоритет
 register: neutral
 domains: [work, project-management]
-meaning_ru: уточнить или вернуться к вопросу
-source_refs: [ngsl@1.01]
-transformations: [identity]   # журнал изменений при импорте (rereview I-R3)
+meaning_ru: поставка, выпуск результата
+source_refs: [wordfreq@3.1.1, ngsl@1.2]
+transformations: [authored, corpus-enriched]   # журнал изменений (rereview I-R3)
 examples:
-  - I'll follow up on this tomorrow.
+  - The delivery is planned for next week.
+```
+
+Многословная единица — **без** частотных полей и без `source_refs`: корпус её не покрывает, подделывать нечем:
+
+```yaml
+id: chunk.follow-up-message
+type: chunk
+title: follow-up message
+cefr: A2
+curriculum_priority_band: USEFUL
+register: neutral
+domains: [work, communication]
+meaning_ru: последующее сообщение
+transformations: [authored]
+examples:
+  - I sent a follow-up message on Tuesday.
 ```
 
 - **MUST — mastery-профиль** [rereview E-R3]: у каждого LexicalItem (в т.ч. обычного word/chunk) есть versioned `LexicalMasteryProfile` — required dimensions и mastery-критерии по type/usage_policy, разрешимый из curriculum; validator проверяет наличие профиля. Схема — 0.4 ([[../OPEN]] OPEN-13).

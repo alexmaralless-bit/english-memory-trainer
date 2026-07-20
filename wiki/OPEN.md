@@ -1,11 +1,11 @@
 # OPEN — единый реестр нерешённых вопросов
 
 > **Status**: living
-> **Last updated**: 2026-07-19
+> **Last updated**: 2026-07-20
 
 Продуктовые развилки и нерешённые вопросы. Решение принимает человек; принятое решение получает `[PD-YYYY-MM-DD]`, вносится в спеку, строка отсюда уходит в «Решённые». Любой OPEN, упомянутый в спеке, обязан иметь строку здесь. Каждый открытый OPEN указывает контракт-исполнитель, который его закрывает.
 
-OPEN-7…OPEN-21 заведены 2026-07-19/20 по итогам red-team ревью (первый прогон + rereview + foundation-review): это признанные дыры, механизм которых принадлежит будущим контрактам. Инвариант (что должно выполняться) зафиксирован в спеке; здесь — обязательство контракта достроить механизм. Владельца механизма определяет **owner-матрица** ниже (единый источник, ревью J-R1).
+OPEN-7…OPEN-22 заведены 2026-07-19/20 по итогам red-team ревью (первый прогон + rereview + foundation-review): это признанные дыры, механизм которых принадлежит будущим контрактам. Инвариант (что должно выполняться) зафиксирован в спеке; здесь — обязательство контракта достроить механизм. Владельца механизма определяет **owner-матрица** ниже (единый источник, ревью J-R1).
 
 ### Owner-матрица (компонент → контракт-владелец)
 
@@ -32,6 +32,7 @@ OPEN-7…OPEN-21 заведены 2026-07-19/20 по итогам red-team ре�
 | OPEN-19 | Атомарность event-store: SQLite event-таблица authoritative (commit с state+outbox в одной tx), JSONL — derived rebuildable export; crash-recovery/reconciliation, сверка event-таблица↔JSONL | foundation A-1/E-1 (BLOCKER решён), режим выбран | 0.2 kernel / 1.2 |
 | OPEN-20 | Детерминизм-контракт: монотонный `sequence` + tie-break; canonical encoding + фиксированный `payload_hash`-алгоритм; sorted iteration/query. (Числовой interface scoring — fixed-precision decimal + rounding — **зафиксирован в 0.4** [[modules/scoring]] §2.1; здесь остаётся kernel-часть encoding/hash) | foundation B-1 | 0.2 kernel / 1.2 |
 | OPEN-21 | Outbox + rebuild: message id/dedup/ack/ordering key, per-consumer inbox; protocol rebuild проекций (applied-offset/checkpoint, isolate-and-swap, high-water mark, ordered catch-up) | foundation B-2/E-2 | 0.2 kernel / 1.2 |
+| OPEN-22 | **Формула `learner_priority`** — числилась закрытой в OPEN-8 «определена в 0.4», но в [[modules/scoring]] её нет ни в каком виде (проверено при П.4b). Формула обязана: (а) определить поведение при **отсутствующем** `frequency_band` — у 56% инвентаря частоты нет и не будет ([[product/lexical-system]] §1); (б) не трактовать отсутствие как «редкое», иначе рабочие фреймы вытесняются из повторений; (в) быть детерминированной и versioned | П.4b; over-claim в OPEN-8 | 0.4 scoring (+ П.3 отбор в повторения) |
 
 ## Решённые
 
@@ -75,13 +76,14 @@ OPEN-7…OPEN-21 заведены 2026-07-19/20 по итогам red-team ре�
 | — | **Порядок П.4 → П.2 (content-review C-3):** сначала закрыть **OPEN-15** (лицензии/provenance), затем П.4 (лексикон), затем П.2 (тела тем с `topic.lexicon` refs). OPEN-15 выходит на критический путь | [PD-2026-07-20], [[roadmap]] фаза П |
 | OPEN-1 | Scoring-модель **и schema** определены в 0.4 (Topic.mastery_criteria §3b, numeric-контекст §2, таблица тотальна §3); остаётся **калибровка** *tunable*-констант (итеративно, versioned) | [PD-2026-07-20], [[modules/scoring]] |
 | OPEN-7 | Правила admissibility/identity/independence/multi-credit/observation-schema — [[modules/evidence]] §4; численные cap'ы — [[modules/scoring]] | [PD-2026-07-20] |
-| OPEN-8 | CEFR coverage/confidence/уровень и learner_priority определены в 0.4 (целые bands, «полступени» снято) | [PD-2026-07-20], [[modules/scoring]] §4 |
+| OPEN-8 | CEFR coverage/confidence/уровень определены в 0.4 (целые bands, «полступени» снято). ~~learner_priority~~ — **закрытие было ошибочным**: формулы в 0.4 нет, вопрос переоткрыт как **OPEN-22** (П.4b) | [PD-2026-07-20], [[modules/scoring]] §4 |
 | OPEN-12 | XP-ledger, Learning Score/Tutor Compliance шкалы, day-attribution streak — [[modules/scoring]] §5/§7 | [PD-2026-07-20] |
 | OPEN-13 | Informal Online Competence-шкала, contribution_scope, LexicalMasteryProfile — [[modules/scoring]] §5/§6 | [PD-2026-07-20] |
 | OPEN-18 | Scheduler-policy (интервалы, re-entry trigger, overdue→AT_RISK) — [[modules/scheduler]] §3–§4; калибровка порогов отдельно | [PD-2026-07-19], [[modules/scheduler]] |
 
 ## История изменений
 
+- **2026-07-20 (16)**: П.4b (корпусный проход) — заведён **OPEN-22**: формула `learner_priority` числилась закрытой в OPEN-8, но в 0.4 её нет; вдобавок она обязана определить поведение при отсутствующей частоте (56% инвентаря). Строка OPEN-8 исправлена. Открытых вопросов стало 8.
 - **2026-07-20 (15)**: 0.6 Obsidian Vault принят — закрыты **OPEN-2** (две зоны + структура) и **OPEN-3** (обычные файлы). Открытых вопросов осталось 7.
 - **2026-07-20 (14)**: 0.5 Lesson Lifecycle + assessments принят — закрыты **OPEN-10** (Attempt machine, closure trigger, терминализация), **OPEN-17** (placement lifecycle/exposure) и бизнес-часть **OPEN-11** (uniqueness поверх CAS). 3 PD: авто-abandon stale-сессии событием, `draft→recorded→assessed`, окно resume placement.
 - **2026-07-20 (13)**: **OPEN-15 закрыт** — правовая позиция «приватное личное использование без распространения» + publication trigger; provenance сохранён по технической мотивации; living-layer excerpts запрещены постоянно. **П.4 разблокирована** (критический путь свободен).
