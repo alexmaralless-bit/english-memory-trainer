@@ -1,4 +1,4 @@
-# TODO(review): minimal A1 topic inventory inferred from the approved module descriptions.
+# TODO(review): minimal A1 topic inventory inferred from the approved module descriptions; informal-topic placement and granularity are the minimal P.1b interpretation of the approved concept.
 topics:
   - id: grammar.be.identity
     cefr: A1
@@ -167,6 +167,13 @@ topics:
     can_do: "Describe a work-in-progress item in a simple technology update."
     advisory_prerequisites:
       strong: [written-interaction.current-status]
+  - id: everyday-online-informal.written-contractions
+    cefr: A1
+    track: everyday-online-informal
+    module: a1.4-work-in-progress
+    can_do: "Use common written contractions in a simple chat or status message."
+    advisory_prerequisites:
+      strong: [written-interaction.current-status]
   - id: grammar.can-cant.ability-requests
     cefr: A1
     track: grammar-engine
@@ -201,6 +208,14 @@ topics:
     module: a1.5-requests-and-clarification
     can_do: "Respond naturally to a simple chat request or acknowledgement."
     advisory_prerequisites:
+      soft: [written-interaction.request-clarification]
+  - id: everyday-online-informal.casual-acknowledgements
+    cefr: A1
+    track: everyday-online-informal
+    module: a1.5-requests-and-clarification
+    can_do: "Recognize and choose a basic casual acknowledgement or apology in a simple chat exchange."
+    advisory_prerequisites:
+      strong: [everyday-online-informal.basic-chat-response]
       soft: [written-interaction.request-clarification]
   - id: grammar.past-simple.events
     cefr: A1

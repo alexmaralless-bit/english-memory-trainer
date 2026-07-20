@@ -1,9 +1,10 @@
 id: a1.4-work-in-progress
 level: A1
 can_do: "Report what is happening now and distinguish current work from routine work."
-tracks: [grammar-engine, written-interaction, us-tech-english]
+tracks: [grammar-engine, written-interaction, us-tech-english, everyday-online-informal]
 topics:
   - grammar.present-continuous.status
   - grammar.present-simple-continuous.choice
   - written-interaction.current-status
   - us-tech.work-in-progress
+  - everyday-online-informal.written-contractions

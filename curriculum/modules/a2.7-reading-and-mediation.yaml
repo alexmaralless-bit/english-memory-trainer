@@ -1,10 +1,12 @@
 id: a2.7-reading-and-mediation
 level: A2
 can_do: "Read a short ticket or documentation excerpt and communicate its main point accurately."
-tracks: [reading, written-production-mediation, us-tech-english]
+tracks: [reading, written-production-mediation, us-tech-english, everyday-online-informal]
 topics:
   - reading.documentation-scan
   - reading.main-idea-details
+  - everyday-online-informal.tone-recognition
+  - everyday-online-informal.forum-thread-reply
   - written-production.paraphrase-summary
   - written-production.fact-inference
   - us-tech.ticket-mediation

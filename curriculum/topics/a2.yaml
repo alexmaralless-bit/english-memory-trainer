@@ -1,4 +1,4 @@
-# TODO(review): minimal A2 topic inventory inferred from the approved module descriptions.
+# TODO(review): minimal A2 topic inventory inferred from the approved module descriptions; informal-topic placement and granularity are the minimal P.1b interpretation of the approved concept.
 topics:
   - id: grammar.past-continuous.incident-context
     cefr: A2
@@ -228,6 +228,22 @@ topics:
     advisory_prerequisites:
       strong: [everyday-online-informal.basic-chat-response]
       soft: [written-interaction.polite-request]
+  - id: everyday-online-informal.common-abbreviations
+    cefr: A2
+    track: everyday-online-informal
+    module: a2.6-collaboration
+    can_do: "Recognize common online abbreviations and their intended meaning in a work-chat message."
+    advisory_prerequisites:
+      strong: [everyday-online-informal.written-contractions]
+      soft: [everyday-online-informal.casual-neutral-request]
+  - id: everyday-online-informal.casual-neutral-rephrasing
+    cefr: A2
+    track: everyday-online-informal
+    module: a2.6-collaboration
+    can_do: "Rewrite a simple casual chat message in a neutral work-appropriate register and back."
+    advisory_prerequisites:
+      strong: [everyday-online-informal.casual-neutral-request]
+      soft: [written-interaction.respectful-disagreement]
   - id: reading.documentation-scan
     cefr: A2
     track: reading
@@ -242,6 +258,22 @@ topics:
     can_do: "Separate the main idea from supporting details in a short work text."
     advisory_prerequisites:
       strong: [reading.documentation-scan]
+  - id: everyday-online-informal.tone-recognition
+    cefr: A2
+    track: everyday-online-informal
+    module: a2.7-reading-and-mediation
+    can_do: "Distinguish helpful, dismissive, sarcastic, and hostile tone in a short online message."
+    advisory_prerequisites:
+      strong: [reading.main-idea-details]
+      soft: [everyday-online-informal.common-abbreviations]
+  - id: everyday-online-informal.forum-thread-reply
+    cefr: A2
+    track: everyday-online-informal
+    module: a2.7-reading-and-mediation
+    can_do: "Write a short helpful and non-rude reply that addresses a point in a forum or chat thread."
+    advisory_prerequisites:
+      strong: [reading.main-idea-details]
+      soft: [everyday-online-informal.tone-recognition, written-interaction.suggestion-feedback]
   - id: written-production.paraphrase-summary
     cefr: A2
     track: written-production-mediation
