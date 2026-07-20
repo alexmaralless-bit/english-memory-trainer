@@ -46,7 +46,7 @@ stateDiagram-v2
 | `answer(placement_id, section, answers)` | API | инкрементальная фиксация + checkpoint | `[mvp]` |
 | `resume(placement_id)` | API | состояние + следующая секция (в пределах окна) | `[mvp]` |
 | `submit(placement_id)` | API | идемпотентный терминальный submit | `[mvp]` |
-| `abandon(placement_id)` / `decline(self_assessment?)` | API | терминализация / отказ | `[mvp]` |
+| `abandon(placement_id)` / `decline(self_assessment?)` | API | терминализация / отказ. `self_assessment` — **объект по core-skill ID**, не скаляр (R-5) | `[mvp]` |
 | `PLACEMENT_STARTED / CHECKPOINT / RESUMED / SUBMITTED / SCORED / DECLINED / ABANDONED / EXPIRED` | publishes | lifecycle-факты | `[mvp]` |
 
 ## 5. CLI-поверхность
@@ -57,7 +57,15 @@ stateDiagram-v2
 | `trainer placement answer --input FILE` | инкрементальная фиксация |
 | `trainer placement resume --format json` | продолжение в пределах окна |
 | `trainer placement submit` | терминальный идемпотентный submit |
-| `trainer placement abandon` / `decline --self-assessment X` | терминализация / отказ |
+| `trainer placement abandon` / `decline [--self-assessment JSON]` | терминализация / отказ |
+
+**Schema самооценки** [R-5], `schema_version: 1` — объект по core-skill ID; **скаляр запрещён**, broadcast одного значения на все навыки не подразумевается:
+
+```json
+{"schema_version": 1, "levels": {"grammar": "A2", "vocabulary": "A2", "reading": "B1", "writing": "A1"}}
+```
+
+Частичный объект допустим: отсутствующий навык остаётся `unknown` и **не** получает значение по умолчанию. Каждое значение пишется в `self_reported_level` **своего** навыка и полностью перекрывается первым допустимым evidence по нему ([[../flows/placement]]). Один скаляр на четыре навыка канон не допускает: из `A2` реализация иначе могла бы записать либо четыре A2, либо одну общую оценку.
 
 ## 6. Границы
 

@@ -61,7 +61,7 @@ sequenceDiagram
         T->>T: объективный скоринг кодом + rubric-observations по writing → outcome движком
         T-->>A: уровни по навыкам + confidence (потолок ACTIVE); evidence проверенным темам/LexicalItem
     else отказ
-        A->>T: placement decline --self-assessment A2
+        A->>T: placement decline --self-assessment {"grammar":"A2","reading":"B1"}
         T-->>A: self_reported_level (отдельно) → provisional very-low-confidence старт
     end
     A->>L: итог: стартовая картина + что уточнится в первых сессиях

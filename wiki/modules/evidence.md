@@ -79,7 +79,7 @@ Evidence event-sourced ([[../platform/foundation]] §2); Attempt operational (fi
 
 ## 5. CLI-поверхность
 
-Через сессию/placement ([[../flows/session]], [[../flows/placement]]): `attempt record`, `review record`, `error/vocabulary/chunk observed`. Прямого пользовательского CLI evidence не имеет (agent-facing через session).
+Через сессию/placement ([[../flows/session]], [[../flows/placement]]): `trainer attempt record`, `trainer review close`, `trainer observed record` — **точные имена**, по которым `skills validate` сверяет `cli_calls` ([[adapters]] §4.3). Прямого пользовательского CLI evidence не имеет (agent-facing через session).
 
 ## 6. Границы
 

@@ -81,7 +81,7 @@ memory/
 | Операция / Событие | Тип | Что делает |
 |---|---|---|
 | `render(scope?)` | API | инкрементальное обновление затронутых страниц |
-| `rebuild()` | API | полный пересбор из event-store (isolate-and-swap) |
+| `rebuild()` | API | **гибридный** пересбор по page-source manifest (§5): event-sourced страницы — replay с isolate-and-swap до high-water mark; operational — render из authoritative SQLite/snapshot в согласованной точке |
 | `check()` | API | drift-проверка generated-зоны |
 | `PROJECTION_UPDATED` | publishes | факт обновления проекции |
 

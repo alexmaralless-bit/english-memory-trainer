@@ -120,6 +120,8 @@ mastery_criteria:
 | `opaque` | **только recognition** (production не required никогда) | только recognition |
 
 Ключевая клетка — `opaque` + `safe_to_use`: производить идиому безопасно, но требовать этого нельзя. Понимать `call it a day` обязательно, употреблять — нет; обратное требование наказывало бы ученика за то, что он выражается проще.
+
+- **MUST — роль оси `type`** [R-Q1]: таблица выше задаёт **required dimensions** по `(transparency, usage_policy)`; `type` их не переопределяет, а управляет **пост-обработкой**: для `lexeme` состояние агрегируется из required forms, для остальных типов агрегации нет. Порядок разрешения: `(transparency, usage_policy) → required dimensions → type-специфичная агрегация`. Именно в этом смысле кортеж тотален; отдельных строк на каждый `type` нет и не требуется.
 - **MUST**: production, не попавший в required, не «застревает» — единица достигает MASTERED по своим required dimensions.
 - **MUST**: lexeme агрегирует состояние из required forms детерминированно.
 

@@ -45,7 +45,7 @@ stateDiagram-v2
 
 - **MUST — FINISHED требует пустой pending-set**: все attempts `assessed`, все ReviewAssignment имеют ReviewOutcome. Иначе finish отклоняется бизнес-ошибкой (это **не** авто-закрытие).
 - **MUST — ABANDONED преобразует pending**: недостигнутые ReviewAssignment закрываются как `INSUFFICIENT_EVIDENCE(reason=abandoned)`, re-entry-блок получает свой outcome, `draft`/`recorded` attempts закрываются без вклада в scoring.
-- **MUST — closure trigger** [OPEN-10, rereview R-5]: терминализация — **второй** (наряду с явным `close_review`) триггер закрытия ReviewAssignment; правило закрытия — [[evidence]] §4.3, триггер — здесь.
+- **MUST — closure trigger** [OPEN-10, rereview R-5, P0-2/R-4]: второй триггер закрытия ReviewAssignment (наряду с явным `close_review`) — **`abandon`**, а не терминализация вообще. `finish` целей не закрывает: он требует уже пустой pending-set. Правило закрытия — [[evidence]] §4.3, триггер — здесь.
 - **MUST — уникальность терминального outcome** [OPEN-11 бизнес-часть]: на один ReviewAssignment ровно один ReviewOutcome. Правило строится **поверх** kernel-CAS (multi-aggregate expected-revisions, foundation §3.5); два агента не могут записать конфликтующие исходы. Коррекция — только correction-событием, не вторым outcome.
 - **MUST — атомарность**: одной SQLite-транзакцией коммитятся authoritative state + events + outbox; `summary` — engine-generated в той же UoW (агент может передать `--summary-draft`); **Obsidian-проекция post-commit через outbox** (foundation §3.7). Различие FINISHED/ABANDONED — только полнота summary и способ закрытия pending.
 - **MUST**: терминализация FINISHED и ABANDONED одинаково пересчитывает производные (scores, расписание, XP, проекция) — рассогласованных производных не остаётся.

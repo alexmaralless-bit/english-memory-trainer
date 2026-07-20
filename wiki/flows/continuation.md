@@ -77,7 +77,7 @@ sequenceDiagram
 | `lessons` (0.5) | `resume` API: полное состояние сессии одним ответом; переживание смены агента без потери обязательств |
 | `learner` | агрегация tutor briefing из состояния (уровень, ошибки, vocabulary, рекомендации) |
 | `evidence` (0.4) | приём опциональной `--note` (untrusted) при фиксациях; выдача notes хронологически, отдельно от state |
-| `audit` | событие `AGENT_ATTACHED {provider, session}`; след смены агентов для Tutor Compliance |
+| `lessons` (0.5) | **владелец** события `AGENT_ATTACHED {provider, session, skills}`; `resume --provider` фиксирует подключение атомарно с возобновлением (R-3). `audit` событие только читает |
 | `cli` (0.7) | briefing в ответах `session start`/`resume` с trust boundary (state vs notes); стабильная схема briefing JSON |
 | `kernel` (0.2) | envelopes, idempotency scope, **CAS/optimistic revision** (механизм), correction protocol (OPEN-11) — без бизнес-логики |
 | `lessons` (0.5) | **уникальность терминального outcome на ReviewAssignment** — бизнес-правило (rereview J-R1), поверх kernel CAS |

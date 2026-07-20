@@ -214,7 +214,7 @@ memory/current/vocabulary-review.md
 
 Механизмы зафиксированных выше инвариантов достраиваются в контрактах ([[../OPEN]]):
 
-- **OPEN-13**: Informal Online Competence — шкала, contribution_scope, assessable dimensions по policy → 0.4.
+- ~~OPEN-13~~ **закрыт** в 0.4: Informal Online Competence, `contribution_scope` и assessable dimensions — [[../modules/scoring]] §5–§6.
 - **OPEN-14**: currency/usage-policy lifecycle, context_dependent enforcement, stale-safety банка, агрегация форм lexeme → curriculum detail / П.3.
 - ~~OPEN-15~~ **закрыт** [PD-2026-07-20]: правовая позиция, состав данных и provenance — [[../modules/curriculum]] §3.1–§3.2.
 - **OPEN-22**: формула learner_priority (OPEN-8 закрыт только в части CEFR-уровня; формула переоткрыта) → 0.4 scoring.

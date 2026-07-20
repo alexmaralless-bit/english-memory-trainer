@@ -119,6 +119,8 @@ Envelope **тотален**: успех и отказ имеют одну фор
 | `trainer attempt record` | evidence | да | фиксирует попытку ученика и наблюдение агента как evidence |
 | `trainer review due` | scheduler | нет | что подлежит повторению |
 | `trainer review close` | evidence | да | вычисляет терминальный ReviewOutcome по накопленному evidence; идемпотентен, повтор возвращает прежний исход |
+| `trainer observed record` | evidence | да | фиксирует наблюдённый факт (ошибка, слово, chunk), замеченный в свободном ответе, — вход `record_observed` ([[evidence]] §3) |
+| `trainer reentry decline` | scheduler | да | ученик отказался от предложенного re-entry: факт сохраняется, ничего не блокирует и не штрафуется ([[scheduler]] §4) |
 | `trainer gate begin` \| `submit` \| `evaluate` | gates | да | рекомендательный гейт по теме |
 
 ### Placement

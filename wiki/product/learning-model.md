@@ -88,7 +88,7 @@ stateDiagram-v2
 
 ## 5. Рабочий уровень (CEFR)
 
-- **MUST**: отдельные уровни по core skills (Grammar, Vocabulary, Reading, Writing); общий working estimate вычисляется консервативно относительно слабейшего core-навыка. Представление уровня (целые CEFR-bands vs ordinal/sublevel для «полступени») определяет 0.4 ([[../OPEN]] OPEN-8, rereview E-R4): текущая Level-schema (`A1…C2`) не выражает полступени, поэтому численное правило фиксируется вместе со шкалой, а не приблизительно.
+- **MUST**: отдельные уровни по core skills (Grammar, Vocabulary, Reading, Writing); общий working estimate вычисляется консервативно относительно слабейшего core-навыка. Представление уровня **решено** в 0.4: только целые CEFR-bands `A1…C2`, подуровней и «полступеней» нет ([[../modules/scoring]] §4, OPEN-8 закрыт).
 - **MUST**: уровень меняет только движок по накопленному evidence тем соответствующего уровня.
 - **MUST — coverage, не выборка** [PD-2026-07-19, ревью C-4]: повышение CEFR-уровня требует покрытия, а не нескольких лёгких тем: минимальное число независимых тем и ширина dimensions уровня, confidence floor. Непроверенная область трактуется как **unknown**, а не как отсутствие слабости; unknown не поднимает уровень. Матрица покрытия и пороги — контракт 0.4 ([[../OPEN]] OPEN-8).
 - **MUST — самооценка отдельно, per-skill** [PD-2026-07-19, ревью A-2/A-R3]: самооценка хранится как `self_reported_level` отдельно от измеренного уровня и даёт только provisional working estimate. Замещение измерением идёт **по каждому навыку отдельно** — self-report перестаёт влиять на конкретный skill после его первого допустимого evidence/confidence floor (не глобально от одного attempt); provenance сохраняется.
@@ -153,7 +153,7 @@ stateDiagram-v2
 
 - **OPEN-1**: численная scoring-формула и пороги Mastery/Stability/Retrievability → 0.4.
 - **OPEN-7**: anti-gaming + observation schema (span-ссылка, machine-checkable часть) → 0.4.
-- **OPEN-8**: coverage-матрица, confidence-policy, ordinal/sublevel уровня → 0.4.
+- ~~OPEN-8~~ **закрыт** в 0.4 (целые bands, coverage, confidence). Формула `learner_priority` переоткрыта отдельно — [[../OPEN]] OPEN-22.
 - **OPEN-10**: AttemptAssessment vs terminal ReviewOutcome, таблица переходов, Attempt lifecycle → 0.5/0.4.
 - **OPEN-12**: XP-ledger, шкалы, day-attribution streak → 0.4.
 - **OPEN-13**: Informal Online Competence + generic LexicalMasteryProfile → 0.4.
