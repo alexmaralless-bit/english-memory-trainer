@@ -25,8 +25,6 @@ OPEN-7…OPEN-21 заведены 2026-07-19/20 по итогам red-team ре�
 
 | ID | Вопрос | Контекст | Блокирует (контракт) |
 |---|---|---|---|
-| OPEN-2 | Структура Obsidian vault и политика ручных заметок ученика | vault генерится движком | 0.6 Obsidian Vault |
-| OPEN-3 | Способ интеграции с Obsidian: файлы напрямую, CLI или плагин | Obsidian CLI не устанавливался | 0.6 Obsidian Vault |
 | OPEN-9 | Version pinning и replay: pin **scoring/структуры/rubric**; активация не ретроактивна; deprecation 1:1/split/merge/retired append-only; бессмертие persistent reference. **Retention pinned-версий/snapshots/tombstones + `PinnedPolicyUnavailable`** (foundation F-1). Safety НЕ пинится — см. OPEN-14 | ревью G-2/G-3/G-5, G-R1, F-1 | 0.3 (+0.2 CAS/snapshot) |
 | OPEN-11 | *(бизнес-часть uniqueness терминального outcome закрыта в 0.5, [[modules/lessons]] §4)* Idempotency и concurrency: namespace задан, **гранулярность scope** (per-learner/global/…) открыта; same-key/different-payload, cached response+retention; **multi-aggregate CAS** (foundation G-1); **compound-команда** `abandon+start` (две идемпотентные + recovery, foundation C-1); **generic correction envelope + reducer** (foundation C-2), для safety-correction — поля `original_pinned_versions`+`active_safety_version` (rereview C-1). Uniqueness терминального outcome — 0.5 | ревью G-7/G-8, C-1/C-2/G-1 | 0.2 kernel |
 | OPEN-14 | Currency и usage-policy lifecycle; `context_dependent`; агрегация форм lexeme. **Safety-overlay** (rereview G-R1/H-R1): вычисляемый `production_eligible` из active usage_policy+currency (`obsolete` исключает production); live manifest/review assignment проверяются active safety при доставке, несовместимое отменяется/заменяется append-only event с обеими версиями; `requires_usage_policy` predicate по type/register; `cultural_context` в validator | ревью D-7/D-8/H-3/H-4/H-5/H-6, G-R1/H-R1 | П.3 (+0.4 scoring, +0.5 live delivery) |
@@ -68,6 +66,8 @@ OPEN-7…OPEN-21 заведены 2026-07-19/20 по итогам red-team ре�
 | — | **Learning Score (0.4):** coverage-взвешенный Mastery текущего working-уровня | [PD-2026-07-20], [[modules/scoring]] §5 |
 | — | **Vocabulary & Chunks — lexicon-layer трек (content-review C-1):** без отдельных Topic'ов; реализуется как LexicalItem через `topic.lexicon`. Пустой topic-инвентарь трека — намеренно | [PD-2026-07-20], [[modules/curriculum]] §2 |
 | — | **Informal-трек расширяется в каркасе (content-review C-2):** добавить A1 contractions/casual chat chunks и A2 abbreviations/forum replies/tone-recognition (патч П.1, делегирован Codex) | [PD-2026-07-20], [[roadmap]] П.1b |
+| OPEN-2 | **Две зоны**: `memory/` генерится движком (перезаписывается), `notes/` — ученика (движок не пишет и не читает); drift-проверка только в generated-зоне. Структура — страница на сущность + дашборды | [PD-2026-07-20], [[modules/memory]] §2/§4 |
+| OPEN-3 | **Обычные markdown-файлы**; Obsidian — просто просмотрщик, без зависимости от CLI/плагина (адаптер — post-mvp) | [PD-2026-07-20], [[modules/memory]] §3 |
 | OPEN-10 | Attempt machine (`draft→recorded→assessed`), finalize/recover, closure trigger терминализации, атомарная терминализация — [[modules/lessons]] §3–§4. Остаётся калибровка `stale_session_days` | [PD-2026-07-20], [[modules/lessons]] |
 | OPEN-17 | Placement lifecycle, окно resume + `PLACEMENT_EXPIRED`, терминальный идемпотентный submit, exposure/cooldown — [[modules/assessments]] §2–§3 | [PD-2026-07-20], [[modules/assessments]] |
 | — | **Stale-работа как replayable факт (0.5):** зависшая сессия и истёкший placement терминализуются событиями `SESSION_STALE_ABANDONED` / `PLACEMENT_EXPIRED` с детерминированным `boundary_at`, не по wall-clock replay'я | [PD-2026-07-20], [[modules/lessons]] §2, [[modules/assessments]] §2 |
@@ -82,6 +82,7 @@ OPEN-7…OPEN-21 заведены 2026-07-19/20 по итогам red-team ре�
 
 ## История изменений
 
+- **2026-07-20 (15)**: 0.6 Obsidian Vault принят — закрыты **OPEN-2** (две зоны + структура) и **OPEN-3** (обычные файлы). Открытых вопросов осталось 7.
 - **2026-07-20 (14)**: 0.5 Lesson Lifecycle + assessments принят — закрыты **OPEN-10** (Attempt machine, closure trigger, терминализация), **OPEN-17** (placement lifecycle/exposure) и бизнес-часть **OPEN-11** (uniqueness поверх CAS). 3 PD: авто-abandon stale-сессии событием, `draft→recorded→assessed`, окно resume placement.
 - **2026-07-20 (13)**: **OPEN-15 закрыт** — правовая позиция «приватное личное использование без распространения» + publication trigger; provenance сохранён по технической мотивации; living-layer excerpts запрещены постоянно. **П.4 разблокирована** (критический путь свободен).
 - **2026-07-20 (12)**: 0.4-rereview (PASS-with-findings) — 5 MAJOR + 2 MINOR сняты в спеках: `schedule_epoch` + pin scoring policy в STATE_TRANSITION (R-1), tie-break по dimension (R-2), `transfer` в core_skill_map (R-3), precedence primary target (R-4), граница закрытия ReviewAssignment (R-5), schema_version vs policy (R-6), Learning Score на measured (R-7). Новых OPEN нет; OPEN-10 уточнён (триггер терминализации — 0.5).

@@ -18,7 +18,7 @@ HTML-версия (пересобирается по запросу из это�
 | 0.3 | Curriculum Contract | `wiki/modules/curriculum.md` | done-with-open | can-do граф, 8 треков; остаточные OPEN-9/14/15 |
 | 0.4 | Evidence, Scoring & Review Contract | `wiki/modules/evidence.md` + `scoring.md` + `scheduler.md` | done-with-open | две оси + целые bands + Learning Score [PD-2026-07-20]; 2 прогона ревью (FAIL→PASS-with-findings, все находки сняты); остаётся калибровка констант + триггер терминализации в 0.5 (OPEN-10) |
 | 0.5 | Lesson Lifecycle & Completion Contract (+ assessments) | `wiki/modules/lessons.md` + `assessments.md` | done-with-open | Attempt `draft→recorded→assessed`, stale/expiry как replayable события, closure trigger, uniqueness [PD-2026-07-20]; закрыл OPEN-10/17 + бизнес-часть OPEN-11; остаётся калибровка порогов |
-| 0.6 | Obsidian Vault Contract | `wiki/modules/memory.md` | planned | OPEN-2, OPEN-3 |
+| 0.6 | Obsidian Vault Contract | `wiki/modules/memory.md` | done | две зоны `memory/`+`notes/`, обычные файлы, страница-на-сущность + дашборды [PD-2026-07-20]; закрыл OPEN-2/OPEN-3 |
 | 0.7 | CLI и Agent Skills contracts | `wiki/modules/cli.md` + `adapters.md` | planned | после 0.5 |
 | 0.8 | Сквозные flows (сессия, продолжение другим агентом, placement) | `wiki/flows/` | done | session · continuation · placement приняты [PD-2026-07-19] |
 | 0.9 | Lexical System Requirements | `wiki/product/lexical-system.md` | done-with-open | дизайн пользователя; остаточные OPEN-13/14/15 |
@@ -62,6 +62,7 @@ Listening/speaking модальности · полный TOEFL-симулято
 
 ## История изменений
 
+- **2026-07-20 (23)**: 0.6 Obsidian Vault принят (`wiki/modules/memory.md`) — две зоны (`memory/` генерится, `notes/` твоя), обычные markdown-файлы без зависимости от Obsidian CLI, страница-на-сущность + дашборды [PD-2026-07-20]. Закрыты OPEN-2/OPEN-3. В фазе 0 остался только **0.7**.
 - **2026-07-20 (22)**: 0.5 Lesson Lifecycle + assessments принят (`wiki/modules/lessons.md`, `assessments.md`) — Attempt `draft→recorded→assessed`, авто-abandon stale-сессии и истечение placement как **replayable события** (`SESSION_STALE_ABANDONED`, `PLACEMENT_EXPIRED`), closure trigger, uniqueness поверх CAS [PD-2026-07-20]. Закрыты OPEN-10/17 + бизнес-часть OPEN-11. В фазе 0 остались 0.6 и 0.7. П.4a передан Codex.
 - **2026-07-20 (21)**: П.1b done — informal-трек расширен (Codex, +6 тем: contractions, casual acknowledgements, abbreviations, casual↔neutral rephrasing, tone-recognition, forum-reply). Каркас: 91 тема, informal 8. Проверено независимо. Каркас готов под П.2.
 - **2026-07-20 (20)**: **OPEN-15 закрыт** [PD-2026-07-20] — репо приватный/личный, без публикации и продажи: обязательства CC BY-SA срабатывают на распространении и не наступают; provenance оставлен по технической мотивации; publication trigger зафиксирован как условие. **П.4 разблокирована**, критический путь свободен. П.1b передан Codex.
