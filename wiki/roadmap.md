@@ -16,7 +16,7 @@ HTML-версия (пересобирается по запросу из это�
 | 0.1 | Learning Model Requirements | `wiki/product/learning-model.md` | done | OPEN-4/5 решены; после триажа — остаточные OPEN-1/7/8/10/12/13 → 0.4 |
 | 0.2 | Application Foundation Contract (kernel) | `wiki/platform/foundation.md` | done-with-open | event-store: SQLite-таблица authoritative + JSONL export [PD-2026-07-20]; 2 прогона ревью пройдены (PASS-with-findings, все сняты); остаточные OPEN-9/10/11/19/20/21 → 1.2/1.3 |
 | 0.3 | Curriculum Contract | `wiki/modules/curriculum.md` | done-with-open | can-do граф, 8 треков; остаточные OPEN-9/14/15 |
-| 0.4 | Evidence, Scoring & Review Contract | `wiki/modules/evidence.md` + `scoring.md` + `scheduler.md` | done-with-open | две оси + целые bands + Learning Score [PD-2026-07-20]; ревью пройдено (2 BLOCKER + 9 MAJOR сняты: mastery_criteria schema, AT_RISK-событие, …); остаётся калибровка констант |
+| 0.4 | Evidence, Scoring & Review Contract | `wiki/modules/evidence.md` + `scoring.md` + `scheduler.md` | done-with-open | две оси + целые bands + Learning Score [PD-2026-07-20]; 2 прогона ревью (FAIL→PASS-with-findings, все находки сняты); остаётся калибровка констант + триггер терминализации в 0.5 (OPEN-10) |
 | 0.5 | Lesson Lifecycle & Completion Contract (+ assessments) | `wiki/modules/lessons.md` + `assessments.md` | next | после 0.1, 0.4; носитель OPEN-10/11(uniqueness)/17. `assessments.md` — named artifact для placement lifecycle |
 | 0.6 | Obsidian Vault Contract | `wiki/modules/memory.md` | planned | OPEN-2, OPEN-3 |
 | 0.7 | CLI и Agent Skills contracts | `wiki/modules/cli.md` + `adapters.md` | planned | после 0.5 |
@@ -62,6 +62,7 @@ Listening/speaking модальности · полный TOEFL-симулято
 
 ## История изменений
 
+- **2026-07-20 (19)**: 0.4-rereview — PASS-with-findings, новых BLOCKER нет; 5 MAJOR + 2 MINOR (schedule_epoch/policy-pin, tie-break по dimension, transfer в core-skill map, primary-target precedence, граница закрытия ReviewOutcome, schema_version, measured Learning Score) сняты. 0.4 подтверждён.
 - **2026-07-20 (18)**: content-review каркаса П.1 пройден (`staging/reviews/2026-07-20-P1-content-review.md`) — хребет верен концепту; 3 PD: vocab = lexicon-layer (пустой topic-трек намеренно), informal расширяется патчем П.1b, **порядок изменён на OPEN-15 → П.4 → П.2**. OPEN-15 на критическом пути.
 - **2026-07-20 (17)**: 0.4-review (FAIL) обработан — 2 BLOCKER (Topic.mastery_criteria schema; overdue→AT_RISK replayable-событие) + 9 MAJOR сняты в спеках; схемы/протоколы определены, не отложены. FAIL снят с 0.4. П.2 теперь genuinely разблокирована (schema есть).
 - **2026-07-20 (16)**: П.1 каркас программы принят (Codex, `curriculum/`) — 6 уровней, 8 треков, 20 модулей, 85 тем A1–A2; независимая проверка: 0 dangling refs, формат по контракту, отложенное (mastery_criteria/лексикон/тела) корректно отсутствует. П.1 → done; П.2 разблокирована (сначала content-review каркаса).

@@ -44,7 +44,12 @@ Evidence event-sourced ([[../platform/foundation]] §2); Attempt operational (fi
 - **MUST — observation schema**: наблюдение ссылается на конкретный `rubric_criterion` и `span/error` в raw_answer, не булев флаг `criterion_satisfied`. Разделены machine-checkable часть (проверяется кодом) и subjective (под cap/trust); observation, не подтверждаемая raw_answer, отклоняется или помечается.
 - **MUST — семантическая идентичность**: evidence имеет `source_span_hash` (canonical hash ответа/цитаты) и `item_exposure_id`. Один source-span засчитывается **не более раза** на пару (target, dimension); переотправка того же span с новыми ключами/session id нового evidence не создаёт.
 - **MUST — независимость**: rubric/informal-повышение состояния требует ≥2 независимых сессий; независимость определяется по **новому prompt/контексту/интервалу**, «другая сессия» сама по себе не считается.
-- **MUST — multi-credit allocation** [ревью 0.4-5]: один span, релевантный нескольким target/dimension, зачитывается по **детерминированному алгоритму**, а результат фиксируется как `CreditAllocation[]` в evidence-событии: для каждой пары (target, dimension) — `contribution` (доля/вес) и признак `used | rejected` с `reason`. Правило: primary target получает полный вес, дополнительные — сниженный по `multi_credit_weight` (*tunable*) с cap на сумму; двойного полного зачёта нет. Allocation воспроизводим при replay.
+- **MUST — multi-credit allocation** [ревью 0.4-5]: один span, релевантный нескольким target/dimension, зачитывается по **детерминированному алгоритму**, результат фиксируется как `CreditAllocation[]` в evidence-событии: для каждой пары (target, dimension) — `contribution` (вес) и `used | rejected` с `reason`. Primary получает полный вес, дополнительные — сниженный `multi_credit_weight` (*tunable*) с cap на сумму; двойного полного зачёта нет.
+- **MUST — выбор primary target: единственное правило precedence** [rereview R-4]: primary определяется по первому сработавшему критерию —
+  1. **явный ReviewAssignment** этого attempt (если attempt выполнялся по цели манифеста);
+  2. **declared target объективного item'а** (упражнение/placement-item объявляет свой target);
+  3. **канонический порядок** `target_id asc` среди кандидатов.
+  Выбранный критерий сохраняется в событии как `selection_basis` — initial scoring и replay дают одинаковый allocation для одинакового входа.
 - **MUST — непроверенная observation** [ревью 0.4-5]: observation, не подтверждаемая raw_answer, → **`rejected`** (не участвует в scoring), с audit-`reason`. Единственная ветка; «помечается» без участия в scoring исключено.
 
 ### 4.2 Trust model [PD-2026-07-19]
@@ -52,7 +57,13 @@ Evidence event-sourced ([[../platform/foundation]] §2); Attempt operational (fi
 - **MUST — объяснение ≠ evidence**: evidence появляется только при отдельном сохранённом learner response; объяснение агентом единицы даёт enrollment, не evidence знания.
 
 ### 4.3 AttemptAssessment vs ReviewOutcome (OPEN-10 evidence-часть)
-- **MUST**: на один `review_id` возможно несколько attempts; per-attempt AttemptAssessment **не терминальна**. `close_review` вычисляет **ровно один** ReviewOutcome в определённый момент (последний attempt / recover / correction); момент фиксируется, не зависит от реализации.
+- **MUST**: на один `review_id` возможно несколько attempts; per-attempt AttemptAssessment **не терминальна**.
+- **MUST — граница закрытия** [rereview R-5]: ReviewOutcome вычисляется **ровно один раз** в момент закрытия ReviewAssignment. Закрытие наступает по **первому** из:
+  1. явный `close_review` (агент отмечает цель выполненной/отклонённой ученицей);
+  2. **терминализация сессии** — finish/abandon закрывает все pending цели ([[lessons]] 0.5 владеет этим триггером).
+  После закрытия ReviewAssignment **терминален**: дальнейшие attempts на тот же `review_id` записываются как non-contributing (audit) либо относятся к **новому** assignment, назначенному scheduler. Повторный `close_review` идемпотентен (возвращает прежний outcome).
+- **MUST — correction ≠ второй outcome**: исправление уже терминального исхода идёт **только** через correction-событие (`corrects_event_id`, [[../platform/foundation]] §3.6), которое замещает эффект; второго ReviewOutcome на assignment не возникает.
+- Владение таймингом: правило закрытия — здесь (0.4); **триггер терминализации сессии — 0.5** ([[../OPEN]] OPEN-10).
 - **MUST**: ReviewOutcome и AttemptAssessment — раздельные записи; scoring применяет transition по ReviewOutcome ([[scoring]] §таблица).
 
 ### 4.4 contribution_scope — cardinality [ревью 0.4-10]
@@ -79,5 +90,6 @@ Evidence event-sourced ([[../platform/foundation]] §2); Attempt operational (fi
 
 ## История изменений
 
+- **2026-07-20 (3)**: 0.4-rereview — единственное правило precedence для primary target + `selection_basis` в событии (R-4); явная граница закрытия ReviewAssignment, терминальность, идемпотентный повторный close, correction ≠ второй outcome (R-5).
 - **2026-07-20 (2)**: 0.4-review триаж — детерминированный `CreditAllocation` record и единственная ветка для непроверенной observation (`rejected`, 0.4-5); cardinality `contribution_scope` (primary + contributions[], 0.4-10); immutable `origin` для placement-ceiling (0.4-4).
 - **2026-07-20**: создан (контракт 0.4, часть 1). Наблюдения→движок, semantic identity, observation schema, AttemptAssessment vs ReviewOutcome, contribution_scope, capture-into-event. Решения из learning-model + review-триажей [PD-2026-07-19/20].

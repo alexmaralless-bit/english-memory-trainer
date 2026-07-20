@@ -17,7 +17,9 @@
 
 | Сущность | Назначение | Ключевые поля |
 |---|---|---|
-| `ReviewSchedule` | план повторения target | target, dimension, `next_review_at`, interval_index, last_outcome |
+| `ReviewSchedule` | план повторения target | target, dimension, `schedule_epoch`, `next_review_at`, interval_index, last_outcome |
+
+- **MUST — `schedule_epoch`** [rereview R-1]: монотонный счётчик расписания на пару (target, dimension); инкрементируется при каждом **новом** назначении интервала. Входит в ключ идемпотентности и в payload события — позволяет отличить легитимное новое пересечение порога от дубля прежнего.
 | `review_status` | scheduling-ось | `not_due` / `due` / `overdue` (вычисляется из времени) |
 
 Review_status — **не** knowledge state ([[scoring]] §3); operational, управляется часами.
@@ -31,13 +33,14 @@ Review_status — **не** knowledge state ([[scoring]] §3); operational, уп�
 ## 4. re-entry и overdue→AT_RISK (OPEN-18) [PD-2026-07-19]
 
 - **MUST — re-entry trigger**: движок формирует re-entry рекомендацию, если перерыв > `gap_threshold` дней **или** средняя Retrievability приоритетных тем < `retrievability_floor` (оба *tunable*, scheduler-policy). Агент предлагает re-entry первым шагом; отказ допустим, ничего не блокирует и не штрафуется; результат обновляет Retrievability и план.
-- **MUST — overdue→AT_RISK как replayable факт** [ревью 0.4-2, BLOCKER]: при пересечении порога `at_risk_overdue_threshold` (*tunable*) scheduler-sweep эмитит **append-only событие** `OVERDUE_AT_RISK_TRIGGERED {target, dimension, boundary_at, next_review_at, pinned_scheduler_policy}`. `boundary_at` = детерминированный момент пересечения (из `next_review_at` + threshold), **не** wall-clock запуска sweep. Scoring применяет `STATE_TRANSITION` из этого события ([[scoring]] §3); **replay применяет событие, а не текущее время** → historical AT_RISK детерминирован.
-  - **MUST — идемпотентность sweep**: повторный sweep не эмитит второго `OVERDUE_AT_RISK_TRIGGERED` для того же (target, dimension, interval-эпохи); ключ идемпотентности — kernel (OPEN-11). Crash между эмиссией и применением — recover по outbox/UoW.
+- **MUST — overdue→AT_RISK как replayable факт** [ревью 0.4-2, BLOCKER]: при пересечении порога `at_risk_overdue_threshold` (*tunable*) scheduler-sweep эмитит **append-only событие** `OVERDUE_AT_RISK_TRIGGERED {target, dimension, schedule_epoch, boundary_at, next_review_at, pinned_scheduler_policy}`. `boundary_at` = детерминированный момент пересечения (из `next_review_at` + threshold), **не** wall-clock запуска sweep. **Replay применяет событие, а не текущее время** → historical AT_RISK детерминирован.
+  - **MUST — идемпотентность sweep** [rereview R-1]: ключ идемпотентности — `(target, dimension, schedule_epoch)`; повторный sweep не эмитит дубль, а новое расписание (новый `schedule_epoch`) даёт легитимное новое событие.
+  - **MUST — pin scoring policy при применении** [rereview R-1]: событие pin-ит scheduler-policy; **результирующий `STATE_TRANSITION` (scoring) pin-ит scoring policy**, по которой переход применён — иначе активация scoring policy между sweep и apply дала бы разные исходы из одного факта. Trigger и применение связаны `causation_id` и коммитятся в **одной UoW** ([[../platform/foundation]] §3.7).
 
 ## 5. Backlog и подача в манифест
 
 - **MUST NOT — не блокировать**: overdue backlog влияет только на рекомендации и состав Session Manifest, **не** на доступность тем ([[../product/learning-model]] §1).
-- **MUST — детерминированный порядок** [ревью 0.4-7]: scheduler выдаёт в манифест due/overdue-цели как `ReviewAssignment` (review_id, target, dimension, режим, критерии, pinned versions). Приоритет — **canonical tuple** с явным порядком ключей: `(overdue_days desc, retrievability asc, weakest_dimension_gap desc, is_prereq_of_next desc, target_id asc)`. Последний ключ `target_id` — стабильный tie-breaker: при равных значениях порядок не зависит от SQLite/query order (детерминизм kernel).
+- **MUST — детерминированный порядок** [ревью 0.4-7]: scheduler выдаёт в манифест due/overdue-цели как `ReviewAssignment` (review_id, target, dimension, режим, критерии, pinned versions). Приоритет — **canonical tuple** с явным порядком ключей: `(overdue_days desc, retrievability asc, weakest_dimension_gap desc, is_prereq_of_next desc, target_id asc, dimension_id asc)`. Два последних ключа — стабильный tie-breaker: у одного target может быть несколько due-dimensions, поэтому `target_id` **недостаточен** (rereview R-2). Порядок не зависит от SQLite/query order; покрыт тестом equal-priority/same-target.
 - **MUST**: повторение бывает явным, подмешанным (`review_id`) и скрытым (conversation evidence) — все через [[evidence]].
 
 ## 6. CLI-поверхность
@@ -58,5 +61,6 @@ Review_status — **не** knowledge state ([[scoring]] §3); operational, уп�
 
 ## История изменений
 
+- **2026-07-20 (3)**: 0.4-rereview — `schedule_epoch` в ReviewSchedule/событии/ключе идемпотентности + pin scoring policy в STATE_TRANSITION и одна UoW (R-1); tie-break расширен `dimension_id` (R-2).
 - **2026-07-20 (2)**: 0.4-review триаж — overdue→AT_RISK стал replayable-событием `OVERDUE_AT_RISK_TRIGGERED` с идемпотентным sweep (BLOCKER 0.4-2); добавлена ветка `INSUFFICIENT_EVIDENCE` (hold+retry, 0.4-7); canonical priority tuple со стабильным tie-breaker `target_id` (0.4-7).
 - **2026-07-20**: создан (контракт 0.4, часть 3). Интервальная модель с интерфейсом под FSRS; review_status; re-entry trigger и overdue→AT_RISK пороги [PD-2026-07-19]; backlog не блокирует.

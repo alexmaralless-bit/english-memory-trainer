@@ -46,7 +46,8 @@
 
 ¹ при threshold required dimensions + independence + repeatability (по `mastery_criteria` §3b). ² при `mastery_criteria` + retention (Stability ≥ `mastered_stability_days`, *tunable*). ³ restore в `prior_steady_state` ∈ {ACTIVE, MASTERED}. ⁴ `RECOVERED` для NEW/LEARNING семантически невозможен (нет prior AT_RISK) → **no-op**, не error; corrupted/late outcome с невозможной парой — no-op с audit-записью (не меняет state, не бросает).
 
-- **MUST — вход AT_RISK только через факт** [ревью 0.4-2]: `AT_RISK` возникает от подтверждённого REGRESSION **или** от события `OVERDUE_AT_RISK_TRIGGERED` (append-only, эмитит scheduler при crossing, [[scheduler]] §4). Scoring применяет `STATE_TRANSITION` из этого события — **не из текущего wall-clock**. Replay применяет тот же факт → historical state детерминирован независимо от времени запуска replay.
+- **MUST — вход AT_RISK только через факт** [ревью 0.4-2]: `AT_RISK` возникает от подтверждённого REGRESSION **или** от события `OVERDUE_AT_RISK_TRIGGERED` (append-only, эмитит scheduler при crossing, [[scheduler]] §4). Scoring применяет `STATE_TRANSITION` из этого события — **не из текущего wall-clock**; replay применяет тот же факт.
+- **MUST — STATE_TRANSITION pin-ит scoring policy** [rereview R-1]: результирующий `STATE_TRANSITION` фиксирует версию scoring policy, по которой переход применён, и связан `causation_id` с триггером; trigger и применение — в одной UoW. Иначе активация policy между sweep и apply дала бы разные исходы из одного факта.
 - **MUST**: review_status (`not_due/due/overdue`) — ось scheduler, не knowledge state; переход выполняет только движок.
 
 ### 3b. `Topic.mastery_criteria` — versioned schema [ревью 0.4-1]
@@ -55,7 +56,7 @@ Schema, которой автор программы (П.2) описывает �
 
 ```yaml
 mastery_criteria:
-  version: 1                      # selector версии scoring policy
+  schema_version: 1               # версия ЭТОЙ schema (не scoring policy, rereview R-6)
   per_dimension:
     recognition:
       active_threshold: 70        # Mastery-порог для вклада в ACTIVE (tunable)
@@ -72,7 +73,8 @@ mastery_criteria:
     retention_confirmations: 2    # подтверждений на разных интервалах
 ```
 
-- **MUST**: `mastery_criteria` определяет только *структуру и связь* с transition table (§3); численные значения — *tunable* policy-константы. Отсутствие критерия на required dimension = ошибка валидации. Эта schema — то, что делает П.2 authoring-возможным (roadmap).
+- **MUST — владение значениями** [rereview R-6]: конкретные значения (`active_threshold`, `retention_*`) **принадлежат теме** и живут в pinned `CurriculumVersion`; scoring policy их только *интерпретирует* (не переопределяет). `schema_version` версионирует форму, а не policy. Апгрейд scoring policy **не** меняет ретроспективно пороги старых тем — retrospective drift исключён.
+- **MUST**: `mastery_criteria` задаёт структуру и связь с transition table (§3). Отсутствие критерия на required dimension = ошибка валидации. Эта schema — то, что делает П.2 authoring-возможным (roadmap).
 - **MUST — relation к table**: `LEARNING → ACTIVE` при выполнении `per_dimension.active_threshold` + `independent_attempts` по всем required; `ACTIVE → MASTERED` при `mastered.*`.
 
 ### 3c. `LexicalMasteryProfile` — см. §6.
@@ -80,11 +82,16 @@ mastery_criteria:
 ## 4. Рабочий CEFR-уровень — целые bands (OPEN-8) [PD-2026-07-20]
 
 - **MUST**: уровни только целые (`A1…C2`), без подуровней. Per-skill CEFR = наивысший band, где выполнено **coverage**: ≥ `min_topics` независимых тем band'а в состоянии ACTIVE+ по required dimensions, ширина dimensions, confidence ≥ `confidence_floor` (все *tunable*). Непроверенная область — **unknown**, не поднимает уровень.
-- **MUST — core-skill map** [ревью 0.4-3]: Track ≠ core skill; вклад темы в core-навык задаётся **versioned `core_skill_map`** (часть scoring policy) по `(track, dimension)` с весами и cap. Дефолт:
-  - `grammar-engine` → Grammar; `vocabulary-chunks` → Vocabulary; `reading` → Reading;
-  - `written-interaction` + `written-production-mediation` → Writing;
-  - `us-tech-english`, `everyday-online-informal` — вклад по dimension: recognition→Reading, production→Writing (с весом < 1, dedup со своим основным треком).
-  Карта versioned и адресуема; coverage считается по ней, а не по track напрямую.
+- **MUST — core-skill map** [ревью 0.4-3, rereview R-3]: Track ≠ core skill; вклад задаётся **versioned `core_skill_map`** (часть scoring policy) по `(track, dimension)` с весами и cap. Правило перечисляет **все четыре machine-ID dimension** явно (никакого обобщённого «production»):
+  | track | recognition | controlled_production | spontaneous_production | transfer |
+  |---|---|---|---|---|
+  | `grammar-engine` | Grammar | Grammar | Grammar | Grammar (w<1) |
+  | `vocabulary-chunks` | Vocabulary | Vocabulary | Vocabulary | Vocabulary (w<1) |
+  | `reading` | Reading | Reading | — | Reading (w<1) |
+  | `written-interaction`, `written-production-mediation` | Reading (w<1) | Writing | Writing | Writing (w<1) |
+  | `us-tech-english`, `everyday-online-informal` | Reading (w<1) | Writing (w<1) | Writing (w<1) | Writing (w<1) |
+
+  `transfer` всегда засчитывается в тот же core skill, что и production данного трека, но с **пониженным весом и отдельным cap** (перенос подтверждает владение, но не заменяет прямое производство). Веса/cap — *tunable*; карта versioned и адресуема, coverage считается по ней, не по track напрямую.
 - **MUST**: overall working level (`measured_working_level`) = **не выше слабейшего core-навыка** (целый band; «полступени» снято, E-R4). Внутриуровневый прогресс отражает Learning Score, не уровень.
 - **MUST — measured vs provisional** [PD-2026-07-20, ревью 0.4-11]: движок отдаёт два раздельных поля — `measured_working_level` (только из evidence; неизмеренные навыки = unknown, трактуются консервативно) и `provisional_working_estimate` (measured где есть, иначе `self_reported_level`, помечено provisional). **Learning Score и gating используют `measured_working_level`**; briefing/рекомендации могут показывать provisional с флагом. `self_reported_level` замещается измерением per-skill после первого evidence/confidence floor.
 - **MUST — confidence**: per-skill confidence (`very_low | low | medium | high`) растёт по объёму/разбросу evidence; rolling-уточнение — versioned policy.
@@ -96,7 +103,7 @@ mastery_criteria:
 
 ## 5. Агрегаты (OPEN-12/13)
 
-- **Learning Score** [PD-2026-07-20]: coverage-взвешенный средний Mastery тем **текущего working-уровня**, 0–100 («насколько твёрдо владею тем, где я есть»). Прогресс-к-следующему — отдельно в roadmap-progress-проекции, не здесь.
+- **Learning Score** [PD-2026-07-20, rereview R-7]: coverage-взвешенный средний Mastery тем **`measured_working_level`** (именно измеренного, §4 — не provisional/self-report), 0–100. Если `measured_working_level` = unknown (нет допустимого evidence) → Learning Score = `no-data`, не 0. Прогресс-к-следующему — отдельно в roadmap-progress-проекции.
 - **Tutor Compliance Score** [ревью 0.4-9]: 0–100, `honored_obligations / total_obligations` за **measurement window** (*tunable*, дефолт последние 10 сессий). **Obligations registry** (versioned): required-skill вызван нужной версии; correction-протокол соблюдён; нет forbidden actions (агент не классифицировал сам, соблюдены finish-postconditions). Каждое obligation берётся из audit-события (raw input — событийный лог, не текст агента). Нет данных в окне → `no-data`, не 0.
 - **Informal Online Competence** (OPEN-13): отдельный 0–100 профиль по informal LexicalItems/навыкам; **не двигает CEFR напрямую**. Informal production через `contribution_scope` даёт компонент writing/transfer с dedup/cap.
 - **MUST**: агрегаты — производные проекции; не влияют обратно на per-target Mastery (нет циклов).
@@ -130,5 +137,6 @@ mastery_criteria:
 
 ## История изменений
 
+- **2026-07-20 (3)**: 0.4-rereview — core_skill_map перечисляет все четыре dimension включая `transfer` (R-3); `schema_version` отделён от scoring policy, значения принадлежат теме (R-6); Learning Score опирается на `measured_working_level` + `no-data` (R-7); STATE_TRANSITION pin-ит scoring policy и связан causation с триггером (R-1).
 - **2026-07-20 (2)**: 0.4-review триаж — добавлена **`Topic.mastery_criteria` schema** (§3b, BLOCKER 0.4-1); AT_RISK применяется из replayable-события, не clock (§3, BLOCKER 0.4-2); таблица переходов тотальна (NEW×RECOVERED, 0.4-6); core-skill map (§4, 0.4-3); origin+placement-cap (§4b, 0.4-4); measured vs provisional level (§4, 0.4-11); точный Decimal-контекст + конкретные дефолты (§2, 0.4-8); XP award-schema и Tutor Compliance measurement (§5/§7, 0.4-9).
 - **2026-07-20**: создан (контракт 0.4, часть 2). Две оси Mastery/Stability-Retrievability [PD-2026-07-20]; таблица переходов; целые CEFR-bands; Learning Score; Tutor Compliance/Informal; LexicalMasteryProfile; XP-ledger; numeric-детерминизм.
