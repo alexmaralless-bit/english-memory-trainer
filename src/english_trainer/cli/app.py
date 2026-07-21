@@ -27,7 +27,7 @@ from __future__ import annotations
 import platform
 import sys
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Annotated, Any, NoReturn
 
 import typer
 
@@ -39,12 +39,21 @@ from english_trainer.cli.envelope import (
     print_json_envelope,
     success_envelope,
 )
+from english_trainer.curriculum.loader import load_program
+from english_trainer.curriculum.service import (
+    activate_version,
+    get_topic,
+    lexicon_query,
+    register_version,
+)
+from english_trainer.curriculum.validate import validate_program
 from english_trainer.kernel.check import database_check
 from english_trainer.kernel.clock import SystemClock, SystemRandom
 from english_trainer.kernel.encoding import payload_hash
-from english_trainer.kernel.errors import IdempotencyConflict, KernelError
+from english_trainer.kernel.errors import IdempotencyConflict, KernelError, StaleRevision
 from english_trainer.kernel.export import JsonlExporter
 from english_trainer.kernel.ids import new_ulid
+from english_trainer.kernel.policy import PolicyRegistry
 from english_trainer.kernel.store import SCHEMA_VERSION, EventStore, connect, migrate
 from english_trainer.kernel.uow import CachedResult, UnitOfWork
 from english_trainer.storage.layout import StorageLayout, open_storage, resolve_layout
@@ -55,6 +64,8 @@ database_app = typer.Typer(add_completion=False, help="Storage integrity command
 app.add_typer(database_app, name="database")
 snapshot_app = typer.Typer(add_completion=False, help="Point-in-time snapshots of the local state.")
 app.add_typer(snapshot_app, name="snapshot")
+curriculum_app = typer.Typer(add_completion=False, help="The authored program: validate, inspect, activate.")
+app.add_typer(curriculum_app, name="curriculum")
 
 _FormatOpt = Annotated[str, typer.Option("--format", help="Output format: text (human) or json (contract).")]
 _RootOpt = Annotated[Path, typer.Option("--root", help="Trainer home directory (storage layout root).")]
@@ -82,7 +93,7 @@ def _correlation(provided: str | None) -> str:
     return provided if provided else new_ulid(SystemClock(), SystemRandom())
 
 
-def _emit(envelope: dict[str, Any], human: list[str], fmt: str, code: ExitCode) -> None:
+def _emit(envelope: dict[str, Any], human: list[str], fmt: str, code: ExitCode) -> NoReturn:
     if fmt == "json":
         print_json_envelope(envelope)
     else:
@@ -341,6 +352,202 @@ def snapshot_create(
             next_action="doctor",
         )
         _emit(failure_envelope("snapshot.create", corr, error), [f"error: {exc}"], fmt, ExitCode.CONFLICT)
+
+
+_CurriculumOpt = Annotated[Path, typer.Option("--curriculum", help="Path to the authored program directory.")]
+
+
+@curriculum_app.command("validate")
+def curriculum_validate(
+    fmt: _FormatOpt = "text",
+    curriculum: _CurriculumOpt = Path("curriculum"),
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Validate the authored program (or a candidate). Read-only; repairs nothing."""
+    corr = _correlation(correlation_id)
+    program = load_program(curriculum)
+    report = validate_program(program)
+    if report.ok:
+        data = {
+            "errors": [],
+            "warnings": report.warnings,
+            "topics": len(program["topics"]),
+            "lexicon": len(program["lexicon"]),
+        }
+        human = [
+            f"curriculum valid: {len(program['topics'])} topics, {len(program['lexicon'])} lexical items",
+            *[f"  warn: {line}" for line in report.warnings],
+        ]
+        _emit(success_envelope("curriculum.validate", corr, data), human, fmt, ExitCode.OK)
+    error = ErrorPayload(
+        error_code="CURRICULUM_INVALID",
+        message=f"{len(report.errors)} validation errors; first: " + " | ".join(report.errors[:5]),
+        allowed_actions=["curriculum validate"],
+        next_action="fix the listed errors, then curriculum validate",
+    )
+    human = [f"curriculum INVALID: {len(report.errors)} errors"] + [f"  - {e}" for e in report.errors]
+    _emit(failure_envelope("curriculum.validate", corr, error), human, fmt, ExitCode.INVALID_INPUT)
+
+
+@curriculum_app.command("show")
+def curriculum_show(
+    topic: Annotated[str, typer.Option("--topic", help="Topic id to show.")],
+    fmt: _FormatOpt = "text",
+    curriculum: _CurriculumOpt = Path("curriculum"),
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Show one topic with its full body."""
+    corr = _correlation(correlation_id)
+    found = get_topic(load_program(curriculum), topic)
+    if found is None:
+        error = ErrorPayload(
+            error_code="TOPIC_NOT_FOUND",
+            message=f"topic {topic!r} does not exist in {curriculum}.",
+            allowed_actions=["curriculum validate", "curriculum show --topic <id>"],
+            next_action="curriculum validate",
+        )
+        _emit(
+            failure_envelope("curriculum.show", corr, error),
+            [f"error: no topic {topic}"],
+            fmt,
+            ExitCode.NOT_FOUND,
+        )
+    human = [f"{found['id']} [{found.get('cefr')}] {found.get('track')}", f"  can_do: {found.get('can_do')}"]
+    _emit(success_envelope("curriculum.show", corr, {"topic": found}), human, fmt, ExitCode.OK)
+
+
+@curriculum_app.command("lexicon")
+def curriculum_lexicon(
+    fmt: _FormatOpt = "text",
+    curriculum: _CurriculumOpt = Path("curriculum"),
+    item_type: Annotated[str | None, typer.Option("--type", help="Filter by item type.")] = None,
+    cefr: Annotated[str | None, typer.Option("--cefr", help="Filter by CEFR level.")] = None,
+    band: Annotated[str | None, typer.Option("--band", help="Filter by curriculum_priority_band.")] = None,
+    register: Annotated[str | None, typer.Option("--register", help="Filter by register.")] = None,
+    limit: Annotated[int, typer.Option("--limit", help="Maximum items returned.")] = 20,
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Query the lexicon with simple filters. Deterministic order by id."""
+    corr = _correlation(correlation_id)
+    items = lexicon_query(
+        load_program(curriculum),
+        item_type=item_type,
+        cefr=cefr,
+        priority_band=band,
+        register=register,
+        limit=limit,
+    )
+    data = {"count": len(items), "items": items}
+    human = [f"{len(items)} lexical items"] + [
+        f"  {item.get('id')} [{item.get('cefr')}/{item.get('curriculum_priority_band')}]" for item in items
+    ]
+    _emit(success_envelope("curriculum.lexicon", corr, data), human, fmt, ExitCode.OK)
+
+
+@curriculum_app.command("activate")
+def curriculum_activate(
+    version: Annotated[str, typer.Option("--version", help="Version id to register and activate.")],
+    fmt: _FormatOpt = "text",
+    curriculum: _CurriculumOpt = Path("curriculum"),
+    root: _RootOpt = Path(),
+    expected_active: Annotated[
+        str | None,
+        typer.Option("--expected-active", help="The version the caller believes is active (CAS)."),
+    ] = None,
+    idempotency_key: Annotated[
+        str | None,
+        typer.Option("--idempotency-key", help="Required with --format json (cli 4.3)."),
+    ] = None,
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Validate, register and CAS-activate the program as one version.
+
+    Activation and its ``curriculum.version_activated`` event commit atomically.
+    """
+    corr = _correlation(correlation_id)
+    if fmt == "json" and not idempotency_key:
+        error = ErrorPayload(
+            error_code="MISSING_IDEMPOTENCY_KEY",
+            message="`trainer curriculum activate` mutates state: --idempotency-key is required with json.",
+            allowed_actions=["curriculum activate --idempotency-key <key>"],
+            next_action="curriculum activate --idempotency-key <key>",
+        )
+        _emit(failure_envelope("curriculum.activate", corr, error), [], fmt, ExitCode.USAGE)
+
+    program = load_program(curriculum)
+    report = validate_program(program)
+    if not report.ok:
+        error = ErrorPayload(
+            error_code="CURRICULUM_INVALID",
+            message=f"{len(report.errors)} validation errors; first: " + " | ".join(report.errors[:5]),
+            allowed_actions=["curriculum validate"],
+            next_action="curriculum validate",
+        )
+        _emit(
+            failure_envelope("curriculum.activate", corr, error),
+            [f"error: invalid program ({len(report.errors)} errors)"],
+            fmt,
+            ExitCode.INVALID_INPUT,
+        )
+
+    layout = resolve_layout(root)
+    request_hash = payload_hash(
+        {"command": "curriculum.activate", "version": version, "expected": expected_active}
+    )
+    try:
+        with open_storage(layout) as storage:
+            registry = PolicyRegistry(storage._conn, SystemClock())
+            if idempotency_key:
+                with UnitOfWork(storage.store, SystemClock()) as uow:
+                    prior = uow.check_idempotency(idempotency_key, request_hash)
+                if isinstance(prior, CachedResult):
+                    data = {**dict(prior.value), "cached": True}
+                    _emit(
+                        success_envelope("curriculum.activate", corr, data),
+                        [f"curriculum {data.get('version')} active (cached result)"],
+                        fmt,
+                        ExitCode.OK,
+                    )
+            register_version(registry, program, version)
+            event = activate_version(
+                storage.store, registry, SystemClock(), SystemRandom(), version, expected_active
+            )
+            result: dict[str, Any] = {
+                "version": version,
+                "previous": expected_active,
+                "activated": event is not None,
+                "event_id": event.id if event is not None else None,
+            }
+            if idempotency_key:
+                with UnitOfWork(storage.store, SystemClock()) as uow:
+                    uow.record_result(idempotency_key, request_hash, result)
+        data = {**result, "cached": False}
+        human = [f"curriculum {version} " + ("activated" if data["activated"] else "already active (no-op)")]
+        _emit(success_envelope("curriculum.activate", corr, data), human, fmt, ExitCode.OK)
+    except IdempotencyConflict as exc:
+        error = ErrorPayload(
+            error_code="IDEMPOTENCY_CONFLICT",
+            message=str(exc),
+            allowed_actions=["curriculum activate --idempotency-key <fresh-key>"],
+            next_action="curriculum activate --idempotency-key <fresh-key>",
+        )
+        _emit(failure_envelope("curriculum.activate", corr, error), [f"error: {exc}"], fmt, ExitCode.CONFLICT)
+    except StaleRevision as exc:
+        error = ErrorPayload(
+            error_code="STALE_ACTIVE_VERSION",
+            message=str(exc),
+            allowed_actions=["curriculum activate --expected-active <current>"],
+            next_action="re-read the active version, then curriculum activate",
+        )
+        _emit(failure_envelope("curriculum.activate", corr, error), [f"error: {exc}"], fmt, ExitCode.CONFLICT)
+    except KernelError as exc:
+        error = ErrorPayload(
+            error_code="CURRICULUM_VERSION_CONFLICT",
+            message=str(exc),
+            allowed_actions=["curriculum activate --version <new-id>"],
+            next_action="curriculum activate --version <new-id>",
+        )
+        _emit(failure_envelope("curriculum.activate", corr, error), [f"error: {exc}"], fmt, ExitCode.CONFLICT)
 
 
 def _wants_json(argv: list[str]) -> bool:

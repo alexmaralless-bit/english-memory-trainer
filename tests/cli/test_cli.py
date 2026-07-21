@@ -187,11 +187,23 @@ def test_registry_matches_published_surface() -> None:
     from english_trainer.cli.registry import command_registry
 
     registry = {descriptor.name: descriptor for descriptor in command_registry()}
-    assert set(registry) == {"doctor", "init", "database.check", "snapshot.create"}
+    assert set(registry) == {
+        "doctor",
+        "init",
+        "database.check",
+        "snapshot.create",
+        "curriculum.validate",
+        "curriculum.show",
+        "curriculum.lexicon",
+        "curriculum.activate",
+    }
     assert registry["init"].mutating and registry["init"].requires_idempotency_key
     assert registry["snapshot.create"].mutating and registry["snapshot.create"].requires_idempotency_key
+    assert registry["curriculum.activate"].mutating
+    assert registry["curriculum.activate"].requires_idempotency_key
     assert not registry["doctor"].mutating
     assert not registry["database.check"].mutating
+    assert not registry["curriculum.validate"].mutating
 
 
 def test_root_option_drives_default_paths(tmp_path: Path, capsys) -> None:

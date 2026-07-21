@@ -34,6 +34,7 @@ dev = [
     "pytest>=8.0",
     "ruff>=0.6",
     "mypy>=1.11",
+    "types-PyYAML>=6.0",
 ]
 
 [build-system]
@@ -44,7 +45,13 @@ build-backend = "setuptools.build_meta"
 # The application code lives under src/ (src layout). wiki/, curriculum/ and
 # staging/ remain data, not packages.
 package-dir = { "" = "src" }
-packages = ["english_trainer", "english_trainer.kernel", "english_trainer.cli", "english_trainer.storage"]
+packages = [
+    "english_trainer",
+    "english_trainer.kernel",
+    "english_trainer.cli",
+    "english_trainer.storage",
+    "english_trainer.curriculum",
+]
 
 [tool.ruff]
 target-version = "py312"

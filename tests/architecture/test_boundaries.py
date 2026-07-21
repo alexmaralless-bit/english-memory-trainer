@@ -32,7 +32,8 @@ LAYER_ALLOWLIST: dict[str, set[str]] = {
     "": set(),  # the root package imports nothing
     "kernel": {"kernel"},
     "storage": {"kernel", "storage"},
-    "cli": {"kernel", "storage", "cli"},
+    "curriculum": {"kernel", "curriculum"},
+    "cli": {"kernel", "storage", "curriculum", "cli"},
 }
 
 # Rule 2/3: module -> stdlib modules it may import from the restricted set.

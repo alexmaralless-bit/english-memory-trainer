@@ -35,6 +35,18 @@ _COMMANDS: tuple[CommandDescriptor, ...] = (
     CommandDescriptor(
         name="snapshot.create", owner_module="storage", mutating=True, requires_idempotency_key=True
     ),
+    CommandDescriptor(
+        name="curriculum.validate", owner_module="curriculum", mutating=False, requires_idempotency_key=False
+    ),
+    CommandDescriptor(
+        name="curriculum.show", owner_module="curriculum", mutating=False, requires_idempotency_key=False
+    ),
+    CommandDescriptor(
+        name="curriculum.lexicon", owner_module="curriculum", mutating=False, requires_idempotency_key=False
+    ),
+    CommandDescriptor(
+        name="curriculum.activate", owner_module="curriculum", mutating=True, requires_idempotency_key=True
+    ),
 )
 
 
