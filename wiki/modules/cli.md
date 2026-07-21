@@ -1,7 +1,7 @@
 # Модуль: cli
 
 > **Status**: current
-> **Last updated**: 2026-07-20
+> **Last updated**: 2026-07-21
 > **Sources**: `docs/english-memory-trainer-build-prompt.md` §12 (CLI contract), §11 (skills) · `CLAUDE.md` инварианты · [[../platform/foundation]] (envelopes, idempotency, correlation) · [[lessons]], [[assessments]], [[evidence]], [[scoring]], [[memory]], [[curriculum]] (владельцы команд) · все решения [PD-2026-07-20]
 > **Bounded context**: `src/english_trainer/cli/`
 
@@ -112,9 +112,9 @@ Envelope **тотален**: успех и отказ имеют одну фор
 | Команда | Владелец | Мутирует | Что делает |
 |---|---|---|---|
 | `trainer session start` | lessons | да | открывает сессию; композиция плана — в той же UoW; `--mode` задаёт режим занятия |
-| `trainer session next` | lessons | **да** | выдаёт следующий шаг: атомарно помечает предъявленным и публикует `STEP_PRESENTED`; идемпотентна ([[control]] §4.2) |
-| `trainer session peek` | lessons | нет | показывает следующий шаг, ничего не помечая — диагностика отделена от выдачи |
-| `trainer session replan` | lessons | да | пересобирает план: `composition_revision + 1`, CAS, новое `SESSION_COMPOSED` |
+| `trainer session next` | lessons | **да** | требует `--expected-plan-version` и `--idempotency-key`; выдаёт шаг, обновляет ledger, увеличивает `plan_version` и публикует `STEP_PRESENTED` ([[control]] §4.2) |
+| `trainer session peek` | lessons | нет | показывает следующий шаг и текущий `plan_version`, ничего не помечая |
+| `trainer session replan` | lessons | да | требует `--expected-plan-version` и `--idempotency-key`; `composition_revision + 1`, `plan_version + 1`, новое `SESSION_COMPOSED` |
 | `trainer session resume` | lessons | да | возобновляет `IN_PROGRESS` после потери чата; `--provider` обязателен и атомарно фиксирует `AGENT_ATTACHED` |
 | `trainer session finish` | lessons | да | **единственный** способ завершить сессию; требует persisted evidence |
 | `trainer session abandon` | lessons | да | явный отказ от сессии |
@@ -148,8 +148,8 @@ Envelope **тотален**: успех и отказ имеют одну фор
 | Команда | Владелец | Мутирует | Что делает |
 |---|---|---|---|
 | `trainer skills sync` \| `validate` | adapters | `sync` — да | синхронизация и drift-check канонических skills ([[adapters]]) |
-| `trainer why` | control | нет | почему выбран этот шаг: decision trace ([[control]] §4.6) |
-| `trainer signal KIND` | control | да | сигнал ученика о форме занятий; `too_easy` запрашивает пробу, оценку не меняет |
+| `trainer why` | control | нет | почему выбран этот шаг: decision trace ([[control]] §4.8) |
+| `trainer signal KIND` | control | да | записывает сигнал; при активной сессии `too_easy` возвращает `probe_id` и `next_action: session.replan`, но сам план не меняет |
 | `trainer availability show` \| `set` | control | `set` — да | объявленный и наблюдаемый ритм занятий |
 | `trainer tunables list` | control | нет | каталог настроек: владелец, диапазон, режим изменения |
 | `trainer metrics` | control | нет | метрики качества политики + аварийные признаки |
@@ -173,4 +173,5 @@ Envelope **тотален**: успех и отказ имеют одну фор
 
 ## История изменений
 
+- **2026-07-21**: `next`/`replan` синхронизированы с единым CAS-токеном `plan_version`; исправлена ссылка decision trace и явный replan после `too_easy`.
 - **2026-07-20**: спека создана (0.7). Тотальный envelope, закрытый набор exit codes с различением `CONFLICT`/`PRECONDITION_FAILED`, обязательный idempotency-key для мутирующих команд (мотив — падение между commit и печатью), запрет команды, принимающей оценку, запрет мутаций в read-only диагностике. Заведён OPEN-23.

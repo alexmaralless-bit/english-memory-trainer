@@ -1,7 +1,7 @@
 # Модуль: scoring
 
 > **Status**: current
-> **Last updated**: 2026-07-20
+> **Last updated**: 2026-07-21
 > **Sources**: [[../product/learning-model]] · [[evidence]] · Concept Gate 0.4 2026-07-20 (3 развилки, [PD-2026-07-20]) · review triage journals (OPEN-1/8/10/12/13/20) · часть контракта 0.4
 > **Bounded context**: `src/english_trainer/scoring/`
 
@@ -143,6 +143,7 @@ mastery_criteria:
 
 - **depends on**: evidence (факты), curriculum (targets/dimensions/profiles/pinned policy), kernel (детерминизм/numeric).
 - **events published**: `SCORES_UPDATED`, `STATE_TRANSITION`, `LEVEL_UPDATED`, `XP_AWARDED`.
+- **events consumed**: `EVIDENCE_ADDED`, `REVIEW_OUTCOME`; `REVIEW_ASSIGNMENT_CANCELLED` — terminal no-op, переход состояния и дельты не вычисляются.
 - **consumed by**: scheduler (Retrievability/состояния), lessons (манифест), memory (проекция), learner (агрегаты).
 
 ## 10. Открытые вопросы
@@ -151,6 +152,7 @@ mastery_criteria:
 
 ## История изменений
 
+- **2026-07-21**: `REVIEW_ASSIGNMENT_CANCELLED` закреплён как terminal no-op, не ReviewOutcome.
 - **2026-07-20 (3)**: 0.4-rereview — core_skill_map перечисляет все четыре dimension включая `transfer` (R-3); `schema_version` отделён от scoring policy, значения принадлежат теме (R-6); Learning Score опирается на `measured_working_level` + `no-data` (R-7); STATE_TRANSITION pin-ит scoring policy и связан causation с триггером (R-1).
 - **2026-07-20 (2)**: 0.4-review триаж — добавлена **`Topic.mastery_criteria` schema** (§3b, BLOCKER 0.4-1); AT_RISK применяется из replayable-события, не clock (§3, BLOCKER 0.4-2); таблица переходов тотальна (NEW×RECOVERED, 0.4-6); core-skill map (§4, 0.4-3); origin+placement-cap (§4b, 0.4-4); measured vs provisional level (§4, 0.4-11); точный Decimal-контекст + конкретные дефолты (§2, 0.4-8); XP award-schema и Tutor Compliance measurement (§5/§7, 0.4-9).
 - **2026-07-20**: создан (контракт 0.4, часть 2). Две оси Mastery/Stability-Retrievability [PD-2026-07-20]; таблица переходов; целые CEFR-bands; Learning Score; Tutor Compliance/Informal; LexicalMasteryProfile; XP-ledger; numeric-детерминизм.

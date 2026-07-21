@@ -1,7 +1,7 @@
 # Модуль: scheduler
 
 > **Status**: current
-> **Last updated**: 2026-07-20
+> **Last updated**: 2026-07-21
 > **Sources**: [[../product/learning-model]] §7 · [[scoring]] · [[../flows/session]] · review triage journals (OPEN-18) · часть контракта 0.4
 > **Bounded context**: `src/english_trainer/scheduler/`
 
@@ -26,7 +26,7 @@ Review_status — **не** knowledge state ([[scoring]] §3); operational, уп�
 
 ## 3. Модель интервалов [mvp]
 
-- **MUST**: базовая последовательность `1 → 3 → 7 → 14 → 30 → 60 → 120 → 180` дней (*tunable*), адаптируется по outcome: CONFIRMED/RECOVERED — шаг вперёд; REGRESSION — шаг назад/сброс; PROGRESS — удержание; **`INSUFFICIENT_EVIDENCE` — hold** (интервал не сдвигается, назначается короткий retry `retry_days`, *tunable* дефолт 1) [ревью 0.4-7]; **`CANCELLED` — не исход**: расписание не трогается вовсе, retry не назначается [RR2-4]. Интервал по **прошедшему времени** (elapsed 24h), не по календарю.
+- **MUST**: базовая последовательность `1 → 3 → 7 → 14 → 30 → 60 → 120 → 180` дней (*tunable*), адаптируется по outcome: CONFIRMED/RECOVERED — шаг вперёд; REGRESSION — шаг назад/сброс; PROGRESS — удержание; **`INSUFFICIENT_EVIDENCE` — hold** для любого значения `reason`, включая `abandoned` (интервал не сдвигается, назначается короткий retry `retry_days`, *tunable* дефолт 1) [ревью 0.4-7]; неизвестный `reason` сохраняется для аудита, но не создаёт новую scheduler-ветку. **`CANCELLED` — не исход**: расписание не трогается вовсе, retry не назначается [RR2-4]. Интервал по **прошедшему времени** (elapsed 24h), не по календарю.
 - **MUST — интерфейс отделён от формулы**: scheduler потребляет Retrievability/Stability из [[scoring]] и `target_recall` (*tunable*, дефолт 0.9); конкретная формула next-review за интерфейсом, FSRS — `[post-mvp]` без смены модели.
 - **MUST**: `due` когда `now ≥ next_review_at`; `overdue` когда просрочка > `overdue_factor × interval` (*tunable*).
 
@@ -41,7 +41,7 @@ Review_status — **не** knowledge state ([[scoring]] §3); operational, уп�
 ## 5. Backlog и подача в манифест
 
 - **MUST NOT — не блокировать**: overdue backlog влияет только на рекомендации и состав Session Manifest, **не** на доступность тем ([[../product/learning-model]] §1).
-- **MUST — детерминированный порядок** [ревью 0.4-7]: scheduler выдаёт в манифест due/overdue-цели как `ReviewAssignment` (review_id, target, dimension, режим, критерии, pinned versions). Приоритет — **canonical tuple** с явным порядком ключей: `(retrievability asc, curriculum_priority_rank asc, is_prereq_of_next desc, weakest_dimension_gap desc, overdue_days desc, target_id asc, dimension_id asc)` [PD-2026-07-20, OPEN-26]. Ведёт **риск утраты**, а не срок простоя: прежний порядок начинался с `overdue_days`, из-за чего периферийная единица, просроченная на 90 дней, обгоняла базовый навык с Retrievability 0.3, просроченный на два. Срок теперь разводит близкие случаи, а не задаёт порядок. **Это промежуточная мера**: лексикографический tuple в принципе не выражает конъюнкцию «риск И ставка», поэтому 0.12 заменяет его классами срочности ([[control]] §4.3), где оба сигнала обязательны одновременно. Два последних ключа — стабильный tie-breaker: у одного target может быть несколько due-dimensions, поэтому `target_id` **недостаточен** (rereview R-2). Порядок не зависит от SQLite/query order; покрыт тестом equal-priority/same-target.
+- **MUST — детерминированный порядок** [ревью 0.4-7]: scheduler выдаёт в манифест due/overdue-цели как `ReviewAssignment` (review_id, target, dimension, режим, критерии, pinned versions). Приоритет — **canonical tuple** с явным порядком ключей: `(retrievability asc, curriculum_priority_rank asc, is_prereq_of_next desc, weakest_dimension_gap desc, overdue_days desc, target_id asc, dimension_id asc)` [PD-2026-07-20, OPEN-26]. Ведёт **риск утраты**, а не срок простоя: прежний порядок начинался с `overdue_days`, из-за чего периферийная единица, просроченная на 90 дней, обгоняла базовый навык с Retrievability 0.3, просроченный на два. Срок теперь разводит близкие случаи, а не задаёт порядок. **Это промежуточная мера**: лексикографический tuple в принципе не выражает конъюнкцию «риск И ставка», поэтому 0.12 заменяет его классами срочности ([[control]] §4.5), где оба сигнала обязательны одновременно. Два последних ключа — стабильный tie-breaker: у одного target может быть несколько due-dimensions, поэтому `target_id` **недостаточен** (rereview R-2). Порядок не зависит от SQLite/query order; покрыт тестом equal-priority/same-target.
 - **MUST**: повторение бывает явным, подмешанным (`review_id`) и скрытым (conversation evidence) — все через [[evidence]].
 
 ## 6. CLI-поверхность
@@ -54,6 +54,7 @@ Review_status — **не** knowledge state ([[scoring]] §3); operational, уп�
 
 - **depends on**: scoring (Retrievability/Stability/состояния), curriculum (target refs/pinned policy), kernel (Clock, elapsed-время).
 - **events published**: `REVIEW_SCHEDULED`, `REVIEW_DUE`, `RE_ENTRY_RECOMMENDED`, `OVERDUE_AT_RISK_TRIGGERED`.
+- **events consumed**: `REVIEW_OUTCOME`; `REVIEW_ASSIGNMENT_CANCELLED` — явный terminal no-op без изменения schedule/retry.
 - **MUST — `REVIEW_DUE` это идемпотентное уведомление, не источник истины** [P0-Q2]: `due` — **вычисляемый** статус (`now ≥ next_review_at`), и потребители обязаны выводить его из расписания и Clock, а не из факта получения события. Событие несёт `boundary_at` (детерминированный момент пересечения, не wall-clock рассылки) и идемпотентно по ключу `(target_id, dimension_id, schedule_epoch)`: повторная рассылка не создаёт второго факта. Трактовать его как истину означало бы два источника статуса с разной задержкой. Ср. `OVERDUE_AT_RISK_TRIGGERED` — тот, наоборот, **является** фактом: он меняет knowledge state и потому append-only и replayable ([[scoring]] §3).
 - **consumed by**: lessons (манифест), evidence (закрытие цели → перепланирование), memory (проекция next-review).
 
@@ -63,6 +64,7 @@ Review_status — **не** knowledge state ([[scoring]] §3); operational, уп�
 
 ## История изменений
 
+- **2026-07-21**: `CANCELLED` закреплён как отдельное событие-terminal no-op; ветка `INSUFFICIENT_EVIDENCE` тотальна по `reason`; исправлена ссылка на control §4.5.
 - **2026-07-20 (3)**: 0.4-rereview — `schedule_epoch` в ReviewSchedule/событии/ключе идемпотентности + pin scoring policy в STATE_TRANSITION и одна UoW (R-1); tie-break расширен `dimension_id` (R-2).
 - **2026-07-20 (2)**: 0.4-review триаж — overdue→AT_RISK стал replayable-событием `OVERDUE_AT_RISK_TRIGGERED` с идемпотентным sweep (BLOCKER 0.4-2); добавлена ветка `INSUFFICIENT_EVIDENCE` (hold+retry, 0.4-7); canonical priority tuple со стабильным tie-breaker `target_id` (0.4-7).
 - **2026-07-20**: создан (контракт 0.4, часть 3). Интервальная модель с интерфейсом под FSRS; review_status; re-entry trigger и overdue→AT_RISK пороги [PD-2026-07-19]; backlog не блокирует.
