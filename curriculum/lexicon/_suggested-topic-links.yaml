@@ -718,3 +718,26 @@ links:
   - {lexical_item: idiom.when-it-comes-to, topics: [reading.idioms-in-context]}
   - {lexical_item: idiom.as-far-as-i-know, topics: [reading.idioms-in-context]}
   - {lexical_item: idiom.in-a-nutshell, topics: [reading.idioms-in-context]}
+
+  # ===== P.4d word-formation additions (PD-2026-07-21) =====
+  # HIGH-band affix derivatives: linked to the word-formation topic that teaches
+  # their pattern, plus a natural usage topic where one clearly exists.
+  - {lexical_item: word.undo, topics: [word-formation.negation-un]}
+  - {lexical_item: word.unclear, topics: [word-formation.negation-un, written-interaction.request-clarification]}
+  - {lexical_item: word.unavailable, topics: [word-formation.negation-un, written-interaction.current-status]}
+  - {lexical_item: word.redo, topics: [word-formation.repeat-re]}
+  - {lexical_item: word.rebuild, topics: [word-formation.repeat-re]}
+  - {lexical_item: word.retry, topics: [word-formation.repeat-re, us-tech.process-troubleshooting]}
+  - {lexical_item: word.misunderstand, topics: [word-formation.opposite-mis-dis]}
+  - {lexical_item: word.disconnect, topics: [word-formation.opposite-mis-dis, written-interaction.current-status]}
+  - {lexical_item: word.disable, topics: [word-formation.opposite-mis-dis]}
+  - {lexical_item: word.overwrite, topics: [word-formation.degree-over-under]}
+  - {lexical_item: word.developer, topics: [word-formation.agent-and-noun-suffix, us-tech.role-responsibilities]}
+  - {lexical_item: word.reviewer, topics: [word-formation.agent-and-noun-suffix]}
+  - {lexical_item: word.manager, topics: [word-formation.agent-and-noun-suffix, us-tech.role-responsibilities]}
+  - {lexical_item: word.user, topics: [word-formation.agent-and-noun-suffix]}
+  - {lexical_item: word.deployment, topics: [word-formation.agent-and-noun-suffix]}
+  - {lexical_item: word.improvement, topics: [word-formation.agent-and-noun-suffix]}
+  - {lexical_item: word.outperform, topics: [word-formation.surpass-out]}
+  - {lexical_item: word.readable, topics: [word-formation.quality-suffix]}
+  - {lexical_item: word.reusable, topics: [word-formation.quality-suffix]}

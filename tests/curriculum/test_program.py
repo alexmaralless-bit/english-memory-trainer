@@ -41,7 +41,7 @@ def test_real_program_loads_completely(program: dict[str, Any]) -> None:
     assert len(program["tracks"]) == 10
     assert len(program["modules"]) == 35
     assert len(program["topics"]) == 155  # 153 A1-A2 bodies + 2 B1 skeletons
-    assert len(program["lexicon"]) == 838
+    assert len(program["lexicon"]) == 886  # 838 + 48 word-formation additions (P.4d)
     assert {a["id"] for a in program["provenance"]["source_artifacts"]} == {
         "wordfreq@3.1.1",
         "ngsl@1.2",

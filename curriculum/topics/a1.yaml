@@ -1490,7 +1490,7 @@ topics:
     advisory_prerequisites:
       soft: [grammar.basic-word-order]
     dimensions: [recognition, controlled_production, transfer]
-    lexicon: [word.restart]
+    lexicon: [word.undo, word.unpack, word.unclear, word.unavailable]
     contexts: [simple-instructions]
     typical_errors:
       - "Assuming every base plus affix is a real English word (ложная продуктивность)."
@@ -1509,7 +1509,7 @@ topics:
     advisory_prerequisites:
       soft: [word-formation.negation-un]
     dimensions: [recognition, controlled_production, transfer]
-    lexicon: [word.restart]
+    lexicon: [word.restart, word.redo, word.retry, word.rebuild]
     contexts: [simple-instructions]
     typical_errors:
       - "Assuming every base plus affix is a real English word (ложная продуктивность)."

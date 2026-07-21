@@ -1451,7 +1451,7 @@ topics:
       strong: [word-formation.negation-un]
       soft: [word-formation.repeat-re]
     dimensions: [recognition, transfer]
-    lexicon: [word.restart, word.deployed]
+    lexicon: [word.misread, word.misunderstand, word.disconnect, word.disable]
     contexts: [documentation-reading]
     typical_errors:
       - "Assuming every base plus affix is a real English word (ложная продуктивность)."
@@ -1470,7 +1470,7 @@ topics:
     advisory_prerequisites:
       strong: [word-formation.negation-un]
     dimensions: [recognition, transfer]
-    lexicon: [word.restart, word.deployed]
+    lexicon: [word.overload, word.overwrite, word.oversleep, word.underestimate]
     contexts: [documentation-reading]
     typical_errors:
       - "Assuming every base plus affix is a real English word (ложная продуктивность)."
@@ -1489,7 +1489,7 @@ topics:
     advisory_prerequisites:
       soft: [grammar.nouns-singular-plural]
     dimensions: [recognition, controlled_production, transfer]
-    lexicon: [word.restart, word.deployed]
+    lexicon: [word.developer, word.reviewer, word.deployment, word.improvement, word.requirement]
     contexts: [documentation-reading]
     typical_errors:
       - "Assuming every base plus affix is a real English word (ложная продуктивность)."
