@@ -56,6 +56,14 @@ from english_trainer.kernel.ids import new_ulid
 from english_trainer.kernel.policy import PolicyRegistry
 from english_trainer.kernel.store import SCHEMA_VERSION, EventStore, connect, migrate
 from english_trainer.kernel.uow import CachedResult, UnitOfWork
+from english_trainer.lessons.sessions import (
+    SessionPrecondition,
+    abandon_session,
+    active_session_id,
+    finish_session,
+    get_session,
+    start_session,
+)
 from english_trainer.storage.layout import StorageLayout, open_storage, resolve_layout
 from english_trainer.storage.snapshot import create_snapshot
 
@@ -66,6 +74,8 @@ snapshot_app = typer.Typer(add_completion=False, help="Point-in-time snapshots o
 app.add_typer(snapshot_app, name="snapshot")
 curriculum_app = typer.Typer(add_completion=False, help="The authored program: validate, inspect, activate.")
 app.add_typer(curriculum_app, name="curriculum")
+session_app = typer.Typer(add_completion=False, help="Learning sessions: start, finish, abandon, status.")
+app.add_typer(session_app, name="session")
 
 _FormatOpt = Annotated[str, typer.Option("--format", help="Output format: text (human) or json (contract).")]
 _RootOpt = Annotated[Path, typer.Option("--root", help="Trainer home directory (storage layout root).")]
@@ -548,6 +558,214 @@ def curriculum_activate(
             next_action="curriculum activate --version <new-id>",
         )
         _emit(failure_envelope("curriculum.activate", corr, error), [f"error: {exc}"], fmt, ExitCode.CONFLICT)
+
+
+def _require_key(command: str, corr: str, fmt: str, idempotency_key: str | None) -> None:
+    if fmt == "json" and not idempotency_key:
+        spoken = command.replace(".", " ")
+        error = ErrorPayload(
+            error_code="MISSING_IDEMPOTENCY_KEY",
+            message=f"`trainer {spoken}` mutates state: --idempotency-key is required with json.",
+            allowed_actions=[f"{spoken} --idempotency-key <key>"],
+            next_action=f"{spoken} --idempotency-key <key>",
+        )
+        _emit(failure_envelope(command, corr, error), [], fmt, ExitCode.USAGE)
+
+
+@session_app.command("start")
+def session_start(
+    provider: Annotated[str, typer.Option("--provider", help="Tutor provider attaching to the session.")],
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    mode: Annotated[str, typer.Option("--mode", help="Session mode.")] = "balanced",
+    idempotency_key: Annotated[
+        str | None, typer.Option("--idempotency-key", help="Required with --format json (cli 4.3).")
+    ] = None,
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Open a session: pins active policy versions into the immutable manifest."""
+    corr = _correlation(correlation_id)
+    _require_key("session.start", corr, fmt, idempotency_key)
+    layout = resolve_layout(root)
+    request_hash = payload_hash(
+        {"command": "session.start", "provider": provider, "mode": mode, "root": str(layout.root)}
+    )
+    try:
+        with open_storage(layout) as storage:
+            registry = PolicyRegistry(storage._conn, SystemClock())
+            if idempotency_key:
+                with UnitOfWork(storage.store, SystemClock()) as uow:
+                    prior = uow.check_idempotency(idempotency_key, request_hash)
+                if isinstance(prior, CachedResult):
+                    _emit(
+                        success_envelope("session.start", corr, {**dict(prior.value), "cached": True}),
+                        ["session (cached result)"],
+                        fmt,
+                        ExitCode.OK,
+                    )
+            manifest = start_session(
+                storage.store, registry, SystemClock(), SystemRandom(), provider=provider, mode=mode
+            )
+            if idempotency_key:
+                with UnitOfWork(storage.store, SystemClock()) as uow:
+                    uow.record_result(idempotency_key, request_hash, manifest)
+        data = {**manifest, "cached": False}
+        human = [
+            f"session {manifest['session_id']} started ({mode}, provider {provider})",
+            f"  pinned: {manifest['pinned_versions']}",
+        ]
+        _emit(success_envelope("session.start", corr, data), human, fmt, ExitCode.OK)
+    except IdempotencyConflict as exc:
+        error = ErrorPayload(
+            error_code="IDEMPOTENCY_CONFLICT",
+            message=str(exc),
+            allowed_actions=["session start --idempotency-key <fresh-key>"],
+            next_action="session start --idempotency-key <fresh-key>",
+        )
+        _emit(failure_envelope("session.start", corr, error), [f"error: {exc}"], fmt, ExitCode.CONFLICT)
+    except SessionPrecondition as exc:
+        error = ErrorPayload(
+            error_code="SESSION_PRECONDITION",
+            message=str(exc),
+            allowed_actions=["session abandon", "curriculum activate", "session status"],
+            next_action="session status",
+        )
+        _emit(
+            failure_envelope("session.start", corr, error),
+            [f"error: {exc}"],
+            fmt,
+            ExitCode.PRECONDITION_FAILED,
+        )
+
+
+def _close_command(
+    command: str,
+    closer: Any,
+    fmt: str,
+    root: Path,
+    session: str | None,
+    idempotency_key: str | None,
+    correlation_id: str | None,
+) -> None:
+    corr = _correlation(correlation_id)
+    _require_key(command, corr, fmt, idempotency_key)
+    layout = resolve_layout(root)
+    try:
+        with open_storage(layout) as storage:
+            session_id = session if session is not None else active_session_id(storage.store)
+            if session_id is None or get_session(storage.store, session_id) is None:
+                error = ErrorPayload(
+                    error_code="SESSION_NOT_FOUND",
+                    message="no such session (and no active session to default to).",
+                    allowed_actions=["session status", "session start"],
+                    next_action="session status",
+                )
+                _emit(failure_envelope(command, corr, error), ["error: no session"], fmt, ExitCode.NOT_FOUND)
+            request_hash = payload_hash({"command": command, "session": session_id, "root": str(layout.root)})
+            if idempotency_key:
+                with UnitOfWork(storage.store, SystemClock()) as uow:
+                    prior = uow.check_idempotency(idempotency_key, request_hash)
+                if isinstance(prior, CachedResult):
+                    _emit(
+                        success_envelope(command, corr, {**dict(prior.value), "cached": True}),
+                        [f"{command} (cached result)"],
+                        fmt,
+                        ExitCode.OK,
+                    )
+            event = closer(storage.store, SystemClock(), SystemRandom(), session_id)
+            result = {"session_id": session_id, "event_id": event.id, "status_event": event.type}
+            if idempotency_key:
+                with UnitOfWork(storage.store, SystemClock()) as uow:
+                    uow.record_result(idempotency_key, request_hash, result)
+        _emit(
+            success_envelope(command, corr, {**result, "cached": False}),
+            [f"session {session_id}: {event.type}"],
+            fmt,
+            ExitCode.OK,
+        )
+    except IdempotencyConflict as exc:
+        error = ErrorPayload(
+            error_code="IDEMPOTENCY_CONFLICT",
+            message=str(exc),
+            allowed_actions=[f"{command.replace('.', ' ')} --idempotency-key <fresh-key>"],
+            next_action=f"{command.replace('.', ' ')} --idempotency-key <fresh-key>",
+        )
+        _emit(failure_envelope(command, corr, error), [f"error: {exc}"], fmt, ExitCode.CONFLICT)
+    except SessionPrecondition as exc:
+        error = ErrorPayload(
+            error_code="SESSION_PRECONDITION",
+            message=str(exc),
+            allowed_actions=["session status", "session abandon"],
+            next_action="session status",
+        )
+        _emit(failure_envelope(command, corr, error), [f"error: {exc}"], fmt, ExitCode.PRECONDITION_FAILED)
+
+
+@session_app.command("finish")
+def session_finish(
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    session: Annotated[
+        str | None, typer.Option("--session", help="Session id; defaults to the active session.")
+    ] = None,
+    idempotency_key: Annotated[
+        str | None, typer.Option("--idempotency-key", help="Required with --format json (cli 4.3).")
+    ] = None,
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Finish the session (the only way to complete one). Requires IN_PROGRESS."""
+    _close_command("session.finish", finish_session, fmt, root, session, idempotency_key, correlation_id)
+
+
+@session_app.command("abandon")
+def session_abandon(
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    session: Annotated[
+        str | None, typer.Option("--session", help="Session id; defaults to the active session.")
+    ] = None,
+    idempotency_key: Annotated[
+        str | None, typer.Option("--idempotency-key", help="Required with --format json (cli 4.3).")
+    ] = None,
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Explicitly abandon the session; everything already recorded is kept."""
+    _close_command("session.abandon", abandon_session, fmt, root, session, idempotency_key, correlation_id)
+
+
+@session_app.command("status")
+def session_status(
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Show the active session, if any. Read-only."""
+    corr = _correlation(correlation_id)
+    layout = resolve_layout(root)
+    if not layout.db.exists():
+        error = ErrorPayload(
+            error_code="DATABASE_NOT_FOUND",
+            message=f"{layout.db} does not exist.",
+            allowed_actions=["init"],
+            next_action="init",
+        )
+        _emit(
+            failure_envelope("session.status", corr, error),
+            ["error: not initialized"],
+            fmt,
+            ExitCode.NOT_FOUND,
+        )
+    with open_storage(layout) as storage:
+        session_id = active_session_id(storage.store)
+        if session_id is None:
+            data: dict[str, Any] = {"active": None}
+            human = ["no active session"]
+        else:
+            found = get_session(storage.store, session_id)
+            state = found[0] if found else {}
+            data = {"active": session_id, "status": state.get("status"), "manifest": state.get("manifest")}
+            human = [f"active session: {session_id} [{state.get('status')}]"]
+    _emit(success_envelope("session.status", corr, data), human, fmt, ExitCode.OK)
 
 
 def _wants_json(argv: list[str]) -> bool:

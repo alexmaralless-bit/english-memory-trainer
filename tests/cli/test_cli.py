@@ -183,6 +183,96 @@ def test_internal_error_is_wrapped_not_raised(tmp_path: Path, capsys) -> None:
     assert env["error"]["error_code"] == "INTERNAL"
 
 
+def test_session_lifecycle_through_the_cli(tmp_path: Path, capsys) -> None:
+    root = str(tmp_path)
+    curriculum_dir = str(Path(__file__).resolve().parents[2] / "curriculum")
+    run(["init", "--format", "json", "--root", root, "--idempotency-key", "k1"])
+    run(
+        [
+            "curriculum",
+            "activate",
+            "--version",
+            "v1",
+            "--curriculum",
+            curriculum_dir,
+            "--root",
+            root,
+            "--format",
+            "json",
+            "--idempotency-key",
+            "a1",
+        ]
+    )
+    capsys.readouterr()
+
+    # Start requires the key in json mode.
+    code = run(["session", "start", "--provider", "claude-code", "--format", "json", "--root", root])
+    env = _json_stdout(capsys)
+    assert code == ExitCode.USAGE and env["error"]["error_code"] == "MISSING_IDEMPOTENCY_KEY"
+
+    code = run(
+        [
+            "session",
+            "start",
+            "--provider",
+            "claude-code",
+            "--format",
+            "json",
+            "--root",
+            root,
+            "--idempotency-key",
+            "s1",
+        ]
+    )
+    env = _json_stdout(capsys)
+    _envelope_shape_ok(env)
+    assert code == ExitCode.OK
+    session_id = env["data"]["session_id"]
+    assert env["data"]["pinned_versions"]["curriculum"] == "v1"
+
+    # A second start is a precondition failure, not a silent abandon.
+    code = run(
+        [
+            "session",
+            "start",
+            "--provider",
+            "codex",
+            "--format",
+            "json",
+            "--root",
+            root,
+            "--idempotency-key",
+            "s2",
+        ]
+    )
+    env = _json_stdout(capsys)
+    assert code == ExitCode.PRECONDITION_FAILED
+    assert env["error"]["error_code"] == "SESSION_PRECONDITION"
+
+    # Status shows the active session; finish from STARTED is refused; abandon works.
+    code = run(["session", "status", "--format", "json", "--root", root])
+    env = _json_stdout(capsys)
+    assert code == ExitCode.OK and env["data"]["active"] == session_id
+
+    code = run(["session", "finish", "--format", "json", "--root", root, "--idempotency-key", "f1"])
+    env = _json_stdout(capsys)
+    assert code == ExitCode.PRECONDITION_FAILED  # nothing recorded -> abandon instead
+
+    code = run(["session", "abandon", "--format", "json", "--root", root, "--idempotency-key", "ab1"])
+    env = _json_stdout(capsys)
+    _envelope_shape_ok(env)
+    assert code == ExitCode.OK and env["data"]["session_id"] == session_id
+
+    # Replay of the same abandon returns the cached result, not an error.
+    code = run(["session", "abandon", "--format", "json", "--root", root, "--idempotency-key", "ab1"])
+    env = _json_stdout(capsys)
+    assert code == ExitCode.NOT_FOUND or env["data"].get("cached") is True
+
+    code = run(["session", "status", "--format", "json", "--root", root])
+    env = _json_stdout(capsys)
+    assert env["data"]["active"] is None
+
+
 def test_registry_matches_published_surface() -> None:
     from english_trainer.cli.registry import command_registry
 
@@ -196,6 +286,10 @@ def test_registry_matches_published_surface() -> None:
         "curriculum.show",
         "curriculum.lexicon",
         "curriculum.activate",
+        "session.start",
+        "session.finish",
+        "session.abandon",
+        "session.status",
     }
     assert registry["init"].mutating and registry["init"].requires_idempotency_key
     assert registry["snapshot.create"].mutating and registry["snapshot.create"].requires_idempotency_key

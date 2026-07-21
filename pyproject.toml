@@ -51,6 +51,7 @@ packages = [
     "english_trainer.cli",
     "english_trainer.storage",
     "english_trainer.curriculum",
+    "english_trainer.lessons",
 ]
 
 [tool.ruff]

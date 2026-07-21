@@ -47,6 +47,18 @@ _COMMANDS: tuple[CommandDescriptor, ...] = (
     CommandDescriptor(
         name="curriculum.activate", owner_module="curriculum", mutating=True, requires_idempotency_key=True
     ),
+    CommandDescriptor(
+        name="session.start", owner_module="lessons", mutating=True, requires_idempotency_key=True
+    ),
+    CommandDescriptor(
+        name="session.finish", owner_module="lessons", mutating=True, requires_idempotency_key=True
+    ),
+    CommandDescriptor(
+        name="session.abandon", owner_module="lessons", mutating=True, requires_idempotency_key=True
+    ),
+    CommandDescriptor(
+        name="session.status", owner_module="lessons", mutating=False, requires_idempotency_key=False
+    ),
 )
 
 
