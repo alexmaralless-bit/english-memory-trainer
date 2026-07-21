@@ -69,7 +69,12 @@ def database_check(store: EventStore, exporter: JsonlExporter) -> CheckReport:
 
     try:
         acknowledged_lines = [record for record in exporter.records() if int(record["sequence"]) <= applied]
-    except (ValueError, KeyError, TypeError) as exc:
+        # Hash validation is part of parsing the untrusted derived file.  A
+        # syntactically valid JSON value can still violate canonical payload
+        # rules (for example by containing a float), and that is corruption to
+        # report rather than an exception to leak from ``database check``.
+        bad_hashes = verify_line_hashes(acknowledged_lines)
+    except (OSError, UnicodeError, ValueError, KeyError, TypeError, AttributeError) as exc:
         # A torn or corrupt export file is invalid content -- an error verdict,
         # not an exception out of the check (foundation 2.1).
         errors.append(f"export file unreadable: {exc}")
@@ -89,7 +94,6 @@ def database_check(store: EventStore, exporter: JsonlExporter) -> CheckReport:
                 errors.append(f"export diverges from event table at sequence {event.sequence}")
                 break
 
-    bad_hashes = verify_line_hashes(acknowledged_lines)
     if bad_hashes:
         errors.append(f"export lines with invalid payload_hash: {bad_hashes}")
 

@@ -3,6 +3,7 @@ and divergence after catch-up is an error (foundation 2.1)."""
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from english_trainer.kernel.check import database_check
@@ -125,6 +126,30 @@ def test_unreadable_export_is_error_not_crash(store, clock, random_source, tmp_p
     export_pending(store, exporter, clock)
     with path.open("a", encoding="ascii") as handle:
         handle.write("not json at all\n")
+
+    report = database_check(store, exporter)
+    assert not report.ok
+    assert any("unreadable" in error for error in report.errors)
+
+
+def test_noncanonical_payload_is_error_not_crash(store, clock, random_source, tmp_path: Path) -> None:
+    # JSON itself permits floats, but the canonical payload contract does not.
+    # A corrupted acknowledged line must produce a check verdict, not let the
+    # canonical hasher's TypeError escape from the diagnostic boundary.
+    path = tmp_path / "e.jsonl"
+    exporter = JsonlExporter(path)
+    _append(store, clock, random_source, 1)
+    export_pending(store, exporter, clock)
+
+    records = exporter.records()
+    records[0]["payload"] = {"ratio": 1.5}
+    path.write_text(
+        "\n".join(
+            json.dumps(record, ensure_ascii=True, sort_keys=True, separators=(",", ":")) for record in records
+        )
+        + "\n",
+        encoding="ascii",
+    )
 
     report = database_check(store, exporter)
     assert not report.ok
