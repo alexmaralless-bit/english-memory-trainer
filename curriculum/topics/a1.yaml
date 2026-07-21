@@ -243,6 +243,19 @@ topics:
     can_do: "Describe what exists in a simple system or interface."
     advisory_prerequisites:
       strong: [grammar.be.identity]
+    dimensions: [recognition, transfer]
+    frequency_tier: tail
+    lexicon: [word.system, word.data]
+    contexts: [interface-walkthrough]
+    typical_errors:
+      - "Using Russian sentence order where English needs a fixed auxiliary or preposition."
+      - "Omitting a small grammar word because Russian does not mark it in the same way."
+      - "Choosing a literal Russian-to-English form instead of the target construction."
+    examples:
+      - "There is an error in the log."
+      - "There are two fields on this screen."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.have-has.objects
     cefr: A1
     track: grammar-engine
@@ -250,12 +263,38 @@ topics:
     can_do: "State what a system, team, or object has."
     advisory_prerequisites:
       strong: [grammar.basic-word-order]
+    dimensions: [recognition, transfer]
+    frequency_tier: tail
+    lexicon: [chunk.each-record-has, lexeme.have, word.system]
+    contexts: [interface-walkthrough]
+    typical_errors:
+      - "Using Russian sentence order where English needs a fixed auxiliary or preposition."
+      - "Omitting a small grammar word because Russian does not mark it in the same way."
+      - "Choosing a literal Russian-to-English form instead of the target construction."
+    examples:
+      - "The form has three required fields."
+      - "Our team has a shared folder."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.nouns-singular-plural
     cefr: A1
     track: grammar-engine
     module: a1.3-systems-objects-and-data
     can_do: "Refer to one or more objects, files, and records accurately."
     advisory_prerequisites: {}
+    dimensions: [recognition, transfer]
+    frequency_tier: tail
+    lexicon: [word.record, word.system, word.data]
+    contexts: [interface-walkthrough]
+    typical_errors:
+      - "Using Russian sentence order where English needs a fixed auxiliary or preposition."
+      - "Omitting a small grammar word because Russian does not mark it in the same way."
+      - "Choosing a literal Russian-to-English form instead of the target construction."
+    examples:
+      - "One file is missing."
+      - "Two records need review."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.demonstratives.references
     cefr: A1
     track: grammar-engine
@@ -263,6 +302,19 @@ topics:
     can_do: "Point to a specific object, field, or screen with demonstratives."
     advisory_prerequisites:
       strong: [grammar.nouns-singular-plural]
+    dimensions: [recognition, transfer]
+    frequency_tier: tail
+    lexicon: [chunk.this-field-contains, word.system, word.data]
+    contexts: [interface-walkthrough]
+    typical_errors:
+      - "Using Russian sentence order where English needs a fixed auxiliary or preposition."
+      - "Omitting a small grammar word because Russian does not mark it in the same way."
+      - "Choosing a literal Russian-to-English form instead of the target construction."
+    examples:
+      - "This field stores the email."
+      - "Those buttons open the report."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.quantifiers.basic
     cefr: A1
     track: grammar-engine
@@ -270,12 +322,38 @@ topics:
     can_do: "Describe simple quantities of objects or data."
     advisory_prerequisites:
       strong: [grammar.nouns-singular-plural]
+    dimensions: [recognition, transfer]
+    frequency_tier: tail
+    lexicon: [word.system, word.data]
+    contexts: [interface-walkthrough]
+    typical_errors:
+      - "Using Russian sentence order where English needs a fixed auxiliary or preposition."
+      - "Omitting a small grammar word because Russian does not mark it in the same way."
+      - "Choosing a literal Russian-to-English form instead of the target construction."
+    examples:
+      - "We have a few open tasks."
+      - "There is not much data yet."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.prepositions.location
     cefr: A1
     track: grammar-engine
     module: a1.3-systems-objects-and-data
     can_do: "Locate an object, field, or item in a simple system."
     advisory_prerequisites: {}
+    dimensions: [recognition, transfer]
+    frequency_tier: tail
+    lexicon: [chunk.its-stored-in, chunk.you-can-find-it-under, chunk.in-the-shared-folder]
+    contexts: [interface-walkthrough]
+    typical_errors:
+      - "Using Russian sentence order where English needs a fixed auxiliary or preposition."
+      - "Omitting a small grammar word because Russian does not mark it in the same way."
+      - "Choosing a literal Russian-to-English form instead of the target construction."
+    examples:
+      - "The setting is in the menu."
+      - "The note is under the title."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: reading.interface-data-description
     cefr: A1
     track: reading
@@ -283,6 +361,18 @@ topics:
     can_do: "Find named objects and simple quantities in an interface or data description."
     advisory_prerequisites:
       soft: [grammar.there-is-are.systems, grammar.quantifiers.basic]
+    dimensions: [recognition, transfer]
+    lexicon: [chunk.this-field-contains, chunk.you-can-find-it-under, word.field]
+    contexts: [interface-walkthrough]
+    typical_errors:
+      - "Translating every word and missing the main instruction or meaning (пословная калька)."
+      - "Treating a familiar-looking word as its Russian false friend without checking context."
+      - "Ignoring a negation, time marker, or modal that changes the practical message."
+    examples:
+      - "Status: Open. Owner: Mia."
+      - "The form has two required fields."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: us-tech.describe-system-data
     cefr: A1
     track: us-tech-english
@@ -291,6 +381,18 @@ topics:
     advisory_prerequisites:
       strong: [grammar.there-is-are.systems, grammar.have-has.objects]
       soft: [grammar.prepositions.location]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [chunk.each-record-has, chunk.its-stored-in, chunk.the-value-should-be]
+    contexts: [interface-walkthrough]
+    typical_errors:
+      - "Using a Russian calque instead of a clear technical action (make a deploy instead of deploy)."
+      - "Dropping the actor, status, or next step that makes an update actionable."
+      - "Using Present Simple for an incident happening now or Past Simple for an unfinished result."
+    examples:
+      - "This field stores the project name."
+      - "The file contains user data."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.present-continuous.status
     cefr: A1
     track: grammar-engine
@@ -298,6 +400,19 @@ topics:
     can_do: "Report work that is happening now with the Present Continuous."
     advisory_prerequisites:
       strong: [grammar.be.identity, grammar.basic-word-order]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: big-five
+    lexicon: [chunk.im-working-on, chunk.were-testing, chunk.were-waiting-on]
+    contexts: [status-update]
+    typical_errors:
+      - "Using Present Continuous for a routine (калька: «я обычно сейчас работаю»)."
+      - "Forgetting -s after he/she/it (русский глагол не меняется по лицам)."
+      - "Using do together with a main verb inflection (Does she works?)."
+    examples:
+      - "I am testing the new flow."
+      - "They are waiting for approval."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.present-simple-continuous.choice
     cefr: A1
     track: grammar-engine
@@ -305,6 +420,19 @@ topics:
     can_do: "Choose Present Simple for routines and Present Continuous for current work."
     advisory_prerequisites:
       strong: [grammar.present-simple.routines, grammar.present-continuous.status]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: big-five
+    lexicon: [word.progress, word.update]
+    contexts: [status-update]
+    typical_errors:
+      - "Using Present Continuous for a routine (калька: «я обычно сейчас работаю»)."
+      - "Forgetting -s after he/she/it (русский глагол не меняется по лицам)."
+      - "Using do together with a main verb inflection (Does she works?)."
+    examples:
+      - "I check logs every day."
+      - "I am checking today's error now."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: written-interaction.current-status
     cefr: A1
     track: written-interaction
@@ -312,6 +440,18 @@ topics:
     can_do: "Write a short current-status message about work in progress."
     advisory_prerequisites:
       strong: [grammar.present-continuous.status]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [chunk.im-working-on, chunk.in-progress, chunk.current-status-is]
+    contexts: [status-update]
+    typical_errors:
+      - "Writing a Russian-style imperative where English needs a polite request (Send me... without context)."
+      - "Omitting the subject, article, or auxiliary in a short message."
+      - "Using a direct calque such as Please, explain me instead of explain it to me."
+    examples:
+      - "I'm testing the payment flow now."
+      - "The update is in progress."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: us-tech.work-in-progress
     cefr: A1
     track: us-tech-english
@@ -319,6 +459,18 @@ topics:
     can_do: "Describe a work-in-progress item in a simple technology update."
     advisory_prerequisites:
       strong: [written-interaction.current-status]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [chunk.were-testing, chunk.in-progress, chunk.its-still-in-review]
+    contexts: [status-update]
+    typical_errors:
+      - "Using a Russian calque instead of a clear technical action (make a deploy instead of deploy)."
+      - "Dropping the actor, status, or next step that makes an update actionable."
+      - "Using Present Simple for an incident happening now or Past Simple for an unfinished result."
+    examples:
+      - "The team is testing the new model."
+      - "This task is blocked by an API error."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: everyday-online-informal.written-contractions
     cefr: A1
     track: everyday-online-informal
@@ -326,6 +478,18 @@ topics:
     can_do: "Use common written contractions in a simple chat or status message."
     advisory_prerequisites:
       strong: [written-interaction.current-status]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [chunk.its-still-in-review, chunk.im-almost-done-with, informal.contraction-im]
+    contexts: [status-update]
+    typical_errors:
+      - "Using a casual phrase in a neutral work message without checking tone or register."
+      - "Reading a short reaction literally and missing its pragmatic meaning (калька по словам)."
+      - "Using an abbreviation or contraction in a formal context where a neutral form is safer."
+    examples:
+      - "I'm on the call now."
+      - "We can't deploy today."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.can-cant.ability-requests
     cefr: A1
     track: grammar-engine
@@ -333,12 +497,38 @@ topics:
     can_do: "State simple ability, inability, and requests with can and can't."
     advisory_prerequisites:
       strong: [grammar.basic-word-order]
+    dimensions: [recognition, transfer]
+    frequency_tier: tail
+    lexicon: [chunk.can-you-help, word.help, word.question]
+    contexts: [work-chat]
+    typical_errors:
+      - "Using Russian sentence order where English needs a fixed auxiliary or preposition."
+      - "Omitting a small grammar word because Russian does not mark it in the same way."
+      - "Choosing a literal Russian-to-English form instead of the target construction."
+    examples:
+      - "Can you open the link?"
+      - "I can't join the call today."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.imperatives.instructions
     cefr: A1
     track: grammar-engine
     module: a1.5-requests-and-clarification
     can_do: "Give a simple written instruction or request."
     advisory_prerequisites: {}
+    dimensions: [recognition, transfer]
+    frequency_tier: tail
+    lexicon: [chunk.could-you-send-me, word.check, phrasal-verb.look-for]
+    contexts: [work-chat]
+    typical_errors:
+      - "Using Russian sentence order where English needs a fixed auxiliary or preposition."
+      - "Omitting a small grammar word because Russian does not mark it in the same way."
+      - "Choosing a literal Russian-to-English form instead of the target construction."
+    examples:
+      - "Open the ticket first."
+      - "Please send the screenshot."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.basic-questions.clarification
     cefr: A1
     track: grammar-engine
@@ -346,6 +536,19 @@ topics:
     can_do: "Ask a basic question to clarify meaning or a task."
     advisory_prerequisites:
       strong: [grammar.do-questions]
+    dimensions: [recognition, transfer]
+    frequency_tier: tail
+    lexicon: [chunk.what-does-mean, chunk.do-you-mean, word.question]
+    contexts: [work-chat]
+    typical_errors:
+      - "Using Russian sentence order where English needs a fixed auxiliary or preposition."
+      - "Omitting a small grammar word because Russian does not mark it in the same way."
+      - "Choosing a literal Russian-to-English form instead of the target construction."
+    examples:
+      - "What does this label mean?"
+      - "Where is the latest file?"
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: written-interaction.request-clarification
     cefr: A1
     track: written-interaction
@@ -354,6 +557,18 @@ topics:
     advisory_prerequisites:
       strong: [grammar.can-cant.ability-requests, grammar.basic-questions.clarification]
       soft: [grammar.imperatives.instructions]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [chunk.can-you-help, chunk.could-you-repeat, chunk.just-to-confirm]
+    contexts: [work-chat]
+    typical_errors:
+      - "Writing a Russian-style imperative where English needs a polite request (Send me... without context)."
+      - "Omitting the subject, article, or auxiliary in a short message."
+      - "Using a direct calque such as Please, explain me instead of explain it to me."
+    examples:
+      - "Could you explain this step, please?"
+      - "Do you mean the first file?"
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: everyday-online-informal.basic-chat-response
     cefr: A1
     track: everyday-online-informal
@@ -361,6 +576,18 @@ topics:
     can_do: "Respond naturally to a simple chat request or acknowledgement."
     advisory_prerequisites:
       soft: [written-interaction.request-clarification]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [chunk.im-not-sure-i-understand, informal.sounds-good, informal.got-it]
+    contexts: [work-chat]
+    typical_errors:
+      - "Using a casual phrase in a neutral work message without checking tone or register."
+      - "Reading a short reaction literally and missing its pragmatic meaning (калька по словам)."
+      - "Using an abbreviation or contraction in a formal context where a neutral form is safer."
+    examples:
+      - "Got it, thanks."
+      - "Sounds good. I'll check it."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: everyday-online-informal.casual-acknowledgements
     cefr: A1
     track: everyday-online-informal
@@ -369,6 +596,18 @@ topics:
     advisory_prerequisites:
       strong: [everyday-online-informal.basic-chat-response]
       soft: [written-interaction.request-clarification]
+    dimensions: [recognition, transfer]
+    lexicon: [informal.no-worries, informal.my-bad, informal.just-a-heads-up]
+    contexts: [work-chat]
+    typical_errors:
+      - "Using a casual phrase in a neutral work message without checking tone or register."
+      - "Reading a short reaction literally and missing its pragmatic meaning (калька по словам)."
+      - "Using an abbreviation or contraction in a formal context where a neutral form is safer."
+    examples:
+      - "No worries — I can wait."
+      - "My bad, I sent the old link."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.past-simple.events
     cefr: A1
     track: grammar-engine
@@ -719,6 +958,19 @@ topics:
     advisory_prerequisites:
       strong: [grammar.there-is-are.systems]
       soft: [grammar.demonstratives.references, grammar.nouns-singular-plural]
+    dimensions: [recognition, transfer]
+    frequency_tier: tail
+    lexicon: [word.system, word.data]
+    contexts: [interface-walkthrough]
+    typical_errors:
+      - "Using Present Continuous for a routine (калька: «я обычно сейчас работаю»)."
+      - "Forgetting -s after he/she/it (русский глагол не меняется по лицам)."
+      - "Using do together with a main verb inflection (Does she works?)."
+    examples:
+      - "Here is your access card."
+      - "Here are the test results."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: word-formation.negation-un
     cefr: A1
     track: word-formation
