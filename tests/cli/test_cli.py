@@ -307,6 +307,72 @@ def test_session_lifecycle_through_the_cli(tmp_path: Path, capsys) -> None:
     assert code == ExitCode.OK
     assert env["data"]["composition_revision"] == 2 and env["data"]["plan_version"] == 3
 
+    # -- evidence: EXERCISE_RENDERED before the learner sees it, then the attempt
+    exercise_file = tmp_path / "exercise.json"
+    exercise_file.write_text(
+        json.dumps(
+            {
+                "prompt": "Complete: I ___ an engineer.",
+                "answer_key": ["am"],
+                "provenance": {"origin": "authored"},
+            }
+        ),
+        encoding="utf-8",
+    )
+    code = run(
+        [
+            "exercise",
+            "rendered",
+            "--step",
+            first_step_id,
+            "--input",
+            str(exercise_file),
+            "--format",
+            "json",
+            "--root",
+            root,
+            "--idempotency-key",
+            "x1",
+        ]
+    )
+    env = _json_stdout(capsys)
+    _envelope_shape_ok(env)
+    assert code == ExitCode.OK
+    instance_id = env["data"]["exercise_instance_id"]
+
+    attempt_file = tmp_path / "attempt.json"
+    attempt_file.write_text(json.dumps({"raw_answer": "am", "hints": 0}), encoding="utf-8")
+    code = run(
+        [
+            "attempt",
+            "record",
+            "--step",
+            first_step_id,
+            "--exercise-instance",
+            instance_id,
+            "--input",
+            str(attempt_file),
+            "--note",
+            "confident answer",
+            "--format",
+            "json",
+            "--root",
+            root,
+            "--idempotency-key",
+            "at1",
+        ]
+    )
+    env = _json_stdout(capsys)
+    _envelope_shape_ok(env)
+    assert code == ExitCode.OK
+    assert env["data"]["status"] == "assessed"
+    assert env["data"]["assessment"]["correct"] is True
+
+    # The untrusted note surfaces in status as its own block.
+    code = run(["session", "status", "--format", "json", "--root", root])
+    env = _json_stdout(capsys)
+    assert env["data"]["notes"][0]["text"] == "confident answer"
+
     code = run(["session", "abandon", "--format", "json", "--root", root, "--idempotency-key", "ab1"])
     env = _json_stdout(capsys)
     _envelope_shape_ok(env)
@@ -342,7 +408,11 @@ def test_registry_matches_published_surface() -> None:
         "session.peek",
         "session.next",
         "session.replan",
+        "exercise.rendered",
+        "attempt.record",
     }
+    assert registry["exercise.rendered"].mutating and registry["exercise.rendered"].requires_idempotency_key
+    assert registry["attempt.record"].mutating and registry["attempt.record"].requires_idempotency_key
     assert registry["session.next"].mutating and registry["session.next"].requires_idempotency_key
     assert registry["session.replan"].mutating and registry["session.replan"].requires_idempotency_key
     assert not registry["session.peek"].mutating

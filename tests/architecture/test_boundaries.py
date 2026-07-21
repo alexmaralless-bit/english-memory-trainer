@@ -38,7 +38,10 @@ LAYER_ALLOWLIST: dict[str, set[str]] = {
     # control -- this direction avoids an import cycle).
     "control": {"kernel", "control"},
     "lessons": {"kernel", "control", "lessons"},
-    "cli": {"kernel", "storage", "curriculum", "control", "lessons", "cli"},
+    # evidence consumes published events, never other modules' code (0.4):
+    # the event log is its boundary with lessons/control.
+    "evidence": {"kernel", "evidence"},
+    "cli": {"kernel", "storage", "curriculum", "control", "lessons", "evidence", "cli"},
 }
 
 # Rule 2/3: module -> stdlib modules it may import from the restricted set.

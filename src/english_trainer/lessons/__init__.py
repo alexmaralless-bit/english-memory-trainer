@@ -16,6 +16,12 @@ from english_trainer.lessons.delivery import (
     production_eligible,
     replan_session,
 )
+from english_trainer.lessons.rendering import (
+    EVENT_EXERCISE_RENDERED,
+    find_presented_step,
+    find_rendered_exercise,
+    record_rendered_exercise,
+)
 from english_trainer.lessons.sessions import (
     ABANDONED,
     EVENT_ABANDONED,
@@ -41,6 +47,7 @@ __all__ = [
     "ABANDONED",
     "EVENT_ABANDONED",
     "EVENT_COMPOSED",
+    "EVENT_EXERCISE_RENDERED",
     "EVENT_FINISHED",
     "EVENT_SAFETY_REJECTED",
     "EVENT_STARTED",
@@ -51,6 +58,8 @@ __all__ = [
     "SessionPrecondition",
     "abandon_session",
     "active_session_id",
+    "find_presented_step",
+    "find_rendered_exercise",
     "finish_session",
     "get_plan",
     "get_session",
@@ -58,6 +67,7 @@ __all__ = [
     "next_step",
     "peek_step",
     "production_eligible",
+    "record_rendered_exercise",
     "replan_session",
     "start_session",
 ]

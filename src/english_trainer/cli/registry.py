@@ -71,6 +71,15 @@ _COMMANDS: tuple[CommandDescriptor, ...] = (
     CommandDescriptor(
         name="session.replan", owner_module="lessons", mutating=True, requires_idempotency_key=True
     ),
+    # Evidence persistence (2.2 increment 3): the rendered snapshot commits
+    # before the learner sees the prompt (P.3 PD-1 A), attempts reference the
+    # delivered step and the snapshot (evidence 4.5 [RR2-3]).
+    CommandDescriptor(
+        name="exercise.rendered", owner_module="lessons", mutating=True, requires_idempotency_key=True
+    ),
+    CommandDescriptor(
+        name="attempt.record", owner_module="evidence", mutating=True, requires_idempotency_key=True
+    ),
 )
 
 

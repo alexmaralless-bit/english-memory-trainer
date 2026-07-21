@@ -24,6 +24,7 @@ storage module (roadmap 1.3) fixes the layout; agents should pass ``--db`` /
 
 from __future__ import annotations
 
+import json
 import platform
 import sys
 from pathlib import Path
@@ -54,6 +55,7 @@ from english_trainer.curriculum.service import (
     register_version,
 )
 from english_trainer.curriculum.validate import validate_program
+from english_trainer.evidence.attempts import EvidencePrecondition, list_notes, record_attempt
 from english_trainer.kernel.check import database_check
 from english_trainer.kernel.clock import SystemClock, SystemRandom
 from english_trainer.kernel.encoding import payload_hash
@@ -64,6 +66,7 @@ from english_trainer.kernel.policy import PolicyRegistry
 from english_trainer.kernel.store import SCHEMA_VERSION, EventStore, connect, migrate
 from english_trainer.kernel.uow import CachedResult, UnitOfWork
 from english_trainer.lessons.delivery import next_step, peek_step, replan_session
+from english_trainer.lessons.rendering import record_rendered_exercise
 from english_trainer.lessons.sessions import (
     SessionPrecondition,
     abandon_session,
@@ -84,6 +87,10 @@ curriculum_app = typer.Typer(add_completion=False, help="The authored program: v
 app.add_typer(curriculum_app, name="curriculum")
 session_app = typer.Typer(add_completion=False, help="Learning sessions: start, finish, abandon, status.")
 app.add_typer(session_app, name="session")
+exercise_app = typer.Typer(add_completion=False, help="Rendered-exercise snapshots (EXERCISE_RENDERED).")
+app.add_typer(exercise_app, name="exercise")
+attempt_app = typer.Typer(add_completion=False, help="Learner attempts against delivered steps.")
+app.add_typer(attempt_app, name="attempt")
 
 _FormatOpt = Annotated[str, typer.Option("--format", help="Output format: text (human) or json (contract).")]
 _RootOpt = Annotated[Path, typer.Option("--root", help="Trainer home directory (storage layout root).")]
@@ -811,8 +818,18 @@ def session_status(
         else:
             found = get_session(storage.store, session_id)
             state = found[0] if found else {}
-            data = {"active": session_id, "status": state.get("status"), "manifest": state.get("manifest")}
-            human = [f"active session: {session_id} [{state.get('status')}]"]
+            notes = list_notes(storage.store, session_id)
+            data = {
+                "active": session_id,
+                "status": state.get("status"),
+                "manifest": state.get("manifest"),
+                # Untrusted agent notes ride along as their own block, never
+                # mixed into state (evidence 3 [R-3], P0-5).
+                "notes": notes,
+            }
+            human = [f"active session: {session_id} [{state.get('status')}]"] + [
+                f"  note ({entry.get('author_provider')}): {entry.get('text')}" for entry in notes
+            ]
     _emit(success_envelope("session.status", corr, data), human, fmt, ExitCode.OK)
 
 
@@ -1026,6 +1043,194 @@ def session_replan(
         correlation_id,
         describe,
     )
+
+
+def _read_input_json(command: str, corr: str, fmt: str, path: Path) -> dict[str, Any]:
+    """Parse the ``--input FILE`` JSON document or refuse with INVALID_INPUT."""
+    try:
+        loaded = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(loaded, dict):
+            raise ValueError("top-level value must be a JSON object")
+        return loaded
+    except (OSError, ValueError) as exc:
+        error = ErrorPayload(
+            error_code="INVALID_INPUT",
+            message=f"cannot read {path}: {exc}",
+            allowed_actions=[f"{command.replace('.', ' ')} --input <json-file>"],
+            next_action="fix the input file and retry",
+        )
+        _emit(failure_envelope(command, corr, error), [f"error: {exc}"], fmt, ExitCode.INVALID_INPUT)
+
+
+_InputOpt = Annotated[Path, typer.Option("--input", help="JSON file with the payload.")]
+_StepOpt = Annotated[str, typer.Option("--step", help="Step id from `session next`.")]
+
+
+@exercise_app.command("rendered")
+def exercise_rendered(
+    step: _StepOpt,
+    input_file: _InputOpt,
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    session: _SessionOpt = None,
+    idempotency_key: Annotated[
+        str | None, typer.Option("--idempotency-key", help="Required with --format json (cli 4.3).")
+    ] = None,
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Persist the rendered-exercise snapshot BEFORE the learner sees it
+    (P.3 PD-1 A). Returns the engine-issued exercise_instance_id."""
+    corr = _correlation(correlation_id)
+    _require_key("exercise.rendered", corr, fmt, idempotency_key)
+    exercise = _read_input_json("exercise.rendered", corr, fmt, input_file)
+    layout = resolve_layout(root)
+    try:
+        with open_storage(layout) as storage:
+            session_id = _resolve_session("exercise.rendered", corr, fmt, storage, session)
+            request_hash = payload_hash(
+                {"command": "exercise.rendered", "session": session_id, "step": step, "exercise": exercise}
+            )
+            if idempotency_key:
+                with UnitOfWork(storage.store, SystemClock()) as uow:
+                    prior = uow.check_idempotency(idempotency_key, request_hash)
+                if isinstance(prior, CachedResult):
+                    _emit(
+                        success_envelope("exercise.rendered", corr, {**dict(prior.value), "cached": True}),
+                        ["exercise rendered (cached result)"],
+                        fmt,
+                        ExitCode.OK,
+                    )
+            result = record_rendered_exercise(
+                storage.store,
+                PolicyRegistry(storage._conn, SystemClock()),
+                SystemClock(),
+                SystemRandom(),
+                session_id,
+                step_id=step,
+                exercise=exercise,
+            )
+            if idempotency_key:
+                with UnitOfWork(storage.store, SystemClock()) as uow:
+                    uow.record_result(idempotency_key, request_hash, result)
+        _emit(
+            success_envelope("exercise.rendered", corr, {**result, "cached": False}),
+            [
+                f"exercise {result['exercise_instance_id']} rendered for step {step}",
+                f"  content hash: {result['content_hash']}",
+            ],
+            fmt,
+            ExitCode.OK,
+        )
+    except IdempotencyConflict as exc:
+        error = ErrorPayload(
+            error_code="IDEMPOTENCY_CONFLICT",
+            message=str(exc),
+            allowed_actions=["exercise rendered --idempotency-key <fresh-key>"],
+            next_action="exercise rendered --idempotency-key <fresh-key>",
+        )
+        _emit(failure_envelope("exercise.rendered", corr, error), [f"error: {exc}"], fmt, ExitCode.CONFLICT)
+    except SessionPrecondition as exc:
+        error = ErrorPayload(
+            error_code=exc.code,
+            message=str(exc),
+            allowed_actions=["session peek", "session next", "session status"],
+            next_action="session peek",
+        )
+        _emit(
+            failure_envelope("exercise.rendered", corr, error),
+            [f"error: {exc}"],
+            fmt,
+            ExitCode.PRECONDITION_FAILED,
+        )
+
+
+@attempt_app.command("record")
+def attempt_record(
+    step: _StepOpt,
+    input_file: _InputOpt,
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    session: _SessionOpt = None,
+    exercise_instance: Annotated[
+        str | None,
+        typer.Option("--exercise-instance", help="EXERCISE_RENDERED instance id (structured tasks)."),
+    ] = None,
+    note: Annotated[str | None, typer.Option("--note", help="Untrusted agent note; never evidence.")] = None,
+    idempotency_key: Annotated[
+        str | None, typer.Option("--idempotency-key", help="Required with --format json (cli 4.3).")
+    ] = None,
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Record a learner attempt against a delivered step. The input file
+    carries {raw_answer, observations?, hints?}; target/dimension/mode/origin
+    are derived by the engine from the step, never taken from the client."""
+    corr = _correlation(correlation_id)
+    _require_key("attempt.record", corr, fmt, idempotency_key)
+    payload = _read_input_json("attempt.record", corr, fmt, input_file)
+    layout = resolve_layout(root)
+    try:
+        with open_storage(layout) as storage:
+            session_id = _resolve_session("attempt.record", corr, fmt, storage, session)
+            request_hash = payload_hash(
+                {
+                    "command": "attempt.record",
+                    "session": session_id,
+                    "step": step,
+                    "exercise_instance": exercise_instance,
+                    "input": payload,
+                }
+            )
+            if idempotency_key:
+                with UnitOfWork(storage.store, SystemClock()) as uow:
+                    prior = uow.check_idempotency(idempotency_key, request_hash)
+                if isinstance(prior, CachedResult):
+                    _emit(
+                        success_envelope("attempt.record", corr, {**dict(prior.value), "cached": True}),
+                        ["attempt (cached result)"],
+                        fmt,
+                        ExitCode.OK,
+                    )
+            result = record_attempt(
+                storage.store,
+                SystemClock(),
+                SystemRandom(),
+                session_id,
+                step_id=step,
+                raw_answer=str(payload.get("raw_answer", "")),
+                exercise_instance_id=exercise_instance,
+                observations=list(payload.get("observations", [])),
+                hints=int(payload.get("hints", 0)),
+                note=note,
+            )
+            if idempotency_key:
+                with UnitOfWork(storage.store, SystemClock()) as uow:
+                    uow.record_result(idempotency_key, request_hash, result)
+        assessment = result.get("assessment")
+        human = [f"attempt {result['attempt_id']} {result['status']}"]
+        if assessment is not None:
+            human.append(f"  objective check: {'correct' if assessment['correct'] else 'incorrect'}")
+        _emit(success_envelope("attempt.record", corr, {**result, "cached": False}), human, fmt, ExitCode.OK)
+    except IdempotencyConflict as exc:
+        error = ErrorPayload(
+            error_code="IDEMPOTENCY_CONFLICT",
+            message=str(exc),
+            allowed_actions=["attempt record --idempotency-key <fresh-key>"],
+            next_action="attempt record --idempotency-key <fresh-key>",
+        )
+        _emit(failure_envelope("attempt.record", corr, error), [f"error: {exc}"], fmt, ExitCode.CONFLICT)
+    except (EvidencePrecondition, SessionPrecondition) as exc:
+        error = ErrorPayload(
+            error_code=exc.code,
+            message=str(exc),
+            allowed_actions=["session peek", "exercise rendered", "session status"],
+            next_action="session peek",
+        )
+        _emit(
+            failure_envelope("attempt.record", corr, error),
+            [f"error: {exc}"],
+            fmt,
+            ExitCode.PRECONDITION_FAILED,
+        )
 
 
 def _wants_json(argv: list[str]) -> bool:
