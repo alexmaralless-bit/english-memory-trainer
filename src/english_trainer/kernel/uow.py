@@ -18,12 +18,16 @@ same key with a different payload is a stable ``IdempotencyConflict``.
 from __future__ import annotations
 
 import json
+import sqlite3
 from collections.abc import Sequence
 from types import TracebackType
+from typing import Any
 
+from english_trainer.kernel.aggregates import read_aggregate
 from english_trainer.kernel.clock import Clock
+from english_trainer.kernel.encoding import canonical_json
 from english_trainer.kernel.envelopes import DomainEvent
-from english_trainer.kernel.errors import IdempotencyConflict, KernelError
+from english_trainer.kernel.errors import IdempotencyConflict, KernelError, StaleRevision
 from english_trainer.kernel.store import EventStore
 
 
@@ -127,6 +131,62 @@ class UnitOfWork:
                 "VALUES (?,?,?,?);",
                 (key, payload_hash, json.dumps(result, sort_keys=True), self._clock.now().isoformat()),
             )
+        except BaseException:
+            self._poisoned = True
+            raise
+
+    # -- operational aggregates (foundation 3.5) -------------------------------
+
+    def get_aggregate(self, aggregate_type: str, aggregate_id: str) -> tuple[dict[str, Any], int] | None:
+        """Read ``(state, revision)`` inside this transaction (or ``None``)."""
+        self._require_open()
+        return read_aggregate(self._conn, aggregate_type, aggregate_id)
+
+    def save_aggregate(
+        self,
+        aggregate_type: str,
+        aggregate_id: str,
+        state: dict[str, Any],
+        *,
+        expected_revision: int,
+    ) -> int:
+        """Compare-and-set write of one aggregate; returns the new revision.
+
+        ``expected_revision == 0`` creates the aggregate (an existing row is a
+        conflict); otherwise the row must still carry exactly the revision the
+        caller read. A mismatch raises a stable :class:`StaleRevision` -- and,
+        like every failed write, poisons the UnitOfWork: several aggregates
+        saved in one transaction commit all-or-nothing, so one stale expectation
+        rolls back every other write, event and outbox row (foundation 3.5).
+        """
+        self._require_open()
+        try:
+            state_text = canonical_json(state).decode("ascii")
+            now = self._clock.now().isoformat()
+            if expected_revision == 0:
+                try:
+                    self._conn.execute(
+                        "INSERT INTO aggregates (aggregate_type, aggregate_id, revision, state, updated_at) "
+                        "VALUES (?,?,1,?,?);",
+                        (aggregate_type, aggregate_id, state_text, now),
+                    )
+                except sqlite3.IntegrityError:
+                    raise StaleRevision(
+                        f"aggregate {aggregate_type}:{aggregate_id} already exists; "
+                        "read it and retry with its current revision"
+                    ) from None
+                return 1
+            cursor = self._conn.execute(
+                "UPDATE aggregates SET revision = revision + 1, state = ?, updated_at = ? "
+                "WHERE aggregate_type = ? AND aggregate_id = ? AND revision = ?;",
+                (state_text, now, aggregate_type, aggregate_id, expected_revision),
+            )
+            if cursor.rowcount != 1:
+                raise StaleRevision(
+                    f"aggregate {aggregate_type}:{aggregate_id} is not at revision "
+                    f"{expected_revision}; re-read and retry with fresh state"
+                )
+            return expected_revision + 1
         except BaseException:
             self._poisoned = True
             raise

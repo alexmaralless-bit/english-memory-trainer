@@ -30,6 +30,7 @@ _REQUIRED_TABLES = frozenset(
         "consumer_offsets",
         "policies",
         "policy_active",
+        "aggregates",
         "schema_migrations",
     }
 )

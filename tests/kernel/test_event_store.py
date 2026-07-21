@@ -65,12 +65,13 @@ def test_migration_base_exception_rolls_back_and_is_resumable(tmp_path: Path) ->
 
         migrate(conn)
         assert not conn.in_transaction
-        assert [row[0] for row in conn.execute("SELECT version FROM schema_migrations ORDER BY version")] == [
-            1,
-            2,
-            3,
-            4,
-        ]
+        # Version-agnostic: the resumed run applies exactly the registered
+        # migrations, whatever the current schema version is.
+        from english_trainer.kernel.store import _MIGRATIONS
+
+        expected = [version for version, _ in _MIGRATIONS]
+        applied = [row[0] for row in conn.execute("SELECT version FROM schema_migrations ORDER BY version")]
+        assert applied == expected
     finally:
         conn.close()
 

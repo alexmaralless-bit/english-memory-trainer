@@ -24,7 +24,7 @@ from english_trainer.kernel.encoding import canonical_and_hash, canonical_json
 from english_trainer.kernel.envelopes import DomainEvent
 from english_trainer.kernel.errors import AppendOnlyViolation, KernelError
 
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 
 # Forward-only migrations: (version, ordered statements). Applied once each,
 # individually, inside one transaction -- SQLite DDL is transactional, but
@@ -190,6 +190,26 @@ _MIGRATIONS: tuple[tuple[int, tuple[str, ...]], ...] = (
             "CREATE TRIGGER policy_active_not_retired_update BEFORE UPDATE ON policy_active "
             "WHEN (SELECT status FROM policies p WHERE p.kind = NEW.kind AND p.version_id = NEW.version_id) "
             "= 'retired' BEGIN SELECT RAISE(ABORT, 'cannot activate retired policy'); END",
+        ),
+    ),
+    (
+        5,
+        (
+            # Revisioned operational aggregates (foundation 3.5). The kernel owns
+            # the mechanism -- a generic revisioned document store written through
+            # the UnitOfWork with compare-and-set -- while business modules own
+            # which aggregate types exist and what their state means. ``revision``
+            # starts at 1 and only ever increments by exactly 1 per successful CAS.
+            """
+            CREATE TABLE aggregates (
+                aggregate_type TEXT NOT NULL,
+                aggregate_id   TEXT NOT NULL,
+                revision       INTEGER NOT NULL,
+                state          TEXT NOT NULL,
+                updated_at     TEXT NOT NULL,
+                PRIMARY KEY (aggregate_type, aggregate_id)
+            )
+            """,
         ),
     ),
 )

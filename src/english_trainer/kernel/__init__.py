@@ -16,6 +16,7 @@ isolate-and-swap projection rebuild for SQLite read-models, and the typer CLI.
 
 from __future__ import annotations
 
+from english_trainer.kernel.aggregates import read_aggregate
 from english_trainer.kernel.check import CheckReport, database_check
 from english_trainer.kernel.clock import (
     Clock,
@@ -96,6 +97,7 @@ __all__ = [
     "migrate",
     "new_ulid",
     "payload_hash",
+    "read_aggregate",
     "rebuild_export",
     "replay",
     "resolve_corrections",
