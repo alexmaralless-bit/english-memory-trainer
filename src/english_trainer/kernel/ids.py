@@ -51,6 +51,14 @@ def is_ulid(value: str) -> bool:
 # Typed IDs. NewType keeps them distinct under mypy strict while staying plain
 # strings at runtime (cheap, JSON-friendly). Each business module owns the
 # entities; the kernel only supplies the id primitives.
+#
+# Honest limitation: NewType is a *static* aid only. It has no runtime identity,
+# and the envelopes (foundation 3.3) store ``id`` as a bare ``str`` -- pydantic
+# neither sees nor enforces these types. So a ``SessionId`` handed to a field
+# expecting an ``EventId`` is caught by mypy at call sites that stay typed, but
+# nothing rejects a mistyped id once it has been widened to ``str`` (e.g. read
+# back from the store). Treat these as discipline the type-checker helps keep,
+# not a runtime guarantee.
 EventId = NewType("EventId", str)
 CommandId = NewType("CommandId", str)
 SessionId = NewType("SessionId", str)
@@ -58,3 +66,33 @@ AttemptId = NewType("AttemptId", str)
 EvidenceId = NewType("EvidenceId", str)
 ReviewId = NewType("ReviewId", str)
 TopicId = NewType("TopicId", str)
+
+
+def new_event_id(clock: Clock, random: RandomSource) -> EventId:
+    """A fresh, time-sortable :data:`EventId`."""
+    return EventId(new_ulid(clock, random))
+
+
+def new_command_id(clock: Clock, random: RandomSource) -> CommandId:
+    """A fresh, time-sortable :data:`CommandId`."""
+    return CommandId(new_ulid(clock, random))
+
+
+def new_session_id(clock: Clock, random: RandomSource) -> SessionId:
+    """A fresh, time-sortable :data:`SessionId`."""
+    return SessionId(new_ulid(clock, random))
+
+
+def new_attempt_id(clock: Clock, random: RandomSource) -> AttemptId:
+    """A fresh, time-sortable :data:`AttemptId`."""
+    return AttemptId(new_ulid(clock, random))
+
+
+def new_evidence_id(clock: Clock, random: RandomSource) -> EvidenceId:
+    """A fresh, time-sortable :data:`EvidenceId`."""
+    return EvidenceId(new_ulid(clock, random))
+
+
+def new_review_id(clock: Clock, random: RandomSource) -> ReviewId:
+    """A fresh, time-sortable :data:`ReviewId`."""
+    return ReviewId(new_ulid(clock, random))

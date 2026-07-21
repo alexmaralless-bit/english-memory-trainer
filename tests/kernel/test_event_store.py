@@ -3,8 +3,11 @@
 
 from __future__ import annotations
 
+import pytest
+
 from english_trainer.kernel.clock import FixedClock, SeededRandomSource
 from english_trainer.kernel.envelopes import make_event
+from english_trainer.kernel.errors import KernelError
 from english_trainer.kernel.ids import new_ulid
 from english_trainer.kernel.store import EventStore
 from english_trainer.kernel.uow import UnitOfWork
@@ -59,6 +62,29 @@ def test_rollback_leaves_no_trace(store: EventStore, clock, random_source) -> No
     # Neither the event nor its outbox row survived the rollback.
     assert store.count() == 1
     assert store._conn.execute("SELECT COUNT(*) AS n FROM outbox;").fetchone()["n"] == 1
+
+
+def test_append_outside_a_transaction_is_refused(store: EventStore, clock, random_source) -> None:
+    # A direct append with no open UoW would write an event without its outbox
+    # row and operational state -- the boundary refuses it (foundation 2.1).
+    with pytest.raises(KernelError):
+        store.append([_event(clock, random_source)])
+    assert store.count() == 0
+
+
+def test_mutated_payload_is_refused_at_the_store_boundary(store: EventStore, clock, random_source) -> None:
+    ev = _event(clock, random_source)
+    ev.payload["kind"] = "tampered"  # the envelope is frozen; its payload dict is not
+    with pytest.raises(KernelError), UnitOfWork(store, clock) as uow:
+        uow.append([ev])
+    assert store.count() == 0  # the mismatched event never entered the log
+
+
+def test_assert_append_only_passes_on_an_empty_log(store: EventStore) -> None:
+    # Row-level BEFORE triggers cannot fire without a row; the schema-level check
+    # must still confirm the guards exist, so an empty log is not a false pass.
+    assert store.count() == 0
+    store.assert_append_only()
 
 
 def test_event_read_roundtrips_payload(store: EventStore, clock, random_source) -> None:

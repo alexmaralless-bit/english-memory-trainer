@@ -4,7 +4,10 @@ order-independence of reads, and deterministic append-order under equal
 
 from __future__ import annotations
 
+import os
 import random
+import subprocess
+import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -16,6 +19,22 @@ from english_trainer.kernel.store import EventStore, connect, migrate
 from english_trainer.kernel.uow import UnitOfWork
 
 EPOCH = datetime(2026, 7, 21, 12, 0, 0, tzinfo=UTC)
+
+# Run in a child process: emit the id stream AND a canonical hash of an
+# unordered dict, so a hash seed that leaked into either would change stdout.
+_CROSS_PROCESS_PROGRAM = """
+from datetime import UTC, datetime
+from english_trainer.kernel.clock import FixedClock, SeededRandomSource
+from english_trainer.kernel.encoding import payload_hash
+from english_trainer.kernel.ids import new_ulid
+
+clock = FixedClock(datetime(2026, 7, 21, 12, 0, 0, tzinfo=UTC))
+rnd = SeededRandomSource("fixed-seed")
+ids = "".join(new_ulid(clock, rnd) for _ in range(10))
+h = payload_hash({"zebra": 1, "alpha": 2, "mid": {"y": 1, "x": 2}, "café": "ǹ"})
+print(ids)
+print(h)
+"""
 
 
 def _digest(acc: str, event: DomainEvent) -> str:
@@ -90,12 +109,22 @@ def test_deterministic_append_order_under_equal_occurred_at(tmp_path: Path) -> N
     assert [t for _, t in run_a] == [t for _, t in run_b]
 
 
-def test_process_hash_seed_does_not_change_outcome(tmp_path: Path) -> None:
-    # SeededRandomSource is backed by random.Random(seed), independent of the
-    # process hash seed, so the id stream (and thus replay) is reproducible.
-    def stream() -> list[str]:
-        clock = FixedClock(EPOCH)
-        rnd = SeededRandomSource("fixed-seed")
-        return [new_ulid(clock, rnd) for _ in range(10)]
+def test_process_hash_seed_does_not_change_outcome() -> None:
+    # PYTHONHASHSEED only takes effect at interpreter start, so a same-process
+    # call cannot prove independence from it. Run the same program in two child
+    # interpreters with different hash seeds and require byte-identical stdout:
+    # this exercises both the seeded id stream and canonical_json's key ordering.
+    src = Path(__file__).resolve().parents[2] / "src"
 
-    assert stream() == stream()
+    def run(hash_seed: str) -> str:
+        env = {**os.environ, "PYTHONHASHSEED": hash_seed, "PYTHONPATH": str(src)}
+        proc = subprocess.run(
+            [sys.executable, "-c", _CROSS_PROCESS_PROGRAM],
+            check=True,
+            capture_output=True,
+            text=True,
+            env=env,
+        )
+        return proc.stdout
+
+    assert run("1") == run("2")

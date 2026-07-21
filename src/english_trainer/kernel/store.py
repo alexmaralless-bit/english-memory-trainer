@@ -13,12 +13,14 @@ later increment; this store establishes the atomic write and the sequence.
 
 from __future__ import annotations
 
+import json
 import sqlite3
 from collections.abc import Iterator, Sequence
 from pathlib import Path
 
+from english_trainer.kernel.encoding import payload_hash
 from english_trainer.kernel.envelopes import DomainEvent
-from english_trainer.kernel.errors import AppendOnlyViolation
+from english_trainer.kernel.errors import AppendOnlyViolation, KernelError
 
 SCHEMA_VERSION = 1
 
@@ -122,13 +124,27 @@ class EventStore:
     def append(self, events: Sequence[DomainEvent]) -> list[DomainEvent]:
         """Append events in order, assigning a monotonic ``sequence`` to each.
 
-        Must run inside an open transaction (the UoW opens it). Returns the
-        events with their assigned ``sequence`` set.
+        Must run inside an open transaction -- writing an event without the
+        outbox and operational state it commits with would break the atomicity
+        the whole design rests on (foundation 2.1). The UoW opens the
+        transaction; a direct call outside one is a bug and is refused here.
+
+        Every event's ``payload_hash`` is re-verified against its payload at this
+        authoritative boundary, so a payload mutated after construction (the
+        envelope freezes attribute assignment, not the payload dict) cannot enter
+        the log with a stale hash (foundation 3.3).
         """
-        import json
+        if not self._conn.in_transaction:
+            raise KernelError("EventStore.append must run inside a UnitOfWork transaction")
 
         stored: list[DomainEvent] = []
         for event in events:
+            expected = payload_hash(event.payload)
+            if event.payload_hash != expected:
+                raise KernelError(
+                    f"event {event.id} payload_hash {event.payload_hash!r} does not match "
+                    f"its payload (hashes to {expected!r}); payload was mutated after construction"
+                )
             cursor = self._conn.execute(
                 "INSERT INTO events "
                 "(id, type, occurred_at, actor, provider, correlation_id, causation_id, "
@@ -153,8 +169,6 @@ class EventStore:
 
     def read(self) -> Iterator[DomainEvent]:
         """Yield every event strictly in ``sequence`` order (foundation 5)."""
-        import json
-
         rows = self._conn.execute(
             "SELECT sequence, id, type, occurred_at, actor, provider, correlation_id, "
             "causation_id, idempotency_key, pinned_versions, payload, payload_hash "
@@ -181,15 +195,28 @@ class EventStore:
         return int(row["n"])
 
     def assert_append_only(self) -> None:
-        """Prove the triggers reject update/delete (used by the invariant test)."""
+        """Prove update/delete on the event log are refused (foundation 3.3).
+
+        Two independent checks, because a row-level ``BEFORE`` trigger only fires
+        when there is a row to touch: the guards must exist in the schema, and --
+        when the log is non-empty -- they must actually abort an update or delete.
+        """
+        triggers = {
+            row["name"]
+            for row in self._conn.execute(
+                "SELECT name FROM sqlite_master WHERE type = 'trigger' AND tbl_name = 'events';"
+            )
+        }
+        missing = {"events_no_update", "events_no_delete"} - triggers
+        if missing:
+            raise AppendOnlyViolation(f"append-only triggers missing: {sorted(missing)}")
+
+        if self.count() == 0:
+            return  # row triggers cannot fire on an empty table; schema check suffices
         for statement in ("UPDATE events SET type = type;", "DELETE FROM events;"):
             try:
                 self._conn.execute(statement)
-            except sqlite3.IntegrityError as exc:
-                if "append-only" in str(exc):
-                    continue
-                raise
-            except sqlite3.OperationalError as exc:
+            except (sqlite3.IntegrityError, sqlite3.OperationalError) as exc:
                 if "append-only" in str(exc):
                     continue
                 raise

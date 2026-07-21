@@ -43,3 +43,15 @@ def test_floats_are_rejected() -> None:
 def test_bool_and_int_are_distinct_but_encode_predictably() -> None:
     assert canonical_json({"flag": True}) == b'{"flag":true}'
     assert canonical_json({"n": 0}) == b'{"n":0}'
+
+
+def test_unicode_forms_normalize_to_one_encoding() -> None:
+    # "e-acute" precomposed (U+00E9) vs "e" + combining acute (U+0301): they
+    # render identically but are different code points. NFC collapses them, so
+    # both the bytes and the hash must match -- for values and for keys.
+    precomposed = {"name": "café"}
+    decomposed = {"name": "café"}
+    assert precomposed["name"] != decomposed["name"]
+    assert canonical_json(precomposed) == canonical_json(decomposed)
+    assert payload_hash(precomposed) == payload_hash(decomposed)
+    assert payload_hash({"café": 1}) == payload_hash({"café": 1})

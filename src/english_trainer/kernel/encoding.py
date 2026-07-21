@@ -4,7 +4,8 @@ Determinism needs one and only one byte representation of a payload, so that
 the same fact always produces the same ``payload_hash`` and replay is
 reproducible across machines and processes. ``canonical_json`` fixes every
 degree of freedom a JSON encoder normally leaves open: keys are sorted, there is
-no incidental whitespace, non-ASCII is escaped, and the number domain is
+no incidental whitespace, non-ASCII is escaped, strings are Unicode-normalized
+(NFC) so equivalent spellings share one encoding, and the number domain is
 restricted so ``1``, ``1.0`` and ``1e0`` cannot masquerade as the same value at
 rest.
 
@@ -17,11 +18,34 @@ from __future__ import annotations
 
 import hashlib
 import json
+import unicodedata
 from typing import Any
 
 JSONValue = None | bool | int | str | float | list["JSONValue"] | dict[str, "JSONValue"]
 
 HASH_ALGORITHM = "sha256"
+
+
+def _nfc(value: Any) -> Any:
+    """Return ``value`` with every string (key and scalar) NFC-normalized.
+
+    The same text can be spelled with different Unicode code points -- "é"
+    (e + combining acute) and "é" (precomposed e-acute) render identically
+    but are distinct byte sequences. Without a fixed normalization form, two
+    payloads that look the same would hash differently, so replay and idempotency
+    would depend on how the caller happened to type a character. NFC gives one
+    spelling. Applied to keys too; if two keys collapse to the same form the last
+    wins, which is the intended canonicalization.
+    """
+    if isinstance(value, str):
+        return unicodedata.normalize("NFC", value)
+    if isinstance(value, dict):
+        return {
+            (unicodedata.normalize("NFC", k) if isinstance(k, str) else k): _nfc(v) for k, v in value.items()
+        }
+    if isinstance(value, (list, tuple)):
+        return [_nfc(v) for v in value]
+    return value
 
 
 def _reject_non_canonical_floats(value: Any) -> None:
@@ -53,7 +77,7 @@ def canonical_json(payload: Any) -> bytes:
     """
     _reject_non_canonical_floats(payload)
     text = json.dumps(
-        payload,
+        _nfc(payload),
         ensure_ascii=True,
         sort_keys=True,
         separators=(",", ":"),

@@ -13,7 +13,7 @@ idempotency and replay.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -45,9 +45,14 @@ class Envelope(BaseModel):
     @field_validator("occurred_at")
     @classmethod
     def _require_utc(cls, value: datetime) -> datetime:
+        # Must be timezone-aware -- a naive instant has no defined moment. An
+        # aware instant at any offset names a real moment, so we accept it and
+        # normalize to UTC: storing the offset would let two envelopes for the
+        # same instant differ in bytes (e.g. 12:00+02:00 vs 10:00Z) and break the
+        # single-representation rule replay depends on (foundation 5).
         if value.tzinfo is None or value.utcoffset() is None:
-            raise ValueError("timestamps must be timezone-aware UTC")
-        return value
+            raise ValueError("timestamps must be timezone-aware")
+        return value.astimezone(UTC)
 
     @model_validator(mode="after")
     def _check_payload_hash(self) -> Envelope:

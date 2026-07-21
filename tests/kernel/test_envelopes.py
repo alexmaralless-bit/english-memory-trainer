@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta, timezone
 
 import pytest
 from pydantic import ValidationError
@@ -95,3 +95,19 @@ def test_event_is_frozen() -> None:
     ev = make_event(id="1", type="t", occurred_at=NOW, actor="e", correlation_id="c")
     with pytest.raises(ValidationError):
         ev.type = "other"  # type: ignore[misc]
+
+
+def test_aware_non_utc_instant_is_normalized_to_utc() -> None:
+    # An aware instant at +02:00 names a real moment; the envelope keeps the
+    # moment but normalizes the representation to UTC so two envelopes for the
+    # same instant never differ in bytes.
+    plus_two = timezone(timedelta(hours=2))
+    ev = make_event(
+        id="1",
+        type="t",
+        occurred_at=datetime(2026, 7, 21, 14, 0, 0, tzinfo=plus_two),
+        actor="e",
+        correlation_id="c",
+    )
+    assert ev.occurred_at.utcoffset() == timedelta(0)
+    assert ev.occurred_at == datetime(2026, 7, 21, 12, 0, 0, tzinfo=UTC)

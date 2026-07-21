@@ -25,10 +25,13 @@ dist/
 *.log
 *.db
 *.sqlite
+*.sqlite3
 *.db-wal
 *.db-shm
 *.sqlite-wal
 *.sqlite-shm
+*.sqlite3-wal
+*.sqlite3-shm
 
 # Editor and operating-system metadata
 .obsidian/
