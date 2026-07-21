@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from english_trainer.kernel.clock import FixedClock, SeededRandomSource
+from english_trainer.kernel.encoding import payload_hash
 from english_trainer.kernel.envelopes import make_event
 from english_trainer.kernel.errors import AppendOnlyViolation, KernelError
 from english_trainer.kernel.ids import new_ulid
@@ -67,25 +68,52 @@ def test_rollback_leaves_no_trace(store: EventStore, clock, random_source) -> No
     assert store._conn.execute("SELECT COUNT(*) AS n FROM outbox;").fetchone()["n"] == 1
 
 
-def test_append_outside_a_transaction_is_refused(store: EventStore, clock, random_source) -> None:
-    # A direct append with no open UoW would write an event without its outbox
-    # row and operational state -- the boundary refuses it (foundation 2.1).
+def test_append_without_the_write_capability_is_refused(store: EventStore, clock, random_source) -> None:
+    # There is no public append. The internal one refuses a missing or wrong
+    # token, so nothing outside the owning UoW can write (foundation 2.1).
+    assert not hasattr(store, "append")
     with pytest.raises(KernelError):
-        store.append([_event(clock, random_source)])
+        store._append([_event(clock, random_source)], None)
+    with pytest.raises(KernelError):
+        store._append([_event(clock, random_source)], object())
     assert store.count() == 0
 
 
 def test_manual_begin_cannot_impersonate_a_uow(store: EventStore, clock, random_source) -> None:
-    # A hand-rolled BEGIN sets in_transaction, but not the UoW capability, so it
-    # cannot smuggle an event past append() without an outbox row.
+    # A hand-rolled BEGIN sets in_transaction, but the caller has no capability
+    # matching the store's owner, so it cannot smuggle an event in.
     store._conn.execute("BEGIN;")
     try:
         with pytest.raises(KernelError):
-            store.append([_event(clock, random_source)])
+            store._append([_event(clock, random_source)], object())
     finally:
         store._conn.execute("ROLLBACK;")
     assert store.count() == 0
     assert store._conn.execute("SELECT COUNT(*) AS n FROM outbox;").fetchone()["n"] == 0
+
+
+def test_forged_claim_without_transaction_cannot_append(store: EventStore, clock, random_source) -> None:
+    # Even forging the claim does not help: append also requires an open
+    # transaction, so a claimed-but-autocommit forge writes nothing.
+    forged = object()
+    store._claim(forged)
+    try:
+        with pytest.raises(KernelError):
+            store._append([_event(clock, random_source)], forged)
+    finally:
+        store._release(forged)
+    assert store.count() == 0
+
+
+def test_direct_append_inside_a_live_uow_is_refused(store: EventStore, clock, random_source) -> None:
+    # Inside a legitimate UoW, code that does not hold the UoW's private token
+    # still cannot append directly -- the outbox bookkeeping cannot be bypassed.
+    with UnitOfWork(store, clock) as uow:
+        uow.append([_event(clock, random_source)])
+        with pytest.raises(KernelError):
+            store._append([_event(clock, random_source)], object())
+    assert store.count() == 1  # only the event that went through uow.append
+    assert store._conn.execute("SELECT COUNT(*) AS n FROM outbox;").fetchone()["n"] == 1
 
 
 def test_stored_payload_is_the_hashed_canonical_snapshot(store: EventStore, clock, random_source) -> None:
@@ -96,6 +124,17 @@ def test_stored_payload_is_the_hashed_canonical_snapshot(store: EventStore, cloc
         uow.append([_event(clock, random_source)])
     row = store._conn.execute("SELECT payload, payload_hash FROM events;").fetchone()
     assert hashlib.sha256(row["payload"].encode("ascii")).hexdigest() == row["payload_hash"]
+
+
+def test_returned_event_is_rebuilt_from_the_stored_snapshot(store: EventStore, clock, random_source) -> None:
+    # The event append() hands back carries the payload that was actually stored
+    # (rebuilt from the canonical bytes), so it stays self-consistent -- its
+    # payload hashes to its payload_hash -- rather than echoing the caller's object.
+    with UnitOfWork(store, clock) as uow:
+        (returned,) = uow.append([_event(clock, random_source)])
+    assert payload_hash(returned.payload) == returned.payload_hash
+    (loaded,) = list(store.read())
+    assert returned.payload == loaded.payload
 
 
 def test_mutated_payload_is_refused_at_the_store_boundary(store: EventStore, clock, random_source) -> None:

@@ -130,11 +130,11 @@ def test_deterministic_append_order_under_equal_occurred_at(tmp_path: Path) -> N
     assert [t for _, t in run_a] == [t for _, t in run_b]
 
 
-def test_interleaved_commits_reproduce_commit_order(tmp_path: Path) -> None:
-    # The real "concurrent append" case: writers serialize on the connection and
-    # arrive as separate transactions. With equal occurred_at and different seeds,
-    # the recorded total order is exactly commit order -- and reproducible. The
-    # tie-break is the assigned `sequence`, not occurred_at or the id.
+def test_separate_commits_reproduce_commit_order(tmp_path: Path) -> None:
+    # Appends that arrive as separate transactions (writers serialize on one
+    # connection; this test drives them sequentially) get a recorded total order
+    # equal to commit order -- reproducibly, with equal occurred_at and different
+    # seeds. The tie-break is the assigned `sequence`, not occurred_at or the id.
     def build(db: str, seed: int) -> list[tuple[int | None, str]]:
         clock = FixedClock(EPOCH)  # frozen: every commit shares occurred_at
         rnd = SeededRandomSource(seed)

@@ -131,48 +131,52 @@ def migrate(conn: sqlite3.Connection) -> None:
 class EventStore:
     """Append-only reads and writes over the ``events`` table.
 
-    Writes go through :class:`~english_trainer.kernel.uow.UnitOfWork`, which wraps
-    append + outbox + idempotency in one transaction and **claims** the store for
-    the duration (see ``_claim``/``_release``). ``append`` here assigns each event
-    its ``sequence`` and returns the persisted events.
+    There is **no public append**. Writing goes through
+    :class:`~english_trainer.kernel.uow.UnitOfWork`, which claims the store with an
+    opaque capability and calls the internal ``_append`` with it. Presenting that
+    exact capability is the only way to write, so no code -- not even code running
+    inside a legitimate UoW -- can smuggle an event past the UoW's outbox and
+    idempotency bookkeeping (foundation 2.1/3.7).
     """
 
     def __init__(self, conn: sqlite3.Connection) -> None:
         self._conn = conn
-        # The UoW that currently owns writes, or ``None``. This is a capability,
-        # not a mere flag: an event can only be appended while a UnitOfWork holds
-        # the store, so a hand-rolled ``BEGIN`` cannot impersonate a UoW and write
-        # an event without its outbox and idempotency rows (foundation 2.1/3.7).
+        # The capability the active UnitOfWork holds, or ``None``. Identity of
+        # this object -- not merely its presence -- authorizes a write.
         self._txn_owner: object | None = None
 
-    def _claim(self, owner: object) -> None:
-        """Mark ``owner`` (a UnitOfWork) as the active writer. Refuses to nest."""
+    def _claim(self, token: object) -> None:
+        """Make ``token`` the active write capability. Refuses to nest."""
         if self._txn_owner is not None:
             raise KernelError("event store already has an active transaction owner")
-        self._txn_owner = owner
+        self._txn_owner = token
 
-    def _release(self, owner: object) -> None:
-        """Drop the claim if ``owner`` holds it (idempotent, safe in ``finally``)."""
-        if self._txn_owner is owner:
+    def _release(self, token: object) -> None:
+        """Drop the claim if ``token`` holds it (idempotent, safe in ``finally``)."""
+        if self._txn_owner is token:
             self._txn_owner = None
 
-    def append(self, events: Sequence[DomainEvent]) -> list[DomainEvent]:
+    def _append(self, events: Sequence[DomainEvent], token: object) -> list[DomainEvent]:
         """Append events in order, assigning a monotonic ``sequence`` to each.
 
-        Only a UnitOfWork that has claimed the store may append -- writing an
-        event without the outbox and operational state it commits with would
-        break the atomicity the whole design rests on (foundation 2.1). A direct
-        call, even inside a hand-opened transaction, is refused.
+        Internal: only the owning UnitOfWork may call this, and only by presenting
+        the exact capability it claimed the store with, from inside its open
+        transaction. Both are required -- a matching token but no transaction, or a
+        transaction but no/other token, is refused. Being inside *some* transaction
+        or holding *some* owner is not enough (foundation 2.1).
 
         Each payload is serialized to its canonical bytes and hashed **once**;
-        those exact bytes are what gets stored and that exact hash is what is
-        checked against the envelope's ``payload_hash``. The whole batch is
-        prepared before any row is inserted, so a payload mutated after
-        construction is rejected (stale hash) and a bad event in the batch cannot
-        leave an earlier one half-inserted (foundation 3.3).
+        those exact bytes are what gets stored, that exact hash is what is checked
+        against the envelope's ``payload_hash``, and the returned event's payload
+        is rebuilt from those bytes (never from the caller's possibly-mutated
+        object). The whole batch is prepared before any row is inserted, so a
+        payload mutated after construction is rejected (stale hash) and a bad event
+        cannot leave an earlier one half-inserted (foundation 3.3).
         """
-        if self._txn_owner is None:
-            raise KernelError("EventStore.append must run inside a UnitOfWork transaction")
+        if token is None or token is not self._txn_owner:
+            raise KernelError("EventStore append requires the active UnitOfWork's write capability")
+        if not self._conn.in_transaction:
+            raise KernelError("EventStore append requires the UnitOfWork's open transaction")
 
         prepared: list[tuple[DomainEvent, str, str]] = []
         for event in events:
@@ -206,7 +210,10 @@ class EventStore:
                     event.payload_hash,
                 ),
             )
-            stored.append(event.model_copy(update={"sequence": int(cursor.lastrowid or 0)}))
+            snapshot_payload = json.loads(payload_text)  # the exact stored bytes, not the input object
+            stored.append(
+                event.model_copy(update={"sequence": int(cursor.lastrowid or 0), "payload": snapshot_payload})
+            )
         return stored
 
     @staticmethod
@@ -258,34 +265,38 @@ class EventStore:
         """Prove update and delete on the event log are actually refused
         (foundation 3.3).
 
-        A name check is not enough: a database could carry same-named triggers
-        that do nothing. So this is a **runtime** proof. Inside a SAVEPOINT it
-        inserts a throwaway row, confirms that an UPDATE and a DELETE targeting it
-        both abort with the append-only error, then rolls the savepoint back so
-        neither the probe row nor its ``sequence`` bump survives. Works on an
-        empty log too, where row-level triggers otherwise could not fire.
+        A name check is not enough -- a database could carry same-named triggers
+        that do nothing -- so this is a **runtime** proof. When the log already has
+        rows, a whole-table UPDATE and DELETE must abort (the trigger fires before
+        any change, so nothing is modified). When it is empty, row triggers cannot
+        fire, so a throwaway row is inserted inside a SAVEPOINT, proven un-editable
+        and un-deletable, then rolled back; the empty table guarantees the probe id
+        cannot collide with a real event.
         """
-        self._conn.execute("SAVEPOINT append_only_probe;")
-        try:
-            self._conn.execute(
-                "INSERT INTO events "
-                "(id, type, occurred_at, actor, correlation_id, pinned_versions, payload, payload_hash) "
-                "VALUES ('__probe__','__probe__','1970-01-01T00:00:00+00:00','__probe__',"
-                "'__probe__','{}','{}','probe');"
-            )
-            for statement in (
-                "UPDATE events SET type = type WHERE id = '__probe__';",
-                "DELETE FROM events WHERE id = '__probe__';",
-            ):
-                aborted = False
-                try:
-                    self._conn.execute(statement)
-                except (sqlite3.IntegrityError, sqlite3.OperationalError) as exc:
-                    if "append-only" not in str(exc):
-                        raise
-                    aborted = True
-                if not aborted:
-                    raise AppendOnlyViolation(f"append-only not enforced for: {statement}")
-        finally:
-            self._conn.execute("ROLLBACK TO append_only_probe;")
-            self._conn.execute("RELEASE append_only_probe;")
+        if self.count() == 0:
+            self._conn.execute("SAVEPOINT append_only_probe;")
+            try:
+                self._conn.execute(
+                    "INSERT INTO events "
+                    "(id, type, occurred_at, actor, correlation_id, pinned_versions, payload, payload_hash) "
+                    "VALUES ('__probe__','__probe__','1970-01-01T00:00:00+00:00','__probe__',"
+                    "'__probe__','{}','{}','probe');"
+                )
+                self._assert_update_delete_abort()
+            finally:
+                self._conn.execute("ROLLBACK TO append_only_probe;")
+                self._conn.execute("RELEASE append_only_probe;")
+        else:
+            self._assert_update_delete_abort()
+
+    def _assert_update_delete_abort(self) -> None:
+        for statement in ("UPDATE events SET type = type;", "DELETE FROM events;"):
+            aborted = False
+            try:
+                self._conn.execute(statement)
+            except (sqlite3.IntegrityError, sqlite3.OperationalError) as exc:
+                if "append-only" not in str(exc):
+                    raise
+                aborted = True
+            if not aborted:
+                raise AppendOnlyViolation(f"append-only not enforced for: {statement}")

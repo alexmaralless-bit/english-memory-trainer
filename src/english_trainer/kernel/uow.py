@@ -50,6 +50,10 @@ class UnitOfWork:
         self._pending_outbox: list[tuple[str, int, str]] = []
         self._open = False
         self._used = False
+        # Opaque write capability, minted on enter and handed to the store's
+        # internal append. Nothing outside this UoW holds it, so no other code can
+        # append events in this transaction (foundation 2.1/3.7).
+        self._token: object | None = None
         # Poisoned once any write raises: the transaction can then only roll back,
         # even if the caller swallowed the exception inside the block. Otherwise a
         # caught mid-batch failure could commit a partial write (foundation 3.7).
@@ -83,14 +87,21 @@ class UnitOfWork:
     def __enter__(self) -> UnitOfWork:
         if self._used:
             raise KernelError("UnitOfWork is single-use; create a new one per transaction")
-        # Claim the store first: if another UoW already owns it, no transaction is
-        # opened. Release the claim if BEGIN itself fails, so nothing leaks.
-        self._store._claim(self)
+        token = object()
+        # Claim first: if another UoW already owns the store, no transaction opens.
+        self._store._claim(token)
+        was_in_transaction = self._conn.in_transaction
         try:
             self._conn.execute("BEGIN;")
         except BaseException:
-            self._store._release(self)
+            # BEGIN may have opened the transaction before the failure surfaced
+            # (an async signal right after SQLite returned). If we opened it, roll
+            # it back so it is not left dangling; then drop the claim.
+            if self._conn.in_transaction and not was_in_transaction:
+                self._conn.execute("ROLLBACK;")
+            self._store._release(token)
             raise
+        self._token = token
         self._used = True
         self._open = True
         return self
@@ -99,7 +110,7 @@ class UnitOfWork:
         """Append events; their outbox messages are enqueued in the same UoW."""
         self._require_open()
         try:
-            stored = self._store.append(events)
+            stored = self._store._append(events, self._token)
         except BaseException:
             self._poisoned = True
             raise
@@ -159,4 +170,4 @@ class UnitOfWork:
                 self._rollback()
                 raise
         finally:
-            self._store._release(self)
+            self._store._release(self._token)

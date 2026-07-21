@@ -43,6 +43,28 @@ class _ArmableClock:
         return self._base.now()
 
 
+class _BeginThenSignalConn:
+    """Wraps a real connection; the first BEGIN really opens the transaction and
+    then raises -- like an async signal (KeyboardInterrupt) arriving the instant
+    SQLite returns. Everything else passes straight through."""
+
+    def __init__(self, real) -> None:
+        self._real = real
+        self._begins = 0
+
+    def execute(self, sql, *args):
+        if sql.strip().upper().startswith("BEGIN"):
+            self._begins += 1
+            if self._begins == 1:
+                self._real.execute(sql, *args)  # the transaction really opens...
+                raise KeyboardInterrupt("signal right after BEGIN")  # ...then the signal hits
+        return self._real.execute(sql, *args)
+
+    @property
+    def in_transaction(self):
+        return self._real.in_transaction
+
+
 def test_uow_is_single_use(store: EventStore, clock, random_source) -> None:
     uow = UnitOfWork(store, clock)
     with uow:
@@ -106,6 +128,24 @@ def test_caught_partial_insert_rolls_back(store: EventStore, clock, random_sourc
         uow.append([first, clash])  # first inserts, clash aborts on UNIQUE(id)
     assert store.count() == 0  # the first, already-inserted row was rolled back
     assert store._conn.execute("SELECT COUNT(*) AS n FROM outbox;").fetchone()["n"] == 0
+
+
+def test_partial_begin_does_not_leak_an_open_transaction(store: EventStore, clock, random_source) -> None:
+    # If BEGIN opens the transaction and then the enter is interrupted, the UoW
+    # must roll that transaction back and release the store -- not leave it open
+    # for the next BEGIN to trip over.
+    real = store._conn
+    store._conn = _BeginThenSignalConn(real)  # type: ignore[assignment]
+    failed = UnitOfWork(store, clock)
+    with pytest.raises(KeyboardInterrupt):
+        failed.__enter__()
+    assert not real.in_transaction  # the half-opened transaction was rolled back
+
+    store._conn = real  # restore a direct connection for the follow-up
+    # The store was released, so a fresh UoW claims and commits cleanly.
+    with UnitOfWork(store, clock) as uow:
+        uow.append([_event(clock, random_source)])
+    assert store.count() == 1
 
 
 def test_base_exception_in_commit_path_rolls_back(store: EventStore, clock, random_source) -> None:
