@@ -56,6 +56,7 @@ STEP_PRESENTED_EVENT = "session.step_presented"
 EXERCISE_RENDERED_EVENT = "exercise.rendered"
 
 EVENT_ATTEMPT_RECORDED = "attempt.recorded"
+EVENT_ATTEMPT_STATE_CHANGED = "attempt.state_changed"
 
 ATTEMPT_AGGREGATE = "attempt"
 NOTES_AGGREGATE = "session_notes"
@@ -67,6 +68,9 @@ REQUIRES_EXERCISE_INSTANCE = frozenset({"recognition_check", "controlled_product
 
 RECORDED = "recorded"
 ASSESSED = "assessed"
+# Terminal, non-contributing: the session was abandoned before assessment.
+# Never an input to scoring -- the learner is not punished for a lost chat.
+CLOSED_UNASSESSED = "closed_unassessed"
 
 
 class EvidencePrecondition(KernelError):
@@ -305,3 +309,85 @@ def session_attempts(store: EventStore, session_id: str) -> list[dict[str, Any]]
         if event.type == EVENT_ATTEMPT_RECORDED and event.correlation_id == session_id:
             out.append(dict(event.payload))
     return out
+
+
+def pending_attempts(store: EventStore, session_id: str) -> list[dict[str, Any]]:
+    """Attempts of the session whose disposition is still open (lessons 0.5).
+
+    The pending set is read from the attempt *aggregates* (the operational
+    truth for lifecycle status), located via the session's ``ATTEMPT_RECORDED``
+    events. ``recorded`` attempts are pending; ``assessed`` and
+    ``closed_unassessed`` are settled. Review assignments join this set once
+    the scheduler exists.
+    """
+    from english_trainer.kernel.aggregates import read_aggregate
+
+    pending: list[dict[str, Any]] = []
+    for recorded in session_attempts(store, session_id):
+        attempt_id = str(recorded["attempt_id"])
+        found = read_aggregate(store._conn, ATTEMPT_AGGREGATE, attempt_id)
+        state = found[0] if found is not None else recorded
+        if state.get("status") not in (ASSESSED, CLOSED_UNASSESSED):
+            pending.append(dict(state))
+    return pending
+
+
+def close_pending_attempts(
+    store: EventStore,
+    uow: UnitOfWork,
+    clock: Clock,
+    random_source: RandomSource,
+    session_id: str,
+    *,
+    reason: str,
+    actor: str = "engine",
+) -> list[str]:
+    """Close every pending attempt of the session without scoring contribution.
+
+    Runs INSIDE the caller's UnitOfWork (lessons owns the abandon trigger,
+    evidence executes the closure -- 0.4 4.3): aggregate updates and the
+    ``ATTEMPT_STATE_CHANGED`` events commit atomically with the session
+    terminalization or not at all. Returns the closed attempt ids.
+    """
+    closed: list[str] = []
+    for state in pending_attempts(store, session_id):
+        attempt_id = str(state["attempt_id"])
+        found = uow.get_aggregate(ATTEMPT_AGGREGATE, attempt_id)
+        if found is None:
+            continue
+        current, revision = found
+        previous = str(current.get("status"))
+        uow.save_aggregate(
+            ATTEMPT_AGGREGATE,
+            attempt_id,
+            {
+                **current,
+                "status": CLOSED_UNASSESSED,
+                "non_contributing": True,
+                "close_reason": reason,
+                "closed_at": clock.now().isoformat(),
+            },
+            expected_revision=revision,
+        )
+        uow.append(
+            [
+                make_event(
+                    id=new_ulid(clock, random_source),
+                    type=EVENT_ATTEMPT_STATE_CHANGED,
+                    occurred_at=clock.now(),
+                    actor=actor,
+                    provider=current.get("provider"),
+                    correlation_id=session_id,
+                    payload={
+                        "attempt_id": attempt_id,
+                        "session_id": session_id,
+                        "from_status": previous,
+                        "to_status": CLOSED_UNASSESSED,
+                        "reason": reason,
+                        "non_contributing": True,
+                    },
+                )
+            ]
+        )
+        closed.append(attempt_id)
+    return closed

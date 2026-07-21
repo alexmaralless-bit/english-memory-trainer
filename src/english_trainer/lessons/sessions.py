@@ -303,7 +303,11 @@ def _close_session(
     allowed_from: tuple[str, ...],
     refusal: str,
     actor: str,
+    require_empty_pending: bool = False,
+    close_pending_reason: str | None = None,
 ) -> DomainEvent:
+    from english_trainer.evidence.attempts import close_pending_attempts, pending_attempts
+
     found = get_session(store, session_id)
     if found is None:
         raise KernelError(f"session {session_id} does not exist")
@@ -314,6 +318,26 @@ def _close_session(
 
     manifest = state.get("manifest") or {}
     with UnitOfWork(store, clock) as uow:
+        # Pending-set rules run inside the transaction so the decision and the
+        # terminalization see one consistent state (lessons 0.5).
+        if require_empty_pending:
+            pending = pending_attempts(store, session_id)
+            if pending:
+                names = ", ".join(str(a.get("attempt_id")) for a in pending[:3])
+                raise SessionPrecondition(
+                    f"session {session_id} has {len(pending)} attempt(s) without a terminal "
+                    f"disposition ({names}{'…' if len(pending) > 3 else ''}): finish REQUIRES an "
+                    "empty pending set and never auto-closes [P0-2]. Objective attempts assess on "
+                    "record; rubric assessment for open answers arrives with scoring (2.3). "
+                    "Use `trainer session abandon` to close without contribution."
+                )
+        closed_attempts: list[str] = []
+        if close_pending_reason is not None:
+            # ABANDONED converts the pending set (0.5): recorded attempts close
+            # without scoring contribution, atomically with the terminalization.
+            closed_attempts = close_pending_attempts(
+                store, uow, clock, random_source, session_id, reason=close_pending_reason, actor=actor
+            )
         uow.save_aggregate(
             SESSION_AGGREGATE,
             session_id,
@@ -325,6 +349,9 @@ def _close_session(
             uow.save_aggregate(
                 POINTER_AGGREGATE, POINTER_ID, {"session_id": None}, expected_revision=pointer[1]
             )
+        payload: dict[str, Any] = {"session_id": session_id, "from_status": status}
+        if close_pending_reason is not None:
+            payload["closed_attempts"] = closed_attempts
         (event,) = uow.append(
             [
                 make_event(
@@ -334,7 +361,7 @@ def _close_session(
                     actor=actor,
                     provider=manifest.get("provider"),
                     correlation_id=session_id,
-                    payload={"session_id": session_id, "from_status": status},
+                    payload=payload,
                     pinned_versions=dict(manifest.get("pinned_versions") or {}),
                 )
             ]
@@ -352,8 +379,10 @@ def finish_session(
     """IN_PROGRESS → FINISHED. A session that recorded nothing cannot finish:
     the contract lifecycle has no ``STARTED → FINISHED`` edge -- abandon it.
 
-    Evidence-completeness requirements (empty pending review set, 0.5 closure
-    rules) attach here in the evidence increment of 2.2.
+    FINISHED *requires* an already-empty pending set and refuses otherwise --
+    it never closes goals itself [P0-2]: auto-closing would let a session end
+    without outcomes, bypassing exactly the evidence persistence finish exists
+    to guarantee. Review assignments join the pending set with the scheduler.
     """
     return _close_session(
         store,
@@ -368,6 +397,7 @@ def finish_session(
             "use `trainer session abandon` instead"
         ),
         actor=actor,
+        require_empty_pending=True,
     )
 
 
@@ -378,7 +408,9 @@ def abandon_session(
     session_id: str,
     actor: str = "engine",
 ) -> DomainEvent:
-    """STARTED | IN_PROGRESS → ABANDONED. Keeps everything already recorded."""
+    """STARTED | IN_PROGRESS → ABANDONED. Keeps everything already recorded;
+    pending attempts close without scoring contribution in the same
+    transaction (0.5: the learner is not punished for a lost chat)."""
     return _close_session(
         store,
         clock,
@@ -389,4 +421,5 @@ def abandon_session(
         allowed_from=_ACTIVE_STATES,
         refusal="session {session_id} is already {status}",
         actor=actor,
+        close_pending_reason="abandoned",
     )

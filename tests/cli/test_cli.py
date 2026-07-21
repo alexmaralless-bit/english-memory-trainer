@@ -373,6 +373,58 @@ def test_session_lifecycle_through_the_cli(tmp_path: Path, capsys) -> None:
     env = _json_stdout(capsys)
     assert env["data"]["notes"][0]["text"] == "confident answer"
 
+    # -- increment 4: the pending-set gate and the bank
+    # An open (rubric-less) attempt stays `recorded` and blocks finish [P0-2].
+    open_file = tmp_path / "open_attempt.json"
+    open_file.write_text(json.dumps({"raw_answer": "I am an engineer, so I am."}), encoding="utf-8")
+    code = run(
+        [
+            "attempt",
+            "record",
+            "--step",
+            first_step_id,
+            "--input",
+            str(open_file),
+            "--format",
+            "json",
+            "--root",
+            root,
+            "--idempotency-key",
+            "at2",
+        ]
+    )
+    env = _json_stdout(capsys)
+    assert code == ExitCode.OK and env["data"]["status"] == "recorded"
+
+    code = run(["session", "finish", "--format", "json", "--root", root, "--idempotency-key", "f2"])
+    env = _json_stdout(capsys)
+    assert code == ExitCode.PRECONDITION_FAILED
+    assert "pending" in env["error"]["message"]
+
+    # The assessed attempt earned this exercise its bank admission (PD-2 A).
+    code = run(
+        [
+            "exercise",
+            "accept",
+            "--instance",
+            instance_id,
+            "--format",
+            "json",
+            "--root",
+            root,
+            "--idempotency-key",
+            "ba1",
+        ]
+    )
+    env = _json_stdout(capsys)
+    _envelope_shape_ok(env)
+    assert code == ExitCode.OK and env["data"]["status"] == "accepted"
+
+    code = run(["exercise", "bank", "--format", "json", "--root", root])
+    env = _json_stdout(capsys)
+    assert code == ExitCode.OK and env["data"]["count"] == 1
+    assert env["data"]["items"][0]["admission_basis"] == "assessed_attempt"
+
     code = run(["session", "abandon", "--format", "json", "--root", root, "--idempotency-key", "ab1"])
     env = _json_stdout(capsys)
     _envelope_shape_ok(env)
@@ -410,7 +462,13 @@ def test_registry_matches_published_surface() -> None:
         "session.replan",
         "exercise.rendered",
         "attempt.record",
+        "exercise.accept",
+        "exercise.reject",
+        "exercise.retire",
+        "exercise.bank",
     }
+    assert registry["exercise.accept"].mutating and registry["exercise.accept"].requires_idempotency_key
+    assert not registry["exercise.bank"].mutating
     assert registry["exercise.rendered"].mutating and registry["exercise.rendered"].requires_idempotency_key
     assert registry["attempt.record"].mutating and registry["attempt.record"].requires_idempotency_key
     assert registry["session.next"].mutating and registry["session.next"].requires_idempotency_key

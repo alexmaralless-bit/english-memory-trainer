@@ -80,6 +80,21 @@ _COMMANDS: tuple[CommandDescriptor, ...] = (
     CommandDescriptor(
         name="attempt.record", owner_module="evidence", mutating=True, requires_idempotency_key=True
     ),
+    # The exercise bank (generation@1 bank_lifecycle, PD-2 A): admission after
+    # an assessed attempt or the explicit maintainer fast-path; rejected and
+    # retired are terminal.
+    CommandDescriptor(
+        name="exercise.accept", owner_module="lessons", mutating=True, requires_idempotency_key=True
+    ),
+    CommandDescriptor(
+        name="exercise.reject", owner_module="lessons", mutating=True, requires_idempotency_key=True
+    ),
+    CommandDescriptor(
+        name="exercise.retire", owner_module="lessons", mutating=True, requires_idempotency_key=True
+    ),
+    CommandDescriptor(
+        name="exercise.bank", owner_module="lessons", mutating=False, requires_idempotency_key=False
+    ),
 )
 
 

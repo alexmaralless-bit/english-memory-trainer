@@ -37,7 +37,10 @@ LAYER_ALLOWLIST: dict[str, set[str]] = {
     # (the canon assigns the CLI commands to lessons and their behavior to
     # control -- this direction avoids an import cycle).
     "control": {"kernel", "control"},
-    "lessons": {"kernel", "control", "lessons"},
+    # lessons owns the session triggers and delegates attempt closures to
+    # evidence inside its own UoW (0.5/0.4 4.3) -- the dependency points
+    # lessons -> evidence, never back.
+    "lessons": {"kernel", "control", "evidence", "lessons"},
     # evidence consumes published events, never other modules' code (0.4):
     # the event log is its boundary with lessons/control.
     "evidence": {"kernel", "evidence"},

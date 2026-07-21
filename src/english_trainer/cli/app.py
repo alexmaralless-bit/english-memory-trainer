@@ -65,6 +65,13 @@ from english_trainer.kernel.ids import new_ulid
 from english_trainer.kernel.policy import PolicyRegistry
 from english_trainer.kernel.store import SCHEMA_VERSION, EventStore, connect, migrate
 from english_trainer.kernel.uow import CachedResult, UnitOfWork
+from english_trainer.lessons.bank import (
+    BankPrecondition,
+    accept_exercise,
+    bank_items,
+    reject_exercise,
+    retire_exercise,
+)
 from english_trainer.lessons.delivery import next_step, peek_step, replan_session
 from english_trainer.lessons.rendering import record_rendered_exercise
 from english_trainer.lessons.sessions import (
@@ -1231,6 +1238,172 @@ def attempt_record(
             fmt,
             ExitCode.PRECONDITION_FAILED,
         )
+
+
+_InstanceOpt = Annotated[
+    str, typer.Option("--instance", help="exercise_instance_id from `exercise rendered`.")
+]
+
+
+def _bank_mutation(
+    command: str,
+    runner: Any,
+    fmt: str,
+    root: Path,
+    instance: str,
+    idempotency_key: str | None,
+    correlation_id: str | None,
+) -> None:
+    corr = _correlation(correlation_id)
+    _require_key(command, corr, fmt, idempotency_key)
+    layout = resolve_layout(root)
+    spoken = command.replace(".", " ")
+    try:
+        with open_storage(layout) as storage:
+            request_hash = payload_hash({"command": command, "instance": instance, "root": str(layout.root)})
+            if idempotency_key:
+                with UnitOfWork(storage.store, SystemClock()) as uow:
+                    prior = uow.check_idempotency(idempotency_key, request_hash)
+                if isinstance(prior, CachedResult):
+                    _emit(
+                        success_envelope(command, corr, {**dict(prior.value), "cached": True}),
+                        [f"{spoken} (cached result)"],
+                        fmt,
+                        ExitCode.OK,
+                    )
+            result = runner(storage)
+            if idempotency_key:
+                with UnitOfWork(storage.store, SystemClock()) as uow:
+                    uow.record_result(idempotency_key, request_hash, result)
+        _emit(
+            success_envelope(command, corr, {**result, "cached": False}),
+            [f"exercise {instance}: {result['status']}"],
+            fmt,
+            ExitCode.OK,
+        )
+    except IdempotencyConflict as exc:
+        error = ErrorPayload(
+            error_code="IDEMPOTENCY_CONFLICT",
+            message=str(exc),
+            allowed_actions=[f"{spoken} --idempotency-key <fresh-key>"],
+            next_action=f"{spoken} --idempotency-key <fresh-key>",
+        )
+        _emit(failure_envelope(command, corr, error), [f"error: {exc}"], fmt, ExitCode.CONFLICT)
+    except BankPrecondition as exc:
+        error = ErrorPayload(
+            error_code=exc.code,
+            message=str(exc),
+            allowed_actions=["exercise bank", "attempt record", "exercise rendered"],
+            next_action="exercise bank",
+        )
+        _emit(failure_envelope(command, corr, error), [f"error: {exc}"], fmt, ExitCode.PRECONDITION_FAILED)
+
+
+@exercise_app.command("accept")
+def exercise_accept(
+    instance: _InstanceOpt,
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    maintainer_reason: Annotated[
+        str | None,
+        typer.Option(
+            "--maintainer-reason",
+            help="Fast-path attestation: schema, safety, answer key and authorship reviewed by a human.",
+        ),
+    ] = None,
+    idempotency_key: Annotated[
+        str | None, typer.Option("--idempotency-key", help="Required with --format json (cli 4.3).")
+    ] = None,
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Admit a rendered exercise into the bank. Requires an assessed attempt
+    against this exact instance, or the explicit maintainer fast-path (PD-2 A)."""
+
+    def runner(storage: Any) -> dict[str, Any]:
+        return accept_exercise(
+            storage.store,
+            PolicyRegistry(storage._conn, SystemClock()),
+            SystemClock(),
+            SystemRandom(),
+            instance,
+            maintainer_reason=maintainer_reason,
+        )
+
+    _bank_mutation("exercise.accept", runner, fmt, root, instance, idempotency_key, correlation_id)
+
+
+@exercise_app.command("reject")
+def exercise_reject(
+    instance: _InstanceOpt,
+    reason: Annotated[str, typer.Option("--reason", help="One of the closed rejection reasons.")],
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    idempotency_key: Annotated[
+        str | None, typer.Option("--idempotency-key", help="Required with --format json (cli 4.3).")
+    ] = None,
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Reject a generated exercise (terminal): it never becomes reusable."""
+
+    def runner(storage: Any) -> dict[str, Any]:
+        return reject_exercise(storage.store, SystemClock(), SystemRandom(), instance, reason=reason)
+
+    _bank_mutation("exercise.reject", runner, fmt, root, instance, idempotency_key, correlation_id)
+
+
+@exercise_app.command("retire")
+def exercise_retire(
+    instance: _InstanceOpt,
+    reason: Annotated[str, typer.Option("--reason", help="One of the closed retirement reasons.")],
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    idempotency_key: Annotated[
+        str | None, typer.Option("--idempotency-key", help="Required with --format json (cli 4.3).")
+    ] = None,
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Retire an accepted bank item (terminal): reuse stops, history stands."""
+
+    def runner(storage: Any) -> dict[str, Any]:
+        return retire_exercise(storage.store, SystemClock(), SystemRandom(), instance, reason=reason)
+
+    _bank_mutation("exercise.retire", runner, fmt, root, instance, idempotency_key, correlation_id)
+
+
+@exercise_app.command("bank")
+def exercise_bank(
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    status: Annotated[
+        str | None, typer.Option("--status", help="Filter: accepted | rejected | retired.")
+    ] = None,
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """List bank items in deterministic order. Read-only."""
+    corr = _correlation(correlation_id)
+    layout = resolve_layout(root)
+    if not layout.db.exists():
+        error = ErrorPayload(
+            error_code="DATABASE_NOT_FOUND",
+            message=f"{layout.db} does not exist.",
+            allowed_actions=["init"],
+            next_action="init",
+        )
+        _emit(
+            failure_envelope("exercise.bank", corr, error),
+            ["error: not initialized"],
+            fmt,
+            ExitCode.NOT_FOUND,
+        )
+    with open_storage(layout) as storage:
+        items = bank_items(storage.store, status=status)
+    data = {"count": len(items), "items": items}
+    human = [f"{len(items)} bank item(s)"] + [
+        f"  {item['exercise_instance_id']} [{item['status']}] {item.get('step_type', '')} "
+        f"{','.join(item.get('target_refs', []))}"
+        for item in items
+    ]
+    _emit(success_envelope("exercise.bank", corr, data), human, fmt, ExitCode.OK)
 
 
 def _wants_json(argv: list[str]) -> bool:

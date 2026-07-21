@@ -10,6 +10,13 @@ by step under CAS (``session next`` / ``peek`` / ``replan``).
 
 from __future__ import annotations
 
+from english_trainer.lessons.bank import (
+    BankPrecondition,
+    accept_exercise,
+    bank_items,
+    reject_exercise,
+    retire_exercise,
+)
 from english_trainer.lessons.delivery import (
     next_step,
     peek_step,
@@ -55,9 +62,12 @@ __all__ = [
     "FINISHED",
     "IN_PROGRESS",
     "STARTED",
+    "BankPrecondition",
     "SessionPrecondition",
     "abandon_session",
+    "accept_exercise",
     "active_session_id",
+    "bank_items",
     "find_presented_step",
     "find_rendered_exercise",
     "finish_session",
@@ -68,6 +78,8 @@ __all__ = [
     "peek_step",
     "production_eligible",
     "record_rendered_exercise",
+    "reject_exercise",
     "replan_session",
+    "retire_exercise",
     "start_session",
 ]

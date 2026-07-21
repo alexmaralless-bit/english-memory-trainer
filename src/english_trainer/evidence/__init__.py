@@ -10,11 +10,15 @@ events and its own aggregates: the event log is the module boundary.
 from english_trainer.evidence.attempts import (
     ASSESSED,
     ATTEMPT_AGGREGATE,
+    CLOSED_UNASSESSED,
     EVENT_ATTEMPT_RECORDED,
+    EVENT_ATTEMPT_STATE_CHANGED,
     RECORDED,
     REQUIRES_EXERCISE_INSTANCE,
     EvidencePrecondition,
+    close_pending_attempts,
     list_notes,
+    pending_attempts,
     record_attempt,
     session_attempts,
 )
@@ -22,11 +26,15 @@ from english_trainer.evidence.attempts import (
 __all__ = [
     "ASSESSED",
     "ATTEMPT_AGGREGATE",
+    "CLOSED_UNASSESSED",
     "EVENT_ATTEMPT_RECORDED",
+    "EVENT_ATTEMPT_STATE_CHANGED",
     "RECORDED",
     "REQUIRES_EXERCISE_INSTANCE",
     "EvidencePrecondition",
+    "close_pending_attempts",
     "list_notes",
+    "pending_attempts",
     "record_attempt",
     "session_attempts",
 ]

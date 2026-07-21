@@ -34,3 +34,17 @@ def read_aggregate(
         return None
     state: dict[str, Any] = json.loads(row["state"])
     return state, int(row["revision"])
+
+
+def list_aggregates(conn: sqlite3.Connection, aggregate_type: str) -> list[tuple[str, dict[str, Any], int]]:
+    """All aggregates of one type as ``(id, state, revision)``, ordered by id.
+
+    A read-only enumeration for module-owned collections (e.g. the exercise
+    bank); deterministic order so folds over it are replayable.
+    """
+    rows = conn.execute(
+        "SELECT aggregate_id, state, revision FROM aggregates "
+        "WHERE aggregate_type = ? ORDER BY aggregate_id;",
+        (aggregate_type,),
+    ).fetchall()
+    return [(str(row["aggregate_id"]), json.loads(row["state"]), int(row["revision"])) for row in rows]
