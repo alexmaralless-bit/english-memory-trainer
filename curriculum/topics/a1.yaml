@@ -1193,6 +1193,18 @@ topics:
     advisory_prerequisites:
       strong: [grammar.basic-questions.clarification, grammar.prepositions.location]
       soft: [grammar.can-cant.ability-requests]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [word.station, word.shop]
+    contexts: [city-trip]
+    typical_errors:
+      - "Omitting articles or subjects because Russian can express the idea without them."
+      - "Using Russian word order or a literal calque in a short practical message."
+      - "Choosing a familiar false friend instead of the word that fits the situation."
+    examples:
+      - "How can I get to the station?"
+      - "Is the pharmacy near here?"
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: everyday-life.understanding-simple-directions
     cefr: A1
     track: everyday-life
@@ -1201,6 +1213,18 @@ topics:
     advisory_prerequisites:
       strong: [grammar.imperatives.instructions, grammar.prepositions.location]
       soft: [grammar.demonstratives.references]
+    dimensions: [recognition, transfer]
+    lexicon: [word.station, word.shop]
+    contexts: [city-trip]
+    typical_errors:
+      - "Omitting articles or subjects because Russian can express the idea without them."
+      - "Using Russian word order or a literal calque in a short practical message."
+      - "Choosing a familiar false friend instead of the word that fits the situation."
+    examples:
+      - "Turn left at the bank, then go straight."
+      - "The station is next to the supermarket."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: everyday-life.buying-basic-items
     cefr: A1
     track: everyday-life
@@ -1209,6 +1233,18 @@ topics:
     advisory_prerequisites:
       strong: [grammar.can-cant.ability-requests, grammar.articles.identity]
       soft: [grammar.quantifiers.basic]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [word.bus, word.train, word.subway]
+    contexts: [city-trip]
+    typical_errors:
+      - "Omitting articles or subjects because Russian can express the idea without them."
+      - "Using Russian word order or a literal calque in a short practical message."
+      - "Choosing a familiar false friend instead of the word that fits the situation."
+    examples:
+      - "I'd like to buy a ticket to Utrecht."
+      - "Do you have this in a larger size?"
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: everyday-life.asking-about-price-and-quantity
     cefr: A1
     track: everyday-life
@@ -1217,6 +1253,18 @@ topics:
     advisory_prerequisites:
       strong: [grammar.basic-questions.clarification, grammar.quantifiers.basic]
       soft: [grammar.nouns-singular-plural]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [word.station, word.shop]
+    contexts: [city-trip]
+    typical_errors:
+      - "Omitting articles or subjects because Russian can express the idea without them."
+      - "Using Russian word order or a literal calque in a short practical message."
+      - "Choosing a familiar false friend instead of the word that fits the situation."
+    examples:
+      - "How much is this bag?"
+      - "How many tickets do we need?"
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: everyday-life.starting-everyday-small-talk
     cefr: A1
     track: everyday-life
@@ -1225,6 +1273,18 @@ topics:
     advisory_prerequisites:
       strong: [grammar.be.identity, grammar.basic-questions.clarification]
       soft: [everyday-online-informal.basic-chat-response]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [reaction.hows-it-going, reaction.never-mind, reaction.are-you-kidding]
+    contexts: [friendly-chat]
+    typical_errors:
+      - "Omitting articles or subjects because Russian can express the idea without them."
+      - "Using Russian word order or a literal calque in a short practical message."
+      - "Choosing a familiar false friend instead of the word that fits the situation."
+    examples:
+      - "Hi, how's it going?"
+      - "Nice weather today, isn't it?"
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: everyday-life.talking-about-likes-and-free-time
     cefr: A1
     track: everyday-life
@@ -1233,6 +1293,18 @@ topics:
     advisory_prerequisites:
       strong: [grammar.present-simple.routines, grammar.do-questions]
       soft: [grammar.frequency-adverbs]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [slang.chill, word.weekend, word.invitation]
+    contexts: [friendly-chat]
+    typical_errors:
+      - "Omitting articles or subjects because Russian can express the idea without them."
+      - "Using Russian word order or a literal calque in a short practical message."
+      - "Choosing a familiar false friend instead of the word that fits the situation."
+    examples:
+      - "I like walking and listening to podcasts."
+      - "On weekends, I play tennis."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: everyday-life.making-simple-plans-with-friends
     cefr: A1
     track: everyday-life
@@ -1241,6 +1313,18 @@ topics:
     advisory_prerequisites:
       strong: [grammar.going-to.plans, grammar.future-time-expressions]
       soft: [everyday-online-informal.basic-chat-response]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [reaction.sounds-like-a-plan, reaction.that-works, reaction.why-not]
+    contexts: [friendly-chat]
+    typical_errors:
+      - "Omitting articles or subjects because Russian can express the idea without them."
+      - "Using Russian word order or a literal calque in a short practical message."
+      - "Choosing a familiar false friend instead of the word that fits the situation."
+    examples:
+      - "Do you want to meet on Saturday?"
+      - "Let's go for coffee at two."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: everyday-life.accepting-or-declining-an-invitation
     cefr: A1
     track: everyday-life
@@ -1249,6 +1333,18 @@ topics:
     advisory_prerequisites:
       strong: [grammar.will.basic-decisions]
       soft: [everyday-online-informal.casual-acknowledgements]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [word.weekend, word.invitation]
+    contexts: [friendly-chat]
+    typical_errors:
+      - "Omitting articles or subjects because Russian can express the idea without them."
+      - "Using Russian word order or a literal calque in a short practical message."
+      - "Choosing a familiar false friend instead of the word that fits the situation."
+    examples:
+      - "Yes, I'd love to come."
+      - "Sorry, I can't make it on Friday."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: reading.everyday-phrasal-verbs
     cefr: A1
     track: reading
@@ -1256,6 +1352,18 @@ topics:
     can_do: "Recognize the everyday meaning of a common phrasal verb when its parts do not add up (put up with, figure out)."
     advisory_prerequisites:
       soft: [grammar.present-simple.routines, reading.interface-data-description]
+    dimensions: [recognition, transfer]
+    lexicon: [phrasal-verb.figure-out, reaction.never-mind]
+    contexts: [everyday-message]
+    typical_errors:
+      - "Translating every word and missing the main instruction or meaning (пословная калька)."
+      - "Treating a familiar-looking word as its Russian false friend without checking context."
+      - "Ignoring a negation, time marker, or modal that changes the practical message."
+    examples:
+      - "I need to figure out this bill."
+      - "She puts up with the noise."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: reading.common-idioms
     cefr: A1
     track: reading
@@ -1263,6 +1371,18 @@ topics:
     can_do: "Recognize a very common fixed expression and tell its real meaning apart from the word-for-word reading."
     advisory_prerequisites:
       soft: [grammar.basic-word-order, reading.interface-data-description]
+    dimensions: [recognition, transfer]
+    lexicon: [phrasal-verb.figure-out, reaction.never-mind]
+    contexts: [everyday-message]
+    typical_errors:
+      - "Translating every word and missing the main instruction or meaning (пословная калька)."
+      - "Treating a familiar-looking word as its Russian false friend without checking context."
+      - "Ignoring a negation, time marker, or modal that changes the practical message."
+    examples:
+      - "Let's call it a day."
+      - "It was a piece of cake."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: reading.casual-reactions
     cefr: A1
     track: reading
@@ -1270,6 +1390,18 @@ topics:
     can_do: "Understand short casual reactions in a chat (no way, never mind, fair enough) and what the writer actually means."
     advisory_prerequisites:
       soft: [everyday-online-informal.basic-chat-response]
+    dimensions: [recognition, transfer]
+    lexicon: [phrasal-verb.figure-out, reaction.never-mind]
+    contexts: [everyday-message]
+    typical_errors:
+      - "Translating every word and missing the main instruction or meaning (пословная калька)."
+      - "Treating a familiar-looking word as its Russian false friend without checking context."
+      - "Ignoring a negation, time marker, or modal that changes the practical message."
+    examples:
+      - "No way! You got the job?"
+      - "Never mind, I found it."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: reading.everyday-notice
     cefr: A1
     track: reading
@@ -1277,6 +1409,18 @@ topics:
     can_do: "Find the key information in a short everyday notice, sign, or label."
     advisory_prerequisites:
       soft: [reading.interface-data-description]
+    dimensions: [recognition, transfer]
+    lexicon: [phrasal-verb.figure-out, reaction.never-mind]
+    contexts: [everyday-message]
+    typical_errors:
+      - "Translating every word and missing the main instruction or meaning (пословная калька)."
+      - "Treating a familiar-looking word as its Russian false friend without checking context."
+      - "Ignoring a negation, time marker, or modal that changes the practical message."
+    examples:
+      - "Closed after 6 p.m."
+      - "Please keep the door shut."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: reading.household-instructions
     cefr: A1
     track: reading
@@ -1284,6 +1428,18 @@ topics:
     can_do: "Follow short written instructions for a household item or service."
     advisory_prerequisites:
       soft: [grammar.imperatives.instructions]
+    dimensions: [recognition, transfer]
+    lexicon: [phrasal-verb.figure-out, reaction.never-mind]
+    contexts: [everyday-message]
+    typical_errors:
+      - "Translating every word and missing the main instruction or meaning (пословная калька)."
+      - "Treating a familiar-looking word as its Russian false friend without checking context."
+      - "Ignoring a negation, time marker, or modal that changes the practical message."
+    examples:
+      - "Press start, then wait five minutes."
+      - "Do not use the machine without water."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.prepositions.time
     cefr: A1
     track: grammar-engine
@@ -1333,6 +1489,18 @@ topics:
     can_do: "Recognize that un- reverses or negates a base word (undo, unpack, unclear) and form a simple un- word."
     advisory_prerequisites:
       soft: [grammar.basic-word-order]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [word.restart]
+    contexts: [simple-instructions]
+    typical_errors:
+      - "Assuming every base plus affix is a real English word (ложная продуктивность)."
+      - "Reading the affix as a separate Russian word and missing its change of meaning."
+      - "Confusing the word class after a suffix, for example a person with an action."
+    examples:
+      - "The box is unlocked."
+      - "Please unpack the order."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: word-formation.repeat-re
     cefr: A1
     track: word-formation
@@ -1340,3 +1508,15 @@ topics:
     can_do: "Recognize that re- means doing something again (redo, rebuild, restart) and form a simple re- word."
     advisory_prerequisites:
       soft: [word-formation.negation-un]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [word.restart]
+    contexts: [simple-instructions]
+    typical_errors:
+      - "Assuming every base plus affix is a real English word (ложная продуктивность)."
+      - "Reading the affix as a separate Russian word and missing its change of meaning."
+      - "Confusing the word class after a suffix, for example a person with an action."
+    examples:
+      - "Please restart the router."
+      - "I need to redo this form."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
