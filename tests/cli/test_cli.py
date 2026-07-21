@@ -258,6 +258,55 @@ def test_session_lifecycle_through_the_cli(tmp_path: Path, capsys) -> None:
     env = _json_stdout(capsys)
     assert code == ExitCode.PRECONDITION_FAILED  # nothing recorded -> abandon instead
 
+    # -- step delivery: peek -> next (CAS) -> cached replay -> conflict -> replan
+    code = run(["session", "peek", "--format", "json", "--root", root])
+    env = _json_stdout(capsys)
+    _envelope_shape_ok(env)
+    assert code == ExitCode.OK and env["data"]["plan_version"] == 1
+    assert env["data"]["step"] is not None and env["data"]["steps_remaining"] > 0
+
+    code = run(["session", "next", "--expected-plan-version", "1", "--format", "json", "--root", root])
+    env = _json_stdout(capsys)
+    assert code == ExitCode.USAGE and env["error"]["error_code"] == "MISSING_IDEMPOTENCY_KEY"
+
+    next_args = ["session", "next", "--expected-plan-version", "1", "--format", "json", "--root", root]
+    code = run([*next_args, "--idempotency-key", "n1"])
+    env = _json_stdout(capsys)
+    _envelope_shape_ok(env)
+    assert code == ExitCode.OK and env["data"]["plan_version"] == 2
+    first_step_id = env["data"]["step"]["step_id"]
+
+    # Same key replays the same step from the cache -- no second STEP_PRESENTED.
+    code = run([*next_args, "--idempotency-key", "n1"])
+    env = _json_stdout(capsys)
+    assert code == ExitCode.OK and env["data"]["cached"] is True
+    assert env["data"]["step"]["step_id"] == first_step_id
+
+    # A fresh key with the stale version is a CONFLICT naming the current one.
+    code = run([*next_args, "--idempotency-key", "n2"])
+    env = _json_stdout(capsys)
+    assert code == ExitCode.CONFLICT and env["error"]["error_code"] == "PLAN_VERSION_CONFLICT"
+    assert "version 2" in env["error"]["message"]
+
+    code = run(
+        [
+            "session",
+            "replan",
+            "--expected-plan-version",
+            "2",
+            "--format",
+            "json",
+            "--root",
+            root,
+            "--idempotency-key",
+            "r1",
+        ]
+    )
+    env = _json_stdout(capsys)
+    _envelope_shape_ok(env)
+    assert code == ExitCode.OK
+    assert env["data"]["composition_revision"] == 2 and env["data"]["plan_version"] == 3
+
     code = run(["session", "abandon", "--format", "json", "--root", root, "--idempotency-key", "ab1"])
     env = _json_stdout(capsys)
     _envelope_shape_ok(env)
@@ -290,7 +339,13 @@ def test_registry_matches_published_surface() -> None:
         "session.finish",
         "session.abandon",
         "session.status",
+        "session.peek",
+        "session.next",
+        "session.replan",
     }
+    assert registry["session.next"].mutating and registry["session.next"].requires_idempotency_key
+    assert registry["session.replan"].mutating and registry["session.replan"].requires_idempotency_key
+    assert not registry["session.peek"].mutating
     assert registry["init"].mutating and registry["init"].requires_idempotency_key
     assert registry["snapshot.create"].mutating and registry["snapshot.create"].requires_idempotency_key
     assert registry["curriculum.activate"].mutating

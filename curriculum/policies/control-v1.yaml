@@ -1,0 +1,80 @@
+# control@1 -- the executable session-composition policy (wiki/modules/control.md section 3).
+# Every decision-bearing value is an integer: shares are basis points (1 bp = 1/10000),
+# probabilities and tolerances are ppm (1e-6), time is seconds or whole minutes.
+# Binary floats are banned on the whole decision path [R-12, RR2-12]; the kernel's
+# canonical encoding refuses them at registration and the control validator refuses
+# them earlier with a readable message.
+policy_id: "control@1"
+schema_version: 1
+status: "accepted"
+canonical_encoding: "kernel.canonical_json_v1"
+numeric_value_rule: "integer_policy_values_only"
+
+budget:
+  default_total_minutes: 30
+  min_total_minutes: 10
+  expected_seconds_by_step_type:
+    recognition_check: 30
+    controlled_production: 120
+    spontaneous_production: 360
+    transfer_task: 480
+    new_material_intro: 300
+    integration_task: 420
+    gate_item: 180
+    free_conversation: 300
+  shares_bp_by_mode:
+    balanced:
+      review_max: 4500
+      growth_min: 2500
+      integration_min: 1500
+      choice_min: 1000
+    maintenance:
+      review_max: 10000
+      growth_min: 0
+      integration_min: 0
+      choice_min: 1000
+    re_entry:
+      review_max: 8000
+      growth_min: 0
+      integration_min: 0
+      choice_min: 2000
+
+classification:
+  critical_floor_retrievability_ppm: 500000
+  maintenance_floor_retrievability_ppm: 850000
+  recurring_error_window_sessions: 3
+  recurring_error_min_occurrences: 2
+  prereq_leverage_min_dependents: 2
+
+starvation:
+  reserved_steps_per_session: 1
+  deferrals_to_qualify: 3
+
+signals:
+  default_effect_sessions: 3
+
+saturation:
+  exposure_window_sessions: 5
+  max_exposures_in_window: 3
+  consecutive_success_threshold: 3
+  min_distinct_contexts: 2
+  transfer_check_staleness_days: 30
+
+diversity:
+  max_steps_per_topic: 2
+  max_consecutive_same_mode: 2
+  max_similar_items: 2
+
+availability:
+  divergence_tolerance_ppm: 300000
+  divergence_window_weeks: 6
+  min_observed_sessions: 3
+  reentry_critical_boost_bp: 1000
+
+alerts:
+  review_share_enter_bp: 4200
+  review_share_exit_bp: 3500
+  review_share_consecutive: 3
+  growth_rate_enter_bp: 1000
+  growth_rate_exit_bp: 1800
+  growth_rate_consecutive: 3

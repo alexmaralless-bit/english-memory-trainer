@@ -39,7 +39,14 @@ from english_trainer.cli.envelope import (
     print_json_envelope,
     success_envelope,
 )
-from english_trainer.curriculum.loader import load_program
+from english_trainer.control.errors import (
+    BudgetTooSmall,
+    ControlPolicyInvalid,
+    NoCandidates,
+    PlanVersionConflict,
+)
+from english_trainer.control.policy import CONTROL_KIND, require_valid
+from english_trainer.curriculum.loader import load_policies, load_program
 from english_trainer.curriculum.service import (
     activate_version,
     get_topic,
@@ -56,6 +63,7 @@ from english_trainer.kernel.ids import new_ulid
 from english_trainer.kernel.policy import PolicyRegistry
 from english_trainer.kernel.store import SCHEMA_VERSION, EventStore, connect, migrate
 from english_trainer.kernel.uow import CachedResult, UnitOfWork
+from english_trainer.lessons.delivery import next_step, peek_step, replan_session
 from english_trainer.lessons.sessions import (
     SessionPrecondition,
     abandon_session,
@@ -519,6 +527,16 @@ def curriculum_activate(
                         ExitCode.OK,
                     )
             register_version(registry, program, version)
+            # Engine policies ship with the curriculum (curriculum/policies/):
+            # register and activate them alongside the program so a fresh
+            # install can start a session. Registration is idempotent for
+            # identical content; control@1 is validated before it may register.
+            policies = load_policies(curriculum)
+            for kind, policy_version, payload in policies:
+                if kind == CONTROL_KIND:
+                    require_valid(payload)
+                registry.register(kind, policy_version, payload)
+                registry.activate(kind, policy_version)
             event = activate_version(
                 storage.store, registry, SystemClock(), SystemRandom(), version, expected_active
             )
@@ -527,6 +545,7 @@ def curriculum_activate(
                 "previous": expected_active,
                 "activated": event is not None,
                 "event_id": event.id if event is not None else None,
+                "policies": [policy_version for _, policy_version, _ in policies],
             }
             if idempotency_key:
                 with UnitOfWork(storage.store, SystemClock()) as uow:
@@ -542,6 +561,19 @@ def curriculum_activate(
             next_action="curriculum activate --idempotency-key <fresh-key>",
         )
         _emit(failure_envelope("curriculum.activate", corr, error), [f"error: {exc}"], fmt, ExitCode.CONFLICT)
+    except ControlPolicyInvalid as exc:
+        error = ErrorPayload(
+            error_code="CONTROL_POLICY_INVALID",
+            message=str(exc),
+            allowed_actions=["curriculum validate"],
+            next_action="fix curriculum/policies/control-v1.yaml, then curriculum activate",
+        )
+        _emit(
+            failure_envelope("curriculum.activate", corr, error),
+            [f"error: {exc}"],
+            fmt,
+            ExitCode.INVALID_INPUT,
+        )
     except StaleRevision as exc:
         error = ErrorPayload(
             error_code="STALE_ACTIVE_VERSION",
@@ -578,17 +610,27 @@ def session_start(
     fmt: _FormatOpt = "text",
     root: _RootOpt = Path(),
     mode: Annotated[str, typer.Option("--mode", help="Session mode.")] = "balanced",
+    duration_minutes: Annotated[
+        int | None,
+        typer.Option("--duration-minutes", help="Session budget; defaults to the control policy."),
+    ] = None,
     idempotency_key: Annotated[
         str | None, typer.Option("--idempotency-key", help="Required with --format json (cli 4.3).")
     ] = None,
     correlation_id: _CorrOpt = None,
 ) -> None:
-    """Open a session: pins active policy versions into the immutable manifest."""
+    """Open a session: pins active policies into the manifest and composes the plan."""
     corr = _correlation(correlation_id)
     _require_key("session.start", corr, fmt, idempotency_key)
     layout = resolve_layout(root)
     request_hash = payload_hash(
-        {"command": "session.start", "provider": provider, "mode": mode, "root": str(layout.root)}
+        {
+            "command": "session.start",
+            "provider": provider,
+            "mode": mode,
+            "duration_minutes": duration_minutes,
+            "root": str(layout.root),
+        }
     )
     try:
         with open_storage(layout) as storage:
@@ -604,7 +646,13 @@ def session_start(
                         ExitCode.OK,
                     )
             manifest = start_session(
-                storage.store, registry, SystemClock(), SystemRandom(), provider=provider, mode=mode
+                storage.store,
+                registry,
+                SystemClock(),
+                SystemRandom(),
+                provider=provider,
+                mode=mode,
+                duration_minutes=duration_minutes,
             )
             if idempotency_key:
                 with UnitOfWork(storage.store, SystemClock()) as uow:
@@ -623,9 +671,9 @@ def session_start(
             next_action="session start --idempotency-key <fresh-key>",
         )
         _emit(failure_envelope("session.start", corr, error), [f"error: {exc}"], fmt, ExitCode.CONFLICT)
-    except SessionPrecondition as exc:
+    except (SessionPrecondition, BudgetTooSmall, NoCandidates) as exc:
         error = ErrorPayload(
-            error_code="SESSION_PRECONDITION",
+            error_code=exc.code,
             message=str(exc),
             allowed_actions=["session abandon", "curriculum activate", "session status"],
             next_action="session status",
@@ -766,6 +814,218 @@ def session_status(
             data = {"active": session_id, "status": state.get("status"), "manifest": state.get("manifest")}
             human = [f"active session: {session_id} [{state.get('status')}]"]
     _emit(success_envelope("session.status", corr, data), human, fmt, ExitCode.OK)
+
+
+_SessionOpt = Annotated[
+    str | None, typer.Option("--session", help="Session id; defaults to the active session.")
+]
+_PlanVersionOpt = Annotated[
+    int, typer.Option("--expected-plan-version", help="CAS token from peek/start (control 4.2).")
+]
+
+
+def _resolve_session(command: str, corr: str, fmt: str, storage: Any, session: str | None) -> str:
+    session_id = session if session is not None else active_session_id(storage.store)
+    if session_id is None or get_session(storage.store, session_id) is None:
+        error = ErrorPayload(
+            error_code="SESSION_NOT_FOUND",
+            message="no such session (and no active session to default to).",
+            allowed_actions=["session status", "session start"],
+            next_action="session status",
+        )
+        _emit(failure_envelope(command, corr, error), ["error: no session"], fmt, ExitCode.NOT_FOUND)
+    return session_id
+
+
+@session_app.command("peek")
+def session_peek(
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    session: _SessionOpt = None,
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Show the next step and the current plan_version. Read-only: nothing is
+    marked presented, nothing is published (control 4.2)."""
+    corr = _correlation(correlation_id)
+    layout = resolve_layout(root)
+    try:
+        with open_storage(layout) as storage:
+            session_id = _resolve_session("session.peek", corr, fmt, storage, session)
+            data = peek_step(storage.store, session_id)
+        step = data.get("step")
+        human = [
+            f"session {session_id}: plan v{data['plan_version']} "
+            f"(revision {data['composition_revision']}), {data['steps_remaining']} steps remaining"
+        ]
+        if step is not None:
+            human.append(
+                f"  next: {step['step_id']} [{step['bucket']}/{step['step_type']}] "
+                f"{step.get('target_ref') or 'free conversation'}"
+            )
+        _emit(success_envelope("session.peek", corr, data), human, fmt, ExitCode.OK)
+    except SessionPrecondition as exc:
+        error = ErrorPayload(
+            error_code="SESSION_PRECONDITION",
+            message=str(exc),
+            allowed_actions=["session status", "session start"],
+            next_action="session status",
+        )
+        _emit(
+            failure_envelope("session.peek", corr, error),
+            [f"error: {exc}"],
+            fmt,
+            ExitCode.PRECONDITION_FAILED,
+        )
+
+
+def _plan_mutation(
+    command: str,
+    runner: Any,
+    fmt: str,
+    root: Path,
+    session: str | None,
+    expected_plan_version: int,
+    idempotency_key: str | None,
+    correlation_id: str | None,
+    describe: Any,
+) -> None:
+    """Shared shape of ``session next`` / ``session replan``: idempotent replay
+    is answered before the CAS check (control 4.2), a CAS miss is a CONFLICT
+    carrying the current version, an exhausted plan is a precondition."""
+    corr = _correlation(correlation_id)
+    _require_key(command, corr, fmt, idempotency_key)
+    layout = resolve_layout(root)
+    spoken = command.replace(".", " ")
+    try:
+        with open_storage(layout) as storage:
+            session_id = _resolve_session(command, corr, fmt, storage, session)
+            request_hash = payload_hash(
+                {
+                    "command": command,
+                    "session": session_id,
+                    "expected_plan_version": expected_plan_version,
+                    "root": str(layout.root),
+                }
+            )
+            if idempotency_key:
+                with UnitOfWork(storage.store, SystemClock()) as uow:
+                    prior = uow.check_idempotency(idempotency_key, request_hash)
+                if isinstance(prior, CachedResult):
+                    _emit(
+                        success_envelope(command, corr, {**dict(prior.value), "cached": True}),
+                        [f"{spoken} (cached result)"],
+                        fmt,
+                        ExitCode.OK,
+                    )
+            result = runner(
+                storage.store,
+                PolicyRegistry(storage._conn, SystemClock()),
+                SystemClock(),
+                SystemRandom(),
+                session_id,
+                expected_plan_version=expected_plan_version,
+            )
+            if idempotency_key:
+                with UnitOfWork(storage.store, SystemClock()) as uow:
+                    uow.record_result(idempotency_key, request_hash, result)
+        _emit(
+            success_envelope(command, corr, {**result, "cached": False}),
+            describe(result),
+            fmt,
+            ExitCode.OK,
+        )
+    except IdempotencyConflict as exc:
+        error = ErrorPayload(
+            error_code="IDEMPOTENCY_CONFLICT",
+            message=str(exc),
+            allowed_actions=[f"{spoken} --idempotency-key <fresh-key>"],
+            next_action=f"{spoken} --idempotency-key <fresh-key>",
+        )
+        _emit(failure_envelope(command, corr, error), [f"error: {exc}"], fmt, ExitCode.CONFLICT)
+    except PlanVersionConflict as exc:
+        error = ErrorPayload(
+            error_code=exc.code,
+            message=str(exc),
+            allowed_actions=["session peek", f"{spoken} --expected-plan-version <current>"],
+            next_action="session peek",
+        )
+        _emit(failure_envelope(command, corr, error), [f"error: {exc}"], fmt, ExitCode.CONFLICT)
+    except (SessionPrecondition, NoCandidates, BudgetTooSmall) as exc:
+        error = ErrorPayload(
+            error_code=exc.code,
+            message=str(exc),
+            allowed_actions=["session replan", "session finish", "session status"],
+            next_action="session replan" if command == "session.next" else "session finish",
+        )
+        _emit(failure_envelope(command, corr, error), [f"error: {exc}"], fmt, ExitCode.PRECONDITION_FAILED)
+
+
+@session_app.command("next")
+def session_next(
+    expected_plan_version: _PlanVersionOpt,
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    session: _SessionOpt = None,
+    idempotency_key: Annotated[
+        str | None, typer.Option("--idempotency-key", help="Required with --format json (cli 4.3).")
+    ] = None,
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Claim the next step (mutating, CAS): marks it presented, moves its cost
+    planned -> presented, bumps plan_version and publishes STEP_PRESENTED."""
+
+    def describe(result: dict[str, Any]) -> list[str]:
+        step = result["step"]
+        return [
+            f"step {step['step_id']} [{step['bucket']}/{step['step_type']}] "
+            f"{step.get('target_ref') or 'free conversation'}",
+            f"  plan version now {result['plan_version']}",
+        ]
+
+    _plan_mutation(
+        "session.next",
+        next_step,
+        fmt,
+        root,
+        session,
+        expected_plan_version,
+        idempotency_key,
+        correlation_id,
+        describe,
+    )
+
+
+@session_app.command("replan")
+def session_replan(
+    expected_plan_version: _PlanVersionOpt,
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    session: _SessionOpt = None,
+    idempotency_key: Annotated[
+        str | None, typer.Option("--idempotency-key", help="Required with --format json (cli 4.3).")
+    ] = None,
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Recompose the unpresented remainder (mutating, CAS): a new composition
+    revision over the remaining budget; presented steps are kept."""
+
+    def describe(result: dict[str, Any]) -> list[str]:
+        return [
+            f"replanned: revision {result['composition_revision']}, "
+            f"plan version {result['plan_version']}, {result['steps_planned']} steps ahead"
+        ]
+
+    _plan_mutation(
+        "session.replan",
+        replan_session,
+        fmt,
+        root,
+        session,
+        expected_plan_version,
+        idempotency_key,
+        correlation_id,
+        describe,
+    )
 
 
 def _wants_json(argv: list[str]) -> bool:

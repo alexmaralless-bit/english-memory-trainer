@@ -59,6 +59,18 @@ _COMMANDS: tuple[CommandDescriptor, ...] = (
     CommandDescriptor(
         name="session.status", owner_module="lessons", mutating=False, requires_idempotency_key=False
     ),
+    # Step delivery (control defines the behavior, lessons owns the commands):
+    # `next` and `replan` are CAS mutations [R-1]; `peek` observes and never
+    # publishes (control 4.2).
+    CommandDescriptor(
+        name="session.peek", owner_module="lessons", mutating=False, requires_idempotency_key=False
+    ),
+    CommandDescriptor(
+        name="session.next", owner_module="lessons", mutating=True, requires_idempotency_key=True
+    ),
+    CommandDescriptor(
+        name="session.replan", owner_module="lessons", mutating=True, requires_idempotency_key=True
+    ),
 )
 
 

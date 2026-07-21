@@ -99,3 +99,28 @@ def snapshot_payload(program: dict[str, Any]) -> dict[str, Any]:
     """The immutable, canonically-encodable snapshot of a loaded program."""
     normalized = _normalize(program)
     return {"schema_version": 1, **normalized}
+
+
+def load_policies(root: Path) -> list[tuple[str, str, dict[str, Any]]]:
+    """Engine policies shipped with the curriculum (``policies/*.yaml``).
+
+    Returns ``(kind, version_id, payload)`` per file, deterministically
+    ordered. The kind is the ``policy_id`` prefix before ``@`` (so
+    ``control@1`` registers under kind ``control``); a file without a
+    ``policy_id`` is skipped -- validation, not loading, reports shape
+    problems. Floats are NOT normalized away here: a float in a policy is a
+    contract violation the validator must refuse, not a value to launder.
+    """
+    policies_dir = root / "policies"
+    out: list[tuple[str, str, dict[str, Any]]] = []
+    if not policies_dir.is_dir():
+        return out
+    for path in sorted(policies_dir.glob("*.yaml")):
+        loaded = _read_yaml(path)
+        if not isinstance(loaded, dict):
+            continue
+        policy_id = str(loaded.get("policy_id", ""))
+        if "@" not in policy_id:
+            continue
+        out.append((policy_id.split("@")[0], policy_id, loaded))
+    return out

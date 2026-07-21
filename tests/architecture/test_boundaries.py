@@ -33,8 +33,12 @@ LAYER_ALLOWLIST: dict[str, set[str]] = {
     "kernel": {"kernel"},
     "storage": {"kernel", "storage"},
     "curriculum": {"kernel", "curriculum"},
-    "lessons": {"kernel", "lessons"},
-    "cli": {"kernel", "storage", "curriculum", "lessons", "cli"},
+    # control is the pure composition brain; lessons runs its transactions
+    # (the canon assigns the CLI commands to lessons and their behavior to
+    # control -- this direction avoids an import cycle).
+    "control": {"kernel", "control"},
+    "lessons": {"kernel", "control", "lessons"},
+    "cli": {"kernel", "storage", "curriculum", "control", "lessons", "cli"},
 }
 
 # Rule 2/3: module -> stdlib modules it may import from the restricted set.
