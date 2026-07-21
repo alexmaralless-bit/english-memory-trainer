@@ -214,14 +214,19 @@ def migrate(conn: sqlite3.Connection) -> None:
     for version, statements in _MIGRATIONS:
         if version in applied:
             continue
-        conn.execute("BEGIN;")
         try:
+            # BEGIN belongs inside the recovery boundary: an async signal can
+            # arrive after SQLite opened the transaction but before execute()
+            # returns to us.  Catching BaseException below then closes that
+            # partially-entered transaction just like a failure in the DDL.
+            conn.execute("BEGIN;")
             for statement in statements:
                 conn.execute(statement)
             conn.execute("INSERT INTO schema_migrations (version) VALUES (?);", (version,))
             conn.execute("COMMIT;")
-        except Exception:
-            conn.execute("ROLLBACK;")
+        except BaseException:
+            if conn.in_transaction:
+                conn.execute("ROLLBACK;")
             raise
 
 

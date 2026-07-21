@@ -18,6 +18,25 @@ from english_trainer.kernel.store import EventStore, connect, migrate
 from english_trainer.kernel.uow import UnitOfWork
 
 
+class _SignalDuringMigration:
+    """Raise after migration DDL has run inside the real transaction."""
+
+    def __init__(self, real) -> None:
+        self._real = real
+        self._raised = False
+
+    def execute(self, sql, *args):
+        result = self._real.execute(sql, *args)
+        if not self._raised and sql.lstrip().startswith("CREATE TABLE events"):
+            self._raised = True
+            raise KeyboardInterrupt("signal during migration DDL")
+        return result
+
+    @property
+    def in_transaction(self):
+        return self._real.in_transaction
+
+
 def _event(clock: FixedClock, rnd: SeededRandomSource, kind: str = "demo.happened"):
     return make_event(
         id=new_ulid(clock, rnd),
@@ -27,6 +46,33 @@ def _event(clock: FixedClock, rnd: SeededRandomSource, kind: str = "demo.happene
         correlation_id="corr-1",
         payload={"kind": kind},
     )
+
+
+def test_migration_base_exception_rolls_back_and_is_resumable(tmp_path: Path) -> None:
+    conn = connect(tmp_path / "interrupted-migration.db")
+    try:
+        with pytest.raises(KeyboardInterrupt, match="signal during migration DDL"):
+            migrate(_SignalDuringMigration(conn))  # type: ignore[arg-type]
+
+        assert not conn.in_transaction
+        assert conn.execute("SELECT COUNT(*) FROM schema_migrations").fetchone()[0] == 0
+        assert (
+            conn.execute(
+                "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'events'"
+            ).fetchone()[0]
+            == 0
+        )
+
+        migrate(conn)
+        assert not conn.in_transaction
+        assert [row[0] for row in conn.execute("SELECT version FROM schema_migrations ORDER BY version")] == [
+            1,
+            2,
+            3,
+            4,
+        ]
+    finally:
+        conn.close()
 
 
 def test_sequence_is_monotonic(store: EventStore, clock, random_source) -> None:
