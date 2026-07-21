@@ -22,7 +22,7 @@ from english_trainer.kernel.encoding import payload_hash
 from english_trainer.kernel.envelopes import DomainEvent
 from english_trainer.kernel.errors import AppendOnlyViolation, KernelError
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 # Forward-only migrations: (version, ordered statements). Applied once each,
 # individually, inside one transaction -- SQLite DDL is transactional, but
@@ -73,6 +73,24 @@ _MIGRATIONS: tuple[tuple[int, tuple[str, ...]], ...] = (
                 payload_hash    TEXT NOT NULL,
                 result          TEXT NOT NULL,
                 created_at      TEXT NOT NULL
+            )
+            """,
+        ),
+    ),
+    (
+        2,
+        (
+            # Per-consumer delivery checkpoint (foundation 3.7/3.8). Each consumer
+            # (outbox subscriber, projection, JSONL export) records how far it has
+            # applied the global event ``sequence``. A single ``delivered`` flag on
+            # the outbox row cannot express independent progress of many consumers;
+            # this high-water mark can, and it doubles as the dedup gate (a message
+            # at or below ``applied_sequence`` was already handled).
+            """
+            CREATE TABLE consumer_offsets (
+                consumer_name    TEXT PRIMARY KEY,
+                applied_sequence INTEGER NOT NULL DEFAULT 0,
+                updated_at       TEXT NOT NULL
             )
             """,
         ),
@@ -167,28 +185,46 @@ class EventStore:
             stored.append(event.model_copy(update={"sequence": int(cursor.lastrowid or 0)}))
         return stored
 
+    @staticmethod
+    def _row_to_event(row: sqlite3.Row) -> DomainEvent:
+        return DomainEvent(
+            sequence=row["sequence"],
+            id=row["id"],
+            type=row["type"],
+            occurred_at=row["occurred_at"],
+            actor=row["actor"],
+            provider=row["provider"],
+            correlation_id=row["correlation_id"],
+            causation_id=row["causation_id"],
+            idempotency_key=row["idempotency_key"],
+            pinned_versions=json.loads(row["pinned_versions"]),
+            payload=json.loads(row["payload"]),
+            payload_hash=row["payload_hash"],
+        )
+
+    _SELECT_COLUMNS = (
+        "SELECT sequence, id, type, occurred_at, actor, provider, correlation_id, "
+        "causation_id, idempotency_key, pinned_versions, payload, payload_hash FROM events"
+    )
+
     def read(self) -> Iterator[DomainEvent]:
         """Yield every event strictly in ``sequence`` order (foundation 5)."""
+        rows = self._conn.execute(f"{self._SELECT_COLUMNS} ORDER BY sequence ASC;")
+        for row in rows:
+            yield self._row_to_event(row)
+
+    def read_since(self, after_sequence: int) -> Iterator[DomainEvent]:
+        """Yield events with ``sequence`` greater than ``after_sequence``, in order.
+
+        The delivery tail for a consumer sitting at ``after_sequence`` (its
+        high-water mark). ``after_sequence == 0`` yields the whole log.
+        """
         rows = self._conn.execute(
-            "SELECT sequence, id, type, occurred_at, actor, provider, correlation_id, "
-            "causation_id, idempotency_key, pinned_versions, payload, payload_hash "
-            "FROM events ORDER BY sequence ASC;"
+            f"{self._SELECT_COLUMNS} WHERE sequence > ? ORDER BY sequence ASC;",
+            (after_sequence,),
         )
         for row in rows:
-            yield DomainEvent(
-                sequence=row["sequence"],
-                id=row["id"],
-                type=row["type"],
-                occurred_at=row["occurred_at"],
-                actor=row["actor"],
-                provider=row["provider"],
-                correlation_id=row["correlation_id"],
-                causation_id=row["causation_id"],
-                idempotency_key=row["idempotency_key"],
-                pinned_versions=json.loads(row["pinned_versions"]),
-                payload=json.loads(row["payload"]),
-                payload_hash=row["payload_hash"],
-            )
+            yield self._row_to_event(row)
 
     def count(self) -> int:
         row = self._conn.execute("SELECT COUNT(*) AS n FROM events;").fetchone()

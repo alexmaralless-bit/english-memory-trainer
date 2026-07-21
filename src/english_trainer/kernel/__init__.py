@@ -6,13 +6,16 @@ event envelopes, an append-only SQLite event store, and an atomic Unit of Work.
 The kernel holds no business logic: concrete event types and rules belong to the
 owning modules (owner matrix in wiki/OPEN.md).
 
-This is increment 1 (deterministic event-store core). Deferred to later
-increments: JSONL export and outbox delivery, the versioned policy registry,
-multi-aggregate CAS, the projection/rebuild framework, and the CLI surface.
+Increments 1-2 are in place: the deterministic event-store core, plus
+transactional outbox delivery, the JSONL derived export, and the integrity
+check. Deferred to later increments: the versioned policy registry and
+correction events, multi-aggregate CAS, isolate-and-swap projection rebuild for
+SQLite read-models, and the typer CLI surface.
 """
 
 from __future__ import annotations
 
+from english_trainer.kernel.check import CheckReport, database_check
 from english_trainer.kernel.clock import (
     Clock,
     FixedClock,
@@ -29,7 +32,13 @@ from english_trainer.kernel.errors import (
     KernelError,
     StaleRevision,
 )
+from english_trainer.kernel.export import (
+    JsonlExporter,
+    export_pending,
+    rebuild_export,
+)
 from english_trainer.kernel.ids import new_ulid
+from english_trainer.kernel.outbox import Consumer, OffsetStore, deliver
 from english_trainer.kernel.replay import fold, iter_events, replay
 from english_trainer.kernel.store import EventStore, connect, migrate
 from english_trainer.kernel.uow import CachedResult, UnitOfWork
@@ -37,13 +46,17 @@ from english_trainer.kernel.uow import CachedResult, UnitOfWork
 __all__ = [
     "AppendOnlyViolation",
     "CachedResult",
+    "CheckReport",
     "Clock",
     "Command",
+    "Consumer",
     "DomainEvent",
     "EventStore",
     "FixedClock",
     "IdempotencyConflict",
+    "JsonlExporter",
     "KernelError",
+    "OffsetStore",
     "RandomSource",
     "SeededRandomSource",
     "StaleRevision",
@@ -52,6 +65,9 @@ __all__ = [
     "UnitOfWork",
     "canonical_json",
     "connect",
+    "database_check",
+    "deliver",
+    "export_pending",
     "fold",
     "iter_events",
     "make_command",
@@ -59,5 +75,6 @@ __all__ = [
     "migrate",
     "new_ulid",
     "payload_hash",
+    "rebuild_export",
     "replay",
 ]
