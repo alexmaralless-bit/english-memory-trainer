@@ -6,10 +6,11 @@ event envelopes, an append-only SQLite event store, and an atomic Unit of Work.
 The kernel holds no business logic: concrete event types and rules belong to the
 owning modules (owner matrix in wiki/OPEN.md).
 
-Increments 1-3 are in place: the deterministic event-store core; transactional
-outbox delivery, the JSONL derived export, and the integrity check; and the
-versioned policy registry with pinning and retention. Deferred to later
-increments: the generic correction envelope and reducer, multi-aggregate CAS,
+Increments 1-4 are in place: the deterministic event-store core; transactional
+outbox delivery, the JSONL derived export, and the integrity check; the
+versioned policy registry with pinning and retention; and the generic
+correction envelope with correction-aware replay. Deferred to later increments:
+multi-aggregate CAS, deprecation mappings and aliases (OPEN-9),
 isolate-and-swap projection rebuild for SQLite read-models, and the typer CLI.
 """
 
@@ -23,6 +24,14 @@ from english_trainer.kernel.clock import (
     SeededRandomSource,
     SystemClock,
     SystemRandom,
+)
+from english_trainer.kernel.corrections import (
+    CORRECTION_KEY,
+    Correction,
+    correction_of,
+    fold_corrected,
+    make_correction_event,
+    resolve_corrections,
 )
 from english_trainer.kernel.encoding import canonical_json, payload_hash
 from english_trainer.kernel.envelopes import Command, DomainEvent, make_command, make_event
@@ -47,6 +56,7 @@ from english_trainer.kernel.store import EventStore, connect, migrate
 from english_trainer.kernel.uow import CachedResult, UnitOfWork
 
 __all__ = [
+    "CORRECTION_KEY",
     "KNOWN_KINDS",
     "AppendOnlyViolation",
     "CachedResult",
@@ -54,6 +64,7 @@ __all__ = [
     "Clock",
     "Command",
     "Consumer",
+    "Correction",
     "DomainEvent",
     "EventStore",
     "FixedClock",
@@ -72,16 +83,20 @@ __all__ = [
     "UnitOfWork",
     "canonical_json",
     "connect",
+    "correction_of",
     "database_check",
     "deliver",
     "export_pending",
     "fold",
+    "fold_corrected",
     "iter_events",
     "make_command",
+    "make_correction_event",
     "make_event",
     "migrate",
     "new_ulid",
     "payload_hash",
     "rebuild_export",
     "replay",
+    "resolve_corrections",
 ]
