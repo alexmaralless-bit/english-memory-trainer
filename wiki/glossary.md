@@ -77,7 +77,10 @@
 - **DecisionTrace** — сохранённое основание решения планирования: сработавшие правила, прогнозы, версии политик. Доступен по `trainer why` ([[modules/control]] §4.8).
 - **TunableParameter** — строка каталога настроек: владелец, диапазон, несущая policy, наблюдающие метрики, режим изменения. Каталог — **реестр метаданных, не хранилище значений** ([[modules/control]] §4.9).
 - **PolicyMetric** — versioned определение метрики качества политики: входы, когорта, формула, окно, правило отсутствующих данных ([[modules/control]] §4.10).
-- **STEP_PRESENTED** — факт выдачи шага **тьютору**, то есть граница наблюдаемости движка; не утверждает, что ученик увидел экран. Отличается от `SESSION_COMPOSED` (намерение): непредъявленный шаг мог выпасть при replan ([[modules/control]] §4.6).
+- **STEP_PRESENTED** — факт выдачи шага **тьютору**, то есть граница наблюдаемости движка; не утверждает, что ученик увидел экран. Отличается от `SESSION_COMPOSED` (намерение): непредъявленный шаг мог выпасть при replan ([[modules/control]] §4.6). Текст упражнения этим событием не подразумевается: сгенерированный/выбранный контент фиксируется отдельно.
+- **EXERCISE_RENDERED** — иммутабельное событие, сохраняющее авторский снапшот упражнения **до** предъявления ученику: `step_id`, `exercise_instance_id`, content hash, targets, dimensions, контекст, лексикон-ссылки, answer key или rubric ref, версии generation/rubric/curriculum и active safety.
+- **ExerciseInstance** — один rendered-снапшот упражнения, привязанный к `PlannedStep`. Может обслуживать текущую попытку сразу, но не reusable до приёма в банк.
+- **ExerciseBankItem** — переиспользуемое принятое упражнение с provenance, dedup-ключом, ре-валидацией safety, историей использований и append-only lifecycle `generated → accepted/rejected → retired`.
 - **Placement** — внутренняя CEFR-aligned диагностика стартового уровня (текстовые модальности), ~30–40 мин, с rolling-уточнением. Потолок: не выше ACTIVE, никогда MASTERED.
 - **Re-entry протокол** — после длительного перерыва движок рекомендует начать сессию с быстрого повторения или короткого теста остаточных знаний; отказ допустим и не штрафуется.
 
@@ -92,14 +95,18 @@
 - **corpus_frequency / `frequency_band`** — **только** корпусная частота: numeric score (Zipf/source) + нейтральные band'ы `very_high | high | mid | low | rare` по versioned thresholds. Не содержит педагогических/доменных категорий (rereview E-R5).
 - **curriculum_priority_band** — педагогический приоритет в программе: `CORE → HIGH → USEFUL → SPECIALIZED → INCIDENTAL`. Policy output, не частота (сюда ушли utility/domain-категории).
 - **learner_priority** — персональный приоритет для конкретного ученика (учитывает личную потребность); вычисляется, не хранится как глобальное поле.
-- **production_eligible** — вычисляемый признак «можно ли предъявлять как production сейчас» из active `usage_policy` + `currency` (`avoid`/`recognition_only`/`obsolete` → false). Всегда по active policy, не пинится (safety-overlay, [[OPEN]] OPEN-14).
+- **production_eligible** — вычисляемый признак «можно ли предъявлять как production сейчас» из active `usage_policy` + `currency` + контекста + transparency (`avoid`/`recognition_only`/`obsolete`/`dated` без явного recognition-override/`context_dependent` вне allowed_contexts/`opaque` как required production → false). Всегда по active policy, не пинится (safety-overlay).
 - **LexicalMasteryProfile** — versioned профиль required dimensions и mastery-критериев для LexicalItem по `(type, transparency, usage_policy)` (обычный word/chunk тоже; [[OPEN]] OPEN-13).
 - **volatility** — устойчивость единицы: `stable` / `changing`. Отделена от currency.
-- **currency** — актуальность изменчивой единицы: `current` / `dated` / `obsolete`, с датами наблюдения/проверки и владельцем reverification ([[OPEN]] OPEN-14).
+- **currency** — актуальность изменчивой единицы: `current` / `dated` / `obsolete`, с датами наблюдения/проверки и владельцем reverification. Истёкший review interval приостанавливает production и открывает review-задачу; `dated` — recognition-only по умолчанию; `obsolete` блокирует новые production/review assignments.
+- **generation_policy** — versioned policy-снапшот, pinned в Session Manifest: допустимые схемы упражнений, формы step-type, правила дистракторов, правила приёма/reuse банка, dedup-ключи и safety-предикаты для сгенерированных упражнений.
+- **stale-safety** — ре-валидация по active safety перед доставкой/reuse/рендером; если active usage/currency теперь запрещает production-шаг, шаг или банк-item отменяется/заменяется/ретайрится append-only, а не выдаётся молча.
 - **usage_policy** — политика употребления: `safe_to_use` / `context_dependent` / `recognition_only` / `avoid`. Понимать ≠ употреблять; assessable dimensions зависят от policy.
 - **contribution_scope** — тег evidence, определяющий, куда оно засчитывается (informal-профиль / writing / transfer / core CEFR). Разделяет informal recognition (никогда не в CEFR) и письменное производство в рабочем контексте.
 - **Личный словарь (LearnerLexicalState)** — индивидуальное состояние LexicalItem: evidence по recognition/production раздельно, ошибки, Mastery/Stability/Retrievability, три оси состояния как выше. «Выучено» — не boolean; вход по критериям — но **сам вход даёт только enrollment**: evidence появляется лишь при отдельном сохранённом learner response, объяснение агента evidence не создаёт (rereview C-R2).
-- **Stable core / living layer** — каталоги лексикона: спроектированный заранее / пополняемый из обучения (мемы, сленг) с provenance.
+- **Stable core / living layer** — каталоги лексикона: спроектированный заранее / пополняемый из обучения (мемы, сленг, новые рабочие выражения) с provenance.
+- **LivingLexicalCandidate** — no-evidence кандидат из сессии: нормализованная единица, предложенные метаданные, source pointer/hash и авторское summary. Не LexicalItem и не schedulable до приёма через `maintain-english-curriculum`.
+- **lexicon-first micro lane** — малая scheduling-полоса для LexicalItem без topic-ссылок: learner-requested, observed-error, due-review и CORE/HIGH safe единицы; advisory-лимит живёт в generation policy.
 - **Informal Online Competence** — отдельный профиль владения неформальным письменным английским; не двигает CEFR напрямую (отдельная шкала — [[OPEN]] OPEN-13).
 
 ## Метрики

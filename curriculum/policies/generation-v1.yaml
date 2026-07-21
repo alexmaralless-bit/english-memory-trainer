@@ -1,0 +1,457 @@
+policy_id: "generation@1"
+schema_version: 1
+status: "accepted"
+decision_record: "PD-2026-07-21"
+canonical_encoding: "kernel.canonical_json_v1"
+numeric_value_rule: "integer_and_string_policy_values_only"
+own_text_rule: "All prompts, examples, distractors, model answers, hints, rubrics, and feedback text MUST be authored for this project. Third-party excerpts are forbidden."
+
+pd_decisions:
+  - "PD-1:A:rendered_exercise_is_persisted_as_EXERCISE_RENDERED_before_tutor_presents_it_to_the_learner"
+  - "PD-2:A:bank_admission_requires_an_assessed_attempt_or_explicit_maintainer_fast_path"
+  - "PD-3:C:currency_aging_is_hybrid_expiry_suspends_production_and_opens_review_obsolete_requires_repeated_missed_checks_or_negative_review"
+  - "PD-4:A:dated_items_are_recognition_only_by_default_with_explicit_historical_or_register_awareness_override"
+  - "PD-5:D:unlinked_lexicon_coverage_uses_a_lexicon_first_micro_lane_plus_auto_link_candidates"
+  - "PD-6:A:safety_and_lifecycle_changes_use_domain_event_types_carried_by_kernel_envelopes"
+  - "PD-7:A:idiom_and_slang_cefr_register_cleanup_remains_content_review"
+
+supported_dimensions:
+  recognition:
+    production_required: "false"
+    allowed_step_types:
+      - "recognition_check"
+      - "transfer_task"
+      - "gate_item"
+    evidence_mode:
+      - "objective_check"
+      - "rubric_observation_when_classification_is_open"
+    allowed_targets:
+      - "Topic"
+      - "LexicalItem"
+  controlled_production:
+    production_required: "true"
+    allowed_step_types:
+      - "controlled_production"
+      - "integration_task"
+      - "gate_item"
+    evidence_mode:
+      - "objective_check_for_closed_items"
+      - "rubric_observation_for_open_constrained_answers"
+    allowed_targets:
+      - "Topic"
+      - "LexicalItem"
+  spontaneous_production:
+    production_required: "true"
+    allowed_step_types:
+      - "spontaneous_production"
+      - "free_conversation"
+      - "integration_task"
+    evidence_mode:
+      - "rubric_observation_with_assessable_span_required"
+    allowed_targets:
+      - "Topic"
+      - "LexicalItem"
+  transfer:
+    production_required: "depends_on_step_type"
+    allowed_step_types:
+      - "transfer_task"
+      - "integration_task"
+    evidence_mode:
+      - "transfer_task"
+      - "integration_task"
+      - "rubric_observation_when_open"
+    allowed_targets:
+      - "Topic"
+      - "LexicalItem"
+
+step_type_forms:
+  recognition_check:
+    - "meaning_choice"
+    - "form_choice"
+    - "cloze_recognition"
+    - "sentence_classification"
+    - "neutral_paraphrase_match"
+    - "tone_register_classification"
+  controlled_production:
+    - "slot_fill"
+    - "sentence_transformation"
+    - "word_order"
+    - "guided_reply"
+    - "constrained_short_answer"
+  spontaneous_production:
+    - "short_free_reply"
+    - "mini_chat_turn"
+    - "status_update"
+    - "role_context_prompt"
+  transfer_task:
+    - "new_context_rewrite"
+    - "cross_domain_prompt"
+    - "register_shift"
+    - "paraphrase_in_different_register"
+  new_material_intro:
+    - "micro_explanation_with_check"
+    - "example_contrast"
+  integration_task:
+    - "new_plus_learned_target"
+    - "context_switch_task"
+    - "multi_target_reply"
+  gate_item:
+    - "boundary_check"
+    - "mixed_dimension_check"
+  free_conversation:
+    - "goal_chat_turn"
+    - "open_context_prompt"
+
+exercise_schemas:
+  common_required_fields:
+    - "exercise_instance_id"
+    - "step_id"
+    - "step_type"
+    - "dimension"
+    - "target_refs"
+    - "context_id"
+    - "lexicon_refs"
+    - "prompt"
+    - "content_hash"
+    - "generation_policy_version"
+    - "pinned_curriculum_version"
+    - "pinned_rubric_version"
+    - "active_safety_version"
+    - "provenance"
+  recognition:
+    required_fields:
+      - "question"
+      - "options"
+      - "correct_option_id"
+      - "distractors"
+      - "feedback_keys"
+    validation:
+      - "options_have_stable_ids"
+      - "correct_option_is_unique"
+      - "each_distractor_has_distractor_error_ref_when_error_based"
+      - "opaque_targets_use_literal_trap_ru_only_as_authoring_guidance"
+  controlled_production:
+    required_fields:
+      - "prompt"
+      - "expected_answer"
+      - "acceptable_variants"
+      - "hints"
+      - "rubric_ref"
+    validation:
+      - "target_form_is_required_by_prompt"
+      - "answer_key_or_variants_are_sufficient_for_objective_check_when_closed"
+      - "open_constrained_tasks_have_rubric_ref"
+      - "unsafe_lexical_items_are_not_required_for_production"
+  spontaneous_production:
+    required_fields:
+      - "prompt"
+      - "rubric_ref"
+      - "negative_checks"
+      - "context_constraints"
+    validation:
+      - "prompt_elicits_target_without_showing_exact_target_form"
+      - "evidence_requires_assessable_span"
+      - "no_span_results_in_no_contributing_evidence"
+      - "unsafe_lexical_items_are_not_required_for_production"
+  transfer:
+    required_fields:
+      - "prompt"
+      - "source_context_id"
+      - "transfer_context_id"
+      - "rubric_ref"
+      - "independence_rule"
+    validation:
+      - "transfer_context_differs_from_recent_exposures_when_independence_is_claimed"
+      - "integration_roles_are_explicit_for_multi_target_steps"
+      - "production_safety_is_checked_for_any_required_output"
+  word_formation:
+    required_fields:
+      - "formation_ref"
+      - "base_form_ref"
+      - "affix"
+      - "affix_type"
+    validation:
+      - "base_form_ref_resolves_to_existing_wordform"
+      - "fake_words_are_forbidden_as_correct_answers"
+      - "inference_tasks_are_marked_as_recognition_or_transfer_unless_topic_requires_production"
+  lexeme_form:
+    required_fields:
+      - "lexeme_ref"
+      - "form_slot"
+      - "expected_form"
+    validation:
+      - "form_slot_is_one_of_base_past_participle_or_policy_declared_slot"
+      - "evidence_records_tested_form_slot"
+
+distractor_rules:
+  default_source_order:
+    - "topic.typical_errors"
+    - "lexical_item.literal_trap_ru"
+    - "observed_error_kind"
+  required_metadata:
+    - "distractor_id"
+    - "distractor_error_ref"
+    - "feedback_key"
+  constraints:
+    - "Each error-based distractor SHOULD map to exactly one typical_errors entry."
+    - "Distractors MUST be plausible for a Russian-speaking learner."
+    - "Distractors MUST be authored text, not copied learner answers or third-party text."
+    - "A learner wrong answer can seed future rules only as an observed_error_kind."
+    - "Feedback SHOULD name the root error through distractor_error_ref."
+
+safety_predicates:
+  active_safety_required_at:
+    - "control.session_next"
+    - "bank.reuse"
+    - "exercise.rendered"
+    - "placement.production_item_delivery"
+  production_eligible:
+    computed_from:
+      - "active_usage_policy"
+      - "active_currency"
+      - "active_allowed_contexts"
+      - "lexical_transparency"
+    allowed_usage_policy:
+      - "safe_to_use"
+      - "context_dependent_with_allowed_context"
+    forbidden_usage_policy:
+      - "recognition_only"
+      - "avoid"
+    forbidden_currency:
+      - "obsolete"
+    dated_default: "recognition_only"
+    dated_override_allowed_contexts:
+      - "historical_usage_recognition"
+      - "register_awareness_recognition"
+    opaque_required_production: "forbidden"
+    recognition_only_required_production: "forbidden"
+    avoid_required_production: "forbidden"
+    obsolete_required_production: "forbidden"
+    context_dependent_outside_allowed_context: "recognition_only"
+    missing_required_usage_policy: "reject_candidate"
+  recognition_allowed:
+    safe_to_use: "allowed"
+    context_dependent: "allowed_with_context_label"
+    recognition_only: "allowed"
+    dated: "allowed"
+    avoid: "allowed_only_for_safety_awareness_or_neutral_paraphrase"
+    obsolete: "allowed_only_for_historical_or_safety_awareness"
+  rendered_step_after_later_safety_change: "historical_attempt_uses_stored_snapshot_future_delivery_requires_revalidation"
+  unpresented_step_after_safety_change: "reject_or_replan_append_only"
+  domain_events:
+    live_step_safety_rejected: "LIVE_STEP_SAFETY_REJECTED"
+    bank_item_retired: "BANK_ITEM_RETIRED"
+    lexical_currency_changed: "LEXICAL_CURRENCY_CHANGED"
+
+exercise_rendered_event:
+  event_type: "EXERCISE_RENDERED"
+  timing: "must_commit_before_tutor_presents_prompt_to_learner"
+  minimum_payload_fields:
+    - "session_id"
+    - "step_id"
+    - "exercise_instance_id"
+    - "content_hash"
+    - "target_refs"
+    - "dimensions"
+    - "context_id"
+    - "lexicon_refs"
+    - "exercise_schema_version"
+    - "prompt"
+    - "answer_key_or_rubric_ref"
+    - "distractor_error_refs"
+    - "generation_policy_version"
+    - "pinned_curriculum_version"
+    - "pinned_rubric_version"
+    - "active_safety_version"
+    - "provider"
+    - "rendered_at"
+    - "provenance"
+  resume_rule: "STEP_PRESENTED_without_EXERCISE_RENDERED_returns_same_step_and_generation_directive"
+  attempt_rule: "structured_attempts_reference_exercise_instance_id"
+
+bank_lifecycle:
+  statuses:
+    - "generated"
+    - "accepted"
+    - "rejected"
+    - "retired"
+  transitions:
+    - "generated_to_accepted"
+    - "generated_to_rejected"
+    - "accepted_to_retired"
+  admission_rule: "accept_only_after_assessed_attempt_or_explicit_maintainer_fast_path"
+  maintainer_fast_path:
+    allowed: "true"
+    required_reason: "maintainer_reviewed_schema_safety_answer_key_and_no_excerpt"
+  generated_not_reusable: "true"
+  acceptance_checks:
+    - "schema_valid"
+    - "target_refs_resolve"
+    - "dimension_matches_planned_step"
+    - "lexicon_refs_resolve"
+    - "active_safety_allows_required_production"
+    - "answer_key_or_rubric_sufficient_for_admissible_evidence"
+    - "no_third_party_excerpt"
+    - "not_near_duplicate_unless_distinct_transfer_context"
+  rejection_reasons:
+    - "ambiguous_answer_key"
+    - "dangling_refs"
+    - "unsafe_production_requirement"
+    - "borrowed_text_or_excerpt"
+    - "wrong_dimension_fit"
+    - "prompt_fault"
+  retirement_reasons:
+    - "active_safety_forbids_reuse"
+    - "target_retired"
+    - "lexical_item_retired_or_obsolete"
+    - "schema_incompatible"
+    - "better_duplicate_replacement"
+    - "prompt_fault_threshold"
+    - "maintainer_rejection"
+  prompt_fault_retire_after_flags:
+    value: 3
+    calibration: "advisory"
+  maintainer_rejection_retire_after_flags:
+    value: 2
+    calibration: "advisory"
+  idempotency_key: "exercise_instance_id"
+  every_reuse_records: "ExerciseUse"
+  reuse_checks:
+    - "bank_item_status_is_accepted"
+    - "bank_item_status_is_not_retired"
+    - "active_safety_revalidated"
+    - "context_independence_revalidated"
+
+canonical_dedup_key:
+  fields_in_order:
+    - "target_refs"
+    - "dimensions"
+    - "step_type"
+    - "context_family"
+    - "normalized_prompt_skeleton"
+    - "answer_key_hash"
+    - "sorted_lexicon_refs"
+  normalization:
+    - "NFC"
+    - "strip_incidental_whitespace"
+    - "sort_mapping_keys"
+    - "sort_lexicon_refs"
+  near_duplicate_policy: "accepted_item_for_same_target_dimension_context_is_rejected_unless_distinct_transfer_context"
+
+living_layer:
+  candidate_status_before_acceptance: "not_a_LexicalItem_and_not_schedulable"
+  candidate_required_fields:
+    - "candidate_id"
+    - "normalized_unit_text"
+    - "proposed_id"
+    - "proposed_type"
+    - "proposed_register"
+    - "proposed_transparency"
+    - "proposed_usage_policy"
+    - "allowed_contexts_when_context_dependent"
+    - "neutral_equivalent"
+    - "meaning_ru"
+    - "literal_trap_ru_when_opaque"
+    - "cultural_context_when_meme_template"
+    - "first_observed_at"
+    - "source_kind"
+    - "communities"
+    - "source_pointer_or_source_hash"
+    - "authored_context_summary"
+    - "session_id"
+    - "provider"
+    - "proposed_volatility"
+    - "proposed_currency"
+  acceptance_workflow: "maintain-english-curriculum"
+  acceptance_steps:
+    - "normalize_and_dedup_against_core_living_aliases_and_tombstones"
+    - "verify_no_third_party_excerpt"
+    - "assign_type_register_transparency_usage_policy"
+    - "require_allowed_contexts_for_context_dependent"
+    - "require_currency_fields_for_changing_items"
+    - "require_cultural_context_for_meme_template"
+    - "author_examples_and_neutral_paraphrase"
+    - "validate_candidate"
+    - "activate_through_curriculum_versioning"
+    - "emit_LEXICAL_ITEM_ADDED"
+  currency_values:
+    - "current"
+    - "dated"
+    - "obsolete"
+  volatility_values:
+    - "stable"
+    - "changing"
+  review_intervals_days:
+    meme_template: 30
+    highly_volatile_slang: 30
+    changing_informal_chunk: 90
+    abbreviation: 90
+    stable_slang_or_idiom: 180
+    neutral_work_chunk: 365
+    calibration: "advisory"
+  stale_safety:
+    expired_review_interval: "suspend_production_and_open_currency_review_task"
+    repeated_missed_checks: "mark_obsolete_after_policy_threshold"
+    explicit_negative_review: "mark_obsolete"
+    dated: "recognition_only_by_default"
+    obsolete: "exclude_from_new_production_and_review_assignments"
+  source_text_storage: "store_pointer_or_hash_and_authored_summary_never_excerpt"
+
+lexicon_first_lane:
+  strategy: "hybrid_micro_lane_plus_auto_link_candidates"
+  eligible_sources:
+    - "learner_requested"
+    - "observed_error"
+    - "due_review"
+    - "CORE_or_HIGH_safe_unlinked_item"
+  balanced_session_growth_limit:
+    value: 1
+    unit: "lexicon_first_growth_item_per_session"
+    calibration: "advisory"
+  unlimited_when:
+    - "maintenance_mode"
+    - "learner_explicitly_requests_vocabulary_practice"
+  auto_link_candidates:
+    workflow: "maintain-english-curriculum"
+    inputs:
+      - "cefr"
+      - "domains"
+      - "examples"
+      - "type"
+      - "register"
+      - "context"
+      - "topic_can_do"
+    activation: "candidate_only_until_reviewed"
+  unlinked_items_policy: "unlinked_is_not_integrity_error"
+
+frequency_tier_weights:
+  big-five:
+    weight: 10000
+    calibration: "advisory"
+    effect: "highest_repetition_and_full_production_intensity_when_topic_requires_it"
+  core:
+    weight: 8500
+    calibration: "advisory"
+    effect: "high_priority_for_frequent_non_tense_grammar_with_natural_topic_dimensions"
+  tail:
+    weight: 3500
+    calibration: "advisory"
+    effect: "recognition_and_transfer_bias_at_A1_A2_unless_later_topic_requires_production"
+  hard_rule: "frequency_affects_ordering_and_intensity_never_target_set_or_required_dimensions"
+
+deterministic_selection:
+  candidate_order_key:
+    - "frequency_tier_weight_desc"
+    - "curriculum_priority_rank_asc"
+    - "learner_relevance_desc"
+    - "target_id_asc"
+    - "dimension_id_asc"
+    - "step_type_rank_asc"
+    - "candidate_id_asc"
+  randomization: "only_from_injected_seeded_random_source_after_canonical_candidate_order"
+
+audit_constraints:
+  replay: "historical_replay_uses_stored_exercise_snapshot_and_pinned_generation_policy"
+  safety_replay_boundary: "safety_changes_apply_to_future_delivery_not_to_historical_assessment"
+  excerpts: "forbidden_in_policy_bank_living_layer_and_events"
+  empty_bank: "must_not_block_session"

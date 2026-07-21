@@ -18,7 +18,7 @@
 | Сущность | Назначение | Ключевые поля |
 |---|---|---|
 | `SessionPlan` | сохранённый состав занятия | `session_id`, `composition_revision`, `plan_version`, `steps[]`, `budget`, `pinned_control_policy`, `created_at` |
-| `PlannedStep` | один шаг занятия — **tagged union по `kind`** (§4.3a) | общие: `step_id`, `decision_id`, `kind`, `bucket`, `step_type`, `expected_seconds`, `order_index`, `presented_at?` |
+| `PlannedStep` | один шаг занятия — **tagged union по `kind`** (§4.3a) | общие: `step_id`, `decision_id`, `kind`, `bucket`, `step_type`, `expected_seconds`, `order_index`, `presented_at?`, `generation_directive?`, `bank_item_id?`, `lexicon_first?` |
 | `SessionBudget` | session-level бюджет + **непредъявленный остаток** текущей ревизии | immutable `total_seconds`, `mode`; mutable `planned{review, growth, integration, choice}` только по непредъявленным шагам; `sum(planned) ≤ DeliveryLedger.remaining_seconds` |
 | `DeliveryLedger` | **накопительный** факт занятия, один на сессию и единственный источник факта | `presented_seconds`, `presented{review, growth, integration, choice}`, `remaining_seconds = SessionBudget.total_seconds − presented_seconds`; история планов живёт в `SESSION_COMPOSED`, не дублируется здесь |
 | `UrgencyClass` | класс review-кандидата | `critical \| important \| normal \| maintenance \| deferrable` |
@@ -124,7 +124,7 @@ control_policy:
 | `metrics()` / `catalogue()` | API | §4.10, §4.9 | `[mvp]` |
 | `propose_calibration()` / `confirm_calibration(id)` | API | §4.9; активацию делает владелец параметра | `[post-mvp]` |
 | `SESSION_COMPOSED {session_id, composition_revision, plan_version, steps[], budget, pinned_versions, active_safety_version}` | publishes | план создан или пересобран | `[mvp]` |
-| `STEP_PRESENTED {step_id, session_id, composition_revision, plan_version, review_assignment_id?, targets[]:{target_ref, dimension}, context_id, predicted_retrievability?, presented_at}` | publishes | шаг **фактически выдан**; `targets[]` пуст только у target-less choice | `[mvp]` |
+| `STEP_PRESENTED {step_id, session_id, composition_revision, plan_version, review_assignment_id?, targets[]:{target_ref, dimension}, context_id, step_type, generation_directive_hash?, bank_item_id?, predicted_retrievability?, presented_at, active_safety_version}` | publishes | шаг **фактически выдан тьютору**; `targets[]` пуст только у target-less choice; текст упражнения всё ещё требует `EXERCISE_RENDERED` до предъявления ученику | `[mvp]` |
 | `LEARNER_SIGNAL_RECORDED`, `SIGNAL_CONSUMED` | publishes | сигнал зафиксирован / израсходован | `[mvp]` |
 | `PROBE_REQUESTED {probe_id, target_ref, dimension, requested_difficulty, avoid_context}` | publishes | запрошена проба; `probe_id` выдаёт **движок** | `[mvp]` |
 | `AVAILABILITY_UPDATED`, `CALIBRATION_PROPOSED`, `CALIBRATION_APPLIED` | publishes | — | `[mvp]` / `[post-mvp]` |
@@ -147,7 +147,7 @@ control_policy:
 - **MUST — две версии имеют разные назначения** `[mvp]`: `composition_revision` увеличивается только при успешном `replan` и идентифицирует состав; `plan_version` увеличивается на 1 при **каждой** успешной мутации плана — `next` или `replan` — и служит CAS-токеном. Ни одна успешная мутация не сохраняет прежний `plan_version`.
 - **MUST — выдача шага это мутация** `[mvp]` [R-1]: `trainer session next` **мутирующая** и идемпотентная. В одной UoW она при совпавшем `expected_plan_version` помечает следующий непредъявленный шаг выданным, **вычитает** его `expected_seconds` из `SessionBudget.planned[bucket]`, прибавляет ту же величину в `DeliveryLedger.presented[bucket]`, пересчитывает totals/remaining, увеличивает `plan_version`, публикует `STEP_PRESENTED` и возвращает шаг с новой версией. Так `effective = presented + planned` не удваивает выданный шаг. Повтор с тем же `--idempotency-key` отдаёт сохранённый ответ до проверки CAS.
 - **MUST — просмотр без выдачи** `[mvp]`: `trainer session peek` — read-only, показывает следующий шаг и текущий `plan_version`, ничего не помечая и ничего не публикуя. Полученный токен передаётся в следующий `next` либо `replan`.
-- **MUST — live safety перед выдачей** `[mvp]`: в UoW `next` сначала читает active safety-policy, затем выполняет единый условный commit с предикатом `plan_version = expected_plan_version ∧ production_eligible`. Недопустимый шаг не предъявляется, версия и ledger не меняются; ответ — `PRECONDITION_FAILED {reason: safety_changed, current_plan_version, next_action: session.replan}`. Replan затем закрывает выпавший непредъявленный review-assignment как `CANCELLED`, а не outcome.
+- **MUST — live safety перед выдачей** `[mvp]` [П.3]: в UoW `next` сначала читает active safety-policy, затем выполняет единый условный commit с предикатом `plan_version = expected_plan_version ∧ production_eligible`. `production_eligible` учитывает active usage_policy, currency, allowed_contexts, `dated` recognition-only default и запрет production для opaque/recognition-only. Недопустимый шаг не предъявляется, версия и ledger не меняются; ответ — `PRECONDITION_FAILED {reason: safety_changed, current_plan_version, next_action: session.replan}`, и при изменении состояния эмитится доменное событие `LIVE_STEP_SAFETY_REJECTED`. Replan затем закрывает выпавший непредъявленный review-assignment как `CANCELLED`, а не outcome.
 - **MUST — выдача под CAS, наблюдаемый исход гонок** `[mvp]` [RR2-7]: `claim_next_step` принимает `expected_plan_version`; CAS берётся по `(session_id, plan_version)`, а `step_id` может быть заклеймён ровно один раз. Область уникальности идемпотентного ключа — `(session_id, operation, idempotency_key)`; сохранённый ответ включает версию, на которой команда была применена. Исходы гонок заданы, а не оставлены реализации:
 
 | Гонка | Результат |
@@ -183,7 +183,10 @@ control_policy:
 
 ### 4.3a Схема `PlannedStep` — tagged union [R-3]
 
-Общие поля: `step_id`, `decision_id`, `kind`, `bucket`, `step_type`, `expected_seconds`, `order_index`, `presented_at?`.
+Общие поля: `step_id`, `decision_id`, `kind`, `bucket`, `step_type`, `expected_seconds`, `order_index`, `presented_at?`, `generation_directive?`, `bank_item_id?`, `lexicon_first?`.
+
+- **MUST — источник упражнения явный** [П.3]: у выданного шага ровно одно из `bank_item_id` или `generation_directive`. `bank_item_id` означает reuse принятого, ре-валидированного по active safety банк-item'а. `generation_directive` — каноничные данные для тьютора, рендерящего упражнение под pinned `generation@1`; сам текст фиксируется отдельно как `EXERCISE_RENDERED`.
+- **MUST — банк-item не evidence** [П.3]: выбор или рендер банк-item'а не создаёт evidence. Evidence по-прежнему требует сохранённого ответа ученика через [[evidence]].
 
 | `kind` | Обязательные поля |
 |---|---|
@@ -215,7 +218,7 @@ control_policy:
 
 Детерминирован целиком; два корректных исполнения дают побайтово равный `SessionPlan`.
 
-1. **Кандидаты.** `review` — due/overdue от [[scheduler]] §5. `growth` — рекомендации [[curriculum]], отфильтрованные по `is_first_exposure`. `integration` — пары (новая цель, освоенная цель). `choice` — цели из `goals[]`/личного словаря [[learner]] и рекомендация гейта от [[gates]], если она есть.
+1. **Кандидаты.** `review` — due/overdue от [[scheduler]] §5, включая review LexicalItem'ов. `growth` — рекомендации [[curriculum]], отфильтрованные по `is_first_exposure`, плюс lexicon-first micro lane из `generation@1` для learner-requested / observed-error / due-review / CORE-HIGH safe unlinked-единиц (advisory: не более одного growth item за сбалансированную сессию, кроме maintenance или явного vocabulary-запроса). `integration` — пары (новая цель, освоенная цель). `choice` — цели из `goals[]`/личного словаря [[learner]] и рекомендация гейта от [[gates]], если она есть.
 2. **Исключение по safety** — по active policy; исключённое фиксируется в trace.
 3. **Классификация** review-кандидатов — §4.5.
 3a. **Активные сигналы** — фильтры и сдвиги §4.7 применяются после базовой классификации.
@@ -272,7 +275,7 @@ control_policy:
 - **MUST — что из этого следует** `[mvp]`: exposure, saturation и сброс `deferral_count` считаются от выдачи тьютору; идемпотентный повтор с тем же ключом возвращает тот же шаг и **не** создаёт второй факт. Если сессия брошена сразу после выдачи, факт остаётся — это честная плата за то, что доставку подтвердить нечем, и она названа здесь, а не замаскирована.
 - **MUST — план не равен выдаче** `[mvp]`: `SESSION_COMPOSED` — намерение; в брошенной или перепланированной сессии шаг мог не выдаваться вовсе.
 - **MUST — `SaturationState` строится из существующих событий** `[mvp]` [R-5]: входы — `STEP_PRESENTED` (число показов и `context_id`), `EVIDENCE_ADDED` и `REVIEW_OUTCOME` из [[evidence]] §3 (успех, independence), `ERROR_OBSERVED` (повторяющаяся живая ошибка для предиката `risk`). Событие с именем `ATTEMPT_ASSESSED` в каноне отсутствует и здесь не используется. Reducer применяет события в порядке канонического `sequence`, дедуп — по `event_id`.
-- **MUST — цели и `context_id` в факте доставки** `[mvp]` [R-5]: `STEP_PRESENTED.targets[]` перечисляет все пары `(target_ref, dimension)` шага, включая обе роли integration, а `context_id` идентифицирует смысловой контекст (домен + тип задания). Reducer обновляет saturation для каждой пары; `review_assignment_id` обязателен для kind=review и делает разрешимой корреляцию §4.10.
+- **MUST — цели, `context_id` и источник упражнения в факте доставки** `[mvp]` [R-5; П.3]: `STEP_PRESENTED.targets[]` перечисляет все пары `(target_ref, dimension)` шага, включая обе роли integration, а `context_id` идентифицирует смысловой контекст (домен + тип задания). Событие также несёт `step_type`, `active_safety_version` и ровно одно из `bank_item_id` / `generation_directive_hash`. Reducer обновляет saturation для каждой пары; `review_assignment_id` обязателен для kind=review и делает разрешимой корреляцию §4.10.
 - **MUST — предикат `saturated`** `[mvp]` [RR2-13]: считается **per-dimension**; `exposures_in_window ≥ max_exposures_in_window` **∨** (`consecutive_independent_successes ≥ consecutive_success_threshold` **∧** `distinct_contexts < min_distinct_contexts` **∧** `last_transfer_check_at != null` **∧** `now − last_transfer_check_at ≤ transfer_check_staleness_days`). При `last_transfer_check_at = null` вторая конъюнкция ложна. Ключ по цели без dimension позволил бы частым проверкам узнавания заглушить слабое производство той же цели. Если transfer давно не проверялся или не проверялся вообще, устойчивый успех в знакомом шаблоне **не** считается насыщением.
 - **MUST — насыщение не равно владению** `[mvp]`: понижение класса меняет только план; состояние знания меняет исключительно [[scoring]].
 - **MUST — квоты разнообразия** `[mvp]`: `max_steps_per_topic`, `max_consecutive_same_mode`, `max_similar_items`. «Похожие» = единицы, делящие `lemma`/базовый глагол phrasal-verb либо один `topic`.

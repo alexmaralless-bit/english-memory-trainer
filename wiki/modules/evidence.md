@@ -17,7 +17,7 @@
 
 | Сущность | Назначение | Ключевые поля |
 |---|---|---|
-| `Attempt` | одна попытка ученика | id, **`step_id`** (выданный шаг, [RR2-3]), target, dimension, mode, raw_answer, span, hints, draft/finalized |
+| `Attempt` | одна попытка ученика | id, **`step_id`** (выданный шаг, [RR2-3]), `exercise_instance_id?` (для structured/generated задач), target, dimension, mode, raw_answer, span, hints, draft/finalized |
 | `Observation` | наблюдение агента по attempt | rubric_criterion_ref, span_ref, machine-checkable часть, subjective часть |
 | `Evidence` | сохранённый факт владения | id, target, dimension, origin, primary_scope, contributions[], source_span_hash, item_exposure_id, pinned_versions, AttemptAssessment |
 | `CreditAllocation` | как span зачтён по target/dimension | target, dimension, contribution, used\|rejected, reason |
@@ -34,7 +34,7 @@ Evidence event-sourced ([[../platform/foundation]] §2); Attempt operational (fi
 | `finalize_attempt(id)` / `recover` | API | финализация draft-attempt (idempotent) | `[mvp]` |
 | `close_review(review_id)` | API | вычисление единственного ReviewOutcome | `[mvp]` |
 | `cancel_review(review_id, reason)` | internal API | терминальная системная отмена без ReviewOutcome; v1 reason: `replanned` | `[mvp]` |
-| `record_attempt(step_id, raw_answer, observations, hints)` | API | фиксация попытки **по выданному шагу**; target/dimension/mode и `origin` движок берёт из `PlannedStep`, клиент их не задаёт [RR2-3] | `[mvp]` |
+| `record_attempt(step_id, exercise_instance_id?, raw_answer, observations, hints)` | API | фиксация попытки **по выданному шагу**; для structured/generated задач валидирует сохранённый `EXERCISE_RENDERED`; target/dimension/mode и `origin` движок берёт из `PlannedStep`, клиент их не задаёт [RR2-3] | `[mvp]` |
 | `SessionNote` | сущность | untrusted-заметка агента при фиксации: `session_id`, `author_provider`, `created_at`, `text`; **не evidence**, в scoring не участвует ([[../flows/continuation]], P0-5) | `[mvp]` |
 | `list_notes(session_id)` | API | заметки сессии в хронологическом порядке, отдельным блоком от state | `[mvp]` |
 
@@ -47,7 +47,7 @@ Evidence event-sourced ([[../platform/foundation]] §2); Attempt operational (fi
 
 ### 4.1 Допустимость и уникальность (OPEN-7)
 - **MUST**: клиентская готовая классификация запрещена; движок вычисляет AttemptAssessment и ReviewOutcome по versioned policy.
-- **MUST — observation schema**: наблюдение ссылается на конкретный `rubric_criterion` и `span/error` в raw_answer, не булев флаг `criterion_satisfied`. Разделены machine-checkable часть (проверяется кодом) и subjective (под cap/trust); observation, не подтверждаемая raw_answer, **отклоняется** (единственная ветка, см. ниже).
+- **MUST — observation schema**: наблюдение ссылается на конкретный `rubric_criterion` и/или `distractor_error_ref` и `span/error` в raw_answer, не булев флаг `criterion_satisfied`. Разделены machine-checkable часть (проверяется кодом) и subjective (под cap/trust); observation, не подтверждаемая raw_answer или сохранённым exercise-снапшотом, **отклоняется** (единственная ветка, см. ниже).
 - **MUST — семантическая идентичность**: evidence имеет `source_span_hash` (canonical hash ответа/цитаты) и `item_exposure_id`. Один source-span засчитывается **не более раза** на пару (target, dimension); переотправка того же span с новыми ключами/session id нового evidence не создаёт.
 - **MUST — независимость**: rubric/informal-повышение состояния требует ≥2 независимых сессий; независимость определяется по **новому prompt/контексту/интервалу**, «другая сессия» сама по себе не считается.
 - **MUST — multi-credit allocation** [ревью 0.4-5]: один span, релевантный нескольким target/dimension, зачитывается по **детерминированному алгоритму**, результат фиксируется как `CreditAllocation[]` в evidence-событии: для каждой пары (target, dimension) — `contribution` (вес) и `used | rejected` с `reason`. Primary получает полный вес, дополнительные — сниженный `multi_credit_weight` (*tunable*) с cap на сумму; двойного полного зачёта нет.
@@ -83,7 +83,8 @@ Evidence event-sourced ([[../platform/foundation]] §2); Attempt operational (fi
 
 ### 4.5 capture-into-event [rereview A-2]
 - **MUST**: любое operational значение, влияющее на scoring (вес exposure placement, snapshot ReviewAssignment, `origin`), фиксируется **в самом evidence-событии** с версией policy — не читается из operational store при replay.
-- **MUST — attempt ссылается на выданный шаг** [RR2-3]: `record_attempt` принимает `step_id` шага с зафиксированным `STEP_PRESENTED` в указанной активной сессии; ссылка валидируется. Уже выданный шаг остаётся допустимым после replan, даже если его `composition_revision` больше не текущая: replan сохраняет предъявленные шаги и их assignments. Отсюда движок выводит target, dimension, mode и `origin` — клиент их не передаёт.
+- **MUST — attempt ссылается на выданный шаг и rendered-снапшот** [RR2-3; П.3]: `record_attempt` принимает `step_id` шага с зафиксированным `STEP_PRESENTED` в указанной активной сессии; ссылка валидируется. Для structured/generated задач он также принимает и валидирует `exercise_instance_id` с зафиксированным `EXERCISE_RENDERED`, совпадающим по `step_id`, targets, dimensions и content hash. Уже выданный шаг остаётся допустимым после replan, даже если его `composition_revision` больше не текущая: replan сохраняет предъявленные шаги и их assignments. Отсюда движок выводит target, dimension, mode и `origin` — клиент их не передаёт.
+- **MUST — обработка дефектного сгенерированного упражнения** [П.3, PD-2 A]: неоднозначный answer key, unsafe production, dangling-ссылки, заимствованный текст или prompt-fault отклоняют приём в банк и могут сделать попытку non-contributing с audit-причиной; тихого позитивного evidence это никогда не создаёт. Приём в банк требует оценённой попытки или явного maintainer fast-path.
 - **MUST — origin** [ревью 0.4-4, CTRL-10, RR2-3]: evidence несёт immutable `origin` — **единый закрытый enum** `session | placement | re_entry | control_probe`, одинаковый во всех спеках; scoring применяет placement-ceiling по нему ([[scoring]] §4b) и правило no-negative для `control_probe` ([[scoring]] §4b, [[control]] §4.7).
 
 ## 5. CLI-поверхность

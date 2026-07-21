@@ -111,10 +111,10 @@ mastery_criteria:
 
 ## 6. LexicalMasteryProfile (OPEN-13)
 
-- **MUST — разрешение по трём осям** [P0-3]: у каждого LexicalItem versioned `LexicalMasteryProfile`; lookup **тотален** по кортежу `(type, transparency, usage_policy)` ([[../product/lexical-system]] §1a). Прежний lookup по `type`/`usage_policy` не учитывал ось прозрачности и оставлял mastery непрозрачных единиц неопределённой.
-- **MUST — precedence: ограничение сильнее разрешения** [P0-3]: `recognition` требуется всегда. `controlled_production` попадает в required, **только если разрешают обе** оси — и `transparency`, и `usage_policy`. Конфликт разрешается в сторону запрета, а не разрешения.
+- **MUST — разрешение по effective safety profile** [P0-3; П.3 PD-2026-07-21]: у каждого LexicalItem versioned `LexicalMasteryProfile`; lookup **тотален** по кортежу `(type, transparency, effective_usage_policy)`, где `effective_usage_policy` выводится из active usage_policy + active currency + context. Прежний lookup по `type`/`usage_policy` не учитывал ось прозрачности и оставлял mastery непрозрачных единиц неопределённой.
+- **MUST — precedence: ограничение сильнее разрешения** [P0-3; PD-4 A]: `recognition` требуется всегда. `controlled_production` попадает в required, **только если разрешают все** оси — transparency, usage_policy, currency и context. `dated` — recognition-only по умолчанию; `obsolete`, `avoid`, `recognition_only`, `opaque` как required production и `context_dependent` вне allowed context запрещают production. Конфликт разрешается в сторону запрета, а не разрешения.
 
-| | `usage_policy` разрешает production (`safe_to_use`, разрешённый `context_dependent`) | `usage_policy` запрещает (`recognition_only`, `avoid`, `obsolete`) |
+| | effective safety разрешает production (`safe_to_use`, разрешённый `context_dependent`, `currency: current`) | effective safety запрещает (`recognition_only`, `avoid`, `dated`, `obsolete`, запрещённый контекст) |
 |---|---|---|
 | `transparent` | recognition + controlled_production | только recognition |
 | `semi_opaque` | recognition → затем controlled_production | только recognition |
@@ -124,7 +124,7 @@ mastery_criteria:
 
 - **MUST — роль оси `type`** [R-Q1]: таблица выше задаёт **required dimensions** по `(transparency, usage_policy)`; `type` их не переопределяет, а управляет **пост-обработкой**: для `lexeme` состояние агрегируется из required forms, для остальных типов агрегации нет. Порядок разрешения: `(transparency, usage_policy) → required dimensions → type-специфичная агрегация`. Именно в этом смысле кортеж тотален; отдельных строк на каждый `type` нет и не требуется.
 - **MUST**: production, не попавший в required, не «застревает» — единица достигает MASTERED по своим required dimensions.
-- **MUST**: lexeme агрегирует состояние из required forms детерминированно.
+- **MUST**: lexeme агрегирует состояние из required forms детерминированно. Evidence сгенерированных упражнений фиксирует тестируемый `form_slot` (`base`, `past`, `participle` или policy-объявленный слот); scoring потребляет form-slot evidence, а не текст prompt'а — replay остаётся детерминированным.
 
 ## 7. XP-ledger (OPEN-12)
 
@@ -143,7 +143,7 @@ mastery_criteria:
 
 - **depends on**: evidence (факты), curriculum (targets/dimensions/profiles/pinned policy), kernel (детерминизм/numeric).
 - **events published**: `SCORES_UPDATED`, `STATE_TRANSITION`, `LEVEL_UPDATED`, `XP_AWARDED`.
-- **events consumed**: `EVIDENCE_ADDED`, `REVIEW_OUTCOME`; `REVIEW_ASSIGNMENT_CANCELLED` — terminal no-op, переход состояния и дельты не вычисляются.
+- **events consumed**: `EVIDENCE_ADDED`, `REVIEW_OUTCOME`; `REVIEW_ASSIGNMENT_CANCELLED` — terminal no-op, переход состояния и дельты не вычисляются. `EXERCISE_RENDERED`/bank-lifecycle события — только audit/admissibility-контекст: без `EVIDENCE_ADDED` они не меняют scores.
 - **consumed by**: scheduler (Retrievability/состояния), lessons (манифест), memory (проекция), learner (агрегаты).
 
 ## 10. Открытые вопросы

@@ -54,13 +54,13 @@ stateDiagram-v2
 
 Манифест — то, что сессия закрепила в момент старта; он делает поведение внутри сессии воспроизводимым, даже если между стартом и завершением активная конфигурация изменилась.
 
-- **MUST — содержимое**: `session_id`, `provider`, `mode`, `pinned_versions` (curriculum, scoring, scheduler, **control**, generation, rubric), **`required_skills[]`** — пары `{skill_name, version}` — и `session_plan_id` со стартовым снимком `{composition_revision: 1, plan_version: 1}`. Manifest неизменяем; живые `SessionPlan`/`DeliveryLedger` хранятся в session aggregate по этой ссылке ([[control]] §4.2).
+- **MUST — содержимое**: `session_id`, `provider`, `mode`, `pinned_versions` (curriculum, scoring, scheduler, **control**, generation, rubric), **`required_skills[]`** — пары `{skill_name, version}` — и `session_plan_id` со стартовым снимком `{composition_revision: 1, plan_version: 1}`. Manifest неизменяем; живые `SessionPlan`/`DeliveryLedger` хранятся в session aggregate по этой ссылке ([[control]] §4.2). Rendered exercise text не входит в Manifest: он фиксируется отдельным `EXERCISE_RENDERED` перед предъявлением learner prompt.
 - **MUST — композиция в UoW старта** [CTRL-2]: `start` синхронно вызывает `control.compose_session` **до** commit и сохраняет план в той же транзакции. Отдельного шага композиции после старта не существует. `session peek` read-only возвращает следующий шаг и `plan_version`; `session next` при совпавшем `expected_plan_version` атомарно помечает шаг выданным, обновляет ledger, увеличивает версию и публикует `STEP_PRESENTED`; `session replan` использует тот же CAS-токен и увеличивает также `composition_revision` ([[control]] §4.2).
 - **MUST — replan не оставляет pending-сирот** [R-3, RR2-4]: непредъявленный review-шаг, выпавший из новой ревизии, получает `CANCELLED(reason=replanned)` для своего ReviewAssignment **в той же UoW**. Это терминальная отмена, не ReviewOutcome: scoring и scheduler её игнорируют ([[evidence]] §4.3).
 - **MUST — режим занятия** [CTRL-11]: `start` принимает `mode` (`balanced` по умолчанию). Режимы `maintenance`/`re_entry` — единственный путь к занятию без нового материала ([[control]] §4.1), и без параметра это нормативное исключение было недостижимо.
 - **MUST — `required_skills` явные** [0.7, бриф §11]: требуемые навыки перечисляются в манифесте, а не подбираются средой по описанию. Implicit invocation делает поведение невоспроизводимым между Codex и Claude Code и лишает [[scoring]] §5 базы для Tutor Compliance: обязательство «вызван нужный skill нужной версии» проверяемо только против явного списка.
 - **MUST — разрешимость при старте, синхронно до commit** [P0-Q1]: порядок строгий — `resolve` всех `required_skills` → открытие UoW → commit → `SESSION_STARTED`. `start` падает **до** создания сессии, если хоть одна затребованная версия неразрешима ([[adapters]] §4.2). Post-commit consumer `SESSION_STARTED` в [[adapters]] — только аудит уже обеспеченного инварианта, а не сама проверка: проверка по событию произошла бы после создания сессии и нарушила бы это MUST.
-- **MUST — safety не пинится**: манифест закрепляет структуру и scoring, но не safety; `production_eligible` проверяется по active policy при доставке ([[../OPEN]] OPEN-14).
+- **MUST — safety не пинится** [П.3]: манифест закрепляет структуру, pinned policies и generation policy, но не safety; `production_eligible` проверяется по active policy при `session next`, bank reuse и `EXERCISE_RENDERED`. `STEP_PRESENTED` без `EXERCISE_RENDERED` восстановим на `resume`: тот же шаг возвращается с той же generation directive. `EXERCISE_RENDERED` без попытки ученика — не evidence и становится reusable только после приёма в банк.
 
 ## 5. Публичный API и события
 
@@ -71,9 +71,12 @@ stateDiagram-v2
 | `abandon(session_id)` | API | идемпотентная терминализация без summary | `[mvp]` |
 | `finish(session_id, summary_draft?)` | API | проверка postconditions → атомарная терминализация | `[mvp]` |
 | `peek_next_step(session_id)` | API (read-only) | следующий шаг + текущий `plan_version`, без факта выдачи | `[mvp]` |
-| `claim_next_step(session_id, expected_plan_version, idempotency_key)` | API (mutating, CAS) | выдача шага по протоколу [[control]] §4.2 | `[mvp]` |
+| `claim_next_step(session_id, expected_plan_version, idempotency_key)` | API (mutating, CAS) | выдача шага по протоколу [[control]] §4.2; возвращает bank item или generation directive | `[mvp]` |
+| `record_rendered_exercise(session_id, step_id, exercise_instance, idempotency_key)` | API (mutating) | фиксирует иммутабельный rendered-exercise снапшот до предъявления ученику | `[mvp]` [П.3] |
 | `replan(session_id, expected_plan_version, idempotency_key)` | API (mutating, CAS) | новая композиционная ревизия остатка бюджета | `[mvp]` |
 | `SESSION_STARTED` / `FINISHED` / `ABANDONED` / `SESSION_STALE_ABANDONED` | publishes | lifecycle-факты | `[mvp]` |
+| `EXERCISE_RENDERED` | publishes | rendered-exercise снапшот, привязанный к `step_id`; источник для исторических попыток/replay | `[mvp]` [П.3, PD-1 A] |
+| `EXERCISE_ACCEPTED` / `EXERCISE_REJECTED` / `EXERCISE_RETIRED` | publishes | lifecycle банка упражнений; приём только после оценённой попытки или maintainer fast-path | `[mvp]` [П.3, PD-2 A] |
 | `ATTEMPT_STATE_CHANGED` | publishes | draft/recorded/assessed | `[mvp]` |
 | `attach_agent(session_id, provider, skills)` | API | фиксирует подключение агента к сессии | `[mvp]` |
 | `AGENT_ATTACHED` | publishes | к сессии подключился агент: провайдер, версии skills, момент ([[../flows/continuation]]) | `[mvp]` |
@@ -94,7 +97,8 @@ stateDiagram-v2
 | `trainer session resume --session ID --provider X --format json` | состояние + briefing + notes; фиксирует `AGENT_ATTACHED` |
 | `trainer session abandon --session ID` | идемпотентная терминализация |
 | `trainer session finish --session ID [--summary-draft FILE]` | завершение с postconditions |
-| `trainer attempt record --session ID --step STEP_ID --input FILE [--note "..."]` | фиксация attempt по выданному шагу; `--note` — untrusted-заметка ([[evidence]] §3) |
+| `trainer exercise rendered --session ID --step STEP_ID --input FILE --idempotency-key K --format json` | фиксация rendered-exercise снапшота до предъявления ученику; возвращает `exercise_instance_id` |
+| `trainer attempt record --session ID --step STEP_ID [--exercise-instance EXERCISE_ID] --input FILE [--note "..."]` | фиксация attempt по выданному шагу; structured-задачи ссылаются на сохранённый exercise-снапшот; `--note` — untrusted-заметка ([[evidence]] §3) |
 
 Ошибки: `error_code` + причины + `allowed_actions` + `next_action`; отдельно бизнес-postconditions и lifecycle/concurrency/idempotency ([[../flows/session]]).
 
