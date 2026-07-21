@@ -6,8 +6,8 @@ topics:
     module: a1.1-identity-and-role
     can_do: "State identity, role, and company with forms of be."
     advisory_prerequisites: {}
-    dimensions: [recognition, transfer]
-    frequency_tier: tail
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: core
     lexicon: [chunk.i-work-as, chunk.my-name-is, word.company]
     contexts: [team-introduction]
     typical_errors:
@@ -18,7 +18,7 @@ topics:
       - "I am a data analyst."
       - "Our company is small."
     explanation_language: ru-allowed
-    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.pronouns.possessives
     cefr: A1
     track: grammar-engine
@@ -26,8 +26,8 @@ topics:
     can_do: "Refer to people, teams, and ownership with pronouns and possessives."
     advisory_prerequisites:
       strong: [grammar.be.identity]
-    dimensions: [recognition, transfer]
-    frequency_tier: tail
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: core
     lexicon: [chunk.my-main-task-is, word.company, word.team]
     contexts: [team-introduction]
     typical_errors:
@@ -38,7 +38,7 @@ topics:
       - "She owns the release notes."
       - "Their team has a demo today."
     explanation_language: ru-allowed
-    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.basic-word-order
     cefr: A1
     track: grammar-engine
@@ -46,8 +46,8 @@ topics:
     can_do: "Write simple affirmative statements in a clear English word order."
     advisory_prerequisites:
       strong: [grammar.be.identity]
-    dimensions: [recognition, transfer]
-    frequency_tier: tail
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: core
     lexicon: [word.company, word.team]
     contexts: [team-introduction]
     typical_errors:
@@ -58,7 +58,7 @@ topics:
       - "The client needs a report."
       - "We test the model today."
     explanation_language: ru-allowed
-    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.articles.identity
     cefr: A1
     track: grammar-engine
@@ -66,8 +66,8 @@ topics:
     can_do: "Use a, an, and the in simple descriptions of roles and objects."
     advisory_prerequisites:
       soft: [grammar.be.identity]
-    dimensions: [recognition, transfer]
-    frequency_tier: tail
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: core
     lexicon: [chunk.i-work-in-the-team, word.company, word.team]
     contexts: [team-introduction]
     typical_errors:
@@ -78,7 +78,7 @@ topics:
       - "I am an engineer on the project."
       - "The dashboard has a new chart."
     explanation_language: ru-allowed
-    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: written-interaction.self-introduction
     cefr: A1
     track: written-interaction
@@ -184,8 +184,8 @@ topics:
     module: a1.2-daily-work
     can_do: "State simple times, dates, and schedule points in a work message."
     advisory_prerequisites: {}
-    dimensions: [recognition, transfer]
-    frequency_tier: tail
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: core
     lexicon: [chunk.first-thing-in-the-morning, chunk.at-the-end-of-the-day, word.day]
     contexts: [daily-standup]
     typical_errors:
@@ -196,7 +196,7 @@ topics:
       - "The call starts at nine."
       - "The demo is on 12 May."
     explanation_language: ru-allowed
-    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: written-production.daily-work-update
     cefr: A1
     track: written-production-mediation
@@ -243,8 +243,8 @@ topics:
     can_do: "Describe what exists in a simple system or interface."
     advisory_prerequisites:
       strong: [grammar.be.identity]
-    dimensions: [recognition, transfer]
-    frequency_tier: tail
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: core
     lexicon: [word.system, word.data]
     contexts: [interface-walkthrough]
     typical_errors:
@@ -255,7 +255,7 @@ topics:
       - "There is an error in the log."
       - "There are two fields on this screen."
     explanation_language: ru-allowed
-    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.have-has.objects
     cefr: A1
     track: grammar-engine
@@ -263,8 +263,8 @@ topics:
     can_do: "State what a system, team, or object has."
     advisory_prerequisites:
       strong: [grammar.basic-word-order]
-    dimensions: [recognition, transfer]
-    frequency_tier: tail
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: core
     lexicon: [chunk.each-record-has, lexeme.have, word.system]
     contexts: [interface-walkthrough]
     typical_errors:
@@ -275,15 +275,15 @@ topics:
       - "The form has three required fields."
       - "Our team has a shared folder."
     explanation_language: ru-allowed
-    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.nouns-singular-plural
     cefr: A1
     track: grammar-engine
     module: a1.3-systems-objects-and-data
     can_do: "Refer to one or more objects, files, and records accurately."
     advisory_prerequisites: {}
-    dimensions: [recognition, transfer]
-    frequency_tier: tail
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: core
     lexicon: [word.record, word.system, word.data]
     contexts: [interface-walkthrough]
     typical_errors:
@@ -294,7 +294,7 @@ topics:
       - "One file is missing."
       - "Two records need review."
     explanation_language: ru-allowed
-    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.demonstratives.references
     cefr: A1
     track: grammar-engine
@@ -302,8 +302,8 @@ topics:
     can_do: "Point to a specific object, field, or screen with demonstratives."
     advisory_prerequisites:
       strong: [grammar.nouns-singular-plural]
-    dimensions: [recognition, transfer]
-    frequency_tier: tail
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: core
     lexicon: [chunk.this-field-contains, word.system, word.data]
     contexts: [interface-walkthrough]
     typical_errors:
@@ -314,7 +314,7 @@ topics:
       - "This field stores the email."
       - "Those buttons open the report."
     explanation_language: ru-allowed
-    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.quantifiers.basic
     cefr: A1
     track: grammar-engine
@@ -322,8 +322,8 @@ topics:
     can_do: "Describe simple quantities of objects or data."
     advisory_prerequisites:
       strong: [grammar.nouns-singular-plural]
-    dimensions: [recognition, transfer]
-    frequency_tier: tail
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: core
     lexicon: [word.system, word.data]
     contexts: [interface-walkthrough]
     typical_errors:
@@ -334,15 +334,15 @@ topics:
       - "We have a few open tasks."
       - "There is not much data yet."
     explanation_language: ru-allowed
-    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.prepositions.location
     cefr: A1
     track: grammar-engine
     module: a1.3-systems-objects-and-data
     can_do: "Locate an object, field, or item in a simple system."
     advisory_prerequisites: {}
-    dimensions: [recognition, transfer]
-    frequency_tier: tail
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: core
     lexicon: [chunk.its-stored-in, chunk.you-can-find-it-under, chunk.in-the-shared-folder]
     contexts: [interface-walkthrough]
     typical_errors:
@@ -353,7 +353,7 @@ topics:
       - "The setting is in the menu."
       - "The note is under the title."
     explanation_language: ru-allowed
-    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: reading.interface-data-description
     cefr: A1
     track: reading
@@ -497,8 +497,8 @@ topics:
     can_do: "State simple ability, inability, and requests with can and can't."
     advisory_prerequisites:
       strong: [grammar.basic-word-order]
-    dimensions: [recognition, transfer]
-    frequency_tier: tail
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: core
     lexicon: [chunk.can-you-help, word.help, word.question]
     contexts: [work-chat]
     typical_errors:
@@ -509,15 +509,15 @@ topics:
       - "Can you open the link?"
       - "I can't join the call today."
     explanation_language: ru-allowed
-    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.imperatives.instructions
     cefr: A1
     track: grammar-engine
     module: a1.5-requests-and-clarification
     can_do: "Give a simple written instruction or request."
     advisory_prerequisites: {}
-    dimensions: [recognition, transfer]
-    frequency_tier: tail
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: core
     lexicon: [chunk.could-you-send-me, word.check, phrasal-verb.look-for]
     contexts: [work-chat]
     typical_errors:
@@ -528,7 +528,7 @@ topics:
       - "Open the ticket first."
       - "Please send the screenshot."
     explanation_language: ru-allowed
-    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.basic-questions.clarification
     cefr: A1
     track: grammar-engine
@@ -536,8 +536,8 @@ topics:
     can_do: "Ask a basic question to clarify meaning or a task."
     advisory_prerequisites:
       strong: [grammar.do-questions]
-    dimensions: [recognition, transfer]
-    frequency_tier: tail
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: core
     lexicon: [chunk.what-does-mean, chunk.do-you-mean, word.question]
     contexts: [work-chat]
     typical_errors:
@@ -548,7 +548,7 @@ topics:
       - "What does this label mean?"
       - "Where is the latest file?"
     explanation_language: ru-allowed
-    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: written-interaction.request-clarification
     cefr: A1
     track: written-interaction
@@ -734,8 +734,8 @@ topics:
     can_do: "State an intended plan with going to."
     advisory_prerequisites:
       strong: [grammar.be.identity]
-    dimensions: [recognition, transfer]
-    frequency_tier: tail
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: core
     lexicon: [chunk.were-planning-to, chunk.thats-the-plan-for-now, word.plan]
     contexts: [task-planning]
     typical_errors:
@@ -746,7 +746,7 @@ topics:
       - "We are going to test the new page."
       - "I am going to call the clinic."
     explanation_language: ru-allowed
-    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.will.basic-decisions
     cefr: A1
     track: grammar-engine
@@ -1448,8 +1448,8 @@ topics:
     advisory_prerequisites:
       strong: [grammar.time-dates]
       soft: [grammar.prepositions.location]
-    dimensions: [recognition, transfer]
-    frequency_tier: tail
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: core
     lexicon: [word.task, word.schedule]
     contexts: [daily-standup]
     typical_errors:
@@ -1460,7 +1460,7 @@ topics:
       - "The review is on Monday."
       - "The call starts at 10:00."
     explanation_language: ru-allowed
-    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.here-is-are.presenting
     cefr: A1
     track: grammar-engine
@@ -1469,8 +1469,8 @@ topics:
     advisory_prerequisites:
       strong: [grammar.there-is-are.systems]
       soft: [grammar.demonstratives.references, grammar.nouns-singular-plural]
-    dimensions: [recognition, transfer]
-    frequency_tier: tail
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: core
     lexicon: [word.system, word.data]
     contexts: [interface-walkthrough]
     typical_errors:
@@ -1481,7 +1481,7 @@ topics:
       - "Here is your access card."
       - "Here are the test results."
     explanation_language: ru-allowed
-    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: word-formation.negation-un
     cefr: A1
     track: word-formation

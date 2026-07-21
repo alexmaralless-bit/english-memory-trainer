@@ -31,6 +31,43 @@ BIG_FIVE_GRAMMAR_TOPIC_IDS = {
     "grammar.past-participle.forms",
     "grammar.present-perfect-past-simple.choice",
 }
+# Frequent non-tense grammar (PD-2026-07-21, P.2 review): full dimensions and
+# big-five-level priority. The first, binary tier model pushed these into
+# recognition-only, contradicting their productive can_do statements.
+CORE_GRAMMAR_TOPIC_IDS = {
+    "grammar.be.identity",
+    "grammar.pronouns.possessives",
+    "grammar.basic-word-order",
+    "grammar.articles.identity",
+    "grammar.time-dates",
+    "grammar.there-is-are.systems",
+    "grammar.have-has.objects",
+    "grammar.nouns-singular-plural",
+    "grammar.demonstratives.references",
+    "grammar.quantifiers.basic",
+    "grammar.prepositions.location",
+    "grammar.can-cant.ability-requests",
+    "grammar.imperatives.instructions",
+    "grammar.basic-questions.clarification",
+    "grammar.going-to.plans",
+    "grammar.prepositions.time",
+    "grammar.here-is-are.presenting",
+    "grammar.sequencing.delivery",
+    "grammar.modals.requirements",
+    "grammar.comparatives.options",
+    "grammar.superlatives.selection",
+    "grammar.quantifiers.requirements",
+    "grammar.connectors.cause-contrast",
+}
+# Rare verb forms only: recognition + transfer at the home level; production
+# arrives with their B1-B2 continuations (the can_do names the target ability).
+TAIL_GRAMMAR_TOPIC_IDS = {
+    "grammar.zero-conditional.processes",
+    "grammar.first-conditional.troubleshooting",
+    "grammar.passive.basic-process",
+    "grammar.past-continuous.incident-context",
+    "grammar.when-while.sequence",
+}
 FULL_GRAMMAR_DIMENSIONS = {
     "recognition",
     "controlled_production",
@@ -38,6 +75,11 @@ FULL_GRAMMAR_DIMENSIONS = {
     "transfer",
 }
 TAIL_GRAMMAR_DIMENSIONS = {"recognition", "transfer"}
+TIER_BY_TOPIC_ID = (
+    dict.fromkeys(BIG_FIVE_GRAMMAR_TOPIC_IDS, "big-five")
+    | dict.fromkeys(CORE_GRAMMAR_TOPIC_IDS, "core")
+    | dict.fromkeys(TAIL_GRAMMAR_TOPIC_IDS, "tail")
+)
 REQUIRED_BODY_FIELDS = {
     "contexts",
     "dimensions",
@@ -132,16 +174,28 @@ def test_grammar_frequency_tiers_match_required_dimensions(topics: list[dict[str
         topic_id = topic["id"]
         tier = topic.get("frequency_tier")
         dimensions = set(topic["dimensions"])
-        if tier not in {"big-five", "tail"}:
-            offenders.append(f"{topic_id}: frequency_tier={tier!r}")
-        expected_dimensions = (
-            FULL_GRAMMAR_DIMENSIONS if topic_id in BIG_FIVE_GRAMMAR_TOPIC_IDS else TAIL_GRAMMAR_DIMENSIONS
-        )
+        expected_tier = TIER_BY_TOPIC_ID.get(topic_id)
+        if expected_tier is None:
+            offenders.append(f"{topic_id}: not classified in any tier set")
+            continue
+        if tier != expected_tier:
+            offenders.append(f"{topic_id}: frequency_tier={tier!r}, expected {expected_tier!r}")
+        expected_dimensions = TAIL_GRAMMAR_DIMENSIONS if expected_tier == "tail" else FULL_GRAMMAR_DIMENSIONS
         if dimensions != expected_dimensions:
             offenders.append(f"{topic_id}: dimensions={sorted(dimensions)}")
-        if (topic_id in BIG_FIVE_GRAMMAR_TOPIC_IDS) != (tier == "big-five"):
-            offenders.append(f"{topic_id}: tier contradicts big-five membership")
     assert not offenders
+
+
+def test_tier_sets_partition_the_grammar_track(topics: list[dict[str, Any]]) -> None:
+    # The three classification sets must cover the grammar track exactly: an
+    # unclassified topic or a stale entry for a removed topic both fail loudly.
+    grammar_ids = {topic["id"] for topic in topics if topic["track"] == "grammar-engine"}
+    classified = set(TIER_BY_TOPIC_ID)
+    assert grammar_ids == classified, (
+        f"unclassified={sorted(grammar_ids - classified)}, stale={sorted(classified - grammar_ids)}"
+    )
+    total = len(BIG_FIVE_GRAMMAR_TOPIC_IDS) + len(CORE_GRAMMAR_TOPIC_IDS) + len(TAIL_GRAMMAR_TOPIC_IDS)
+    assert total == len(TIER_BY_TOPIC_ID)  # the three sets are disjoint
 
 
 def test_topic_lexicon_references_resolve(

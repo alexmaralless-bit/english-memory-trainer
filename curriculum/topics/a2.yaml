@@ -244,8 +244,8 @@ topics:
     can_do: "Sequence planned delivery steps in a clear order."
     advisory_prerequisites:
       strong: [grammar.future-forms.planning]
-    dimensions: [recognition, transfer]
-    frequency_tier: tail
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: core
     lexicon: [word.delivery, word.deadline]
     contexts: [delivery-planning]
     typical_errors:
@@ -256,7 +256,7 @@ topics:
       - "First we test, then we deploy."
       - "After approval, the team sends the update."
     explanation_language: ru-allowed
-    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: written-production.delivery-plan
     cefr: A2
     track: written-production-mediation
@@ -302,8 +302,8 @@ topics:
     can_do: "State requirements, advice, permission, and possibility with basic modals."
     advisory_prerequisites:
       strong: [grammar.can-cant.ability-requests]
-    dimensions: [recognition, transfer]
-    frequency_tier: tail
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: core
     lexicon: [chunk.we-should-consider, word.requirement, word.option]
     contexts: [option-review]
     typical_errors:
@@ -314,7 +314,7 @@ topics:
       - "You must save the form."
       - "We should check the option first."
     explanation_language: ru-allowed
-    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.comparatives.options
     cefr: A2
     track: grammar-engine
@@ -322,8 +322,8 @@ topics:
     can_do: "Compare two simple options."
     advisory_prerequisites:
       strong: [grammar.articles.identity]
-    dimensions: [recognition, transfer]
-    frequency_tier: tail
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: core
     lexicon: [chunk.in-terms-of, word.compare, word.requirement]
     contexts: [option-review]
     typical_errors:
@@ -334,7 +334,7 @@ topics:
       - "This plan is cheaper than the other one."
       - "Email is faster than a meeting."
     explanation_language: ru-allowed
-    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.superlatives.selection
     cefr: A2
     track: grammar-engine
@@ -342,8 +342,8 @@ topics:
     can_do: "Identify the best or most suitable option in a simple set."
     advisory_prerequisites:
       strong: [grammar.comparatives.options]
-    dimensions: [recognition, transfer]
-    frequency_tier: tail
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: core
     lexicon: [chunk.the-main-advantage-is, chunk.the-main-requirement-is, word.priority]
     contexts: [option-review]
     typical_errors:
@@ -354,7 +354,7 @@ topics:
       - "This is the best option for us."
       - "Monday is the busiest day."
     explanation_language: ru-allowed
-    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.quantifiers.requirements
     cefr: A2
     track: grammar-engine
@@ -362,8 +362,8 @@ topics:
     can_do: "State simple quantity requirements for a task or option."
     advisory_prerequisites:
       strong: [grammar.quantifiers.basic]
-    dimensions: [recognition, transfer]
-    frequency_tier: tail
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: core
     lexicon: [word.requirement, word.option]
     contexts: [option-review]
     typical_errors:
@@ -374,7 +374,7 @@ topics:
       - "We need enough time for testing."
       - "There are too many open requests."
     explanation_language: ru-allowed
-    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: written-interaction.requirement-question
     cefr: A2
     track: written-interaction
@@ -421,8 +421,8 @@ topics:
     can_do: "Connect a cause, result, and contrast with because, so, and although."
     advisory_prerequisites:
       strong: [grammar.basic-word-order]
-    dimensions: [recognition, transfer]
-    frequency_tier: tail
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: core
     lexicon: [chunk.the-root-cause-was, chunk.the-same-thing-happened-before, word.cause]
     contexts: [support-ticket]
     typical_errors:
@@ -433,7 +433,7 @@ topics:
       - "The page failed because the token expired."
       - "The test passed, but the email did not arrive."
     explanation_language: ru-allowed
-    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.zero-conditional.processes
     cefr: A2
     track: grammar-engine
