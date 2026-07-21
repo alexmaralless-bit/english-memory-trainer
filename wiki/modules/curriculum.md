@@ -1,7 +1,7 @@
 # Модуль: curriculum
 
 > **Status**: current
-> **Last updated**: 2026-07-20
+> **Last updated**: 2026-07-21
 > **Sources**: концепт Codex (одобрен, `staging/journal/2026-07-19-codex-curriculum-concept.md`) · red-team триаж (`staging/journal/2026-07-19-concept-review-triage.md`) · [[../product/learning-model]] §9 · [[../product/lexical-system]] · flows [[../flows/session]], [[../flows/placement]] · лицензии проверены 2026-07-19 ([PD-2026-07-19])
 > **Bounded context**: `src/english_trainer/curriculum/`
 
@@ -67,6 +67,15 @@ explanation_language: ru-allowed   # когда допустим русский
 | 9 | TOEFL Reading & Writing | B1 `[post-mvp]` |
 
 - **Девять треков; `everyday-life` отделён от `everyday-online-informal`** [PD-2026-07-20, P0-8]: первый задаёт **домен** (о чём речь), второй — **регистр и канал** (как пишут онлайн). Смешение домена с регистром повторило бы склейку, уже распутанную для частоты и педагогического приоритета. Бытовой пласт паритетен рабочему.
+
+### Частотное взвешивание грамматики [PD-2026-07-21]
+
+Корпусная основа: пять форм — Present Simple, Past Simple, Future Simple, Present Perfect, Present Continuous — покрывают ≈95%+ употреблений финитного глагола (Krámský 1969, воспроизводится по форме в Biber et al. 1999; точные доли зависят от регистра: научный текст — present simple, нарратив — past simple). Отсюда правило авторинга и приоритезации грамматических тем:
+
+- **MUST — «большая пятёрка» = production-mastery**: темы пяти форм несут полный набор dimensions (recognition → controlled_production → spontaneous_production, transfer) на своём домашнем уровне (A1–A2) и получают высший рекомендательный приоритет. Цель — автоматизм («вызубрить»).
+- **MUST — хвост полностью в продукте, приоритет ≠ включение**: редкие формы (past perfect, conditionals, past continuous, пассивные комбинации, будущее в прошедшем…) **не вырезаются и не откладываются** — TOEFL Reading/Writing без них не сдать, а «понять, а не перевести дословно» без них недостижимо. Последовательность: на уровне появления темы обязательны recognition (+ transfer понимания); controlled/spontaneous production обязательны к B1–B2. Частотный вес управляет **порядком и интенсивностью** практики, никогда — составом программы.
+- **MUST — вес advisory**: взвешивание — рекомендация (карта, не замки, §5); scheduler/control потребляют его как обычный приоритет и ничего не блокируют.
+- **MUST — разметка при авторинге (П.2)**: каждая тема трека Grammar Engine несёт `frequency_tier: big-five | tail`; валидатор требует поле только у тем этого трека.
 - **Vocabulary & Chunks — lexicon-layer трек** [PD-2026-07-20, content-review C-1]: не несёт отдельных Topic'ов; реализуется как `LexicalItem` (chunks/слова), привязанные к темам через `topic.lexicon`, и отслеживается через LearnerLexicalState ([[../product/lexical-system]]). Пустой topic-инвентарь этого трека — намеренно, не пробел.
 
 ### Каталоги лексикона
@@ -134,7 +143,7 @@ explanation_language: ru-allowed   # когда допустим русский
 - **MUST — enforcement активации** [ревью E-5]: `validate`/`activate` энфорсят schema, provenance и целостность **независимо от способа правки файла**; невалидная версия не активируется. (Отдельный attestation-протокол в MVP не вводится — осознанный отказ от gate-машинерии, [[../README]].)
 - **MUST**: изменения программы проходят `maintain-english-curriculum` workflow с последующей валидацией.
 - **MUST — `production_eligible` и predicate** [rereview H-R1]: production/scheduler используют вычисляемый `production_eligible`; `obsolete` исключает production и новые assignments. `requires_usage_policy` — predicate по type/register, а не только по «informal-единица»: рискованный `type: word`/register тоже обязан иметь usage_policy.
-- **MUST**: валидация ловит: циклы advisory-графа; битые ссылки prerequisites/lexicon/module/track/source_refs; дубли ID; prerequisite с CEFR выше уровня темы; пустые dimensions или отсутствие `mastery_criteria`/`LexicalMasteryProfile` на required dimension; отсутствие can_do; единицу, для которой `requires_usage_policy=true`, без `usage_policy`; `context_dependent` без `allowed_contexts`; `volatility: changing` без полного набора (`first_observed_at`/`last_verified_at`/`currency`/источник); `meme_template` без нейтрального объяснения **или `cultural_context`** (rereview H-R1); импортированную единицу без `source_refs`/SourceArtifact **или без `transformations`** (rereview I-R3); сторонние excerpts в living layer (постоянное правило).
+- **MUST**: валидация ловит: циклы advisory-графа; битые ссылки prerequisites/lexicon/module/track/source_refs; дубли ID; prerequisite с CEFR выше уровня темы; пустые dimensions или отсутствие `mastery_criteria`/`LexicalMasteryProfile` на required dimension; отсутствие can_do; тему трека Grammar Engine без `frequency_tier` [PD-2026-07-21]; единицу, для которой `requires_usage_policy=true`, без `usage_policy`; `context_dependent` без `allowed_contexts`; `volatility: changing` без полного набора (`first_observed_at`/`last_verified_at`/`currency`/источник); `meme_template` без нейтрального объяснения **или `cultural_context`** (rereview H-R1); импортированную единицу без `source_refs`/SourceArtifact **или без `transformations`** (rereview I-R3); сторонние excerpts в living layer (постоянное правило).
 - **MUST NOT — living layer excerpts** [PD-2026-07-20, rereview I-R2]: **постоянно** запрещено хранить сторонние excerpts (текст forum post/example) — мотив ToS площадок и персональные данные, независимо от лицензий. Разрешены: source-метаданные, короткая сама единица (выражение/сокращение) и **собственный** нейтральный парафраз/объяснение.
 - **MUST**: informal-единицы с `usage_policy: avoid`/`recognition_only`/`currency: obsolete` не попадают в production и не рекомендуются — только на понимание; банк/формы/live manifests ре-валидируются против active policy ([[../product/lexical-system]] §3b, [[../OPEN]] OPEN-14).
 - **MUST**: TOEFL-трек не порождает тем ниже B1.
@@ -165,6 +174,7 @@ OPEN-6 решён (источники + build-time режим). Остаточн
 
 ## История изменений
 
+- **2026-07-21**: **частотное взвешивание грамматики [PD-2026-07-21]** — «большая пятёрка» времён (≈95%+ финитных употреблений: present/past/future simple, present perfect, present continuous) получает production-mastery и высший приоритет на A1–A2; хвост (past perfect, conditionals, пассив…) **полностью в продукте** — recognition на уровне появления, production обязательна к B1–B2 (TOEFL). Приоритет управляет порядком и интенсивностью, никогда — составом. Новое поле `frequency_tier: big-five | tail` обязательно для тем Grammar Engine (валидатор). Инициировано пользователем (Krámský 1969 / Biber et al. 1999).
 - **2026-07-20 (P0-триаж)**: добавлен трек `everyday-life` в нормативную таблицу (девять треков, P0-8); living layer и `LEXICAL_ITEM_ADDED` помечены `[post-mvp]` согласно принятому PD (P0-9); SHOULD «рабочий контекст» расширен до «рабочий или бытовой»; ранее в этот же день — манифест provenance, закрытый словарь `transformations`, валидация `transparency` (П.4b/П.4c).
 - **2026-07-20**: OPEN-15 закрыт [PD-2026-07-20] — правовая позиция «приватное личное использование, без распространения/продажи» + publication trigger (§3.1); состав данных (свои поля + собственный производный band + source_refs) и provenance по технической мотивации (§3.2); living-layer excerpts запрещены постоянно; ATTRIBUTIONS.md → SHOULD (заготовка). П.4 разблокирована. Также добавлен Vocabulary&Chunks как lexicon-layer трек (content-review C-1).
 - **2026-07-19 (3)**: rereview — safety-overlay «safety не пинится» + live manifests в scope stale-safety (G-R1); candidate `validate`/`activate` API (E-R2); license-таблица разделена CEFR-J/Octanove + полные CC BY-SA obligations (I-R1); валидатор проверяет `transformations` (I-R3), `cultural_context` и `production_eligible`/`requires_usage_policy` (H-R1); living layer без сторонних excerpts до OPEN-15 (I-R2).
