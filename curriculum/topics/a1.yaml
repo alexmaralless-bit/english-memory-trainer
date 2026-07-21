@@ -503,3 +503,38 @@ topics:
     advisory_prerequisites:
       strong: [grammar.will.basic-decisions]
       soft: [everyday-online-informal.casual-acknowledgements]
+  - id: reading.everyday-phrasal-verbs
+    cefr: A1
+    track: reading
+    module: a1.14-understanding-everyday-expressions
+    can_do: "Recognize the everyday meaning of a common phrasal verb when its parts do not add up (put up with, figure out)."
+    advisory_prerequisites:
+      soft: [grammar.present-simple.routines, reading.interface-data-description]
+  - id: reading.common-idioms
+    cefr: A1
+    track: reading
+    module: a1.14-understanding-everyday-expressions
+    can_do: "Recognize a very common fixed expression and tell its real meaning apart from the word-for-word reading."
+    advisory_prerequisites:
+      soft: [grammar.basic-word-order, reading.interface-data-description]
+  - id: reading.casual-reactions
+    cefr: A1
+    track: reading
+    module: a1.14-understanding-everyday-expressions
+    can_do: "Understand short casual reactions in a chat (no way, never mind, fair enough) and what the writer actually means."
+    advisory_prerequisites:
+      soft: [everyday-online-informal.basic-chat-response]
+  - id: reading.everyday-notice
+    cefr: A1
+    track: reading
+    module: a1.14-understanding-everyday-expressions
+    can_do: "Find the key information in a short everyday notice, sign, or label."
+    advisory_prerequisites:
+      soft: [reading.interface-data-description]
+  - id: reading.household-instructions
+    cefr: A1
+    track: reading
+    module: a1.14-understanding-everyday-expressions
+    can_do: "Follow short written instructions for a household item or service."
+    advisory_prerequisites:
+      soft: [grammar.imperatives.instructions]

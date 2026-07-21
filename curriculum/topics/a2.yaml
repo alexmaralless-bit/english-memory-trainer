@@ -509,3 +509,43 @@ topics:
     advisory_prerequisites:
       strong: [written-interaction.follow-up, grammar.future-forms.planning]
       soft: [everyday-life.requesting-a-repair, written-interaction.suggestion-feedback]
+  - id: reading.idioms-in-context
+    cefr: A2
+    track: reading
+    module: a2.14-non-literal-meaning-and-reading
+    can_do: "Work out the meaning of a less common idiom from the surrounding context instead of translating it literally."
+    advisory_prerequisites:
+      strong: [reading.common-idioms]
+      soft: [grammar.connectors.cause-contrast]
+  - id: reading.stable-slang
+    cefr: A2
+    track: reading
+    module: a2.14-non-literal-meaning-and-reading
+    can_do: "Recognize common stable slang in casual writing and state its neutral meaning."
+    advisory_prerequisites:
+      strong: [reading.casual-reactions]
+      soft: [everyday-online-informal.tone-recognition]
+  - id: reading.personal-message
+    cefr: A2
+    track: reading
+    module: a2.14-non-literal-meaning-and-reading
+    can_do: "Understand the main point and tone of a short personal message or review."
+    advisory_prerequisites:
+      strong: [reading.main-idea-details]
+      soft: [everyday-online-informal.tone-recognition]
+  - id: reading.short-news-item
+    cefr: A2
+    track: reading
+    module: a2.14-non-literal-meaning-and-reading
+    can_do: "Get the main facts from a short everyday news item or announcement."
+    advisory_prerequisites:
+      strong: [reading.main-idea-details]
+      soft: [grammar.past-simple.events]
+  - id: written-production.paraphrase-expression
+    cefr: A2
+    track: written-production-mediation
+    module: a2.14-non-literal-meaning-and-reading
+    can_do: "Restate an everyday idiom or phrasal verb in plain neutral English, showing its meaning is understood."
+    advisory_prerequisites:
+      strong: [reading.common-idioms, written-production.paraphrase-summary]
+      soft: [reading.idioms-in-context]

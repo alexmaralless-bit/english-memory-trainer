@@ -1,0 +1,13 @@
+# P.1c-bis: inferring non-literal meaning from context, recognising stable
+# slang, and restating an expression in plain neutral English (mediation of
+# meaning, which is not the same as producing the idiom).
+id: a2.14-non-literal-meaning-and-reading
+level: A2
+can_do: "Work out non-literal meaning from context, recognise common stable slang, and read short everyday texts for their main point."
+tracks: [reading, written-production-mediation]
+topics:
+  - reading.idioms-in-context
+  - reading.stable-slang
+  - reading.personal-message
+  - reading.short-news-item
+  - written-production.paraphrase-expression

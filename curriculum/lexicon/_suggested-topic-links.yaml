@@ -702,3 +702,19 @@ links:
   - {lexical_item: slang.my-folks, topics: [everyday-life.talking-about-close-relationships]}
   - {lexical_item: slang.hang-on, topics: [everyday-life.starting-everyday-small-talk]}
   - {lexical_item: slang.come-on, topics: [everyday-life.starting-everyday-small-talk]}
+
+  # ===== P.1c-bis: 14 opaque idioms that had no comprehension topic until a2.14 =====
+  - {lexical_item: idiom.all-of-a-sudden, topics: [reading.idioms-in-context]}
+  - {lexical_item: idiom.learn-the-hard-way, topics: [reading.idioms-in-context]}
+  - {lexical_item: idiom.take-it-or-leave-it, topics: [reading.idioms-in-context]}
+  - {lexical_item: idiom.you-name-it, topics: [reading.idioms-in-context]}
+  - {lexical_item: idiom.that-rings-a-bell, topics: [reading.idioms-in-context]}
+  - {lexical_item: idiom.it-slipped-my-mind, topics: [reading.idioms-in-context]}
+  - {lexical_item: idiom.my-hands-are-tied, topics: [reading.idioms-in-context]}
+  - {lexical_item: idiom.i-have-no-clue, topics: [reading.idioms-in-context]}
+  - {lexical_item: idiom.beats-me, topics: [reading.idioms-in-context]}
+  - {lexical_item: idiom.fair-and-square, topics: [reading.idioms-in-context]}
+  - {lexical_item: idiom.from-scratch, topics: [reading.idioms-in-context]}
+  - {lexical_item: idiom.when-it-comes-to, topics: [reading.idioms-in-context]}
+  - {lexical_item: idiom.as-far-as-i-know, topics: [reading.idioms-in-context]}
+  - {lexical_item: idiom.in-a-nutshell, topics: [reading.idioms-in-context]}
