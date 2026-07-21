@@ -50,6 +50,10 @@ class UnitOfWork:
         self._pending_outbox: list[tuple[str, int, str]] = []
         self._open = False
         self._used = False
+        # Poisoned once any write raises: the transaction can then only roll back,
+        # even if the caller swallowed the exception inside the block. Otherwise a
+        # caught mid-batch failure could commit a partial write (foundation 3.7).
+        self._poisoned = False
 
     # -- idempotency boundary ------------------------------------------------
 
@@ -79,15 +83,26 @@ class UnitOfWork:
     def __enter__(self) -> UnitOfWork:
         if self._used:
             raise KernelError("UnitOfWork is single-use; create a new one per transaction")
+        # Claim the store first: if another UoW already owns it, no transaction is
+        # opened. Release the claim if BEGIN itself fails, so nothing leaks.
+        self._store._claim(self)
+        try:
+            self._conn.execute("BEGIN;")
+        except BaseException:
+            self._store._release(self)
+            raise
         self._used = True
-        self._conn.execute("BEGIN;")
         self._open = True
         return self
 
     def append(self, events: Sequence[DomainEvent]) -> list[DomainEvent]:
         """Append events; their outbox messages are enqueued in the same UoW."""
         self._require_open()
-        stored = self._store.append(events)
+        try:
+            stored = self._store.append(events)
+        except BaseException:
+            self._poisoned = True
+            raise
         for event in stored:
             assert event.sequence is not None
             message_id = f"{event.id}:{event.type}"
@@ -97,10 +112,15 @@ class UnitOfWork:
     def record_result(self, key: str, payload_hash: str, result: dict[str, object]) -> None:
         """Store the cached result for an idempotency key inside this UoW."""
         self._require_open()
-        self._conn.execute(
-            "INSERT INTO idempotency (idempotency_key, payload_hash, result, created_at) VALUES (?,?,?,?);",
-            (key, payload_hash, json.dumps(result, sort_keys=True), self._clock.now().isoformat()),
-        )
+        try:
+            self._conn.execute(
+                "INSERT INTO idempotency (idempotency_key, payload_hash, result, created_at) "
+                "VALUES (?,?,?,?);",
+                (key, payload_hash, json.dumps(result, sort_keys=True), self._clock.now().isoformat()),
+            )
+        except BaseException:
+            self._poisoned = True
+            raise
 
     def _rollback(self) -> None:
         if self._conn.in_transaction:
@@ -116,22 +136,27 @@ class UnitOfWork:
             return
         self._open = False
         pending, self._pending_outbox = self._pending_outbox, []
-
-        if exc_type is not None:
-            self._rollback()
-            return
-
-        # Commit path: any failure here (clock, outbox insert, COMMIT) must roll
-        # the whole transaction back -- a half-written outbox or an open
-        # transaction would break all-or-nothing (foundation 3.7).
         try:
-            now = self._clock.now().isoformat()
-            for message_id, sequence, topic in pending:
-                self._conn.execute(
-                    "INSERT INTO outbox (message_id, sequence, topic, created_at) VALUES (?,?,?,?);",
-                    (message_id, sequence, topic, now),
-                )
-            self._conn.execute("COMMIT;")
-        except Exception:
-            self._rollback()
-            raise
+            # Roll back on any in-block exception OR any earlier swallowed write
+            # error (poisoned) -- all-or-nothing must not depend on whether the
+            # caller re-raised.
+            if exc_type is not None or self._poisoned:
+                self._rollback()
+                return
+
+            # Commit path: any failure here -- including BaseException such as
+            # KeyboardInterrupt/SystemExit from the clock -- must roll the whole
+            # transaction back, never leave it open (foundation 3.7).
+            try:
+                now = self._clock.now().isoformat()
+                for message_id, sequence, topic in pending:
+                    self._conn.execute(
+                        "INSERT INTO outbox (message_id, sequence, topic, created_at) VALUES (?,?,?,?);",
+                        (message_id, sequence, topic, now),
+                    )
+                self._conn.execute("COMMIT;")
+            except BaseException:
+                self._rollback()
+                raise
+        finally:
+            self._store._release(self)

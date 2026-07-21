@@ -126,7 +126,7 @@ def rebuild_export(store: EventStore, exporter: JsonlExporter, clock: Clock) -> 
     try:
         OffsetStore(conn).set(exporter.name, last, clock.now().isoformat())
         conn.execute("COMMIT;")
-    except Exception:
+    except BaseException:
         if conn.in_transaction:
             conn.execute("ROLLBACK;")
         raise

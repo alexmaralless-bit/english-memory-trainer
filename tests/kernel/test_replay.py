@@ -20,20 +20,41 @@ from english_trainer.kernel.uow import UnitOfWork
 
 EPOCH = datetime(2026, 7, 21, 12, 0, 0, tzinfo=UTC)
 
-# Run in a child process: emit the id stream AND a canonical hash of an
-# unordered dict, so a hash seed that leaked into either would change stdout.
+# Run in a child process: build a store, append events with equal occurred_at
+# into it, then replay a reducer over (sequence, type, payload_hash). Everything
+# a leaked hash seed could touch -- the seeded id stream, canonical_json key
+# ordering inside payload_hash, and the replay order -- feeds stdout, so two
+# child processes with different PYTHONHASHSEED must print byte-identical output.
 _CROSS_PROCESS_PROGRAM = """
 from datetime import UTC, datetime
 from english_trainer.kernel.clock import FixedClock, SeededRandomSource
-from english_trainer.kernel.encoding import payload_hash
+from english_trainer.kernel.envelopes import make_event
 from english_trainer.kernel.ids import new_ulid
+from english_trainer.kernel.replay import replay
+from english_trainer.kernel.store import EventStore, connect, migrate
+from english_trainer.kernel.uow import UnitOfWork
 
-clock = FixedClock(datetime(2026, 7, 21, 12, 0, 0, tzinfo=UTC))
+clock = FixedClock(datetime(2026, 7, 21, 12, 0, 0, tzinfo=UTC))  # frozen: equal occurred_at
 rnd = SeededRandomSource("fixed-seed")
-ids = "".join(new_ulid(clock, rnd) for _ in range(10))
-h = payload_hash({"zebra": 1, "alpha": 2, "mid": {"y": 1, "x": 2}, "café": "ǹ"})
+conn = connect(":memory:")
+migrate(conn)
+store = EventStore(conn)
+with UnitOfWork(store, clock) as uow:
+    uow.append([
+        make_event(
+            id=new_ulid(clock, rnd),
+            type=f"e{i}",
+            occurred_at=clock.now(),
+            actor="engine",
+            correlation_id="c",
+            payload={"i": i, "note": {"z": 1, "a": 2}},
+        )
+        for i in range(8)
+    ])
+ids = "".join(new_ulid(clock, rnd) for _ in range(5))
+digest = replay(store, lambda acc, e: f"{acc}|{e.sequence}:{e.type}:{e.payload_hash}", "")
 print(ids)
-print(h)
+print(digest)
 """
 
 
@@ -109,11 +130,42 @@ def test_deterministic_append_order_under_equal_occurred_at(tmp_path: Path) -> N
     assert [t for _, t in run_a] == [t for _, t in run_b]
 
 
+def test_interleaved_commits_reproduce_commit_order(tmp_path: Path) -> None:
+    # The real "concurrent append" case: writers serialize on the connection and
+    # arrive as separate transactions. With equal occurred_at and different seeds,
+    # the recorded total order is exactly commit order -- and reproducible. The
+    # tie-break is the assigned `sequence`, not occurred_at or the id.
+    def build(db: str, seed: int) -> list[tuple[int | None, str]]:
+        clock = FixedClock(EPOCH)  # frozen: every commit shares occurred_at
+        rnd = SeededRandomSource(seed)
+        store = _fresh_store(tmp_path, db)
+        for i in range(6):
+            with UnitOfWork(store, clock) as uow:
+                uow.append(
+                    [
+                        make_event(
+                            id=new_ulid(clock, rnd),
+                            type=f"e{i}",
+                            occurred_at=clock.now(),
+                            actor="engine",
+                            correlation_id="c",
+                            payload={"i": i},
+                        )
+                    ]
+                )
+        return [(event.sequence, event.type) for event in store.read()]
+
+    run_a = build("il_a.db", seed=7)
+    run_b = build("il_b.db", seed=13)
+    assert run_a == [(i + 1, f"e{i}") for i in range(6)]
+    assert run_a == run_b
+
+
 def test_process_hash_seed_does_not_change_outcome() -> None:
     # PYTHONHASHSEED only takes effect at interpreter start, so a same-process
-    # call cannot prove independence from it. Run the same program in two child
-    # interpreters with different hash seeds and require byte-identical stdout:
-    # this exercises both the seeded id stream and canonical_json's key ordering.
+    # call cannot prove independence from it. Run the append+replay program in two
+    # child interpreters with different hash seeds and require byte-identical
+    # stdout: the id stream, the payload hashing, and the replay all feed it.
     src = Path(__file__).resolve().parents[2] / "src"
 
     def run(hash_seed: str) -> str:
@@ -127,4 +179,6 @@ def test_process_hash_seed_does_not_change_outcome() -> None:
         )
         return proc.stdout
 
-    assert run("1") == run("2")
+    seed_one, seed_two = run("1"), run("2")
+    assert seed_one == seed_two
+    assert seed_one.strip()  # not silently empty (a crashed child would print nothing)

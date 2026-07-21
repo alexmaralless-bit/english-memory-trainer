@@ -3,13 +3,16 @@
 
 from __future__ import annotations
 
+import hashlib
+from pathlib import Path
+
 import pytest
 
 from english_trainer.kernel.clock import FixedClock, SeededRandomSource
 from english_trainer.kernel.envelopes import make_event
-from english_trainer.kernel.errors import KernelError
+from english_trainer.kernel.errors import AppendOnlyViolation, KernelError
 from english_trainer.kernel.ids import new_ulid
-from english_trainer.kernel.store import EventStore
+from english_trainer.kernel.store import EventStore, connect, migrate
 from english_trainer.kernel.uow import UnitOfWork
 
 
@@ -72,6 +75,29 @@ def test_append_outside_a_transaction_is_refused(store: EventStore, clock, rando
     assert store.count() == 0
 
 
+def test_manual_begin_cannot_impersonate_a_uow(store: EventStore, clock, random_source) -> None:
+    # A hand-rolled BEGIN sets in_transaction, but not the UoW capability, so it
+    # cannot smuggle an event past append() without an outbox row.
+    store._conn.execute("BEGIN;")
+    try:
+        with pytest.raises(KernelError):
+            store.append([_event(clock, random_source)])
+    finally:
+        store._conn.execute("ROLLBACK;")
+    assert store.count() == 0
+    assert store._conn.execute("SELECT COUNT(*) AS n FROM outbox;").fetchone()["n"] == 0
+
+
+def test_stored_payload_is_the_hashed_canonical_snapshot(store: EventStore, clock, random_source) -> None:
+    # The bytes persisted for a payload hash to the stored payload_hash: the store
+    # hashes and writes one and the same serialization, leaving no window for a
+    # concurrent mutation to be hashed as one thing and written as another.
+    with UnitOfWork(store, clock) as uow:
+        uow.append([_event(clock, random_source)])
+    row = store._conn.execute("SELECT payload, payload_hash FROM events;").fetchone()
+    assert hashlib.sha256(row["payload"].encode("ascii")).hexdigest() == row["payload_hash"]
+
+
 def test_mutated_payload_is_refused_at_the_store_boundary(store: EventStore, clock, random_source) -> None:
     ev = _event(clock, random_source)
     ev.payload["kind"] = "tampered"  # the envelope is frozen; its payload dict is not
@@ -81,10 +107,28 @@ def test_mutated_payload_is_refused_at_the_store_boundary(store: EventStore, clo
 
 
 def test_assert_append_only_passes_on_an_empty_log(store: EventStore) -> None:
-    # Row-level BEFORE triggers cannot fire without a row; the schema-level check
-    # must still confirm the guards exist, so an empty log is not a false pass.
+    # The runtime probe (savepoint + throwaway row) proves the guards abort even
+    # when the log is empty, then rolls the probe back.
     assert store.count() == 0
     store.assert_append_only()
+    assert store.count() == 0  # the probe row did not survive
+
+
+def test_assert_append_only_rejects_noop_triggers(tmp_path: Path) -> None:
+    # Same trigger names, but no-op bodies: the old name-only check passed this;
+    # the runtime probe must catch that update/delete are not actually refused.
+    conn = connect(tmp_path / "noop.db")
+    migrate(conn)
+    store = EventStore(conn)
+    try:
+        conn.execute("DROP TRIGGER events_no_update;")
+        conn.execute("DROP TRIGGER events_no_delete;")
+        conn.execute("CREATE TRIGGER events_no_update BEFORE UPDATE ON events BEGIN SELECT 1; END;")
+        conn.execute("CREATE TRIGGER events_no_delete BEFORE DELETE ON events BEGIN SELECT 1; END;")
+        with pytest.raises(AppendOnlyViolation):
+            store.assert_append_only()
+    finally:
+        conn.close()
 
 
 def test_event_read_roundtrips_payload(store: EventStore, clock, random_source) -> None:

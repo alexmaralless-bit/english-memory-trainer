@@ -45,6 +45,21 @@ def test_bool_and_int_are_distinct_but_encode_predictably() -> None:
     assert canonical_json({"n": 0}) == b'{"n":0}'
 
 
+def test_nfc_key_collision_is_rejected() -> None:
+    # Two distinct keys that collapse to the same NFC form must be rejected, not
+    # merged: merging would make the encoding depend on insertion order and let
+    # different payloads share a hash.
+    colliding = {"é": 1, "é": 2}  # precomposed vs decomposed "e-acute"
+    assert len(colliding) == 2  # distinct keys before normalization
+    with pytest.raises(ValueError, match="NFC key collision"):
+        canonical_json(colliding)
+    with pytest.raises(ValueError, match="NFC key collision"):
+        payload_hash(colliding)
+    # Nested collisions are caught too.
+    with pytest.raises(ValueError, match="NFC key collision"):
+        payload_hash({"outer": {"é": 1, "é": 2}})
+
+
 def test_unicode_forms_normalize_to_one_encoding() -> None:
     # "e-acute" precomposed (U+00E9) vs "e" + combining acute (U+0301): they
     # render identically but are different code points. NFC collapses them, so

@@ -101,7 +101,7 @@ def deliver(store: EventStore, consumer: Consumer, clock: Clock) -> int:
             consumer.apply(event)
             offsets.advance(consumer.name, event.sequence, clock.now().isoformat())
             conn.execute("COMMIT;")
-        except Exception:
+        except BaseException:
             if conn.in_transaction:
                 conn.execute("ROLLBACK;")
             raise

@@ -117,8 +117,8 @@
 - **Tutor briefing** — полная картина ученика одним JSON в манифесте/resume. Генерится из состояния движка, не из Markdown.
 - **Session notes** — опциональные короткие заметки агента (`--note`). **Untrusted non-evidence**: экранируются в briefing, не интерпретируются как state.
 - **Event log** — append-only журнал DomainEvents. Authoritative носитель — **таблица в SQLite** (коммитится с state+outbox одной транзакцией); **JSONL — derived rebuildable export** (аудит/git/сверка replay), не источник истины ([[platform/foundation]] §2.1).
-- **Command / DomainEvent envelope** — конверт мутации/факта: `id, sequence, type, occurred_at (UTC), actor/provider, correlation_id, causation_id, idempotency_key, pinned_versions, payload_hash` ([[platform/foundation]] §3.3).
-- **sequence** — монотонный canonical total order событий в event-таблице (tie-breaker для равных `occurred_at`); replay применяет события строго по нему. Обязательное поле конверта.
+- **Command / DomainEvent envelope** — конверт мутации/факта. Всегда: `id, type, occurred_at (UTC), actor/provider, correlation_id, causation_id, pinned_versions, payload_hash`. Условные: `sequence` (только событие) и `idempotency_key` (только мутирующая команда) ([[platform/foundation]] §3.3).
+- **sequence** — монотонный canonical total order событий в event-таблице (tie-breaker для равных `occurred_at`); replay применяет события строго по нему. Есть только у `DomainEvent` (не у `Command`) и присваивается event-store'ом на append — до append не определён.
 - **pinned_versions** — зафиксированные в конверте версии policy (curriculum/scoring/scheduler/generation/rubric), под которыми создан факт; replay резолвит по ним, не по active. Safety (`production_eligible`) — исключение, резолвится по active.
 - **Unit of Work** — атомарный commit authoritative state + events + outbox одной транзакцией.
 - **Transactional outbox** — надёжная post-commit доставка проекций (Obsidian, внешние) с retry/rebuild; сбой проекции не откатывает commit.

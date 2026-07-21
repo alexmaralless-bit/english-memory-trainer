@@ -29,20 +29,32 @@ HASH_ALGORITHM = "sha256"
 def _nfc(value: Any) -> Any:
     """Return ``value`` with every string (key and scalar) NFC-normalized.
 
-    The same text can be spelled with different Unicode code points -- "é"
-    (e + combining acute) and "é" (precomposed e-acute) render identically
-    but are distinct byte sequences. Without a fixed normalization form, two
-    payloads that look the same would hash differently, so replay and idempotency
-    would depend on how the caller happened to type a character. NFC gives one
-    spelling. Applied to keys too; if two keys collapse to the same form the last
-    wins, which is the intended canonicalization.
+    The same text can be spelled with different Unicode code points -- one
+    precomposed code point versus a base letter plus a combining mark render
+    identically but are distinct byte sequences. Without a fixed normalization
+    form, two payloads that look the same would hash differently, so replay and
+    idempotency would depend on how the caller happened to type a character. NFC
+    gives one spelling.
+
+    Keys are normalized too, but a collision is a hard error, not a silent merge.
+    If two *distinct* keys collapse to the same NFC form, keeping only one would
+    make the encoding depend on insertion order and let two different payloads
+    share a hash -- the exact ambiguity this function exists to remove. Such a
+    payload is rejected instead.
     """
     if isinstance(value, str):
         return unicodedata.normalize("NFC", value)
     if isinstance(value, dict):
-        return {
-            (unicodedata.normalize("NFC", k) if isinstance(k, str) else k): _nfc(v) for k, v in value.items()
-        }
+        out: dict[Any, Any] = {}
+        for key, item in value.items():
+            nkey = unicodedata.normalize("NFC", key) if isinstance(key, str) else key
+            if nkey in out:
+                raise ValueError(
+                    f"NFC key collision: {key!r} normalizes to a key already present in the same "
+                    "object; distinct keys that collapse under NFC are rejected, never merged"
+                )
+            out[nkey] = _nfc(item)
+        return out
     if isinstance(value, (list, tuple)):
         return [_nfc(v) for v in value]
     return value
@@ -86,6 +98,20 @@ def canonical_json(payload: Any) -> bytes:
     return text.encode("utf-8")
 
 
+def canonical_and_hash(payload: Any) -> tuple[bytes, str]:
+    """The canonical bytes of ``payload`` and their SHA-256, from **one**
+    serialization.
+
+    A caller that persists an event stores exactly these bytes and trusts exactly
+    this hash. Computing the two together closes the window in which a payload,
+    hashed once and then serialized again for storage, could be mutated in
+    between -- the snapshot that is hashed is the snapshot that is written
+    (foundation 3.3).
+    """
+    canonical = canonical_json(payload)
+    return canonical, hashlib.sha256(canonical).hexdigest()
+
+
 def payload_hash(payload: Any) -> str:
     """Hex SHA-256 of the canonical encoding. Fixed algorithm (foundation 3.3)."""
-    return hashlib.sha256(canonical_json(payload)).hexdigest()
+    return canonical_and_hash(payload)[1]
