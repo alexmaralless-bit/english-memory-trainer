@@ -83,7 +83,7 @@ explanation_language: ru-allowed   # когда допустим русский
 ### Каталоги лексикона
 
 - **stable core** — проектируется заранее (П.4) из источников ниже;
-- **living layer** `[post-mvp]` [PD-2026-07-20, P0-9] — мемы, сленг и форумные единицы, встреченные во время обучения; добавляются через `maintain-english-curriculum` workflow с provenance (`first_observed_at`, источник, `currency`). **Механизм в MVP не строится**: workflow, lifecycle и авто-устаревание откладываются. Поля (`volatility`, `currency`, `first_observed_at`) и постоянный запрет сторонних excerpts остаются в target-контракте и заполняются при авторинге — их отмена потребовала бы миграции данных;
+- **living layer** [PD-2026-07-21, supersedes P0-9] — мемы, сленг и форумные единицы, встреченные во время обучения; добавляются через `maintain-english-curriculum` workflow с provenance (`first_observed_at`, источник, `currency`). **В продукте целиком**: workflow-пополнение, currency-lifecycle и авто-устаревание строятся — работа ложится в П.3 вместе с currency/usage-policy lifecycle (OPEN-14). Прежняя отложка «механизм в MVP не строится» снята: у личного тренажёра нет MVP-фазировки контента. Поля `volatility`/`currency`/`first_observed_at` обязательны, как и были; постоянный запрет сторонних excerpts (§3.1) не меняется;
 - **learner lexicon** — личный словарь; живёт в модуле learner, не здесь.
 
 ## 3. Данные и лицензии [PD-2026-07-19]
@@ -132,7 +132,7 @@ explanation_language: ru-allowed   # когда допустим русский
 | `validate(version_or_candidate)` | API | валидация **кандидата или версии** до активации (rereview E-R2) | `[mvp]` |
 | `activate(version, expected_active)` | API | атомарная активация: требует успешный validate + CAS по expected_active, публикует событие | `[mvp]` |
 | `CURRICULUM_VERSION_ACTIVATED` | publishes | активация новой версии (эмитится `activate`) | `[mvp]` |
-| `LEXICAL_ITEM_ADDED` | publishes | пополнение living layer | `[post-mvp]` |
+| `LEXICAL_ITEM_ADDED` | publishes | пополнение living layer | `[mvp]` [PD-2026-07-21] |
 
 ## 5. Поведение
 
@@ -176,6 +176,7 @@ OPEN-6 решён (источники + build-time режим). Остаточн
 
 ## История изменений
 
+- **2026-07-21 (3)**: **living layer — в продукте [PD-2026-07-21]**, supersedes P0-9: workflow-пополнение, currency-lifecycle и авто-устаревание строятся (работа — П.3, вместе с OPEN-14); `LEXICAL_ITEM_ADDED` → `[mvp]`. Provenance-поля и постоянный запрет сторонних excerpts не меняются.
 - **2026-07-21 (2)**: **TOEFL-трек — в продукте [PD-2026-07-21]**: тег `[post-mvp]` снят по решению пользователя (готовится к TOEFL; у личного тренажёра нет MVP-фазировки контента). Таблица треков синхронизирована с фактическим состоянием: добавлен ряд 10 `word-formation` (заведён П.1d, [PD-2026-07-21]), счёт «девять» → «десять» здесь и в glossary.
 - **2026-07-21**: **частотное взвешивание грамматики [PD-2026-07-21]** — «большая пятёрка» времён (≈95%+ финитных употреблений: present/past/future simple, present perfect, present continuous) получает production-mastery и высший приоритет на A1–A2; хвост (past perfect, conditionals, пассив…) **полностью в продукте** — recognition на уровне появления, production обязательна к B1–B2 (TOEFL). Приоритет управляет порядком и интенсивностью, никогда — составом. Новое поле `frequency_tier: big-five | tail` обязательно для тем Grammar Engine (валидатор). Инициировано пользователем (Krámský 1969 / Biber et al. 1999).
 - **2026-07-20 (P0-триаж)**: добавлен трек `everyday-life` в нормативную таблицу (девять треков, P0-8); living layer и `LEXICAL_ITEM_ADDED` помечены `[post-mvp]` согласно принятому PD (P0-9); SHOULD «рабочий контекст» расширен до «рабочий или бытовой»; ранее в этот же день — манифест provenance, закрытый словарь `transformations`, валидация `transparency` (П.4b/П.4c).
