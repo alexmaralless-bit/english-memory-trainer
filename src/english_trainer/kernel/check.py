@@ -20,7 +20,17 @@ from english_trainer.kernel.export import JsonlExporter, verify_line_hashes
 from english_trainer.kernel.outbox import OffsetStore
 from english_trainer.kernel.store import EventStore
 
-_REQUIRED_TABLES = frozenset({"events", "outbox", "idempotency", "consumer_offsets", "schema_migrations"})
+_REQUIRED_TABLES = frozenset(
+    {
+        "events",
+        "outbox",
+        "idempotency",
+        "consumer_offsets",
+        "policies",
+        "policy_active",
+        "schema_migrations",
+    }
+)
 
 
 @dataclass(frozen=True)

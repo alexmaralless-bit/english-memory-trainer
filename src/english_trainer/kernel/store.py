@@ -22,7 +22,7 @@ from english_trainer.kernel.encoding import canonical_and_hash, canonical_json
 from english_trainer.kernel.envelopes import DomainEvent
 from english_trainer.kernel.errors import AppendOnlyViolation, KernelError
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 # Forward-only migrations: (version, ordered statements). Applied once each,
 # individually, inside one transaction -- SQLite DDL is transactional, but
@@ -91,6 +91,44 @@ _MIGRATIONS: tuple[tuple[int, tuple[str, ...]], ...] = (
                 consumer_name    TEXT PRIMARY KEY,
                 applied_sequence INTEGER NOT NULL DEFAULT 0,
                 updated_at       TEXT NOT NULL
+            )
+            """,
+        ),
+    ),
+    (
+        3,
+        (
+            # Versioned policy registry (foundation 3.6, OPEN-9). Each version is an
+            # immutable content snapshot addressable by (kind, version_id). Content
+            # is never rewritten and rows are never deleted -- a version referenced
+            # by a pin must stay resolvable forever (retention != immutability).
+            # Only ``status`` may change (registered -> deprecated -> retired).
+            """
+            CREATE TABLE policies (
+                kind         TEXT NOT NULL,
+                version_id   TEXT NOT NULL,
+                content      TEXT NOT NULL,
+                content_hash TEXT NOT NULL,
+                status       TEXT NOT NULL DEFAULT 'registered',
+                created_at   TEXT NOT NULL,
+                PRIMARY KEY (kind, version_id)
+            )
+            """,
+            # Immutability: content and its hash are frozen once written; only
+            # status transitions are allowed to update a row.
+            "CREATE TRIGGER policies_content_immutable BEFORE UPDATE OF content, content_hash ON policies "
+            "BEGIN SELECT RAISE(ABORT, 'policy content is immutable'); END",
+            # Retention: a registered version is never deleted (a pin may reference
+            # it). Deprecation is a status change, not a removal.
+            "CREATE TRIGGER policies_no_delete BEFORE DELETE ON policies "
+            "BEGIN SELECT RAISE(ABORT, 'policies are retained, never deleted'); END",
+            # Active pointer per kind for the active-resolve path (production
+            # eligibility at delivery). Pins never read this; they resolve by id.
+            """
+            CREATE TABLE policy_active (
+                kind         TEXT PRIMARY KEY,
+                version_id   TEXT NOT NULL,
+                activated_at TEXT NOT NULL
             )
             """,
         ),

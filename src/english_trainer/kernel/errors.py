@@ -38,3 +38,26 @@ class AppendOnlyViolation(KernelError):
     """An attempt to update or delete the append-only event log (foundation 3.3)."""
 
     code = "APPEND_ONLY_VIOLATION"
+
+
+class PinnedPolicyUnavailable(KernelError):
+    """A pinned policy version does not resolve in the registry (foundation 3.6).
+
+    Replay and scoring pin the exact policy versions they ran under and must
+    resolve them by id. If a pinned version is missing, that is a hard error --
+    never a silent fallback to the active version or an alias -- because the two
+    could differ and quietly change a reproduced result.
+    """
+
+    code = "PINNED_POLICY_UNAVAILABLE"
+
+
+class NoActivePolicy(KernelError):
+    """No active version is set for a policy kind (foundation 3.6).
+
+    The active-resolve path (e.g. ``production_eligible`` at delivery) needs a
+    current version; its absence is a configuration error, distinct from a
+    pinned version failing to resolve.
+    """
+
+    code = "NO_ACTIVE_POLICY"
