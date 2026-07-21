@@ -302,6 +302,19 @@ topics:
     can_do: "State requirements, advice, permission, and possibility with basic modals."
     advisory_prerequisites:
       strong: [grammar.can-cant.ability-requests]
+    dimensions: [recognition, transfer]
+    frequency_tier: tail
+    lexicon: [chunk.we-should-consider, word.requirement, word.option]
+    contexts: [option-review]
+    typical_errors:
+      - "Using Russian sentence order where English needs a fixed auxiliary or preposition."
+      - "Omitting a small grammar word because Russian does not mark it in the same way."
+      - "Choosing a literal Russian-to-English form instead of the target construction."
+    examples:
+      - "You must save the form."
+      - "We should check the option first."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.comparatives.options
     cefr: A2
     track: grammar-engine
@@ -309,6 +322,19 @@ topics:
     can_do: "Compare two simple options."
     advisory_prerequisites:
       strong: [grammar.articles.identity]
+    dimensions: [recognition, transfer]
+    frequency_tier: tail
+    lexicon: [chunk.in-terms-of, word.compare, word.requirement]
+    contexts: [option-review]
+    typical_errors:
+      - "Using Russian sentence order where English needs a fixed auxiliary or preposition."
+      - "Omitting a small grammar word because Russian does not mark it in the same way."
+      - "Choosing a literal Russian-to-English form instead of the target construction."
+    examples:
+      - "This plan is cheaper than the other one."
+      - "Email is faster than a meeting."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.superlatives.selection
     cefr: A2
     track: grammar-engine
@@ -316,6 +342,19 @@ topics:
     can_do: "Identify the best or most suitable option in a simple set."
     advisory_prerequisites:
       strong: [grammar.comparatives.options]
+    dimensions: [recognition, transfer]
+    frequency_tier: tail
+    lexicon: [chunk.the-main-advantage-is, chunk.the-main-requirement-is, word.priority]
+    contexts: [option-review]
+    typical_errors:
+      - "Using Russian sentence order where English needs a fixed auxiliary or preposition."
+      - "Omitting a small grammar word because Russian does not mark it in the same way."
+      - "Choosing a literal Russian-to-English form instead of the target construction."
+    examples:
+      - "This is the best option for us."
+      - "Monday is the busiest day."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.quantifiers.requirements
     cefr: A2
     track: grammar-engine
@@ -323,6 +362,19 @@ topics:
     can_do: "State simple quantity requirements for a task or option."
     advisory_prerequisites:
       strong: [grammar.quantifiers.basic]
+    dimensions: [recognition, transfer]
+    frequency_tier: tail
+    lexicon: [word.requirement, word.option]
+    contexts: [option-review]
+    typical_errors:
+      - "Using Russian sentence order where English needs a fixed auxiliary or preposition."
+      - "Omitting a small grammar word because Russian does not mark it in the same way."
+      - "Choosing a literal Russian-to-English form instead of the target construction."
+    examples:
+      - "We need enough time for testing."
+      - "There are too many open requests."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: written-interaction.requirement-question
     cefr: A2
     track: written-interaction
@@ -330,6 +382,18 @@ topics:
     can_do: "Ask a clear written question about a requirement or option."
     advisory_prerequisites:
       strong: [grammar.modals.requirements, grammar.basic-questions.clarification]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [chunk.the-main-requirement-is, word.requirement, word.option]
+    contexts: [option-review]
+    typical_errors:
+      - "Writing a Russian-style imperative where English needs a polite request (Send me... without context)."
+      - "Omitting the subject, article, or auxiliary in a short message."
+      - "Using a direct calque such as Please, explain me instead of explain it to me."
+    examples:
+      - "What is the main requirement for this task?"
+      - "Do we need a mobile version?"
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: written-production.option-comparison
     cefr: A2
     track: written-production-mediation
@@ -338,6 +402,18 @@ topics:
     advisory_prerequisites:
       strong: [grammar.comparatives.options, grammar.modals.requirements]
       soft: [grammar.superlatives.selection]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [chunk.the-main-advantage-is, chunk.we-should-consider, chunk.the-downside-is]
+    contexts: [option-review]
+    typical_errors:
+      - "Copying Russian word order into a multi-sentence update or summary."
+      - "Mixing a fact and an inference without a marker such as I think or may."
+      - "Using a false friend or literal translation that changes the intended meaning."
+    examples:
+      - "Option A is cheaper, but Option B is faster."
+      - "I recommend Option B for this project."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.connectors.cause-contrast
     cefr: A2
     track: grammar-engine
@@ -345,6 +421,19 @@ topics:
     can_do: "Connect a cause, result, and contrast with because, so, and although."
     advisory_prerequisites:
       strong: [grammar.basic-word-order]
+    dimensions: [recognition, transfer]
+    frequency_tier: tail
+    lexicon: [chunk.the-root-cause-was, chunk.the-same-thing-happened-before, word.cause]
+    contexts: [support-ticket]
+    typical_errors:
+      - "Using Russian sentence order where English needs a fixed auxiliary or preposition."
+      - "Omitting a small grammar word because Russian does not mark it in the same way."
+      - "Choosing a literal Russian-to-English form instead of the target construction."
+    examples:
+      - "The page failed because the token expired."
+      - "The test passed, but the email did not arrive."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.zero-conditional.processes
     cefr: A2
     track: grammar-engine
@@ -352,6 +441,19 @@ topics:
     can_do: "Describe a regular process or rule with the zero conditional."
     advisory_prerequisites:
       strong: [grammar.present-simple.routines]
+    dimensions: [recognition, transfer]
+    frequency_tier: tail
+    lexicon: [chunk.the-usual-process-is-to, word.if, word.process]
+    contexts: [support-ticket]
+    typical_errors:
+      - "Using will in both halves of a first conditional (If it will fail, we will restart)."
+      - "Using a future form for a general zero-conditional rule."
+      - "Dropping the comma or changing clause order until the condition is unclear."
+    examples:
+      - "If the form is empty, the app shows an error."
+      - "When users save, the system creates a record."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.first-conditional.troubleshooting
     cefr: A2
     track: grammar-engine
@@ -359,6 +461,19 @@ topics:
     can_do: "State a likely troubleshooting action and result with the first conditional."
     advisory_prerequisites:
       strong: [grammar.future-forms.planning, grammar.connectors.cause-contrast]
+    dimensions: [recognition, transfer]
+    frequency_tier: tail
+    lexicon: [chunk.if-that-does-not-help, word.if, word.process]
+    contexts: [support-ticket]
+    typical_errors:
+      - "Using will in both halves of a first conditional (If it will fail, we will restart)."
+      - "Using a future form for a general zero-conditional rule."
+      - "Dropping the comma or changing clause order until the condition is unclear."
+    examples:
+      - "If the error returns, we will restart the service."
+      - "If you send the log, I will check it."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.passive.basic-process
     cefr: A2
     track: grammar-engine
@@ -366,6 +481,19 @@ topics:
     can_do: "Describe a basic process when the action is more important than the actor."
     advisory_prerequisites:
       strong: [grammar.be.identity, grammar.past-participle.forms]
+    dimensions: [recognition, transfer]
+    frequency_tier: tail
+    lexicon: [word.process, word.solution]
+    contexts: [support-ticket]
+    typical_errors:
+      - "Using Russian sentence order where English needs a fixed auxiliary or preposition."
+      - "Omitting a small grammar word because Russian does not mark it in the same way."
+      - "Choosing a literal Russian-to-English form instead of the target construction."
+    examples:
+      - "The file is stored in the shared folder."
+      - "The request is checked before approval."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: written-production.troubleshooting-explanation
     cefr: A2
     track: written-production-mediation
@@ -374,6 +502,18 @@ topics:
     advisory_prerequisites:
       strong: [grammar.connectors.cause-contrast, grammar.first-conditional.troubleshooting]
       soft: [grammar.passive.basic-process]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [chunk.the-root-cause-was, chunk.try-this-first, chunk.if-that-does-not-help]
+    contexts: [support-ticket]
+    typical_errors:
+      - "Copying Russian word order into a multi-sentence update or summary."
+      - "Mixing a fact and an inference without a marker such as I think or may."
+      - "Using a false friend or literal translation that changes the intended meaning."
+    examples:
+      - "The root cause was an expired token."
+      - "Try this first: restart the service."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: us-tech.process-troubleshooting
     cefr: A2
     track: us-tech-english
@@ -381,6 +521,18 @@ topics:
     can_do: "Explain a simple technology process and troubleshooting path."
     advisory_prerequisites:
       strong: [written-production.troubleshooting-explanation]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [chunk.the-usual-process-is-to, chunk.make-sure-that, chunk.as-a-workaround]
+    contexts: [support-ticket]
+    typical_errors:
+      - "Using a Russian calque instead of a clear technical action (make a deploy instead of deploy)."
+      - "Dropping the actor, status, or next step that makes an update actionable."
+      - "Using Present Simple for an incident happening now or Past Simple for an unfinished result."
+    examples:
+      - "The usual process is to check the log first."
+      - "If that does not help, restart the service."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: written-interaction.polite-request
     cefr: A2
     track: written-interaction
@@ -388,6 +540,18 @@ topics:
     can_do: "Make a polite written request for help, action, or information."
     advisory_prerequisites:
       strong: [written-interaction.request-clarification, grammar.modals.requirements]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [chunk.could-you-please, chunk.could-you-take-a-look-at, chunk.does-that-work-for-you]
+    contexts: [team-chat]
+    typical_errors:
+      - "Writing a Russian-style imperative where English needs a polite request (Send me... without context)."
+      - "Omitting the subject, article, or auxiliary in a short message."
+      - "Using a direct calque such as Please, explain me instead of explain it to me."
+    examples:
+      - "Could you please check this file?"
+      - "Could you take a look at the error?"
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: written-interaction.suggestion-feedback
     cefr: A2
     track: written-interaction
@@ -395,6 +559,18 @@ topics:
     can_do: "Offer a simple suggestion and give constructive written feedback."
     advisory_prerequisites:
       strong: [grammar.modals.requirements]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [chunk.i-suggest, word.feedback, word.suggestion]
+    contexts: [team-chat]
+    typical_errors:
+      - "Writing a Russian-style imperative where English needs a polite request (Send me... without context)."
+      - "Omitting the subject, article, or auxiliary in a short message."
+      - "Using a direct calque such as Please, explain me instead of explain it to me."
+    examples:
+      - "I suggest testing the smaller option first."
+      - "Your summary is clear; please add the date."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: written-interaction.respectful-disagreement
     cefr: A2
     track: written-interaction
@@ -402,6 +578,18 @@ topics:
     can_do: "Disagree respectfully and give a simple reason in writing."
     advisory_prerequisites:
       strong: [written-interaction.suggestion-feedback, grammar.connectors.cause-contrast]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [chunk.i-see-your-point, word.agree, word.disagree]
+    contexts: [team-chat]
+    typical_errors:
+      - "Writing a Russian-style imperative where English needs a polite request (Send me... without context)."
+      - "Omitting the subject, article, or auxiliary in a short message."
+      - "Using a direct calque such as Please, explain me instead of explain it to me."
+    examples:
+      - "I see your point, but this option costs more."
+      - "I am not sure I agree because the deadline is close."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: written-interaction.follow-up
     cefr: A2
     track: written-interaction
@@ -409,6 +597,18 @@ topics:
     can_do: "Write a follow-up message that confirms an action or asks for a response."
     advisory_prerequisites:
       strong: [written-interaction.polite-request]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [chunk.let-me-know, chunk.thanks-for-the-update, chunk.sorry-for-the-delay]
+    contexts: [team-chat]
+    typical_errors:
+      - "Writing a Russian-style imperative where English needs a polite request (Send me... without context)."
+      - "Omitting the subject, article, or auxiliary in a short message."
+      - "Using a direct calque such as Please, explain me instead of explain it to me."
+    examples:
+      - "Thanks for the update. Please let me know by Friday."
+      - "Just following up on the access request."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: everyday-online-informal.casual-neutral-request
     cefr: A2
     track: everyday-online-informal
@@ -417,6 +617,18 @@ topics:
     advisory_prerequisites:
       strong: [everyday-online-informal.basic-chat-response]
       soft: [written-interaction.polite-request]
+    dimensions: [recognition, transfer]
+    lexicon: [chunk.could-you-take-a-look-at, chunk.does-that-work-for-you, informal.could-you-clarify]
+    contexts: [team-chat]
+    typical_errors:
+      - "Using a casual phrase in a neutral work message without checking tone or register."
+      - "Reading a short reaction literally and missing its pragmatic meaning (калька по словам)."
+      - "Using an abbreviation or contraction in a formal context where a neutral form is safer."
+    examples:
+      - "Could you take a look at this?"
+      - "Quick question: is the call at three?"
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: everyday-online-informal.common-abbreviations
     cefr: A2
     track: everyday-online-informal
@@ -425,6 +637,18 @@ topics:
     advisory_prerequisites:
       strong: [everyday-online-informal.written-contractions]
       soft: [everyday-online-informal.casual-neutral-request]
+    dimensions: [recognition, transfer]
+    lexicon: [abbreviation.imo, abbreviation.fyi, abbreviation.asap]
+    contexts: [team-chat]
+    typical_errors:
+      - "Using a casual phrase in a neutral work message without checking tone or register."
+      - "Reading a short reaction literally and missing its pragmatic meaning (калька по словам)."
+      - "Using an abbreviation or contraction in a formal context where a neutral form is safer."
+    examples:
+      - "FYI, the meeting moved to 3 p.m."
+      - "Please reply ASAP if the date is wrong."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: everyday-online-informal.casual-neutral-rephrasing
     cefr: A2
     track: everyday-online-informal
@@ -433,6 +657,18 @@ topics:
     advisory_prerequisites:
       strong: [everyday-online-informal.casual-neutral-request]
       soft: [written-interaction.respectful-disagreement]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [chunk.sorry-for-the-delay, informal.i-see-what-you-mean, informal.not-sure-i-agree]
+    contexts: [team-chat]
+    typical_errors:
+      - "Using a casual phrase in a neutral work message without checking tone or register."
+      - "Reading a short reaction literally and missing its pragmatic meaning (калька по словам)."
+      - "Using an abbreviation or contraction in a formal context where a neutral form is safer."
+    examples:
+      - "Casual: Can you ping me? Neutral: Please let me know."
+      - "Casual: Not sure I agree. Neutral: I see it differently."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: reading.documentation-scan
     cefr: A2
     track: reading
