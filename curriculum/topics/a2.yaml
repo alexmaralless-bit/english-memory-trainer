@@ -676,6 +676,18 @@ topics:
     can_do: "Scan a short documentation excerpt or ticket for needed information."
     advisory_prerequisites:
       strong: [reading.ticket-basics]
+    dimensions: [recognition, transfer]
+    lexicon: [lexeme.read, chunk.it-says-that, chunk.according-to]
+    contexts: [documentation-review]
+    typical_errors:
+      - "Translating every word and missing the main instruction or meaning (пословная калька)."
+      - "Treating a familiar-looking word as its Russian false friend without checking context."
+      - "Ignoring a negation, time marker, or modal that changes the practical message."
+    examples:
+      - "Setup: add your API key, then save."
+      - "The note says the token expires in 24 hours."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: reading.main-idea-details
     cefr: A2
     track: reading
@@ -683,6 +695,18 @@ topics:
     can_do: "Separate the main idea from supporting details in a short work text."
     advisory_prerequisites:
       strong: [reading.documentation-scan]
+    dimensions: [recognition, transfer]
+    lexicon: [chunk.main-point, chunk.the-key-point-is, word.detail]
+    contexts: [documentation-review]
+    typical_errors:
+      - "Translating every word and missing the main instruction or meaning (пословная калька)."
+      - "Treating a familiar-looking word as its Russian false friend without checking context."
+      - "Ignoring a negation, time marker, or modal that changes the practical message."
+    examples:
+      - "Main point: the release is delayed."
+      - "Detail: testing ends on Thursday."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: everyday-online-informal.tone-recognition
     cefr: A2
     track: everyday-online-informal
@@ -691,6 +715,18 @@ topics:
     advisory_prerequisites:
       strong: [reading.main-idea-details]
       soft: [everyday-online-informal.common-abbreviations]
+    dimensions: [recognition, transfer]
+    lexicon: [informal.yeah-right, word.documentation, word.summary]
+    contexts: [documentation-review]
+    typical_errors:
+      - "Using a casual phrase in a neutral work message without checking tone or register."
+      - "Reading a short reaction literally and missing its pragmatic meaning (калька по словам)."
+      - "Using an abbreviation or contraction in a formal context where a neutral form is safer."
+    examples:
+      - "Yeah, right - that will be easy."
+      - "Thanks for the context; this helps."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: everyday-online-informal.forum-thread-reply
     cefr: A2
     track: everyday-online-informal
@@ -699,6 +735,18 @@ topics:
     advisory_prerequisites:
       strong: [reading.main-idea-details]
       soft: [everyday-online-informal.tone-recognition, written-interaction.suggestion-feedback]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [chunk.as-far-as-i-understand, informal.thanks-for-the-context, informal.do-you-have-a-source]
+    contexts: [documentation-review]
+    typical_errors:
+      - "Using a casual phrase in a neutral work message without checking tone or register."
+      - "Reading a short reaction literally and missing its pragmatic meaning (калька по словам)."
+      - "Using an abbreviation or contraction in a formal context where a neutral form is safer."
+    examples:
+      - "Thanks for the details. Have you tried restarting it?"
+      - "I think the log may help here."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: written-production.paraphrase-summary
     cefr: A2
     track: written-production-mediation
@@ -706,6 +754,18 @@ topics:
     can_do: "Paraphrase the main point of a short ticket or documentation excerpt."
     advisory_prerequisites:
       strong: [reading.main-idea-details]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [chunk.the-key-point-is, chunk.in-short, chunk.to-summarize]
+    contexts: [documentation-review]
+    typical_errors:
+      - "Copying Russian word order into a multi-sentence update or summary."
+      - "Mixing a fact and an inference without a marker such as I think or may."
+      - "Using a false friend or literal translation that changes the intended meaning."
+    examples:
+      - "In short, the client needs a later deadline."
+      - "The key point is that testing is not complete."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: written-production.fact-inference
     cefr: A2
     track: written-production-mediation
@@ -713,6 +773,18 @@ topics:
     can_do: "Distinguish a stated fact from a simple inference in a short work text."
     advisory_prerequisites:
       strong: [reading.main-idea-details]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [chunk.as-far-as-i-understand, chunk.according-to, word.documentation]
+    contexts: [documentation-review]
+    typical_errors:
+      - "Copying Russian word order into a multi-sentence update or summary."
+      - "Mixing a fact and an inference without a marker such as I think or may."
+      - "Using a false friend or literal translation that changes the intended meaning."
+    examples:
+      - "Fact: the ticket is open."
+      - "Inference: the team may need more time."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: us-tech.ticket-mediation
     cefr: A2
     track: us-tech-english
@@ -720,6 +792,18 @@ topics:
     can_do: "Communicate the key information from a short technology ticket to a teammate."
     advisory_prerequisites:
       strong: [written-production.paraphrase-summary, written-production.fact-inference]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [chunk.it-says-that, chunk.in-other-words, word.documentation]
+    contexts: [documentation-review]
+    typical_errors:
+      - "Using a Russian calque instead of a clear technical action (make a deploy instead of deploy)."
+      - "Dropping the actor, status, or next step that makes an update actionable."
+      - "Using Present Simple for an incident happening now or Past Simple for an unfinished result."
+    examples:
+      - "The ticket says the login page fails on mobile."
+      - "In other words, the client cannot sign in."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: written-production.project-update
     cefr: A2
     track: written-production-mediation
@@ -727,6 +811,18 @@ topics:
     can_do: "Write a project update that reports a result, current status, and next step."
     advisory_prerequisites:
       strong: [written-interaction.result-update, written-production.delivery-plan]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [chunk.project-update, chunk.overall-the-project-is, chunk.the-main-risk-is]
+    contexts: [project-update]
+    typical_errors:
+      - "Copying Russian word order into a multi-sentence update or summary."
+      - "Mixing a fact and an inference without a marker such as I think or may."
+      - "Using a false friend or literal translation that changes the intended meaning."
+    examples:
+      - "The project is on track; testing continues this week."
+      - "The main risk is a delay in the data export."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: written-production.bug-report
     cefr: A2
     track: written-production-mediation
@@ -734,6 +830,18 @@ topics:
     can_do: "Write a concise bug report with event, impact, and observed details."
     advisory_prerequisites:
       strong: [us-tech.incident-report-basics, written-production.troubleshooting-explanation]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [chunk.expected-result, chunk.actual-result, word.expected]
+    contexts: [project-update]
+    typical_errors:
+      - "Copying Russian word order into a multi-sentence update or summary."
+      - "Mixing a fact and an inference without a marker such as I think or may."
+      - "Using a false friend or literal translation that changes the intended meaning."
+    examples:
+      - "Expected: the form saves. Actual: it shows an error."
+      - "The bug appears after clicking Save."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: written-interaction.follow-up-recommendation
     cefr: A2
     track: written-interaction
@@ -741,6 +849,18 @@ topics:
     can_do: "Write a follow-up that recommends a next action after a project update."
     advisory_prerequisites:
       strong: [written-interaction.follow-up, written-production.option-comparison]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [chunk.next-week-we-will-focus-on, word.status, word.update]
+    contexts: [project-update]
+    typical_errors:
+      - "Writing a Russian-style imperative where English needs a polite request (Send me... without context)."
+      - "Omitting the subject, article, or auxiliary in a short message."
+      - "Using a direct calque such as Please, explain me instead of explain it to me."
+    examples:
+      - "I recommend testing the fix before release."
+      - "Please confirm the next action by Friday."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: us-tech.integrated-project-update
     cefr: A2
     track: us-tech-english
@@ -750,6 +870,18 @@ topics:
       strong: [written-production.project-update, written-production.bug-report, written-interaction.follow-up-recommendation]
 
   # TODO(review): everyday-life topic boundaries and module placement are the minimal P.1c interpretation of the approved domain-parity decision.
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [lexeme.send, chunk.overall-the-project-is, chunk.no-blockers-at-the-moment]
+    contexts: [project-update]
+    typical_errors:
+      - "Using a Russian calque instead of a clear technical action (make a deploy instead of deploy)."
+      - "Dropping the actor, status, or next step that makes an update actionable."
+      - "Using Present Simple for an incident happening now or Past Simple for an unfinished result."
+    examples:
+      - "The deployment is complete and there are no blockers."
+      - "Next week we will focus on the mobile flow."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: everyday-life.describing-symptoms
     cefr: A2
     track: everyday-life
@@ -758,6 +890,18 @@ topics:
     advisory_prerequisites:
       strong: [grammar.have-has.objects, grammar.present-continuous.status]
       soft: [grammar.past-simple.events]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [word.headache, word.toothache, word.stomachache]
+    contexts: [pharmacy-visit]
+    typical_errors:
+      - "Omitting articles or subjects because Russian can express the idea without them."
+      - "Using Russian word order or a literal calque in a short practical message."
+      - "Choosing a familiar false friend instead of the word that fits the situation."
+    examples:
+      - "I have a headache and a cough."
+      - "The pain started this morning."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: everyday-life.asking-for-medical-help
     cefr: A2
     track: everyday-life
@@ -766,6 +910,18 @@ topics:
     advisory_prerequisites:
       strong: [everyday-life.describing-symptoms, written-interaction.polite-request]
       soft: [grammar.can-cant.ability-requests]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [word.doctor, word.medicine]
+    contexts: [pharmacy-visit]
+    typical_errors:
+      - "Omitting articles or subjects because Russian can express the idea without them."
+      - "Using Russian word order or a literal calque in a short practical message."
+      - "Choosing a familiar false friend instead of the word that fits the situation."
+    examples:
+      - "I have a fever. Can you help me?"
+      - "Do I need an appointment today?"
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: everyday-life.giving-basic-health-advice
     cefr: A2
     track: everyday-life
@@ -774,6 +930,18 @@ topics:
     advisory_prerequisites:
       strong: [grammar.modals.requirements, written-interaction.suggestion-feedback]
       soft: [everyday-life.describing-symptoms]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [word.doctor, word.medicine]
+    contexts: [pharmacy-visit]
+    typical_errors:
+      - "Omitting articles or subjects because Russian can express the idea without them."
+      - "Using Russian word order or a literal calque in a short practical message."
+      - "Choosing a familiar false friend instead of the word that fits the situation."
+    examples:
+      - "You should rest and drink water."
+      - "Please ask a pharmacist about this medicine."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: everyday-life.talking-about-wellbeing-habits
     cefr: A2
     track: everyday-life
@@ -782,6 +950,18 @@ topics:
     advisory_prerequisites:
       strong: [grammar.present-simple.routines, grammar.frequency-adverbs]
       soft: [grammar.zero-conditional.processes]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [word.doctor, word.medicine]
+    contexts: [pharmacy-visit]
+    typical_errors:
+      - "Omitting articles or subjects because Russian can express the idea without them."
+      - "Using Russian word order or a literal calque in a short practical message."
+      - "Choosing a familiar false friend instead of the word that fits the situation."
+    examples:
+      - "I walk every evening to feel better."
+      - "Too much coffee affects my sleep."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: everyday-life.understanding-pharmacy-instructions
     cefr: A2
     track: everyday-life
@@ -790,6 +970,18 @@ topics:
     advisory_prerequisites:
       strong: [grammar.imperatives.instructions, grammar.modals.requirements]
       soft: [reading.documentation-scan]
+    dimensions: [recognition, transfer]
+    lexicon: [word.doctor, word.medicine]
+    contexts: [pharmacy-visit]
+    typical_errors:
+      - "Omitting articles or subjects because Russian can express the idea without them."
+      - "Using Russian word order or a literal calque in a short practical message."
+      - "Choosing a familiar false friend instead of the word that fits the situation."
+    examples:
+      - "Take one tablet after food."
+      - "Use this cream twice a day."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: everyday-life.understanding-a-bill
     cefr: A2
     track: everyday-life
