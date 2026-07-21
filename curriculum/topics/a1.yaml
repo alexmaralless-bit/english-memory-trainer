@@ -6,6 +6,19 @@ topics:
     module: a1.1-identity-and-role
     can_do: "State identity, role, and company with forms of be."
     advisory_prerequisites: {}
+    dimensions: [recognition, transfer]
+    frequency_tier: tail
+    lexicon: [chunk.i-work-as, chunk.my-name-is, word.company]
+    contexts: [team-introduction]
+    typical_errors:
+      - "Omitting be in a statement (калька: «I engineer» вместо I am an engineer)."
+      - "Choosing is for I/you or are for he/she (русское «быть» не меняется по лицам так)."
+      - "Using a job noun without its article after be (I am manager)."
+    examples:
+      - "I am a data analyst."
+      - "Our company is small."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.pronouns.possessives
     cefr: A1
     track: grammar-engine
@@ -13,6 +26,19 @@ topics:
     can_do: "Refer to people, teams, and ownership with pronouns and possessives."
     advisory_prerequisites:
       strong: [grammar.be.identity]
+    dimensions: [recognition, transfer]
+    frequency_tier: tail
+    lexicon: [chunk.my-main-task-is, word.company, word.team]
+    contexts: [team-introduction]
+    typical_errors:
+      - "Using a subject pronoun before a noun instead of a possessive (he name instead of his name)."
+      - "Confusing he/she with him/her after a verb (русские падежи не совпадают с английской позицией)."
+      - "Confusing their with they're because Russian does not mark this spelling distinction."
+    examples:
+      - "She owns the release notes."
+      - "Their team has a demo today."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.basic-word-order
     cefr: A1
     track: grammar-engine
@@ -20,6 +46,19 @@ topics:
     can_do: "Write simple affirmative statements in a clear English word order."
     advisory_prerequisites:
       strong: [grammar.be.identity]
+    dimensions: [recognition, transfer]
+    frequency_tier: tail
+    lexicon: [word.company, word.team]
+    contexts: [team-introduction]
+    typical_errors:
+      - "Placing an adverb or object before the subject (русский свободный порядок слов)."
+      - "Dropping the subject in a statement (калька: «работаю с данными» без I)."
+      - "Putting a question-style auxiliary into an affirmative sentence (гиперкоррекция do)."
+    examples:
+      - "The client needs a report."
+      - "We test the model today."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.articles.identity
     cefr: A1
     track: grammar-engine
@@ -27,6 +66,19 @@ topics:
     can_do: "Use a, an, and the in simple descriptions of roles and objects."
     advisory_prerequisites:
       soft: [grammar.be.identity]
+    dimensions: [recognition, transfer]
+    frequency_tier: tail
+    lexicon: [chunk.i-work-in-the-team, word.company, word.team]
+    contexts: [team-introduction]
+    typical_errors:
+      - "Omitting a/an before a singular countable noun (калька: «я инженер» без артикля)."
+      - "Using the before a role for the first mention (перенос «этот/конкретный» без контекста)."
+      - "Choosing a instead of an before a vowel sound (ошибка по букве, а не по звучанию)."
+    examples:
+      - "I am an engineer on the project."
+      - "The dashboard has a new chart."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: written-interaction.self-introduction
     cefr: A1
     track: written-interaction
@@ -35,6 +87,18 @@ topics:
     advisory_prerequisites:
       strong: [grammar.be.identity, grammar.pronouns.possessives, grammar.basic-word-order]
       soft: [grammar.articles.identity]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [chunk.i-work-as, chunk.i-am-responsible-for, chunk.my-name-is]
+    contexts: [team-introduction]
+    typical_errors:
+      - "Writing a Russian-style imperative where English needs a polite request (Send me... without context)."
+      - "Omitting the subject, article, or auxiliary in a short message."
+      - "Using a direct calque such as Please, explain me instead of explain it to me."
+    examples:
+      - "Hi, I'm Nina, a QA engineer at BrightBuild."
+      - "My main task is testing new releases."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: us-tech.role-responsibilities
     cefr: A1
     track: us-tech-english
@@ -42,6 +106,18 @@ topics:
     can_do: "Describe a simple technology-related role and responsibility."
     advisory_prerequisites:
       strong: [written-interaction.self-introduction]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [chunk.i-am-responsible-for, chunk.i-work-in-the-team, chunk.im-part-of]
+    contexts: [team-introduction]
+    typical_errors:
+      - "Using a Russian calque instead of a clear technical action (make a deploy instead of deploy)."
+      - "Dropping the actor, status, or next step that makes an update actionable."
+      - "Using Present Simple for an incident happening now or Past Simple for an unfinished result."
+    examples:
+      - "I support the data team."
+      - "My role is to check model outputs."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.present-simple.routines
     cefr: A1
     track: grammar-engine
@@ -49,6 +125,19 @@ topics:
     can_do: "Describe a usual work routine with the Present Simple."
     advisory_prerequisites:
       strong: [grammar.basic-word-order]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: big-five
+    lexicon: [chunk.i-usually-start-by, chunk.on-a-typical-day, word.start]
+    contexts: [daily-standup]
+    typical_errors:
+      - "Using Present Continuous for a routine (калька: «я обычно сейчас работаю»)."
+      - "Forgetting -s after he/she/it (русский глагол не меняется по лицам)."
+      - "Using do together with a main verb inflection (Does she works?)."
+    examples:
+      - "I check new tickets every morning."
+      - "The team meets on Monday."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.do-questions
     cefr: A1
     track: grammar-engine
@@ -56,6 +145,19 @@ topics:
     can_do: "Ask and answer simple routine questions with do and does."
     advisory_prerequisites:
       strong: [grammar.present-simple.routines]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: big-five
+    lexicon: [chunk.how-often-do-you, lexeme.do, word.task]
+    contexts: [daily-standup]
+    typical_errors:
+      - "Using Present Continuous for a routine (калька: «я обычно сейчас работаю»)."
+      - "Forgetting -s after he/she/it (русский глагол не меняется по лицам)."
+      - "Using do together with a main verb inflection (Does she works?)."
+    examples:
+      - "Do you review this file every day?"
+      - "Does Maya work from home?"
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.frequency-adverbs
     cefr: A1
     track: grammar-engine
@@ -63,12 +165,38 @@ topics:
     can_do: "State how often a routine action happens."
     advisory_prerequisites:
       strong: [grammar.present-simple.routines]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: big-five
+    lexicon: [chunk.how-often-do-you, chunk.once-a-week, word.usually]
+    contexts: [daily-standup]
+    typical_errors:
+      - "Using Present Continuous for a routine (калька: «я обычно сейчас работаю»)."
+      - "Forgetting -s after he/she/it (русский глагол не меняется по лицам)."
+      - "Using do together with a main verb inflection (Does she works?)."
+    examples:
+      - "We usually deploy on Friday."
+      - "I rarely miss the stand-up."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.time-dates
     cefr: A1
     track: grammar-engine
     module: a1.2-daily-work
     can_do: "State simple times, dates, and schedule points in a work message."
     advisory_prerequisites: {}
+    dimensions: [recognition, transfer]
+    frequency_tier: tail
+    lexicon: [chunk.first-thing-in-the-morning, chunk.at-the-end-of-the-day, word.day]
+    contexts: [daily-standup]
+    typical_errors:
+      - "Using at with a day or date (at Monday, at 12 May) instead of on."
+      - "Omitting the preposition before a clock time (the call starts nine)."
+      - "Writing a date in Russian order without a month word, which can be ambiguous internationally."
+    examples:
+      - "The call starts at nine."
+      - "The demo is on 12 May."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: written-production.daily-work-update
     cefr: A1
     track: written-production-mediation
@@ -77,6 +205,18 @@ topics:
     advisory_prerequisites:
       strong: [grammar.present-simple.routines, grammar.time-dates]
       soft: [grammar.frequency-adverbs]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [chunk.on-a-typical-day, chunk.at-the-end-of-the-day, chunk.i-spend-most-of-my-time]
+    contexts: [daily-standup]
+    typical_errors:
+      - "Copying Russian word order into a multi-sentence update or summary."
+      - "Mixing a fact and an inference without a marker such as I think or may."
+      - "Using a false friend or literal translation that changes the intended meaning."
+    examples:
+      - "I check tickets and update the board every day."
+      - "Today I have two client calls."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: us-tech.work-process-routine
     cefr: A1
     track: us-tech-english
@@ -84,6 +224,18 @@ topics:
     can_do: "Describe a recurring simple process in a technology work context."
     advisory_prerequisites:
       strong: [grammar.present-simple.routines]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [chunk.i-usually-start-by, chunk.first-thing-in-the-morning, word.task]
+    contexts: [daily-standup]
+    typical_errors:
+      - "Using a Russian calque instead of a clear technical action (make a deploy instead of deploy)."
+      - "Dropping the actor, status, or next step that makes an update actionable."
+      - "Using Present Simple for an incident happening now or Past Simple for an unfinished result."
+    examples:
+      - "First, we check the data. Then we run the report."
+      - "The team reviews new tickets each morning."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.there-is-are.systems
     cefr: A1
     track: grammar-engine
@@ -546,6 +698,19 @@ topics:
     advisory_prerequisites:
       strong: [grammar.time-dates]
       soft: [grammar.prepositions.location]
+    dimensions: [recognition, transfer]
+    frequency_tier: tail
+    lexicon: [word.task, word.schedule]
+    contexts: [daily-standup]
+    typical_errors:
+      - "Using Russian sentence order where English needs a fixed auxiliary or preposition."
+      - "Omitting a small grammar word because Russian does not mark it in the same way."
+      - "Choosing a literal Russian-to-English form instead of the target construction."
+    examples:
+      - "The review is on Monday."
+      - "The call starts at 10:00."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.here-is-are.presenting
     cefr: A1
     track: grammar-engine
