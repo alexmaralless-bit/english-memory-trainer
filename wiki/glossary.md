@@ -85,6 +85,7 @@
 
 - **Chunk** — многословная **заготовка со слотом**, которую ученик достраивает своим содержанием (`the main advantage is …`). Изучается как целое, но остаётся продуктивным шаблоном.
 - **Idiom** — фиксированное **неразложимое** выражение, которое не достраивают (`call it a day`). Отдельный `type`, а не chunk: другая структура и другая учебная цель [PD-2026-07-20].
+- **Word formation / `formation`** — продуктивный морфологический паттерн: аффикс + база (`out-` + `run` → `outrun`). Живёт в треке `word-formation`; единица несёт `formation: {affix, base, affix_type}`. Паттерн — помощь **узнаванию**, не генератор слов; тема-паттерн и слово — разные targets [PD-2026-07-21] ([[modules/curriculum]], [[product/lexical-system]] §1b).
 - **transparency** — декодируемость многословной единицы: `transparent | semi_opaque | opaque`. Ось, независимая от регистра и домена, и **не** тождественная `usage_policy`: та отвечает за уместность, эта — за то, выводится ли смысл из слов. У `opaque` обязателен `recognition` и запись `literal_trap_ru` о ложном дословном прочтении [PD-2026-07-20].
 - **LexicalItem** — единица учебного лексикона со стабильным ID: слово, chunk, idiom, phrasal verb или lexeme. Тип informal-единицы: `informal_chunk` / `abbreviation` / `meme_template`.
 - **Lexeme** — LexicalItem с формами (`go / went / gone` — один lexeme); владение агрегируется из evidence по required forms детерминированно ([[OPEN]] OPEN-14).

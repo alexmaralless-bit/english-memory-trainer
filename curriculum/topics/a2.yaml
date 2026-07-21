@@ -549,3 +549,25 @@ topics:
     advisory_prerequisites:
       strong: [reading.common-idioms, written-production.paraphrase-summary]
       soft: [reading.idioms-in-context]
+  - id: word-formation.opposite-mis-dis
+    cefr: A2
+    track: word-formation
+    module: a2.15-word-formation
+    can_do: "Recognize that mis- means wrongly (misread) and dis- reverses or negates (disconnect), and work out an unfamiliar word."
+    advisory_prerequisites:
+      strong: [word-formation.negation-un]
+      soft: [word-formation.repeat-re]
+  - id: word-formation.degree-over-under
+    cefr: A2
+    track: word-formation
+    module: a2.15-word-formation
+    can_do: "Recognize that over- means too much and under- too little (overload, underestimate) and infer the meaning."
+    advisory_prerequisites:
+      strong: [word-formation.negation-un]
+  - id: word-formation.agent-and-noun-suffix
+    cefr: A2
+    track: word-formation
+    module: a2.15-word-formation
+    can_do: "Recognize that -er names a doer and -tion/-ment makes a noun from a verb (deploy, deployment), and tell the word class."
+    advisory_prerequisites:
+      soft: [grammar.nouns-singular-plural]

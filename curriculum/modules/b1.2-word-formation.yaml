@@ -1,0 +1,9 @@
+# B1: semi-opaque prefixes whose meaning does not fully decompose (out- =
+# surpass) and quality suffixes. Recognition-first per the transparency rule.
+id: b1.2-word-formation
+level: B1
+can_do: "Recognize semi-opaque affixes such as out- (surpass) and quality suffixes, and infer an unfamiliar word from the pattern."
+tracks: [word-formation]
+topics:
+  - word-formation.surpass-out
+  - word-formation.quality-suffix

@@ -1,0 +1,9 @@
+# Word-formation track: transparent, high-frequency prefixes. The pattern is
+# generative -- learn un-/re- once, recognise (and for these two, form) a family.
+id: a1.15-word-formation-basics
+level: A1
+can_do: "Recognize and use the most common transparent prefixes un- and re- to understand and build word families."
+tracks: [word-formation]
+topics:
+  - word-formation.negation-un
+  - word-formation.repeat-re

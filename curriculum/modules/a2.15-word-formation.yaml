@@ -1,0 +1,10 @@
+# Semi-transparent prefixes (opposite, degree) and the first productive
+# suffixes, which change word class (deploy -> deployment).
+id: a2.15-word-formation
+level: A2
+can_do: "Work out meaning from semi-transparent prefixes and common suffixes, and recognise the word class a suffix produces."
+tracks: [word-formation]
+topics:
+  - word-formation.opposite-mis-dis
+  - word-formation.degree-over-under
+  - word-formation.agent-and-noun-suffix

@@ -27,6 +27,12 @@ tracks:
   - id: everyday-online-informal
     title: "Online & Informal Register"
     from_level: A1
+  # Morphology track: productive affixes (un-, re-, out-, -er, -tion). A rule,
+  # not a word list -- learn the pattern once, recognise a whole family. Neither
+  # grammar-engine syntax nor the topic-less vocabulary-chunks track. [PD-2026-07-21]
+  - id: word-formation
+    title: "Word Formation"
+    from_level: A1
   - id: toefl-reading-writing
     title: "TOEFL Reading & Writing"
     from_level: B1

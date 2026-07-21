@@ -538,3 +538,33 @@ topics:
     can_do: "Follow short written instructions for a household item or service."
     advisory_prerequisites:
       soft: [grammar.imperatives.instructions]
+  - id: grammar.prepositions.time
+    cefr: A1
+    track: grammar-engine
+    module: a1.2-daily-work
+    can_do: "Choose in, on, or at correctly for a year, month, day, date, or clock time."
+    advisory_prerequisites:
+      strong: [grammar.time-dates]
+      soft: [grammar.prepositions.location]
+  - id: grammar.here-is-are.presenting
+    cefr: A1
+    track: grammar-engine
+    module: a1.3-systems-objects-and-data
+    can_do: "Present an object to someone with here is and here are (here is your pen, here are your glasses)."
+    advisory_prerequisites:
+      strong: [grammar.there-is-are.systems]
+      soft: [grammar.demonstratives.references, grammar.nouns-singular-plural]
+  - id: word-formation.negation-un
+    cefr: A1
+    track: word-formation
+    module: a1.15-word-formation-basics
+    can_do: "Recognize that un- reverses or negates a base word (undo, unpack, unclear) and form a simple un- word."
+    advisory_prerequisites:
+      soft: [grammar.basic-word-order]
+  - id: word-formation.repeat-re
+    cefr: A1
+    track: word-formation
+    module: a1.15-word-formation-basics
+    can_do: "Recognize that re- means doing something again (redo, rebuild, restart) and form a simple re- word."
+    advisory_prerequisites:
+      soft: [word-formation.negation-un]

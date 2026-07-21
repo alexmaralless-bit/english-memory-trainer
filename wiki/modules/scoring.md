@@ -86,7 +86,7 @@ mastery_criteria:
   | track | recognition | controlled_production | spontaneous_production | transfer |
   |---|---|---|---|---|
   | `grammar-engine` | Grammar | Grammar | Grammar | Grammar (w<1) |
-  | `vocabulary-chunks` | Vocabulary | Vocabulary | Vocabulary | Vocabulary (w<1) |
+  | `vocabulary-chunks`, `word-formation` | Vocabulary | Vocabulary | Vocabulary | Vocabulary (w<1) |
   | `reading` | Reading | Reading | — | Reading (w<1) |
   | `written-interaction`, `written-production-mediation`, `everyday-life` | Reading (w<1) | Writing | Writing | Writing (w<1) |
   | `us-tech-english`, `everyday-online-informal` | Reading (w<1) | Writing (w<1) | Writing (w<1) | Writing (w<1) |
