@@ -990,6 +990,18 @@ topics:
     advisory_prerequisites:
       strong: [reading.documentation-scan, grammar.quantifiers.requirements]
       soft: [reading.main-idea-details]
+    dimensions: [recognition, transfer]
+    lexicon: [word.money, word.bank, word.account]
+    contexts: [service-support]
+    typical_errors:
+      - "Omitting articles or subjects because Russian can express the idea without them."
+      - "Using Russian word order or a literal calque in a short practical message."
+      - "Choosing a familiar false friend instead of the word that fits the situation."
+    examples:
+      - "Total due: EUR 42.50 by 15 June."
+      - "The internet charge is EUR 30."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: everyday-life.asking-about-a-charge
     cefr: A2
     track: everyday-life
@@ -998,6 +1010,18 @@ topics:
     advisory_prerequisites:
       strong: [written-interaction.requirement-question, grammar.quantifiers.requirements]
       soft: [written-interaction.polite-request]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [slang.broke, slang.bucks, word.payment]
+    contexts: [service-support]
+    typical_errors:
+      - "Omitting articles or subjects because Russian can express the idea without them."
+      - "Using Russian word order or a literal calque in a short practical message."
+      - "Choosing a familiar false friend instead of the word that fits the situation."
+    examples:
+      - "Could you explain this EUR 12 charge?"
+      - "I think this fee is incorrect."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: everyday-life.confirming-a-payment
     cefr: A2
     track: everyday-life
@@ -1006,6 +1030,18 @@ topics:
     advisory_prerequisites:
       strong: [written-interaction.result-update, grammar.present-perfect.result]
       soft: [written-interaction.follow-up]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [word.payment, word.charge]
+    contexts: [service-support]
+    typical_errors:
+      - "Omitting articles or subjects because Russian can express the idea without them."
+      - "Using Russian word order or a literal calque in a short practical message."
+      - "Choosing a familiar false friend instead of the word that fits the situation."
+    examples:
+      - "I have paid the bill today."
+      - "The payment is still pending."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: everyday-life.resolving-a-service-problem
     cefr: A2
     track: everyday-life
@@ -1014,6 +1050,18 @@ topics:
     advisory_prerequisites:
       strong: [written-production.troubleshooting-explanation, written-interaction.polite-request]
       soft: [us-tech.incident-report-basics]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [word.payment, word.charge]
+    contexts: [service-support]
+    typical_errors:
+      - "Omitting articles or subjects because Russian can express the idea without them."
+      - "Using Russian word order or a literal calque in a short practical message."
+      - "Choosing a familiar false friend instead of the word that fits the situation."
+    examples:
+      - "My internet has not worked since Monday."
+      - "Please send a technician this week."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: everyday-life.comparing-service-options
     cefr: A2
     track: everyday-life
@@ -1022,6 +1070,18 @@ topics:
     advisory_prerequisites:
       strong: [written-production.option-comparison, grammar.comparatives.options]
       soft: [grammar.superlatives.selection]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [word.payment, word.charge]
+    contexts: [service-support]
+    typical_errors:
+      - "Omitting articles or subjects because Russian can express the idea without them."
+      - "Using Russian word order or a literal calque in a short practical message."
+      - "Choosing a familiar false friend instead of the word that fits the situation."
+    examples:
+      - "Plan A is cheaper, but Plan B has more data."
+      - "Plan B is better for my family."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: everyday-life.booking-accommodation
     cefr: A2
     track: everyday-life
@@ -1030,6 +1090,18 @@ topics:
     advisory_prerequisites:
       strong: [grammar.future-forms.planning, written-interaction.polite-request]
       soft: [written-interaction.requirement-question]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [word.trip, word.journey, word.flight]
+    contexts: [hotel-message]
+    typical_errors:
+      - "Omitting articles or subjects because Russian can express the idea without them."
+      - "Using Russian word order or a literal calque in a short practical message."
+      - "Choosing a familiar false friend instead of the word that fits the situation."
+    examples:
+      - "I'd like a room for two nights in June."
+      - "Do you have a quiet room with breakfast?"
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: everyday-life.checking-in-at-accommodation
     cefr: A2
     track: everyday-life
@@ -1038,6 +1110,18 @@ topics:
     advisory_prerequisites:
       strong: [everyday-life.booking-accommodation, written-interaction.polite-request]
       soft: [written-interaction.self-introduction]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [word.hotel, word.booking]
+    contexts: [hotel-message]
+    typical_errors:
+      - "Omitting articles or subjects because Russian can express the idea without them."
+      - "Using Russian word order or a literal calque in a short practical message."
+      - "Choosing a familiar false friend instead of the word that fits the situation."
+    examples:
+      - "I have a booking under Ivan Petrov."
+      - "Here is my passport and reservation number."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: everyday-life.asking-about-facilities
     cefr: A2
     track: everyday-life
@@ -1046,6 +1130,18 @@ topics:
     advisory_prerequisites:
       strong: [grammar.there-is-are.systems, written-interaction.requirement-question]
       soft: [reading.documentation-scan]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [word.hotel, word.booking]
+    contexts: [hotel-message]
+    typical_errors:
+      - "Omitting articles or subjects because Russian can express the idea without them."
+      - "Using Russian word order or a literal calque in a short practical message."
+      - "Choosing a familiar false friend instead of the word that fits the situation."
+    examples:
+      - "Is there a gym in the hotel?"
+      - "Where is the elevator?"
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: everyday-life.changing-a-travel-plan
     cefr: A2
     track: everyday-life
@@ -1054,6 +1150,18 @@ topics:
     advisory_prerequisites:
       strong: [grammar.future-forms.planning, written-interaction.polite-request]
       soft: [everyday-life.booking-accommodation]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [phrasal-verb.take-off, phrasal-verb.pick-up, phrasal-verb.get-in]
+    contexts: [hotel-message]
+    typical_errors:
+      - "Omitting articles or subjects because Russian can express the idea without them."
+      - "Using Russian word order or a literal calque in a short practical message."
+      - "Choosing a familiar false friend instead of the word that fits the situation."
+    examples:
+      - "My flight changed. Can I move the booking to Friday?"
+      - "I need a later train because the first one was cancelled."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: everyday-life.reporting-an-accommodation-problem
     cefr: A2
     track: everyday-life
@@ -1062,6 +1170,18 @@ topics:
     advisory_prerequisites:
       strong: [written-production.troubleshooting-explanation, written-interaction.polite-request]
       soft: [us-tech.past-incident-basics]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [word.hotel, word.booking]
+    contexts: [hotel-message]
+    typical_errors:
+      - "Omitting articles or subjects because Russian can express the idea without them."
+      - "Using Russian word order or a literal calque in a short practical message."
+      - "Choosing a familiar false friend instead of the word that fits the situation."
+    examples:
+      - "The room is cold and the shower does not work."
+      - "Could someone fix the lock, please?"
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: everyday-life.talking-about-the-weekend
     cefr: A2
     track: everyday-life
@@ -1070,6 +1190,18 @@ topics:
     advisory_prerequisites:
       strong: [grammar.past-simple.events, grammar.past-time-sequencing]
       soft: [grammar.past-irregular-basics]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [word.film, word.book]
+    contexts: [friend-message]
+    typical_errors:
+      - "Omitting articles or subjects because Russian can express the idea without them."
+      - "Using Russian word order or a literal calque in a short practical message."
+      - "Choosing a familiar false friend instead of the word that fits the situation."
+    examples:
+      - "On Saturday I visited friends, then I watched a film."
+      - "On Sunday I stayed home because it rained."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: everyday-life.recommending-a-film-or-book
     cefr: A2
     track: everyday-life
@@ -1078,6 +1210,18 @@ topics:
     advisory_prerequisites:
       strong: [written-interaction.suggestion-feedback, grammar.modals.requirements]
       soft: [written-production.option-comparison]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [word.film, word.book]
+    contexts: [friend-message]
+    typical_errors:
+      - "Omitting articles or subjects because Russian can express the idea without them."
+      - "Using Russian word order or a literal calque in a short practical message."
+      - "Choosing a familiar false friend instead of the word that fits the situation."
+    examples:
+      - "I recommend this film because the story is funny."
+      - "This book is easy to read and useful."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: everyday-life.expressing-an-opinion-with-reasons
     cefr: A2
     track: everyday-life
@@ -1086,6 +1230,18 @@ topics:
     advisory_prerequisites:
       strong: [grammar.connectors.cause-contrast]
       soft: [written-interaction.suggestion-feedback, written-interaction.respectful-disagreement]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [word.series, word.episode, word.film]
+    contexts: [friend-message]
+    typical_errors:
+      - "Omitting articles or subjects because Russian can express the idea without them."
+      - "Using Russian word order or a literal calque in a short practical message."
+      - "Choosing a familiar false friend instead of the word that fits the situation."
+    examples:
+      - "I think the podcast is useful because it is short."
+      - "In my opinion, the ending was too sad."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: everyday-life.comparing-leisure-options
     cefr: A2
     track: everyday-life
@@ -1094,6 +1250,18 @@ topics:
     advisory_prerequisites:
       strong: [grammar.comparatives.options, written-production.option-comparison]
       soft: [grammar.superlatives.selection]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [word.film, word.book]
+    contexts: [friend-message]
+    typical_errors:
+      - "Omitting articles or subjects because Russian can express the idea without them."
+      - "Using Russian word order or a literal calque in a short practical message."
+      - "Choosing a familiar false friend instead of the word that fits the situation."
+    examples:
+      - "The concert is more expensive than the cinema."
+      - "I would choose the park because it is quieter."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: everyday-life.describing-a-household-problem
     cefr: A2
     track: everyday-life
