@@ -1270,6 +1270,18 @@ topics:
     advisory_prerequisites:
       strong: [grammar.connectors.cause-contrast, grammar.there-is-are.systems]
       soft: [grammar.passive.basic-process]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [word.leak, word.pipe, word.sink]
+    contexts: [repair-request]
+    typical_errors:
+      - "Omitting articles or subjects because Russian can express the idea without them."
+      - "Using Russian word order or a literal calque in a short practical message."
+      - "Choosing a familiar false friend instead of the word that fits the situation."
+    examples:
+      - "The kitchen sink is leaking."
+      - "The heating stopped, so the room is cold."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: everyday-life.requesting-a-repair
     cefr: A2
     track: everyday-life
@@ -1278,6 +1290,18 @@ topics:
     advisory_prerequisites:
       strong: [everyday-life.describing-a-household-problem, written-interaction.polite-request]
       soft: [grammar.first-conditional.troubleshooting]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [word.repair, word.problem]
+    contexts: [repair-request]
+    typical_errors:
+      - "Omitting articles or subjects because Russian can express the idea without them."
+      - "Using Russian word order or a literal calque in a short practical message."
+      - "Choosing a familiar false friend instead of the word that fits the situation."
+    examples:
+      - "Could you send a plumber, please?"
+      - "The lock needs to be repaired today."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: everyday-life.explaining-an-everyday-incident
     cefr: A2
     track: everyday-life
@@ -1286,6 +1310,18 @@ topics:
     advisory_prerequisites:
       strong: [grammar.past-continuous.incident-context, grammar.when-while.sequence]
       soft: [everyday-life.describing-a-household-problem]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [word.repair, word.problem]
+    contexts: [repair-request]
+    typical_errors:
+      - "Omitting articles or subjects because Russian can express the idea without them."
+      - "Using Russian word order or a literal calque in a short practical message."
+      - "Choosing a familiar false friend instead of the word that fits the situation."
+    examples:
+      - "I was cooking when the power went out."
+      - "First the light stopped, then the alarm sounded."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: everyday-life.agreeing-on-the-next-step
     cefr: A2
     track: everyday-life
@@ -1294,6 +1330,18 @@ topics:
     advisory_prerequisites:
       strong: [written-interaction.follow-up, grammar.future-forms.planning]
       soft: [everyday-life.requesting-a-repair, written-interaction.suggestion-feedback]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [word.repair, word.problem]
+    contexts: [repair-request]
+    typical_errors:
+      - "Omitting articles or subjects because Russian can express the idea without them."
+      - "Using Russian word order or a literal calque in a short practical message."
+      - "Choosing a familiar false friend instead of the word that fits the situation."
+    examples:
+      - "You will call the plumber at ten."
+      - "We agreed that I will send the photos today."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: reading.idioms-in-context
     cefr: A2
     track: reading
@@ -1302,6 +1350,18 @@ topics:
     advisory_prerequisites:
       strong: [reading.common-idioms]
       soft: [grammar.connectors.cause-contrast]
+    dimensions: [recognition, transfer]
+    lexicon: [idiom.all-of-a-sudden, idiom.learn-the-hard-way, idiom.take-it-or-leave-it]
+    contexts: [casual-message]
+    typical_errors:
+      - "Translating every word and missing the main instruction or meaning (пословная калька)."
+      - "Treating a familiar-looking word as its Russian false friend without checking context."
+      - "Ignoring a negation, time marker, or modal that changes the practical message."
+    examples:
+      - "All of a sudden, the screen went black."
+      - "Take it or leave it means there is no better offer."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: reading.stable-slang
     cefr: A2
     track: reading
@@ -1310,6 +1370,18 @@ topics:
     advisory_prerequisites:
       strong: [reading.casual-reactions]
       soft: [everyday-online-informal.tone-recognition]
+    dimensions: [recognition, transfer]
+    lexicon: [slang.cool, slang.broke, slang.bucks]
+    contexts: [casual-message]
+    typical_errors:
+      - "Translating every word and missing the main instruction or meaning (пословная калька)."
+      - "Treating a familiar-looking word as its Russian false friend without checking context."
+      - "Ignoring a negation, time marker, or modal that changes the practical message."
+    examples:
+      - "That movie was cool."
+      - "I'm broke until Friday."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: reading.personal-message
     cefr: A2
     track: reading
@@ -1318,6 +1390,18 @@ topics:
     advisory_prerequisites:
       strong: [reading.main-idea-details]
       soft: [everyday-online-informal.tone-recognition]
+    dimensions: [recognition, transfer]
+    lexicon: [idiom.to-be-honest, informal.thanks-for-the-context, slang.kinda]
+    contexts: [casual-message]
+    typical_errors:
+      - "Translating every word and missing the main instruction or meaning (пословная калька)."
+      - "Treating a familiar-looking word as its Russian false friend without checking context."
+      - "Ignoring a negation, time marker, or modal that changes the practical message."
+    examples:
+      - "Sorry I missed your call; I'll reply tonight."
+      - "To be honest, the room was clean but noisy."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: reading.short-news-item
     cefr: A2
     track: reading
@@ -1326,6 +1410,18 @@ topics:
     advisory_prerequisites:
       strong: [reading.main-idea-details]
       soft: [grammar.past-simple.events]
+    dimensions: [recognition, transfer]
+    lexicon: [word.news, word.status, word.update]
+    contexts: [casual-message]
+    typical_errors:
+      - "Translating every word and missing the main instruction or meaning (пословная калька)."
+      - "Treating a familiar-looking word as its Russian false friend without checking context."
+      - "Ignoring a negation, time marker, or modal that changes the practical message."
+    examples:
+      - "The train line will close on Sunday."
+      - "The notice says the park reopens next week."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: written-production.paraphrase-expression
     cefr: A2
     track: written-production-mediation
@@ -1334,6 +1430,18 @@ topics:
     advisory_prerequisites:
       strong: [reading.common-idioms, written-production.paraphrase-summary]
       soft: [reading.idioms-in-context]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [phrasal-verb.figure-out, idiom.step-by-step, idiom.word-for-word]
+    contexts: [casual-message]
+    typical_errors:
+      - "Copying Russian word order into a multi-sentence update or summary."
+      - "Mixing a fact and an inference without a marker such as I think or may."
+      - "Using a false friend or literal translation that changes the intended meaning."
+    examples:
+      - "Figure out means find the answer or understand."
+      - "Step by step means one stage at a time."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: word-formation.opposite-mis-dis
     cefr: A2
     track: word-formation
@@ -1342,6 +1450,18 @@ topics:
     advisory_prerequisites:
       strong: [word-formation.negation-un]
       soft: [word-formation.repeat-re]
+    dimensions: [recognition, transfer]
+    lexicon: [word.restart, word.deployed]
+    contexts: [documentation-reading]
+    typical_errors:
+      - "Assuming every base plus affix is a real English word (ложная продуктивность)."
+      - "Reading the affix as a separate Russian word and missing its change of meaning."
+      - "Confusing the word class after a suffix, for example a person with an action."
+    examples:
+      - "I misread the date in the email."
+      - "Please disconnect the old device."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: word-formation.degree-over-under
     cefr: A2
     track: word-formation
@@ -1349,6 +1469,18 @@ topics:
     can_do: "Recognize that over- means too much and under- too little (overload, underestimate) and infer the meaning."
     advisory_prerequisites:
       strong: [word-formation.negation-un]
+    dimensions: [recognition, transfer]
+    lexicon: [word.restart, word.deployed]
+    contexts: [documentation-reading]
+    typical_errors:
+      - "Assuming every base plus affix is a real English word (ложная продуктивность)."
+      - "Reading the affix as a separate Russian word and missing its change of meaning."
+      - "Confusing the word class after a suffix, for example a person with an action."
+    examples:
+      - "The server is overloaded today."
+      - "This estimate may underestimate the cost."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: word-formation.agent-and-noun-suffix
     cefr: A2
     track: word-formation
@@ -1356,3 +1488,15 @@ topics:
     can_do: "Recognize that -er names a doer and -tion/-ment makes a noun from a verb (deploy, deployment), and tell the word class."
     advisory_prerequisites:
       soft: [grammar.nouns-singular-plural]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [word.restart, word.deployed]
+    contexts: [documentation-reading]
+    typical_errors:
+      - "Assuming every base plus affix is a real English word (ложная продуктивность)."
+      - "Reading the affix as a separate Russian word and missing its change of meaning."
+      - "Confusing the word class after a suffix, for example a person with an action."
+    examples:
+      - "A tester checks the product."
+      - "Deployment happens after testing."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
