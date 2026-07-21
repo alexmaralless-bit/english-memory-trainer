@@ -76,15 +76,23 @@ class JsonlExporter:
         at-least-once file effect). Lines are in ``sequence`` order, so the tail
         beyond ``applied_sequence`` is exactly the un-acknowledged remainder.
 
-        Rewrites the file only when there is a tail to trim; the common path (a
-        fully-acknowledged file) leaves it untouched, avoiding a needless
-        truncate-and-write on every delivery."""
+        A crash can interrupt the file *mid-write*, leaving a truncated,
+        unparseable final line; such a line is by construction part of the
+        un-acknowledged tail (acknowledged lines were fully written and fsynced
+        before their offset committed), so parsing failures end the kept prefix
+        rather than crashing recovery. Rewrites the file only when there is a
+        tail to trim; the common path (a fully-acknowledged file) leaves it
+        untouched."""
         if not self._path.exists():
             return
         lines = [raw for raw in self._path.read_text(encoding="ascii").splitlines() if raw.strip()]
         kept: list[str] = []
         for raw in lines:
-            if int(json.loads(raw)["sequence"]) <= applied_sequence:
+            try:
+                sequence = int(json.loads(raw)["sequence"])
+            except (ValueError, KeyError, TypeError):
+                break  # a torn or foreign line starts the un-acknowledged tail
+            if sequence <= applied_sequence:
                 kept.append(raw)
             else:
                 break
@@ -122,8 +130,10 @@ def rebuild_export(store: EventStore, exporter: JsonlExporter, clock: Clock) -> 
     last = events[-1].sequence if events else 0
     assert last is not None
     conn = store._conn
-    conn.execute("BEGIN;")
     try:
+        # BEGIN inside the try: an async BaseException right after it must still
+        # hit the rollback, never leave the transaction open.
+        conn.execute("BEGIN;")
         OffsetStore(conn).set(exporter.name, last, clock.now().isoformat())
         conn.execute("COMMIT;")
     except BaseException:

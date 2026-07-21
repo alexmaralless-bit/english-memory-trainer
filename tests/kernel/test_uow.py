@@ -5,11 +5,10 @@ open block, and never carries pending outbox state between transactions
 from __future__ import annotations
 
 import contextlib
-from datetime import datetime
 
 import pytest
 
-from english_trainer.kernel.clock import Clock, FixedClock, SeededRandomSource
+from english_trainer.kernel.clock import FixedClock, SeededRandomSource
 from english_trainer.kernel.envelopes import make_event
 from english_trainer.kernel.errors import KernelError
 from english_trainer.kernel.ids import new_ulid
@@ -28,21 +27,6 @@ def _event(clock: FixedClock, rnd: SeededRandomSource):
     )
 
 
-class _ArmableClock:
-    """A clock that raises a chosen exception from ``now()`` once armed -- used to
-    force a failure inside the commit path."""
-
-    def __init__(self, base: Clock, error: BaseException) -> None:
-        self._base = base
-        self._error = error
-        self.armed = False
-
-    def now(self) -> datetime:
-        if self.armed:
-            raise self._error
-        return self._base.now()
-
-
 class _BeginThenSignalConn:
     """Wraps a real connection; the first BEGIN really opens the transaction and
     then raises -- like an async signal (KeyboardInterrupt) arriving the instant
@@ -58,6 +42,48 @@ class _BeginThenSignalConn:
             if self._begins == 1:
                 self._real.execute(sql, *args)  # the transaction really opens...
                 raise KeyboardInterrupt("signal right after BEGIN")  # ...then the signal hits
+        return self._real.execute(sql, *args)
+
+    @property
+    def in_transaction(self):
+        return self._real.in_transaction
+
+
+class _SignalOnCommitConn:
+    """Wraps a real connection; COMMIT raises a BaseException instead of running
+    -- the transaction stays open and the UoW must close it. Everything else
+    passes straight through."""
+
+    def __init__(self, real) -> None:
+        self._real = real
+
+    def execute(self, sql, *args):
+        if sql.strip().upper().startswith("COMMIT"):
+            raise KeyboardInterrupt("signal during commit")
+        return self._real.execute(sql, *args)
+
+    @property
+    def in_transaction(self):
+        return self._real.in_transaction
+
+
+class _RollbackFailsConn:
+    """Wraps a real connection; ROLLBACK itself raises (a genuinely broken
+    connection). Used to prove the claim is still released."""
+
+    def __init__(self, real) -> None:
+        self._real = real
+        self._begins = 0
+
+    def execute(self, sql, *args):
+        upper = sql.strip().upper()
+        if upper.startswith("BEGIN"):
+            self._begins += 1
+            if self._begins == 1:
+                self._real.execute(sql, *args)
+                raise KeyboardInterrupt("signal right after BEGIN")
+        if upper.startswith("ROLLBACK"):
+            raise RuntimeError("rollback failed")
         return self._real.execute(sql, *args)
 
     @property
@@ -151,13 +177,37 @@ def test_partial_begin_does_not_leak_an_open_transaction(store: EventStore, cloc
 def test_base_exception_in_commit_path_rolls_back(store: EventStore, clock, random_source) -> None:
     # KeyboardInterrupt (a BaseException) raised while committing must still roll
     # back and leave no open transaction -- "any failure" means any.
-    boom = _ArmableClock(clock, KeyboardInterrupt("boom"))
-    with pytest.raises(KeyboardInterrupt), UnitOfWork(store, boom) as uow:
-        uow.append([_event(clock, random_source)])
-        boom.armed = True  # the commit path will call now() and explode
+    real = store._conn
+    store._conn = _SignalOnCommitConn(real)  # type: ignore[assignment]
+    try:
+        with pytest.raises(KeyboardInterrupt), UnitOfWork(store, clock) as uow:
+            uow.append([_event(clock, random_source)])
+    finally:
+        store._conn = real
     assert store.count() == 0
-    assert not store._conn.in_transaction  # transaction was rolled back, not left open
+    assert not real.in_transaction  # transaction was rolled back, not left open
     # The store is released, so a fresh UoW can still claim and commit.
+    with UnitOfWork(store, clock) as uow:
+        uow.append([_event(clock, random_source)])
+    assert store.count() == 1
+
+
+def test_failed_rollback_in_enter_still_releases_the_claim(store: EventStore, clock, random_source) -> None:
+    # Worst case: BEGIN opens the transaction, the signal hits, and the recovery
+    # ROLLBACK itself fails. The connection is genuinely broken -- but the claim
+    # must still be released, so the store is not owner-locked forever.
+    real = store._conn
+    store._conn = _RollbackFailsConn(real)  # type: ignore[assignment]
+    failed = UnitOfWork(store, clock)
+    with pytest.raises(RuntimeError, match="rollback failed"):
+        failed.__enter__()
+    assert store._txn_owner_digest is None  # claim released despite the failed rollback
+
+    # Clean the connection up out-of-band (the UoW could not) and prove a fresh
+    # UoW can claim and work.
+    store._conn = real
+    if real.in_transaction:
+        real.execute("ROLLBACK;")
     with UnitOfWork(store, clock) as uow:
         uow.append([_event(clock, random_source)])
     assert store.count() == 1

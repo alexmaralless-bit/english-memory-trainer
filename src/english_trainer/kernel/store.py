@@ -7,13 +7,15 @@ contract asks for -- WAL, foreign keys on, a forward-only migrator, no ORM.
 
 Determinism lives in the schema: ``events.sequence`` is a monotonic integer that
 gives the canonical total order, and updates and deletes are refused by triggers
-so the log can only grow. The JSONL derived export and outbox *delivery* are a
-later increment; this store establishes the atomic write and the sequence.
+so the log can only grow. Every event is written together with its outbox row --
+that pairing is enforced here, in ``_append``, so no caller can separate them.
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
+import secrets
 import sqlite3
 from collections.abc import Iterator, Sequence
 from pathlib import Path
@@ -22,7 +24,7 @@ from english_trainer.kernel.encoding import canonical_and_hash, canonical_json
 from english_trainer.kernel.envelopes import DomainEvent
 from english_trainer.kernel.errors import AppendOnlyViolation, KernelError
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 
 # Forward-only migrations: (version, ordered statements). Applied once each,
 # individually, inside one transaction -- SQLite DDL is transactional, but
@@ -133,6 +135,63 @@ _MIGRATIONS: tuple[tuple[int, tuple[str, ...]], ...] = (
             """,
         ),
     ),
+    (
+        4,
+        (
+            # Policy integrity at the storage layer (review 1.2-4). The API checks
+            # are polite errors; these triggers are the guarantee -- a direct SQL
+            # UPDATE must not be able to break a pinned resolve or the lifecycle.
+            #
+            # Identity is immutable: renaming (kind, version_id) would orphan pins.
+            "CREATE TRIGGER policies_identity_immutable "
+            "BEFORE UPDATE OF kind, version_id, created_at ON policies "
+            "BEGIN SELECT RAISE(ABORT, 'policy identity is immutable'); END",
+            # Status domain is closed, on insert and update alike.
+            "CREATE TRIGGER policies_status_valid_insert BEFORE INSERT ON policies "
+            "WHEN NEW.status NOT IN ('registered','deprecated','retired') "
+            "BEGIN SELECT RAISE(ABORT, 'invalid policy status'); END",
+            "CREATE TRIGGER policies_status_valid_update BEFORE UPDATE OF status ON policies "
+            "WHEN NEW.status NOT IN ('registered','deprecated','retired') "
+            "BEGIN SELECT RAISE(ABORT, 'invalid policy status'); END",
+            # Transitions are one-way: retired is terminal, deprecated cannot
+            # return to registered.
+            "CREATE TRIGGER policies_retired_terminal BEFORE UPDATE OF status ON policies "
+            "WHEN OLD.status = 'retired' AND NEW.status <> 'retired' "
+            "BEGIN SELECT RAISE(ABORT, 'retired policy status is terminal'); END",
+            "CREATE TRIGGER policies_status_one_way BEFORE UPDATE OF status ON policies "
+            "WHEN OLD.status = 'deprecated' AND NEW.status = 'registered' "
+            "BEGIN SELECT RAISE(ABORT, 'policy status transitions are one-way'); END",
+            # Recreate policy_active with a foreign key so the pointer cannot name
+            # a version that does not exist (SQLite cannot add an FK in place).
+            # This must happen BEFORE any trigger that references policy_active:
+            # ALTER TABLE RENAME rewrites such references to the renamed table.
+            "ALTER TABLE policy_active RENAME TO policy_active_v3",
+            """
+            CREATE TABLE policy_active (
+                kind         TEXT PRIMARY KEY,
+                version_id   TEXT NOT NULL,
+                activated_at TEXT NOT NULL,
+                FOREIGN KEY (kind, version_id) REFERENCES policies (kind, version_id)
+            )
+            """,
+            "INSERT INTO policy_active SELECT kind, version_id, activated_at FROM policy_active_v3",
+            "DROP TABLE policy_active_v3",
+            # The active version can never be retired: each statement is atomic in
+            # SQLite, so this closes the activate-vs-retire race at the database.
+            "CREATE TRIGGER policies_retire_not_active BEFORE UPDATE OF status ON policies "
+            "WHEN NEW.status = 'retired' AND EXISTS "
+            "(SELECT 1 FROM policy_active a WHERE a.kind = NEW.kind AND a.version_id = NEW.version_id) "
+            "BEGIN SELECT RAISE(ABORT, 'cannot retire the active policy'); END",
+            # ...and the pointer can never land on a retired version, whichever
+            # side moves last.
+            "CREATE TRIGGER policy_active_not_retired_insert BEFORE INSERT ON policy_active "
+            "WHEN (SELECT status FROM policies p WHERE p.kind = NEW.kind AND p.version_id = NEW.version_id) "
+            "= 'retired' BEGIN SELECT RAISE(ABORT, 'cannot activate retired policy'); END",
+            "CREATE TRIGGER policy_active_not_retired_update BEFORE UPDATE ON policy_active "
+            "WHEN (SELECT status FROM policies p WHERE p.kind = NEW.kind AND p.version_id = NEW.version_id) "
+            "= 'retired' BEGIN SELECT RAISE(ABORT, 'cannot activate retired policy'); END",
+        ),
+    ),
 )
 
 
@@ -169,49 +228,70 @@ def migrate(conn: sqlite3.Connection) -> None:
 class EventStore:
     """Append-only reads and writes over the ``events`` table.
 
-    There is **no public append**. Writing goes through
-    :class:`~english_trainer.kernel.uow.UnitOfWork`, which claims the store with an
-    opaque capability and calls the internal ``_append`` with it. Presenting that
-    exact capability is the only way to write, so no code -- not even code running
-    inside a legitimate UoW -- can smuggle an event past the UoW's outbox and
-    idempotency bookkeeping (foundation 2.1/3.7).
+    The core integrity invariant is **structural**: ``_append`` inserts every
+    event together with its outbox row, in the same statements of the same
+    transaction. There is no code path -- UnitOfWork, forged claim, stolen
+    credential, hand-rolled BEGIN -- that can write an event without its outbox
+    row, because the store itself refuses to separate them (foundation 2.1/3.7).
+
+    On top of that, writes are capability-gated: ``_claim`` mints an opaque token
+    and hands it to the owning UnitOfWork; the store retains only a one-way
+    digest, so nothing readable from the store's state is an appendable
+    credential. The gate protects the UoW's transactional protocol (idempotency
+    bookkeeping, commit discipline); the event+outbox atomicity above does not
+    depend on it.
     """
 
     def __init__(self, conn: sqlite3.Connection) -> None:
         self._conn = conn
-        # The capability the active UnitOfWork holds, or ``None``. Identity of
-        # this object -- not merely its presence -- authorizes a write.
-        self._txn_owner: object | None = None
+        # sha256 of the active UnitOfWork's token, or None. A digest, not the
+        # token: reading this attribute yields nothing _append would accept.
+        self._txn_owner_digest: str | None = None
 
-    def _claim(self, token: object) -> None:
-        """Make ``token`` the active write capability. Refuses to nest."""
-        if self._txn_owner is not None:
+    @staticmethod
+    def _digest(token: str) -> str:
+        return hashlib.sha256(token.encode("ascii")).hexdigest()
+
+    def _claim(self) -> str:
+        """Mint and return the write capability for one UnitOfWork transaction.
+
+        Refuses to nest and refuses a connection that is already mid-transaction
+        (a hand-rolled BEGIN cannot then acquire a capability at all). The token
+        is transient and never persisted, so its randomness cannot influence any
+        replayed state (foundation 3.2 concerns reproducible *state*, and none is
+        derived from this value).
+        """
+        if self._txn_owner_digest is not None:
             raise KernelError("event store already has an active transaction owner")
-        self._txn_owner = token
+        if self._conn.in_transaction:
+            raise KernelError("cannot claim the event store inside an already-open transaction")
+        token = secrets.token_hex(16)
+        self._txn_owner_digest = self._digest(token)
+        return token
 
-    def _release(self, token: object) -> None:
+    def _release(self, token: str | None) -> None:
         """Drop the claim if ``token`` holds it (idempotent, safe in ``finally``)."""
-        if self._txn_owner is token:
-            self._txn_owner = None
+        if token is None or self._txn_owner_digest is None:
+            return
+        if self._digest(token) == self._txn_owner_digest:
+            self._txn_owner_digest = None
 
-    def _append(self, events: Sequence[DomainEvent], token: object) -> list[DomainEvent]:
-        """Append events in order, assigning a monotonic ``sequence`` to each.
+    def _append(self, events: Sequence[DomainEvent], token: str | None, now: str) -> list[DomainEvent]:
+        """Append events in order -- each with its outbox row -- assigning a
+        monotonic ``sequence``.
 
-        Internal: only the owning UnitOfWork may call this, and only by presenting
-        the exact capability it claimed the store with, from inside its open
-        transaction. Both are required -- a matching token but no transaction, or a
-        transaction but no/other token, is refused. Being inside *some* transaction
-        or holding *some* owner is not enough (foundation 2.1).
+        Internal: requires the active UnitOfWork's token (verified against the
+        stored digest) AND an open transaction; either alone is refused. ``now``
+        stamps the outbox rows (injected clock, never the system clock).
 
         Each payload is serialized to its canonical bytes and hashed **once**;
-        those exact bytes are what gets stored, that exact hash is what is checked
-        against the envelope's ``payload_hash``, and the returned event's payload
-        is rebuilt from those bytes (never from the caller's possibly-mutated
-        object). The whole batch is prepared before any row is inserted, so a
-        payload mutated after construction is rejected (stale hash) and a bad event
-        cannot leave an earlier one half-inserted (foundation 3.3).
+        those exact bytes are stored, that exact hash is checked against the
+        envelope's ``payload_hash``, and the returned event's ``payload`` and
+        ``pinned_versions`` are rebuilt from the stored snapshots (never from the
+        caller's possibly-mutated objects). The whole batch is validated before
+        any row is inserted (foundation 3.3).
         """
-        if token is None or token is not self._txn_owner:
+        if token is None or self._txn_owner_digest is None or self._digest(token) != self._txn_owner_digest:
             raise KernelError("EventStore append requires the active UnitOfWork's write capability")
         if not self._conn.in_transaction:
             raise KernelError("EventStore append requires the UnitOfWork's open transaction")
@@ -248,9 +328,22 @@ class EventStore:
                     event.payload_hash,
                 ),
             )
-            snapshot_payload = json.loads(payload_text)  # the exact stored bytes, not the input object
+            sequence = int(cursor.lastrowid or 0)
+            # The outbox row rides in the same transaction, inseparably: no append
+            # path can produce an event without one (foundation 2.1/3.7).
+            self._conn.execute(
+                "INSERT INTO outbox (message_id, sequence, topic, created_at) VALUES (?,?,?,?);",
+                (f"{event.id}:{event.type}", sequence, event.type, now),
+            )
             stored.append(
-                event.model_copy(update={"sequence": int(cursor.lastrowid or 0), "payload": snapshot_payload})
+                event.model_copy(
+                    update={
+                        "sequence": sequence,
+                        # Rebuilt from the stored snapshots, not the caller's objects.
+                        "payload": json.loads(payload_text),
+                        "pinned_versions": json.loads(pinned_text),
+                    }
+                )
             )
         return stored
 
@@ -285,11 +378,29 @@ class EventStore:
     def read_since(self, after_sequence: int) -> Iterator[DomainEvent]:
         """Yield events with ``sequence`` greater than ``after_sequence``, in order.
 
-        The delivery tail for a consumer sitting at ``after_sequence`` (its
-        high-water mark). ``after_sequence == 0`` yields the whole log.
+        The replay tail. ``after_sequence == 0`` yields the whole log. Delivery
+        must use :meth:`read_outboxed_since` instead -- the transactional-outbox
+        boundary is the outbox, not the event table (foundation 3.7).
         """
         rows = self._conn.execute(
             f"{self._SELECT_COLUMNS} WHERE sequence > ? ORDER BY sequence ASC;",
+            (after_sequence,),
+        )
+        for row in rows:
+            yield self._row_to_event(row)
+
+    def read_outboxed_since(self, after_sequence: int) -> Iterator[DomainEvent]:
+        """Yield events past ``after_sequence`` that have an outbox row, in order.
+
+        The delivery tail (foundation 3.7): consumers receive exactly what was
+        enqueued through the transactional outbox, never a bare event row.
+        """
+        rows = self._conn.execute(
+            "SELECT e.sequence, e.id, e.type, e.occurred_at, e.actor, e.provider, "
+            "e.correlation_id, e.causation_id, e.idempotency_key, e.pinned_versions, "
+            "e.payload, e.payload_hash FROM events e "
+            "JOIN outbox o ON o.sequence = e.sequence "
+            "WHERE e.sequence > ? ORDER BY e.sequence ASC;",
             (after_sequence,),
         )
         for row in rows:
@@ -304,37 +415,33 @@ class EventStore:
         (foundation 3.3).
 
         A name check is not enough -- a database could carry same-named triggers
-        that do nothing -- so this is a **runtime** proof. When the log already has
-        rows, a whole-table UPDATE and DELETE must abort (the trigger fires before
-        any change, so nothing is modified). When it is empty, row triggers cannot
-        fire, so a throwaway row is inserted inside a SAVEPOINT, proven un-editable
-        and un-deletable, then rolled back; the empty table guarantees the probe id
-        cannot collide with a real event.
+        that do nothing -- so this is a **runtime** proof, and the whole probe runs
+        inside a SAVEPOINT that is always rolled back. That rollback is what makes
+        the probe safe even against a *broken* database: if a no-op trigger let the
+        UPDATE or DELETE through, the damage is confined to the savepoint and
+        undone before the violation is reported. On an empty log (where row
+        triggers cannot fire) a throwaway row is inserted first; the empty table
+        guarantees its id cannot collide with a real event.
         """
-        if self.count() == 0:
-            self._conn.execute("SAVEPOINT append_only_probe;")
-            try:
+        self._conn.execute("SAVEPOINT append_only_probe;")
+        try:
+            if self.count() == 0:
                 self._conn.execute(
                     "INSERT INTO events "
                     "(id, type, occurred_at, actor, correlation_id, pinned_versions, payload, payload_hash) "
                     "VALUES ('__probe__','__probe__','1970-01-01T00:00:00+00:00','__probe__',"
                     "'__probe__','{}','{}','probe');"
                 )
-                self._assert_update_delete_abort()
-            finally:
-                self._conn.execute("ROLLBACK TO append_only_probe;")
-                self._conn.execute("RELEASE append_only_probe;")
-        else:
-            self._assert_update_delete_abort()
-
-    def _assert_update_delete_abort(self) -> None:
-        for statement in ("UPDATE events SET type = type;", "DELETE FROM events;"):
-            aborted = False
-            try:
-                self._conn.execute(statement)
-            except (sqlite3.IntegrityError, sqlite3.OperationalError) as exc:
-                if "append-only" not in str(exc):
-                    raise
-                aborted = True
-            if not aborted:
-                raise AppendOnlyViolation(f"append-only not enforced for: {statement}")
+            for statement in ("UPDATE events SET type = type;", "DELETE FROM events;"):
+                aborted = False
+                try:
+                    self._conn.execute(statement)
+                except (sqlite3.IntegrityError, sqlite3.OperationalError) as exc:
+                    if "append-only" not in str(exc):
+                        raise
+                    aborted = True
+                if not aborted:
+                    raise AppendOnlyViolation(f"append-only not enforced for: {statement}")
+        finally:
+            self._conn.execute("ROLLBACK TO append_only_probe;")
+            self._conn.execute("RELEASE append_only_probe;")

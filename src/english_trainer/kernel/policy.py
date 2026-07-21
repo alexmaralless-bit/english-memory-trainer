@@ -106,19 +106,25 @@ class PolicyRegistry:
         """Point ``kind``'s active version at ``version_id``.
 
         The version must exist and not be retired. Not retroactive: existing pins
-        keep resolving to whatever they pinned (foundation 3.6).
+        keep resolving to whatever they pinned (foundation 3.6). The API check
+        gives the polite error; the ``policy_active_not_retired_*`` triggers are
+        the guarantee -- each statement is atomic, so an activate racing a retire
+        cannot leave the pointer on a retired version.
         """
         row = self._row(kind, version_id)
         if row is None:
             raise PinnedPolicyUnavailable(f"cannot activate unknown policy {kind}:{version_id}")
         if row["status"] == "retired":
             raise KernelError(f"cannot activate retired policy {kind}:{version_id}")
-        self._conn.execute(
-            "INSERT INTO policy_active (kind, version_id, activated_at) VALUES (?,?,?) "
-            "ON CONFLICT(kind) DO UPDATE SET version_id = excluded.version_id, "
-            "activated_at = excluded.activated_at;",
-            (kind, version_id, self._clock.now().isoformat()),
-        )
+        try:
+            self._conn.execute(
+                "INSERT INTO policy_active (kind, version_id, activated_at) VALUES (?,?,?) "
+                "ON CONFLICT(kind) DO UPDATE SET version_id = excluded.version_id, "
+                "activated_at = excluded.activated_at;",
+                (kind, version_id, self._clock.now().isoformat()),
+            )
+        except sqlite3.IntegrityError as exc:
+            raise KernelError(f"cannot activate policy {kind}:{version_id}: {exc}") from exc
 
     def active_version(self, kind: str) -> str:
         row = self._conn.execute("SELECT version_id FROM policy_active WHERE kind = ?;", (kind,)).fetchone()
@@ -138,11 +144,17 @@ class PolicyRegistry:
         activatable). Content and the row are retained either way, so a pin to
         this version still resolves (foundation 3.6).
 
-        Retiring the currently-active version is refused: activate a replacement
-        first, so ``active`` is never a retired version.
+        Transitions are one-way: ``retired`` is terminal -- a retired version can
+        never come back as deprecated (and thus never be re-activated). Retiring
+        the currently-active version is refused: activate a replacement first.
+        Both rules are also enforced by triggers, so a direct SQL update or an
+        interleaved activate cannot slip past the API checks.
         """
-        if self._row(kind, version_id) is None:
+        row = self._row(kind, version_id)
+        if row is None:
             raise PinnedPolicyUnavailable(f"cannot deprecate unknown policy {kind}:{version_id}")
+        if row["status"] == "retired":
+            raise KernelError(f"policy {kind}:{version_id} is retired; retired is terminal")
         if retire:
             active = self._conn.execute(
                 "SELECT version_id FROM policy_active WHERE kind = ?;", (kind,)
@@ -151,10 +163,13 @@ class PolicyRegistry:
                 raise KernelError(
                     f"cannot retire the active policy {kind}:{version_id}; activate a replacement first"
                 )
-        self._conn.execute(
-            "UPDATE policies SET status = ? WHERE kind = ? AND version_id = ?;",
-            ("retired" if retire else "deprecated", kind, version_id),
-        )
+        try:
+            self._conn.execute(
+                "UPDATE policies SET status = ? WHERE kind = ? AND version_id = ?;",
+                ("retired" if retire else "deprecated", kind, version_id),
+            )
+        except sqlite3.IntegrityError as exc:
+            raise KernelError(f"cannot change status of {kind}:{version_id}: {exc}") from exc
 
     # -- internals -----------------------------------------------------------
 

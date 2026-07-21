@@ -108,3 +108,51 @@ def test_offset_never_rewinds(store, clock) -> None:
     offsets.advance("x", 5, now)
     offsets.advance("x", 3, now)  # lower sequence must be ignored
     assert offsets.get("x") == 5
+
+
+def test_delivery_reads_from_the_outbox_not_the_event_table(store, clock, random_source) -> None:
+    # The transactional-outbox boundary is the outbox: an event whose outbox row
+    # is gone is not delivered (foundation 3.7).
+    _append(store, clock, random_source, 2)
+    store._conn.execute("DELETE FROM outbox WHERE sequence = 2;")
+    consumer = ListConsumer()
+    assert deliver(store, consumer, clock) == 1
+    assert consumer.seen == [1]
+
+
+def test_offset_recheck_inside_the_transaction_prevents_double_apply(store, clock, random_source) -> None:
+    # Simulate a competing deliverer finishing first: the consumer bumps the
+    # offset to the end while applying event 1. The remaining materialized tail
+    # must be skipped -- the offset is re-read inside each event's transaction,
+    # not trusted from the stale snapshot taken before delivery began.
+    _append(store, clock, random_source, 4)
+
+    class RacingConsumer(ListConsumer):
+        def apply(self, event) -> None:
+            super().apply(event)
+            OffsetStore(store._conn).set(self.name, 4, "t")  # a rival caught up
+
+    racing = RacingConsumer()
+    assert deliver(store, racing, clock) == 1
+    assert racing.seen == [1]  # 2..4 skipped: already applied per the fresh offset
+
+
+def test_base_exception_during_delivery_rolls_back(store, clock, random_source) -> None:
+    # KeyboardInterrupt mid-delivery must not leave an open transaction, and the
+    # committed prefix must survive so delivery is resumable.
+    _append(store, clock, random_source, 3)
+
+    class Boom(ListConsumer):
+        def apply(self, event) -> None:
+            if event.sequence == 2:
+                raise KeyboardInterrupt("signal mid-delivery")
+            super().apply(event)
+
+    boom = Boom()
+    with pytest.raises(KeyboardInterrupt):
+        deliver(store, boom, clock)
+    assert not store._conn.in_transaction
+    assert OffsetStore(store._conn).get("proj") == 1  # event 1 committed, 2 rolled back
+    resumed = ListConsumer("proj")
+    assert deliver(store, resumed, clock) == 2
+    assert resumed.seen == [2, 3]

@@ -129,3 +129,69 @@ def test_deprecated_version_is_still_usable(store, clock) -> None:
     assert reg.resolve_pinned("scoring", "v1") == {"a": 1}
     reg.activate("scoring", "v1")  # still activatable
     assert reg.active_version("scoring") == "v1"
+
+
+def test_identity_is_immutable_at_the_storage_layer(store, clock) -> None:
+    # Renaming (kind, version_id) would orphan every pin to it: refused by
+    # trigger, not just absent from the API.
+    reg = _registry(store, clock)
+    reg.register("scoring", "v1", {"a": 1})
+    with pytest.raises(sqlite3.IntegrityError, match="identity"):
+        store._conn.execute("UPDATE policies SET version_id = 'v9' WHERE version_id = 'v1';")
+    assert reg.resolve_pinned("scoring", "v1") == {"a": 1}
+
+
+def test_invalid_status_is_refused_at_the_storage_layer(store, clock) -> None:
+    reg = _registry(store, clock)
+    reg.register("scoring", "v1", {"a": 1})
+    with pytest.raises(sqlite3.IntegrityError, match="invalid policy status"):
+        store._conn.execute("UPDATE policies SET status = 'nonsense' WHERE version_id = 'v1';")
+
+
+def test_retired_is_terminal_via_api_and_sql(store, clock) -> None:
+    reg = _registry(store, clock)
+    reg.register("scoring", "v1", {"a": 1})
+    reg.register("scoring", "v2", {"a": 2})
+    reg.activate("scoring", "v2")
+    reg.deprecate("scoring", "v1", retire=True)
+    # API: un-retiring (even to deprecated) is refused -- else a retired version
+    # could be laundered back into an activatable state.
+    with pytest.raises(KernelError, match="terminal"):
+        reg.deprecate("scoring", "v1")
+    # SQL: the trigger enforces the same.
+    with pytest.raises(sqlite3.IntegrityError, match="terminal"):
+        store._conn.execute("UPDATE policies SET status = 'deprecated' WHERE version_id = 'v1';")
+    with pytest.raises(KernelError):
+        reg.activate("scoring", "v1")
+
+
+def test_retire_of_active_is_refused_at_the_storage_layer(store, clock) -> None:
+    # The activate-vs-retire race: whichever statement runs second is refused by
+    # a trigger, so the pointer can never rest on a retired version.
+    reg = _registry(store, clock)
+    reg.register("scoring", "v1", {"a": 1})
+    reg.activate("scoring", "v1")
+    with pytest.raises(sqlite3.IntegrityError, match="active"):
+        store._conn.execute("UPDATE policies SET status = 'retired' WHERE version_id = 'v1';")
+    assert reg.status("scoring", "v1") == "registered"
+
+
+def test_activating_retired_is_refused_at_the_storage_layer(store, clock) -> None:
+    reg = _registry(store, clock)
+    reg.register("scoring", "v1", {"a": 1})
+    reg.register("scoring", "v2", {"a": 2})
+    reg.activate("scoring", "v2")
+    reg.deprecate("scoring", "v1", retire=True)
+    with pytest.raises(sqlite3.IntegrityError, match="retired"):
+        store._conn.execute("UPDATE policy_active SET version_id = 'v1' WHERE kind = 'scoring';")
+    assert reg.active_version("scoring") == "v2"
+
+
+def test_active_pointer_cannot_name_an_unknown_version(store, clock) -> None:
+    # The foreign key: a direct write cannot point active at a version that does
+    # not exist in the registry.
+    reg = _registry(store, clock)
+    reg.register("scoring", "v1", {"a": 1})
+    reg.activate("scoring", "v1")
+    with pytest.raises(sqlite3.IntegrityError):
+        store._conn.execute("UPDATE policy_active SET version_id = 'ghost' WHERE kind = 'scoring';")

@@ -83,3 +83,20 @@ def test_rebuild_of_empty_log_is_empty_file(store, clock, tmp_path: Path) -> Non
     exporter = JsonlExporter(path)
     rebuild_export(store, exporter, clock)
     assert path.read_text(encoding="ascii") == ""
+
+
+def test_reconcile_truncates_a_torn_partial_line(store, clock, random_source, tmp_path: Path) -> None:
+    # A crash mid-write leaves a truncated, unparseable final line. It is by
+    # construction un-acknowledged (acknowledged lines were fully written before
+    # their offset committed), so recovery trims it instead of crashing.
+    path = tmp_path / "e.jsonl"
+    exporter = JsonlExporter(path)
+    _append(store, clock, random_source, 2)
+    export_pending(store, exporter, clock)  # acknowledged up to 2
+
+    with path.open("a", encoding="ascii") as handle:
+        handle.write('{"sequence":3')  # torn write: no closing brace, no newline
+
+    _append(store, clock, random_source, 1, start=2)  # the real event 3
+    assert export_pending(store, exporter, clock) == 1  # reconciled, then delivered once
+    assert [record["sequence"] for record in exporter.records()] == [1, 2, 3]

@@ -84,3 +84,48 @@ def test_missing_required_table_is_error(store, clock, tmp_path: Path) -> None:
     report = database_check(store, JsonlExporter(tmp_path / "e.jsonl"))
     assert not report.ok
     assert any("missing tables" in error for error in report.errors)
+
+
+def test_missing_offsets_table_is_reported_not_raised(store, clock, random_source, tmp_path: Path) -> None:
+    # A check must report a broken schema, never crash on it -- even when the
+    # missing table is one the check itself queries.
+    _append(store, clock, random_source, 1)
+    store._conn.execute("DROP TABLE consumer_offsets;")
+    report = database_check(store, JsonlExporter(tmp_path / "e.jsonl"))
+    assert not report.ok
+    assert any("missing tables" in error for error in report.errors)
+
+
+def test_acknowledged_envelope_tamper_is_divergence(store, clock, random_source, tmp_path: Path) -> None:
+    # Divergence is judged on the full envelope, not just sequence + hash: a
+    # tampered actor in an acknowledged line must fail the check.
+    path = tmp_path / "e.jsonl"
+    exporter = JsonlExporter(path)
+    _append(store, clock, random_source, 2)
+    export_pending(store, exporter, clock)
+
+    records = exporter.records()
+    records[0]["actor"] = "impostor"
+    path.write_text(
+        "\n".join(canonical_json(record).decode("ascii") for record in records) + "\n",
+        encoding="ascii",
+    )
+
+    report = database_check(store, exporter)
+    assert not report.ok
+    assert any("diverges" in error for error in report.errors)
+
+
+def test_unreadable_export_is_error_not_crash(store, clock, random_source, tmp_path: Path) -> None:
+    # A torn line inside the acknowledged region makes the file unreadable; the
+    # check reports it as an error instead of raising.
+    path = tmp_path / "e.jsonl"
+    exporter = JsonlExporter(path)
+    _append(store, clock, random_source, 2)
+    export_pending(store, exporter, clock)
+    with path.open("a", encoding="ascii") as handle:
+        handle.write("not json at all\n")
+
+    report = database_check(store, exporter)
+    assert not report.ok
+    assert any("unreadable" in error for error in report.errors)

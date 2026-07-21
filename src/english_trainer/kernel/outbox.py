@@ -79,25 +79,36 @@ class OffsetStore:
 
 
 def deliver(store: EventStore, consumer: Consumer, clock: Clock) -> int:
-    """Deliver every not-yet-applied event to ``consumer`` in ``sequence`` order.
+    """Deliver every not-yet-applied *outboxed* event to ``consumer`` in
+    ``sequence`` order.
 
-    Returns the number of events delivered this call. Idempotent: a second call
-    with no new events delivers nothing. Each event's ``apply`` and the offset
-    advance commit together, so an interrupted delivery either fully happened or
-    is retried from the last committed mark -- never half-applied in SQLite.
+    Returns the number of events delivered this call. The source is the outbox
+    join, not the bare event table: consumers receive exactly what went through
+    the transactional-outbox boundary (foundation 3.7).
+
+    Exactly-once for SQLite consumers: each event runs in its own ``BEGIN
+    IMMEDIATE`` transaction that re-reads the offset *inside* the transaction and
+    skips anything at or below it -- so a competing deliverer that got there
+    first (another connection, or a re-entrant call) cannot cause a double
+    apply. ``apply`` and the offset advance commit together; ``BEGIN`` sits
+    inside the ``try`` so even an async ``BaseException`` right after it cannot
+    leave the transaction open.
     """
     conn = store._conn
     offsets = OffsetStore(conn)
-    applied = offsets.get(consumer.name)
     if isinstance(consumer, Reconcilable):
-        consumer.reconcile(applied)
+        consumer.reconcile(offsets.get(consumer.name))
 
-    pending = list(store.read_since(applied))  # materialize before writing
+    pending = list(store.read_outboxed_since(offsets.get(consumer.name)))
     delivered = 0
     for event in pending:
         assert event.sequence is not None
-        conn.execute("BEGIN;")
         try:
+            conn.execute("BEGIN IMMEDIATE;")
+            # The materialized tail may be stale: re-check under the write lock.
+            if event.sequence <= offsets.get(consumer.name):
+                conn.execute("ROLLBACK;")
+                continue
             consumer.apply(event)
             offsets.advance(consumer.name, event.sequence, clock.now().isoformat())
             conn.execute("COMMIT;")
