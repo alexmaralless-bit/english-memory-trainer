@@ -10,7 +10,7 @@ The planned Python application should keep runtime code, tests, curriculum/confi
 
 ## Development, Validation, and Local Commands
 
-Dependencies live in `pyproject.toml`; Python 3.12+, `uv` where available. Phase 0 (contracts) is complete; the kernel (`src/english_trainer/kernel/`, roadmap 1.2) is the first application code. Runtime deps are only what existing code imports (`pydantic`, `pyyaml`); `typer`/SQLAlchemy stay absent until needed (SQLite via a thin `sqlite3` layer, no ORM).
+Dependencies live in `pyproject.toml`; Python 3.12+, `uv` where available. Phase 0 (contracts) is complete; the kernel (`src/english_trainer/kernel/`, roadmap 1.2) is the first application code, and the `trainer` CLI (`src/english_trainer/cli/`) publishes its kernel-facing surface. Runtime deps are only what existing code imports (`pydantic`, `typer`, `pyyaml`); SQLAlchemy stays absent (SQLite via a thin `sqlite3` layer, no ORM).
 
 ```bash
 pip install -e . --group dev             # or: uv sync
@@ -24,13 +24,12 @@ mypy src                                 # strict; kernel is fully typed
 python tools/enrich_lexicon.py --cache <dir> --check
 ```
 
-These already pass. `trainer` CLI subcommands below arrive with later kernel increments:
+These already pass. The `trainer` CLI exists (kernel-facing surface): `trainer doctor`, `trainer init` (mutating — requires `--idempotency-key` with `--format json`), `trainer database check`. Subcommands below arrive with their owning modules:
 
 ```bash
 trainer curriculum validate
 trainer skills validate
 trainer adapters compare
-trainer database check
 trainer memory check
 trainer scoring replay
 ```

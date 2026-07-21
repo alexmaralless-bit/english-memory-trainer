@@ -6,14 +6,18 @@ requires-python = ">=3.12"
 license = { text = "Proprietary" }
 
 # Runtime dependencies of code that actually exists today. The kernel (roadmap
-# 1.2) is the first application code and needs pydantic for envelope validation
-# (foundation contract 7: stdlib + pydantic). typer / SQLAlchemy from the build
-# prompt are still deliberately absent -- they land with the module that needs
-# them (SQLite goes through the thin sqlite3 layer, no ORM).
+# 1.2) needs pydantic for envelope validation (foundation contract 7: stdlib +
+# pydantic); the CLI increment brought typer for the `trainer` entry point.
+# SQLAlchemy stays deliberately absent -- SQLite goes through the thin sqlite3
+# layer, no ORM.
 dependencies = [
     "pydantic>=2",
     "pyyaml>=6.0",
+    "typer>=0.12",
 ]
+
+[project.scripts]
+trainer = "english_trainer.cli.app:main"
 
 [project.optional-dependencies]
 # Corpus enrichment for the lexicon (P.4b). wordfreq is pinned to an exact
@@ -38,10 +42,9 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 # The application code lives under src/ (src layout). wiki/, curriculum/ and
-# staging/ remain data, not packages. The `trainer` console script arrives with
-# the CLI increment.
+# staging/ remain data, not packages.
 package-dir = { "" = "src" }
-packages = ["english_trainer", "english_trainer.kernel"]
+packages = ["english_trainer", "english_trainer.kernel", "english_trainer.cli"]
 
 [tool.ruff]
 target-version = "py312"

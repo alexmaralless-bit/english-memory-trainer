@@ -32,7 +32,7 @@ Key v0.2 corrections that override the brief: learning is a flexible conversatio
 
 ## Commands
 
-Dependencies live in `pyproject.toml`; Python 3.12+, `uv` where available. Runtime deps are only what existing code imports (`pydantic` for the kernel, `pyyaml` for data tooling); `typer`/SQLAlchemy stay absent until the module that needs them lands (SQLite goes through a thin `sqlite3` layer, no ORM).
+Dependencies live in `pyproject.toml`; Python 3.12+, `uv` where available. Runtime deps are only what existing code imports (`pydantic` for the kernel, `typer` for the CLI, `pyyaml` for data tooling); SQLAlchemy stays absent — SQLite goes through a thin `sqlite3` layer, no ORM.
 
 ```bash
 pip install -e . --group dev             # or: uv sync
@@ -46,13 +46,12 @@ mypy src                                 # strict; kernel is fully typed
 python tools/enrich_lexicon.py --cache <dir> --check
 ```
 
-These already pass. `trainer` CLI subcommands below arrive with later kernel increments:
+These already pass. The `trainer` CLI exists (kernel-facing surface): `trainer doctor`, `trainer init` (mutating — requires `--idempotency-key` with `--format json`), `trainer database check`. Subcommands below arrive with their owning modules:
 
 ```bash
 trainer curriculum validate
 trainer skills validate
 trainer adapters compare
-trainer database check
 trainer memory check
 trainer scoring replay
 ```
