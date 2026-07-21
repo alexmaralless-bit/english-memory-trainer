@@ -17,7 +17,7 @@
 - **LearningTarget** — то, что можно осваивать и оценивать: `Topic | LexicalItem`. Mastery, Stability, Retrievability, состояния и review определены для любого LearningTarget.
 - **Can-do** — формулировка темы как наблюдаемого умения («Report a completed action that matters now»); обязательна у каждой темы.
 - **Skill dimension** — измерение владения. Machine-ID и подписи: `recognition` (узнавание), `controlled_production` (применение в упражнении), `spontaneous_production` (самостоятельное письменное употребление), `transfer` (перенос в новый контекст). Текстовые модальности MVP.
-- **Track** — сквозной трек программы через уровни; их восемь, включая Everyday, Online & Informal English и TOEFL R&W (с B1).
+- **Track** — сквозной трек программы через уровни; их десять, включая Everyday Life, Online & Informal Register, Word Formation и TOEFL R&W (с B1, в продукте — [PD-2026-07-21]).
 - **Curriculum graph** — DAG тем с prerequisites. Карта и источник рекомендаций, не система замков; сила prerequisite — `strong` / `soft` (не «hard»).
 - **CurriculumVersion** — версионируемый снимок программы; evidence и сессии pin-ят версию, под которой созданы (см. [[OPEN]] OPEN-9).
 - **Level** — CEFR-уровень (A1…C2) с главным can-do результатом.
