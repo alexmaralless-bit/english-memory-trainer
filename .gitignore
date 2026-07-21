@@ -21,8 +21,10 @@ build/
 dist/
 *.egg-info/
 
-# Runtime-only files
+# Runtime-only files (local learner state; never committed)
 *.log
+*.db
+*.sqlite
 *.db-wal
 *.db-shm
 *.sqlite-wal

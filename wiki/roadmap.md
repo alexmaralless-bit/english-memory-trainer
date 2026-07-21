@@ -15,7 +15,7 @@
 | Прогонов red-team ревью | **8**; 0.12 подтверждён на 5-м (PASS, 0 находок) |
 | Программа | **155 тем · 35 модулей · 10 треков** |
 | Лексикон | **838 единиц** (П.4c сдан): 120 идиом, 100 phrasal verbs, разметка прозрачности по всему |
-| Исполняемое | `tools/enrich_lexicon.py`, `tests/` (11 тестов), `pyproject.toml`; кода приложения нет |
+| Исполняемое | **kernel** `src/english_trainer/kernel/` (инкремент 1) + `tools/enrich_lexicon.py`; **40 тестов** (29 kernel + 11 лексикон), mypy strict чист |
 | Ближайшее по критическому пути | подтвердить 0.12 · content-review П.4c · П.2 |
 
 HTML-версия (пересобирается по запросу из этого файла): <https://claude.ai/code/artifact/b2afa615-2340-417b-8aed-89efceb89bfa>
@@ -66,7 +66,7 @@ HTML-версия (пересобирается по запросу из это�
 | # | Работа | Статус | Зависимости |
 |---|---|---|---|
 | 1.1 | Окружение и tooling: Python 3.12, `pyproject.toml`, ruff, pytest | done | venv 3.12.10; зависимости объявлены (`pyyaml`, extra `corpus`, dev-группа); `pytest` 11 тестов инвариантов лексикона, `ruff check`/`format` чисто. Приложение не scaffold'ится — `typer`/`pydantic`/SQLAlchemy появятся с модулем, которому понадобятся |
-| 1.2 | Kernel по контракту 0.2 (envelopes, Clock/Random, UoW, outbox, policy registry, event log) | planned | 0.2 done; закрывает механизм OPEN-9/10/11 |
+| 1.2 | Kernel по контракту 0.2 | **in-progress** | **Инкремент 1 (детерминированное ядро event-store) готов**: typed ids/ULID, Clock/RandomSource, canonical encoding + payload_hash, Command/DomainEvent, append-only SQLite event-таблица (монотонный sequence), атомарный UoW (event+outbox+idempotency), replay-тесты §5. Отложено инкрементами 2+: JSONL export/outbox-доставка, policy registry, multi-aggregate CAS, projections, CLI, CI-gate |
 | 1.3 | Storage: SQLite + миграции + event log + Unit of Work | planned | 1.2 |
 
 ## Фаза 2 — вертикальный срез A1–A2
@@ -87,6 +87,7 @@ Listening/speaking модальности · полный TOEFL-симулято
 
 ## История изменений
 
+- **2026-07-21 (45)**: начата реализация — **kernel 1.2, инкремент 1: детерминированное ядро event-store** (первый код приложения). Пакет `src/english_trainer/kernel/`: инъектируемые Clock/RandomSource, ULID-подобные typed ids, каноническое кодирование + sha256 payload_hash (float запрещён), pydantic-конверты Command/DomainEvent, append-only SQLite event-таблица с монотонным sequence (триггеры против update/delete), forward-only мигратор, атомарный UoW (event+outbox+idempotency в одной транзакции), fold/replay. 29 kernel-тестов включая оба теста детерминизма §5 (order-independence, детерм. append-order). Всего 40 тестов зелёные, mypy strict чист. pydantic добавлен, src-layout в pyproject. 1.1 done ранее.
 - **2026-07-21 (44)**: **0.12 разблокирован — фаза 0 завершена.** Пятый, независимый подтверждающий прогон дал `PASS` с 0 находок: 3 BLOCKER и 7 MAJOR предыдущего прогона проверены снятыми у владельца и всех соседей, все 4 сквозных сценария собираются, канон не менялся. Блок снят ревьювером, не автором правок — как требует правило. Все 12 дизайн-контрактов приняты; **вертикальный срез (фаза 2) разблокирован.**
 - **2026-07-21 (43)**: П.1d — по Concept Gate заведён трек `word-formation` (морфология как отдельная ось) и поле `formation` у LexicalItem [PD-2026-07-21]. +7 тем продуктивных аффиксов, сгруппированных по смыслу (un-/re- A1; mis-/dis-, over-/under-, -er/-tion A2; **out-**, -able/-ness — первые детальные B1). +2 грамматических пробела из живого диалога: `prepositions.time` (было место, не было времени) и `here-is-are.presenting` (было there-is, не было here-is). Инвариант: тема-паттерн и слово — разные targets; паттерн — помощь узнаванию, не генератор. Осталось П.4d — разметка слов полем `formation`.
 - **2026-07-21 (42)**: четвёртый подтверждающий прогон 0.12 завершился FAIL (3 BLOCKER / 7 MAJOR / 1 MINOR). Corrective pass синхронизировал бюджет/ledger, CAS, finish/cancellation, fairness, signal/probe и availability во всех владельцах. `blocked` не снят: требуется новый независимый ревьювер.

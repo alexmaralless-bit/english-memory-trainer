@@ -10,20 +10,21 @@ The planned Python application should keep runtime code, tests, curriculum/confi
 
 ## Development, Validation, and Local Commands
 
-Dependencies live in `pyproject.toml`; Python 3.12+, `uv` where available. The application is not scaffolded yet — only data-build tooling exists, so `typer`/`pydantic`/SQLAlchemy are deliberately not declared until the module that needs them lands.
+Dependencies live in `pyproject.toml`; Python 3.12+, `uv` where available. Phase 0 (contracts) is complete; the kernel (`src/english_trainer/kernel/`, roadmap 1.2) is the first application code. Runtime deps are only what existing code imports (`pydantic`, `pyyaml`); `typer`/SQLAlchemy stay absent until needed (SQLite via a thin `sqlite3` layer, no ORM).
 
 ```bash
-pip install -e ".[corpus]" --group dev   # or: uv sync --extra corpus
-pytest                                   # lexicon data invariants (no network)
+pip install -e . --group dev             # or: uv sync
+pytest                                   # kernel determinism + lexicon invariants (no network)
 ruff check .
-ruff format --check .
+ruff format --check src tests
+mypy src                                 # strict; kernel is fully typed
 
 # Reproduce the corpus frequencies from the pinned artifacts (needs network).
 # The cache must live outside the repo: raw datasets are never committed.
 python tools/enrich_lexicon.py --cache <dir> --check
 ```
 
-The three lines above already pass. Everything below arrives with the application:
+These already pass. `trainer` CLI subcommands below arrive with later kernel increments:
 
 ```bash
 trainer curriculum validate

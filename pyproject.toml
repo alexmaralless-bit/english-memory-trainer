@@ -5,11 +5,13 @@ description = "Local-first CLI trainer for American English with interchangeable
 requires-python = ">=3.12"
 license = { text = "Proprietary" }
 
-# Runtime dependencies of code that actually exists today. The application
-# itself is not scaffolded yet (docs-first phase, roadmap 0.x), so typer /
-# pydantic / SQLAlchemy from the build prompt are deliberately NOT listed here:
-# they land when the module that needs them lands.
+# Runtime dependencies of code that actually exists today. The kernel (roadmap
+# 1.2) is the first application code and needs pydantic for envelope validation
+# (foundation contract 7: stdlib + pydantic). typer / SQLAlchemy from the build
+# prompt are still deliberately absent -- they land with the module that needs
+# them (SQLite goes through the thin sqlite3 layer, no ORM).
 dependencies = [
+    "pydantic>=2",
     "pyyaml>=6.0",
 ]
 
@@ -35,13 +37,11 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-# There is no importable package yet: wiki/, curriculum/ and staging/ are data,
-# not Python packages. Installing this project only resolves dependencies.
-# The `trainer` package and its console script arrive with the application.
-packages = []
-
-[tool.uv]
-package = false
+# The application code lives under src/ (src layout). wiki/, curriculum/ and
+# staging/ remain data, not packages. The `trainer` console script arrives with
+# the CLI increment.
+package-dir = { "" = "src" }
+packages = ["english_trainer", "english_trainer.kernel"]
 
 [tool.ruff]
 target-version = "py312"
@@ -71,4 +71,5 @@ addopts = "-q"
 [tool.mypy]
 python_version = "3.12"
 strict = true
+mypy_path = "src"
 exclude = ["^\\.venv/"]

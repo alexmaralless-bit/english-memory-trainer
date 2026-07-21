@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository state
 
-Documentation-first scaffold for **English Memory Trainer** — a local-first Python CLI app for learning American English with interchangeable AI tutors (Codex / Claude Code). No application code exists yet; the docs define what to build. Current phase: producing the eight design contracts listed in `docs/design-direction.md` §5 before implementation.
+**English Memory Trainer** — a local-first Python CLI app for learning American English with interchangeable AI tutors (Codex / Claude Code). Phase 0 is complete: all twelve design contracts in `wiki/` are accepted. Implementation has begun — the kernel (roadmap 1.2, `src/english_trainer/kernel/`) is the first application code, built to `wiki/platform/foundation.md`. The curriculum data (`curriculum/`) and lexicon (838 units) are authored. `wiki/roadmap.md` is the single source of "where we are".
 
 ## Source of truth (order of precedence)
 
@@ -32,20 +32,21 @@ Key v0.2 corrections that override the brief: learning is a flexible conversatio
 
 ## Commands
 
-Dependencies live in `pyproject.toml`; Python 3.12+, `uv` where available. The application is not scaffolded yet — only data-build tooling exists, so `typer`/`pydantic`/SQLAlchemy are deliberately not declared until the module that needs them lands.
+Dependencies live in `pyproject.toml`; Python 3.12+, `uv` where available. Runtime deps are only what existing code imports (`pydantic` for the kernel, `pyyaml` for data tooling); `typer`/SQLAlchemy stay absent until the module that needs them lands (SQLite goes through a thin `sqlite3` layer, no ORM).
 
 ```bash
-pip install -e ".[corpus]" --group dev   # or: uv sync --extra corpus
-pytest                                   # lexicon data invariants (no network)
+pip install -e . --group dev             # or: uv sync
+pytest                                   # kernel determinism + lexicon invariants (no network)
 ruff check .
-ruff format --check .
+ruff format --check src tests
+mypy src                                 # strict; kernel is fully typed
 
 # Reproduce the corpus frequencies from the pinned artifacts (needs network).
 # The cache must live outside the repo: raw datasets are never committed.
 python tools/enrich_lexicon.py --cache <dir> --check
 ```
 
-The three lines above already pass. Everything below arrives with the application:
+These already pass. `trainer` CLI subcommands below arrive with later kernel increments:
 
 ```bash
 trainer curriculum validate
