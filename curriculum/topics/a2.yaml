@@ -7,6 +7,19 @@ topics:
     can_do: "Set the background of an incident with the Past Continuous."
     advisory_prerequisites:
       strong: [grammar.past-simple.events]
+    dimensions: [recognition, transfer]
+    frequency_tier: tail
+    lexicon: [word.at-the-time, word.incident, word.error]
+    contexts: [incident-update]
+    typical_errors:
+      - "Using the base verb after a past-time marker (Yesterday I go)."
+      - "Using did with a past form (Did you went?)."
+      - "Translating Russian aspect word for word instead of choosing the English time frame."
+    examples:
+      - "We were testing the form when it failed."
+      - "The server was running slowly at noon."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.when-while.sequence
     cefr: A2
     track: grammar-engine
@@ -14,6 +27,19 @@ topics:
     can_do: "Connect a background action and an event with when and while."
     advisory_prerequisites:
       strong: [grammar.past-continuous.incident-context, grammar.past-time-sequencing]
+    dimensions: [recognition, transfer]
+    frequency_tier: tail
+    lexicon: [chunk.it-only-happens-when, word.during, word.while]
+    contexts: [incident-update]
+    typical_errors:
+      - "Using the base verb after a past-time marker (Yesterday I go)."
+      - "Using did with a past form (Did you went?)."
+      - "Translating Russian aspect word for word instead of choosing the English time frame."
+    examples:
+      - "The screen froze while I was paying."
+      - "When the alert arrived, we called support."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.past-irregular-events
     cefr: A2
     track: grammar-engine
@@ -21,6 +47,19 @@ topics:
     can_do: "Use a wider set of irregular past forms in an incident account."
     advisory_prerequisites:
       strong: [grammar.past-irregular-basics]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: big-five
+    lexicon: [chunk.we-ran-into, lexeme.begin, lexeme.run]
+    contexts: [incident-update]
+    typical_errors:
+      - "Using the base verb after a past-time marker (Yesterday I go)."
+      - "Using did with a past form (Did you went?)."
+      - "Translating Russian aspect word for word instead of choosing the English time frame."
+    examples:
+      - "The error began after the update."
+      - "We found the missing file."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: written-production.incident-timeline
     cefr: A2
     track: written-production-mediation
@@ -28,6 +67,18 @@ topics:
     can_do: "Write a chronological incident timeline with background and events."
     advisory_prerequisites:
       strong: [grammar.when-while.sequence, grammar.past-irregular-events]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [chunk.we-have-run-into-an-issue, chunk.the-issue-started-at, chunk.users-are-affected]
+    contexts: [incident-update]
+    typical_errors:
+      - "Copying Russian word order into a multi-sentence update or summary."
+      - "Mixing a fact and an inference without a marker such as I think or may."
+      - "Using a false friend or literal translation that changes the intended meaning."
+    examples:
+      - "At 10:00 the screen froze. We were testing the payment flow."
+      - "At 10:15 we restarted the service."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: us-tech.incident-report-basics
     cefr: A2
     track: us-tech-english
@@ -35,6 +86,18 @@ topics:
     can_do: "Write a basic incident report for a technology problem."
     advisory_prerequisites:
       strong: [written-production.incident-timeline]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [chunk.we-have-run-into-an-issue, chunk.we-ran-into, chunk.it-only-happens-when]
+    contexts: [incident-update]
+    typical_errors:
+      - "Using a Russian calque instead of a clear technical action (make a deploy instead of deploy)."
+      - "Dropping the actor, status, or next step that makes an update actionable."
+      - "Using Present Simple for an incident happening now or Past Simple for an unfinished result."
+    examples:
+      - "Users could not log in after the update."
+      - "No data was lost during the incident."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.present-perfect.result
     cefr: A2
     track: grammar-engine
@@ -43,6 +106,19 @@ topics:
     advisory_prerequisites:
       strong: [grammar.have-has.objects, grammar.past-participle.forms]
       soft: [grammar.past-simple.events]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: big-five
+    lexicon: [chunk.we-have-completed, chunk.i-have-already-checked, chunk.i-have-experience-with]
+    contexts: [deployment-update]
+    typical_errors:
+      - "Using Present Continuous for a routine (калька: «я обычно сейчас работаю»)."
+      - "Forgetting -s after he/she/it (русский глагол не меняется по лицам)."
+      - "Using do together with a main verb inflection (Does she works?)."
+    examples:
+      - "We have completed the migration."
+      - "I have already checked the data."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.past-participle.forms
     cefr: A2
     track: grammar-engine
@@ -50,6 +126,19 @@ topics:
     can_do: "Use common past participles in result-focused statements."
     advisory_prerequisites:
       strong: [grammar.past-irregular-basics]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: big-five
+    lexicon: [chunk.we-have-deployed, chunk.it-has-been-fixed, lexeme.build]
+    contexts: [deployment-update]
+    typical_errors:
+      - "Using the base verb after a past-time marker (Yesterday I go)."
+      - "Using did with a past form (Did you went?)."
+      - "Translating Russian aspect word for word instead of choosing the English time frame."
+    examples:
+      - "The team has built a new page."
+      - "The issue has been fixed."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.present-perfect-past-simple.choice
     cefr: A2
     track: grammar-engine
@@ -57,6 +146,19 @@ topics:
     can_do: "Choose Present Perfect for a current result and Past Simple for a finished past event."
     advisory_prerequisites:
       strong: [grammar.present-perfect.result, grammar.past-simple.events]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: big-five
+    lexicon: [chunk.we-have-not-had-any-issues-since, word.yet, word.since]
+    contexts: [deployment-update]
+    typical_errors:
+      - "Using Present Continuous for a routine (калька: «я обычно сейчас работаю»)."
+      - "Forgetting -s after he/she/it (русский глагол не меняется по лицам)."
+      - "Using do together with a main verb inflection (Does she works?)."
+    examples:
+      - "We have fixed the issue."
+      - "We fixed it yesterday."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: written-interaction.result-update
     cefr: A2
     track: written-interaction
@@ -64,6 +166,18 @@ topics:
     can_do: "Write a short update about a completed result that matters now."
     advisory_prerequisites:
       strong: [grammar.present-perfect.result]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [chunk.we-have-completed, chunk.i-have-already-checked, chunk.we-have-not-had-any-issues-since]
+    contexts: [deployment-update]
+    typical_errors:
+      - "Writing a Russian-style imperative where English needs a polite request (Send me... without context)."
+      - "Omitting the subject, article, or auxiliary in a short message."
+      - "Using a direct calque such as Please, explain me instead of explain it to me."
+    examples:
+      - "We have completed the test."
+      - "The new page has worked well so far."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: us-tech.deployment-result
     cefr: A2
     track: us-tech-english
@@ -71,6 +185,18 @@ topics:
     can_do: "Report a deployment or completed technology task and its current result."
     advisory_prerequisites:
       strong: [written-interaction.result-update]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [chunk.we-have-deployed, chunk.it-has-been-fixed, chunk.works-as-expected]
+    contexts: [deployment-update]
+    typical_errors:
+      - "Using a Russian calque instead of a clear technical action (make a deploy instead of deploy)."
+      - "Dropping the actor, status, or next step that makes an update actionable."
+      - "Using Present Simple for an incident happening now or Past Simple for an unfinished result."
+    examples:
+      - "We have deployed the new version."
+      - "The login issue has been fixed."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.future-forms.planning
     cefr: A2
     track: grammar-engine
@@ -78,6 +204,19 @@ topics:
     can_do: "Choose a basic future form for an intention, decision, or arranged plan."
     advisory_prerequisites:
       strong: [grammar.going-to.plans, grammar.will.basic-decisions, grammar.present-continuous.status]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: big-five
+    lexicon: [chunk.were-aiming-for, chunk.we-may-need-more-time, word.delivery]
+    contexts: [delivery-planning]
+    typical_errors:
+      - "Using will after if or when in a time clause (If it will fail...)."
+      - "Using going to for a decision made at the moment of speaking."
+      - "Dropping the be in be going to (I going to call)."
+    examples:
+      - "I am going to review the plan."
+      - "I will answer the client now."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.future-expressions.deadlines
     cefr: A2
     track: grammar-engine
@@ -85,6 +224,19 @@ topics:
     can_do: "State future deadlines and delivery times clearly."
     advisory_prerequisites:
       strong: [grammar.future-time-expressions]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: big-five
+    lexicon: [chunk.the-delivery-date-is, word.delivery, word.deadline]
+    contexts: [delivery-planning]
+    typical_errors:
+      - "Using will after if or when in a time clause (If it will fail...)."
+      - "Using going to for a decision made at the moment of speaking."
+      - "Dropping the be in be going to (I going to call)."
+    examples:
+      - "The delivery date is next Tuesday."
+      - "We will finish by the end of the week."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.sequencing.delivery
     cefr: A2
     track: grammar-engine
@@ -92,6 +244,19 @@ topics:
     can_do: "Sequence planned delivery steps in a clear order."
     advisory_prerequisites:
       strong: [grammar.future-forms.planning]
+    dimensions: [recognition, transfer]
+    frequency_tier: tail
+    lexicon: [word.delivery, word.deadline]
+    contexts: [delivery-planning]
+    typical_errors:
+      - "Using Russian sentence order where English needs a fixed auxiliary or preposition."
+      - "Omitting a small grammar word because Russian does not mark it in the same way."
+      - "Choosing a literal Russian-to-English form instead of the target construction."
+    examples:
+      - "First we test, then we deploy."
+      - "After approval, the team sends the update."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: written-production.delivery-plan
     cefr: A2
     track: written-production-mediation
@@ -99,6 +264,18 @@ topics:
     can_do: "Write a short delivery plan with steps and deadlines."
     advisory_prerequisites:
       strong: [grammar.future-forms.planning, grammar.future-expressions.deadlines, grammar.sequencing.delivery]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [chunk.on-track, chunk.the-delivery-date-is, chunk.were-aiming-for]
+    contexts: [delivery-planning]
+    typical_errors:
+      - "Copying Russian word order into a multi-sentence update or summary."
+      - "Mixing a fact and an inference without a marker such as I think or may."
+      - "Using a false friend or literal translation that changes the intended meaning."
+    examples:
+      - "First we test the form, then we deploy it."
+      - "The delivery date is next Tuesday."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: us-tech.scope-change-update
     cefr: A2
     track: us-tech-english
@@ -106,6 +283,18 @@ topics:
     can_do: "Report a simple scope or delivery-plan change in a technology project."
     advisory_prerequisites:
       strong: [written-production.delivery-plan]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: [chunk.thats-out-of-scope, chunk.we-may-need-more-time, chunk.behind-schedule]
+    contexts: [delivery-planning]
+    typical_errors:
+      - "Using a Russian calque instead of a clear technical action (make a deploy instead of deploy)."
+      - "Dropping the actor, status, or next step that makes an update actionable."
+      - "Using Present Simple for an incident happening now or Past Simple for an unfinished result."
+    examples:
+      - "The new report is out of scope this week."
+      - "We may need more time for testing."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.modals.requirements
     cefr: A2
     track: grammar-engine
