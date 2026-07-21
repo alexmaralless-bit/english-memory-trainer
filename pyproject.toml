@@ -44,7 +44,7 @@ build-backend = "setuptools.build_meta"
 # The application code lives under src/ (src layout). wiki/, curriculum/ and
 # staging/ remain data, not packages.
 package-dir = { "" = "src" }
-packages = ["english_trainer", "english_trainer.kernel", "english_trainer.cli"]
+packages = ["english_trainer", "english_trainer.kernel", "english_trainer.cli", "english_trainer.storage"]
 
 [tool.ruff]
 target-version = "py312"

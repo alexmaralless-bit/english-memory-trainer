@@ -187,7 +187,61 @@ def test_registry_matches_published_surface() -> None:
     from english_trainer.cli.registry import command_registry
 
     registry = {descriptor.name: descriptor for descriptor in command_registry()}
-    assert set(registry) == {"doctor", "init", "database.check"}
+    assert set(registry) == {"doctor", "init", "database.check", "snapshot.create"}
     assert registry["init"].mutating and registry["init"].requires_idempotency_key
+    assert registry["snapshot.create"].mutating and registry["snapshot.create"].requires_idempotency_key
     assert not registry["doctor"].mutating
     assert not registry["database.check"].mutating
+
+
+def test_root_option_drives_default_paths(tmp_path: Path, capsys) -> None:
+    # The layout is the single path authority: --root without --db/--export
+    # resolves to <root>/trainer.db and <root>/trainer.events.jsonl (1.3).
+    code = run(["init", "--format", "json", "--root", str(tmp_path), "--idempotency-key", "k1"])
+    env = _json_stdout(capsys)
+    assert code == ExitCode.OK
+    assert (tmp_path / "trainer.db").exists()
+    assert env["data"]["db"] == str(tmp_path / "trainer.db")
+
+
+def test_snapshot_create_requires_key_in_json_mode(tmp_path: Path, capsys) -> None:
+    code = run(["snapshot", "create", "--format", "json", "--root", str(tmp_path)])
+    env = _json_stdout(capsys)
+    _envelope_shape_ok(env)
+    assert code == ExitCode.USAGE
+    assert env["error"]["error_code"] == "MISSING_IDEMPOTENCY_KEY"
+
+
+def test_snapshot_create_missing_db_is_not_found(tmp_path: Path, capsys) -> None:
+    code = run(["snapshot", "create", "--format", "json", "--root", str(tmp_path), "--idempotency-key", "s1"])
+    env = _json_stdout(capsys)
+    _envelope_shape_ok(env)
+    assert code == ExitCode.NOT_FOUND
+    assert env["error"]["next_action"] == "init"
+
+
+def test_snapshot_create_and_cached_replay(tmp_path: Path, capsys) -> None:
+    run(["init", "--format", "json", "--root", str(tmp_path), "--idempotency-key", "k1"])
+    capsys.readouterr()
+
+    first = run(
+        ["snapshot", "create", "--format", "json", "--root", str(tmp_path), "--idempotency-key", "s1"]
+    )
+    env_first = _json_stdout(capsys)
+    _envelope_shape_ok(env_first)
+    assert first == ExitCode.OK
+    assert env_first["data"]["cached"] is False
+    directory = tmp_path / "snapshots" / env_first["data"]["directory"]
+    assert (directory / "trainer.db").exists()
+    assert (directory / "manifest.json").exists()
+
+    # Same key: the cached manifest replays; no second snapshot directory.
+    second = run(
+        ["snapshot", "create", "--format", "json", "--root", str(tmp_path), "--idempotency-key", "s1"]
+    )
+    env_second = _json_stdout(capsys)
+    assert second == ExitCode.OK
+    assert env_second["data"]["cached"] is True
+    assert env_second["data"]["directory"] == env_first["data"]["directory"]
+    snapshot_dirs = [p for p in (tmp_path / "snapshots").iterdir() if p.is_dir()]
+    assert len(snapshot_dirs) == 1

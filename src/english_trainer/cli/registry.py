@@ -32,6 +32,9 @@ _COMMANDS: tuple[CommandDescriptor, ...] = (
     CommandDescriptor(
         name="database.check", owner_module="storage", mutating=False, requires_idempotency_key=False
     ),
+    CommandDescriptor(
+        name="snapshot.create", owner_module="storage", mutating=True, requires_idempotency_key=True
+    ),
 )
 
 

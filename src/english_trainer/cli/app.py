@@ -42,24 +42,38 @@ from english_trainer.cli.envelope import (
 from english_trainer.kernel.check import database_check
 from english_trainer.kernel.clock import SystemClock, SystemRandom
 from english_trainer.kernel.encoding import payload_hash
-from english_trainer.kernel.errors import IdempotencyConflict
+from english_trainer.kernel.errors import IdempotencyConflict, KernelError
 from english_trainer.kernel.export import JsonlExporter
 from english_trainer.kernel.ids import new_ulid
 from english_trainer.kernel.store import SCHEMA_VERSION, EventStore, connect, migrate
 from english_trainer.kernel.uow import CachedResult, UnitOfWork
-
-DEFAULT_DB = "trainer.db"
-DEFAULT_EXPORT = "trainer.events.jsonl"
+from english_trainer.storage.layout import StorageLayout, open_storage, resolve_layout
+from english_trainer.storage.snapshot import create_snapshot
 
 app = typer.Typer(add_completion=False, help="English Memory Trainer engine CLI.")
 database_app = typer.Typer(add_completion=False, help="Storage integrity commands.")
 app.add_typer(database_app, name="database")
+snapshot_app = typer.Typer(add_completion=False, help="Point-in-time snapshots of the local state.")
+app.add_typer(snapshot_app, name="snapshot")
 
 _FormatOpt = Annotated[str, typer.Option("--format", help="Output format: text (human) or json (contract).")]
-_DbOpt = Annotated[Path, typer.Option("--db", help="Path to the SQLite database.")]
+_RootOpt = Annotated[Path, typer.Option("--root", help="Trainer home directory (storage layout root).")]
+_DbOpt = Annotated[
+    Path | None, typer.Option("--db", help="SQLite database path; defaults to <root>/trainer.db.")
+]
+_ExportOpt = Annotated[
+    Path | None,
+    typer.Option("--export", help="JSONL export path; defaults to <root>/trainer.events.jsonl."),
+]
 _CorrOpt = Annotated[
     str | None, typer.Option("--correlation-id", help="Correlation id; generated when absent.")
 ]
+
+
+def _paths(root: Path, db: Path | None, export: Path | None) -> tuple[StorageLayout, Path, Path]:
+    """Resolve effective paths: explicit options win, the layout fills the rest."""
+    layout = resolve_layout(root)
+    return layout, db if db is not None else layout.db, export if export is not None else layout.export
 
 
 def _correlation(provided: str | None) -> str:
@@ -79,14 +93,14 @@ def _emit(envelope: dict[str, Any], human: list[str], fmt: str, code: ExitCode) 
 @app.command()
 def doctor(
     fmt: _FormatOpt = "text",
-    db: _DbOpt = Path(DEFAULT_DB),
-    export: Annotated[Path, typer.Option("--export", help="Path to the JSONL export.")] = Path(
-        DEFAULT_EXPORT
-    ),
+    root: _RootOpt = Path(),
+    db: _DbOpt = None,
+    export: _ExportOpt = None,
     correlation_id: _CorrOpt = None,
 ) -> None:
     """Diagnose the environment and local state. Read-only; run this first."""
     corr = _correlation(correlation_id)
+    _, db, export = _paths(root, db, export)
     checks: list[dict[str, Any]] = [
         {"name": "python", "status": "ok", "detail": platform.python_version()},
         {"name": "platform", "status": "ok", "detail": platform.platform()},
@@ -140,7 +154,8 @@ def doctor(
 @app.command()
 def init(
     fmt: _FormatOpt = "text",
-    db: _DbOpt = Path(DEFAULT_DB),
+    root: _RootOpt = Path(),
+    db: _DbOpt = None,
     idempotency_key: Annotated[
         str | None,
         typer.Option("--idempotency-key", help="Required with --format json (cli 4.3)."),
@@ -149,6 +164,7 @@ def init(
 ) -> None:
     """Initialize the local state: create the database and apply migrations."""
     corr = _correlation(correlation_id)
+    _, db, _export = _paths(root, db, None)
     if fmt == "json" and not idempotency_key:
         # Mutating commands must carry the key in json mode: the process can die
         # after commit and before the response is printed, and without the key
@@ -162,6 +178,7 @@ def init(
         _emit(failure_envelope("init", corr, error), [], fmt, ExitCode.USAGE)
 
     existed = db.exists()
+    db.parent.mkdir(parents=True, exist_ok=True)
     conn = connect(db)
     try:
         migrate(conn)  # forward-only and idempotent by construction
@@ -202,10 +219,9 @@ def init(
 @database_app.command("check")
 def database_check_cmd(
     fmt: _FormatOpt = "text",
-    db: _DbOpt = Path(DEFAULT_DB),
-    export: Annotated[Path, typer.Option("--export", help="Path to the JSONL export.")] = Path(
-        DEFAULT_EXPORT
-    ),
+    root: _RootOpt = Path(),
+    db: _DbOpt = None,
+    export: _ExportOpt = None,
     correlation_id: _CorrOpt = None,
 ) -> None:
     """Check store integrity and the export up to the acknowledged offset.
@@ -214,6 +230,7 @@ def database_check_cmd(
     divergence after catch-up fails the check. Read-only: nothing is repaired.
     """
     corr = _correlation(correlation_id)
+    _, db, export = _paths(root, db, export)
     if not db.exists():
         error = ErrorPayload(
             error_code="DATABASE_NOT_FOUND",
@@ -246,6 +263,84 @@ def database_check_cmd(
     )
     human = ["database check: FAILED"] + [f"  - {line}" for line in report.errors]
     _emit(failure_envelope("database.check", corr, error), human, fmt, ExitCode.PRECONDITION_FAILED)
+
+
+@snapshot_app.command("create")
+def snapshot_create(
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    idempotency_key: Annotated[
+        str | None,
+        typer.Option("--idempotency-key", help="Required with --format json (cli 4.3)."),
+    ] = None,
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Create a point-in-time snapshot after a WAL checkpoint (foundation 3.9)."""
+    corr = _correlation(correlation_id)
+    layout = resolve_layout(root)
+    if fmt == "json" and not idempotency_key:
+        error = ErrorPayload(
+            error_code="MISSING_IDEMPOTENCY_KEY",
+            message="`trainer snapshot create` mutates state: --idempotency-key is required with json.",
+            allowed_actions=["snapshot create --idempotency-key <key>", "doctor"],
+            next_action="snapshot create --idempotency-key <key>",
+        )
+        _emit(failure_envelope("snapshot.create", corr, error), [], fmt, ExitCode.USAGE)
+    if not layout.db.exists():
+        error = ErrorPayload(
+            error_code="DATABASE_NOT_FOUND",
+            message=f"{layout.db} does not exist.",
+            allowed_actions=["init", "doctor"],
+            next_action="init",
+        )
+        _emit(
+            failure_envelope("snapshot.create", corr, error),
+            [f"error: {layout.db} not found"],
+            fmt,
+            ExitCode.NOT_FOUND,
+        )
+
+    request_hash = payload_hash({"command": "snapshot.create", "root": str(layout.root)})
+    try:
+        if idempotency_key:
+            # The replay check runs on its own short-lived connection and is
+            # closed BEFORE the snapshot: the checkpoint must not compete with
+            # another live connection of ours (foundation 3.9).
+            with open_storage(layout) as storage, UnitOfWork(storage.store, SystemClock()) as uow:
+                prior = uow.check_idempotency(idempotency_key, request_hash)
+            if isinstance(prior, CachedResult):
+                data = {**dict(prior.value), "cached": True}
+                _emit(
+                    success_envelope("snapshot.create", corr, data),
+                    [f"snapshot {data.get('directory')} (cached result)"],
+                    fmt,
+                    ExitCode.OK,
+                )
+        manifest = create_snapshot(layout, SystemClock())
+        if idempotency_key:
+            with open_storage(layout) as storage, UnitOfWork(storage.store, SystemClock()) as uow:
+                uow.record_result(idempotency_key, request_hash, manifest)
+        data = {**manifest, "cached": False}
+        human = [f"snapshot created: {manifest['directory']}"] + [
+            f"  {name}: {digest}" for name, digest in manifest["files"].items()
+        ]
+        _emit(success_envelope("snapshot.create", corr, data), human, fmt, ExitCode.OK)
+    except IdempotencyConflict as exc:
+        error = ErrorPayload(
+            error_code="IDEMPOTENCY_CONFLICT",
+            message=str(exc),
+            allowed_actions=["snapshot create --idempotency-key <fresh-key>"],
+            next_action="snapshot create --idempotency-key <fresh-key>",
+        )
+        _emit(failure_envelope("snapshot.create", corr, error), [f"error: {exc}"], fmt, ExitCode.CONFLICT)
+    except KernelError as exc:
+        error = ErrorPayload(
+            error_code="SNAPSHOT_CONFLICT",
+            message=str(exc),
+            allowed_actions=["snapshot create (retry later)", "doctor"],
+            next_action="doctor",
+        )
+        _emit(failure_envelope("snapshot.create", corr, error), [f"error: {exc}"], fmt, ExitCode.CONFLICT)
 
 
 def _wants_json(argv: list[str]) -> bool:

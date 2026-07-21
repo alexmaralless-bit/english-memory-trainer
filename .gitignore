@@ -26,6 +26,8 @@ dist/
 *.db
 *.sqlite
 *.sqlite3
+trainer.events.jsonl
+snapshots/
 *.db-wal
 *.db-shm
 *.sqlite-wal
