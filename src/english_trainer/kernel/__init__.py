@@ -52,6 +52,7 @@ from english_trainer.kernel.export import (
 from english_trainer.kernel.ids import new_ulid
 from english_trainer.kernel.outbox import Consumer, OffsetStore, deliver
 from english_trainer.kernel.policy import KNOWN_KINDS, PolicyRegistry
+from english_trainer.kernel.projections import SqlProjection, project, rebuild_projection
 from english_trainer.kernel.replay import fold, iter_events, replay
 from english_trainer.kernel.store import EventStore, connect, migrate
 from english_trainer.kernel.uow import CachedResult, UnitOfWork
@@ -78,6 +79,7 @@ __all__ = [
     "PolicyRegistry",
     "RandomSource",
     "SeededRandomSource",
+    "SqlProjection",
     "StaleRevision",
     "SystemClock",
     "SystemRandom",
@@ -97,8 +99,10 @@ __all__ = [
     "migrate",
     "new_ulid",
     "payload_hash",
+    "project",
     "read_aggregate",
     "rebuild_export",
+    "rebuild_projection",
     "replay",
     "resolve_corrections",
 ]

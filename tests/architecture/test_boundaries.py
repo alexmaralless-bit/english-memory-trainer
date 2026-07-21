@@ -44,6 +44,7 @@ RESTRICTED_ALLOWANCES: dict[str, set[str]] = {
     "kernel/uow.py": {"sqlite3"},
     "kernel/policy.py": {"sqlite3"},
     "kernel/outbox.py": {"sqlite3"},
+    "kernel/projections.py": {"sqlite3"},
     "storage/layout.py": {"sqlite3"},
 }
 
