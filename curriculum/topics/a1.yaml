@@ -150,9 +150,9 @@ topics:
     lexicon: [chunk.how-often-do-you, lexeme.do, word.task]
     contexts: [daily-standup]
     typical_errors:
-      - "Using Present Continuous for a routine (калька: «я обычно сейчас работаю»)."
-      - "Forgetting -s after he/she/it (русский глагол не меняется по лицам)."
-      - "Using do together with a main verb inflection (Does she works?)."
+      - "Keeping Russian statement word order in a question (You work where?)."
+      - "Using does together with -s on the main verb (Does she works?)."
+      - "Omitting do/does because Russian questions can rely on intonation."
     examples:
       - "Do you review this file every day?"
       - "Does Maya work from home?"
@@ -170,9 +170,9 @@ topics:
     lexicon: [chunk.how-often-do-you, chunk.once-a-week, word.usually]
     contexts: [daily-standup]
     typical_errors:
-      - "Using Present Continuous for a routine (калька: «я обычно сейчас работаю»)."
-      - "Forgetting -s after he/she/it (русский глагол не меняется по лицам)."
-      - "Using do together with a main verb inflection (Does she works?)."
+      - "Putting always/usually before be (I usually am busy) by copying Russian word order."
+      - "Putting the adverb at the end in every sentence (I check reports always)."
+      - "Using every day with a single present action instead of a routine."
     examples:
       - "We usually deploy on Friday."
       - "I rarely miss the stand-up."
@@ -248,9 +248,9 @@ topics:
     lexicon: [word.system, word.data]
     contexts: [interface-walkthrough]
     typical_errors:
-      - "Using Russian sentence order where English needs a fixed auxiliary or preposition."
-      - "Omitting a small grammar word because Russian does not mark it in the same way."
-      - "Choosing a literal Russian-to-English form instead of the target construction."
+      - "Using have to mean existence (In the file has an error) from Russian есть."
+      - "Choosing there is before plural nouns or lists (There is two fields)."
+      - "Dropping there in questions and negatives (Is a problem here?)."
     examples:
       - "There is an error in the log."
       - "There are two fields on this screen."
@@ -268,9 +268,9 @@ topics:
     lexicon: [chunk.each-record-has, lexeme.have, word.system]
     contexts: [interface-walkthrough]
     typical_errors:
-      - "Using Russian sentence order where English needs a fixed auxiliary or preposition."
-      - "Omitting a small grammar word because Russian does not mark it in the same way."
-      - "Choosing a literal Russian-to-English form instead of the target construction."
+      - "Using the Russian pattern at me is instead of I have."
+      - "Confusing have and has after he/she/it or a singular role noun."
+      - "Asking Have you a file? where A1 work English needs Do you have...?"
     examples:
       - "The form has three required fields."
       - "Our team has a shared folder."
@@ -287,9 +287,9 @@ topics:
     lexicon: [word.record, word.system, word.data]
     contexts: [interface-walkthrough]
     typical_errors:
-      - "Using Russian sentence order where English needs a fixed auxiliary or preposition."
-      - "Omitting a small grammar word because Russian does not mark it in the same way."
-      - "Choosing a literal Russian-to-English form instead of the target construction."
+      - "Omitting plural -s after numbers because Russian number endings work differently."
+      - "Adding -s to every noun, including uncountable words such as information."
+      - "Forgetting a/an before a singular countable noun."
     examples:
       - "One file is missing."
       - "Two records need review."
@@ -307,9 +307,9 @@ topics:
     lexicon: [chunk.this-field-contains, word.system, word.data]
     contexts: [interface-walkthrough]
     typical_errors:
-      - "Using Russian sentence order where English needs a fixed auxiliary or preposition."
-      - "Omitting a small grammar word because Russian does not mark it in the same way."
-      - "Choosing a literal Russian-to-English form instead of the target construction."
+      - "Using this for all distances and contexts because Russian это covers more ground."
+      - "Confusing singular this/that with plural these/those."
+      - "Using it when English needs this/that to point to a visible item or idea."
     examples:
       - "This field stores the email."
       - "Those buttons open the report."
@@ -327,9 +327,9 @@ topics:
     lexicon: [word.system, word.data]
     contexts: [interface-walkthrough]
     typical_errors:
-      - "Using Russian sentence order where English needs a fixed auxiliary or preposition."
-      - "Omitting a small grammar word because Russian does not mark it in the same way."
-      - "Choosing a literal Russian-to-English form instead of the target construction."
+      - "Using many with uncountable nouns and much with countable plural nouns."
+      - "Using some in negatives and questions where any is expected."
+      - "Dropping a before little/few in basic quantity phrases."
     examples:
       - "We have a few open tasks."
       - "There is not much data yet."
@@ -346,9 +346,9 @@ topics:
     lexicon: [chunk.its-stored-in, chunk.you-can-find-it-under, chunk.in-the-shared-folder]
     contexts: [interface-walkthrough]
     typical_errors:
-      - "Using Russian sentence order where English needs a fixed auxiliary or preposition."
-      - "Omitting a small grammar word because Russian does not mark it in the same way."
-      - "Choosing a literal Russian-to-English form instead of the target construction."
+      - "Using in the screen or in the website from Russian на экране/на сайте."
+      - "Using at for every place instead of choosing at/in/on by scale and surface."
+      - "Omitting the preposition after where because Russian can use case endings."
     examples:
       - "The setting is in the menu."
       - "The note is under the title."
@@ -405,9 +405,9 @@ topics:
     lexicon: [chunk.im-working-on, chunk.were-testing, chunk.were-waiting-on]
     contexts: [status-update]
     typical_errors:
-      - "Using Present Continuous for a routine (калька: «я обычно сейчас работаю»)."
-      - "Forgetting -s after he/she/it (русский глагол не меняется по лицам)."
-      - "Using do together with a main verb inflection (Does she works?)."
+      - "Dropping am/is/are before the -ing verb (I working now)."
+      - "Using Present Simple for a temporary current action (I work on it now)."
+      - "Adding -ing to state verbs in simple status messages (I am knowing)."
     examples:
       - "I am testing the new flow."
       - "They are waiting for approval."
@@ -425,9 +425,9 @@ topics:
     lexicon: [word.progress, word.update]
     contexts: [status-update]
     typical_errors:
-      - "Using Present Continuous for a routine (калька: «я обычно сейчас работаю»)."
-      - "Forgetting -s after he/she/it (русский глагол не меняется по лицам)."
-      - "Using do together with a main verb inflection (Does she works?)."
+      - "Using Present Continuous for a routine (I am usually checking reports)."
+      - "Using Present Simple for an action happening now (I check the file now)."
+      - "Ignoring time signals such as usually, today, at the moment, or this week."
     examples:
       - "I check logs every day."
       - "I am checking today's error now."
@@ -502,9 +502,9 @@ topics:
     lexicon: [chunk.can-you-help, word.help, word.question]
     contexts: [work-chat]
     typical_errors:
-      - "Using Russian sentence order where English needs a fixed auxiliary or preposition."
-      - "Omitting a small grammar word because Russian does not mark it in the same way."
-      - "Choosing a literal Russian-to-English form instead of the target construction."
+      - "Adding to after can (I can to join) by analogy with other verbs."
+      - "Using do with can in questions (Do you can help?)."
+      - "Writing cannot hear the difference between can and can't in short requests."
     examples:
       - "Can you open the link?"
       - "I can't join the call today."
@@ -521,9 +521,9 @@ topics:
     lexicon: [chunk.could-you-send-me, word.check, phrasal-verb.look-for]
     contexts: [work-chat]
     typical_errors:
-      - "Using Russian sentence order where English needs a fixed auxiliary or preposition."
-      - "Omitting a small grammar word because Russian does not mark it in the same way."
-      - "Choosing a literal Russian-to-English form instead of the target construction."
+      - "Adding you before an instruction (You click Save) when English uses the base verb."
+      - "Using an infinitive as an instruction (To click Save) from Russian infinitive patterns."
+      - "Making a request sound like an order by omitting please or softening context."
     examples:
       - "Open the ticket first."
       - "Please send the screenshot."
@@ -541,9 +541,9 @@ topics:
     lexicon: [chunk.what-does-mean, chunk.do-you-mean, word.question]
     contexts: [work-chat]
     typical_errors:
-      - "Using Russian sentence order where English needs a fixed auxiliary or preposition."
-      - "Omitting a small grammar word because Russian does not mark it in the same way."
-      - "Choosing a literal Russian-to-English form instead of the target construction."
+      - "Keeping statement order in a question (You mean the old file?)."
+      - "Using two auxiliaries in one simple question (Do you are mean?)."
+      - "Dropping do/does because Russian clarification questions can use intonation."
     examples:
       - "What does this label mean?"
       - "Where is the latest file?"
@@ -739,9 +739,9 @@ topics:
     lexicon: [chunk.were-planning-to, chunk.thats-the-plan-for-now, word.plan]
     contexts: [task-planning]
     typical_errors:
-      - "Using will after if or when in a time clause (If it will fail...)."
-      - "Using going to for a decision made at the moment of speaking."
-      - "Dropping the be in be going to (I going to call)."
+      - "Dropping be in be going to (I going to call)."
+      - "Using will for a plan already decided before the message."
+      - "Writing gonna in neutral work mail where going to is safer."
     examples:
       - "We are going to test the new page."
       - "I am going to call the clinic."
@@ -759,9 +759,9 @@ topics:
     lexicon: [chunk.ill-get-it-done-by, chunk.ill-let-you-know-once, word.plan]
     contexts: [task-planning]
     typical_errors:
-      - "Using will after if or when in a time clause (If it will fail...)."
       - "Using going to for a decision made at the moment of speaking."
-      - "Dropping the be in be going to (I going to call)."
+      - "Dropping will after the subject in an offer or quick decision."
+      - "Using present simple as a direct Russian-style future (I answer you tomorrow)."
     examples:
       - "I will send the link now."
       - "We will help with the setup."
@@ -779,9 +779,9 @@ topics:
     lexicon: [chunk.by-the-end-of-the-week, word.tomorrow, word.deadline]
     contexts: [task-planning]
     typical_errors:
-      - "Using will after if or when in a time clause (If it will fail...)."
-      - "Using going to for a decision made at the moment of speaking."
-      - "Dropping the be in be going to (I going to call)."
+      - "Using at with days or dates (at Monday) instead of on."
+      - "Confusing by and until when stating a deadline."
+      - "Omitting next or in before a future time expression."
     examples:
       - "I will finish by Friday."
       - "The meeting is tomorrow morning."
@@ -1453,9 +1453,9 @@ topics:
     lexicon: [word.task, word.schedule]
     contexts: [daily-standup]
     typical_errors:
-      - "Using Russian sentence order where English needs a fixed auxiliary or preposition."
-      - "Omitting a small grammar word because Russian does not mark it in the same way."
-      - "Choosing a literal Russian-to-English form instead of the target construction."
+      - "Using in Monday or at Monday by mapping Russian case endings to one preposition."
+      - "Using on before clock times instead of at."
+      - "Confusing by and until in deadline messages."
     examples:
       - "The review is on Monday."
       - "The call starts at 10:00."
@@ -1474,9 +1474,9 @@ topics:
     lexicon: [word.system, word.data]
     contexts: [interface-walkthrough]
     typical_errors:
-      - "Using Present Continuous for a routine (калька: «я обычно сейчас работаю»)."
-      - "Forgetting -s after he/she/it (русский глагол не меняется по лицам)."
-      - "Using do together with a main verb inflection (Does she works?)."
+      - "Using here is before plural items (Here is the files)."
+      - "Dropping a/an before a singular item being presented."
+      - "Using it is when English needs Here is to hand over information."
     examples:
       - "Here is your access card."
       - "Here are the test results."

@@ -12,9 +12,9 @@ topics:
     lexicon: [word.at-the-time, word.incident, word.error]
     contexts: [incident-update]
     typical_errors:
-      - "Using the base verb after a past-time marker (Yesterday I go)."
-      - "Using did with a past form (Did you went?)."
-      - "Translating Russian aspect word for word instead of choosing the English time frame."
+      - "Using Past Simple for the background action (We tested when it failed)."
+      - "Dropping was/were before the -ing verb."
+      - "Using Past Continuous for the short completed event instead of the background."
     examples:
       - "We were testing the form when it failed."
       - "The server was running slowly at noon."
@@ -32,9 +32,9 @@ topics:
     lexicon: [chunk.it-only-happens-when, word.during, word.while]
     contexts: [incident-update]
     typical_errors:
-      - "Using the base verb after a past-time marker (Yesterday I go)."
-      - "Using did with a past form (Did you went?)."
-      - "Translating Russian aspect word for word instead of choosing the English time frame."
+      - "Using while with a short completed event when when is clearer."
+      - "Using Past Simple in both clauses when one action is the background."
+      - "Translating Russian когда directly and losing the background/event contrast."
     examples:
       - "The screen froze while I was paying."
       - "When the alert arrived, we called support."
@@ -111,9 +111,9 @@ topics:
     lexicon: [chunk.we-have-completed, chunk.i-have-already-checked, chunk.i-have-experience-with]
     contexts: [deployment-update]
     typical_errors:
-      - "Using Present Continuous for a routine (калька: «я обычно сейчас работаю»)."
-      - "Forgetting -s after he/she/it (русский глагол не меняется по лицам)."
-      - "Using do together with a main verb inflection (Does she works?)."
+      - "Omitting have/has before the participle (We completed the test already) when the result matters now."
+      - "Adding a finished past time to Present Perfect (We have fixed it yesterday)."
+      - "Using Past Simple for a current result without a finished-time marker."
     examples:
       - "We have completed the migration."
       - "I have already checked the data."
@@ -131,9 +131,9 @@ topics:
     lexicon: [chunk.we-have-deployed, chunk.it-has-been-fixed, lexeme.build]
     contexts: [deployment-update]
     typical_errors:
-      - "Using the base verb after a past-time marker (Yesterday I go)."
-      - "Using did with a past form (Did you went?)."
-      - "Translating Russian aspect word for word instead of choosing the English time frame."
+      - "Using the Past Simple form as the participle (has went, has saw)."
+      - "Forgetting irregular participles and defaulting to -ed."
+      - "Choosing the participle by Russian aspect instead of the English verb form."
     examples:
       - "The team has built a new page."
       - "The issue has been fixed."
@@ -151,9 +151,9 @@ topics:
     lexicon: [chunk.we-have-not-had-any-issues-since, word.yet, word.since]
     contexts: [deployment-update]
     typical_errors:
-      - "Using Present Continuous for a routine (калька: «я обычно сейчас работаю»)."
-      - "Forgetting -s after he/she/it (русский глагол не меняется по лицам)."
-      - "Using do together with a main verb inflection (Does she works?)."
+      - "Using Present Perfect with a finished past time (I have sent it yesterday)."
+      - "Using Past Simple for a result that is still relevant now."
+      - "Ignoring already/yet/since because Russian does not require the same tense choice."
     examples:
       - "We have fixed the issue."
       - "We fixed it yesterday."
@@ -229,9 +229,9 @@ topics:
     lexicon: [chunk.the-delivery-date-is, word.delivery, word.deadline]
     contexts: [delivery-planning]
     typical_errors:
-      - "Using will after if or when in a time clause (If it will fail...)."
-      - "Using going to for a decision made at the moment of speaking."
-      - "Dropping the be in be going to (I going to call)."
+      - "Confusing by and until in delivery deadlines."
+      - "Using to before a weekday or date (finish to Tuesday)."
+      - "Dropping the future marker when the date is not enough for a clear plan."
     examples:
       - "The delivery date is next Tuesday."
       - "We will finish by the end of the week."
@@ -249,9 +249,9 @@ topics:
     lexicon: [word.delivery, word.deadline]
     contexts: [delivery-planning]
     typical_errors:
-      - "Using Russian sentence order where English needs a fixed auxiliary or preposition."
-      - "Omitting a small grammar word because Russian does not mark it in the same way."
-      - "Choosing a literal Russian-to-English form instead of the target construction."
+      - "Listing steps without sequence markers, leaving the delivery order unclear."
+      - "Using then after every clause in a Russian-style chain."
+      - "Mixing after/before clause order so the actual next step changes."
     examples:
       - "First we test, then we deploy."
       - "After approval, the team sends the update."
@@ -307,9 +307,9 @@ topics:
     lexicon: [chunk.we-should-consider, word.requirement, word.option]
     contexts: [option-review]
     typical_errors:
-      - "Using Russian sentence order where English needs a fixed auxiliary or preposition."
-      - "Omitting a small grammar word because Russian does not mark it in the same way."
-      - "Choosing a literal Russian-to-English form instead of the target construction."
+      - "Adding to after must/should/can (We must to check it)."
+      - "Using must where a work message needs softer should or need to."
+      - "Combining a modal with do in a question (Do we should test it?)."
     examples:
       - "You must save the form."
       - "We should check the option first."
@@ -327,9 +327,9 @@ topics:
     lexicon: [chunk.in-terms-of, word.compare, word.requirement]
     contexts: [option-review]
     typical_errors:
-      - "Using Russian sentence order where English needs a fixed auxiliary or preposition."
-      - "Omitting a small grammar word because Russian does not mark it in the same way."
-      - "Choosing a literal Russian-to-English form instead of the target construction."
+      - "Using more plus -er together (more cheaper)."
+      - "Omitting than after the comparative."
+      - "Using from instead of than by calquing Russian чем/от."
     examples:
       - "This plan is cheaper than the other one."
       - "Email is faster than a meeting."
@@ -347,9 +347,9 @@ topics:
     lexicon: [chunk.the-main-advantage-is, chunk.the-main-requirement-is, word.priority]
     contexts: [option-review]
     typical_errors:
-      - "Using Russian sentence order where English needs a fixed auxiliary or preposition."
-      - "Omitting a small grammar word because Russian does not mark it in the same way."
-      - "Choosing a literal Russian-to-English form instead of the target construction."
+      - "Omitting the before a superlative (best option)."
+      - "Using most with an -est adjective (most fastest)."
+      - "Choosing in/of incorrectly when naming the comparison group."
     examples:
       - "This is the best option for us."
       - "Monday is the busiest day."
@@ -367,9 +367,9 @@ topics:
     lexicon: [word.requirement, word.option]
     contexts: [option-review]
     typical_errors:
-      - "Using Russian sentence order where English needs a fixed auxiliary or preposition."
-      - "Omitting a small grammar word because Russian does not mark it in the same way."
-      - "Choosing a literal Russian-to-English form instead of the target construction."
+      - "Using many with uncountable nouns such as time or information."
+      - "Putting enough before the noun in phrases like time enough."
+      - "Confusing too much with not enough when translating Russian quantity phrases."
     examples:
       - "We need enough time for testing."
       - "There are too many open requests."
@@ -426,9 +426,9 @@ topics:
     lexicon: [chunk.the-root-cause-was, chunk.the-same-thing-happened-before, word.cause]
     contexts: [support-ticket]
     typical_errors:
-      - "Using Russian sentence order where English needs a fixed auxiliary or preposition."
-      - "Omitting a small grammar word because Russian does not mark it in the same way."
-      - "Choosing a literal Russian-to-English form instead of the target construction."
+      - "Using because and so in the same cause-result sentence."
+      - "Using although and but together by calquing Russian contrast patterns."
+      - "Leaving a dependent because/although clause as a fragment."
     examples:
       - "The page failed because the token expired."
       - "The test passed, but the email did not arrive."
@@ -486,9 +486,9 @@ topics:
     lexicon: [word.process, word.solution]
     contexts: [support-ticket]
     typical_errors:
-      - "Using Russian sentence order where English needs a fixed auxiliary or preposition."
-      - "Omitting a small grammar word because Russian does not mark it in the same way."
-      - "Choosing a literal Russian-to-English form instead of the target construction."
+      - "Omitting be before the participle (The file stored here)."
+      - "Using an active sentence with no actor when the process matters more."
+      - "Using the Past Simple verb instead of the participle in a passive form."
     examples:
       - "The file is stored in the shared folder."
       - "The request is checked before approval."
