@@ -200,7 +200,11 @@ def validate_program(
         dimensions = topic.get("dimensions")
         criteria = topic.get("mastery_criteria")
         if not authored:
-            if dimensions is None and criteria is None:
+            # A skeleton may already carry dimensions (P.1e authors them with
+            # the skeleton); the body marker is mastery_criteria. Keying the
+            # warning on dimensions would silently hide every unauthored body
+            # and let P.2e be forgotten (P.1e handoff finding 2).
+            if criteria is None:
                 warnings.append(f"topic {topic_id}: body not yet authored (level {cefr})")
             continue
         if not dimensions:
