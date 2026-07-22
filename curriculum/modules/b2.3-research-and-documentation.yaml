@@ -1,0 +1,10 @@
+id: b2.3-research-and-documentation
+level: B2
+can_do: "Evaluate argument and evidence, then produce concise research-informed technical documentation."
+tracks: [reading, written-production-mediation, us-tech-english]
+topics:
+  - reading.argument-structure
+  - reading.author-stance-bias
+  - reading.evidence-quality
+  - written-production.executive-summary
+  - us-tech.specification-rationale

@@ -1,0 +1,337 @@
+topics:
+  - id: grammar.third-conditional.retrospective
+    cefr: B2
+    track: grammar-engine
+    module: b2.1-technical-argumentation-and-synthesis
+    can_do: "Explain how a different past action could have changed a completed outcome by using the third conditional."
+    advisory_prerequisites:
+      strong: [grammar.second-conditional.hypothetical, grammar.past-perfect.sequence]
+      soft: [written-production.cause-effect-explanation]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: tail
+    lexicon: []
+
+  - id: grammar.mixed-conditionals.consequences
+    cefr: B2
+    track: grammar-engine
+    module: b2.1-technical-argumentation-and-synthesis
+    can_do: "Connect a past condition to a present consequence, or a persistent condition to a past outcome, with a mixed conditional."
+    advisory_prerequisites:
+      strong: [grammar.third-conditional.retrospective, grammar.second-conditional.hypothetical]
+      soft: [grammar.present-perfect.duration]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: tail
+    lexicon: []
+
+  - id: reading.compare-source-claims
+    cefr: B2
+    track: reading
+    module: b2.1-technical-argumentation-and-synthesis
+    can_do: "Compare how two texts frame the same issue and identify where their claims, evidence, or assumptions differ."
+    advisory_prerequisites:
+      strong: [reading.connected-technical-explanation, reading.implied-online-stance]
+      soft: [written-production.fact-inference]
+    dimensions: [recognition, transfer]
+    lexicon: []
+
+  - id: written-production.technical-position-paper
+    cefr: B2
+    track: written-production-mediation
+    module: b2.1-technical-argumentation-and-synthesis
+    can_do: "Write a structured position on a technical decision with a clear claim, relevant evidence, and explicit trade-offs."
+    advisory_prerequisites:
+      strong: [written-production.reasoned-recommendation, written-production.system-overview]
+      soft: [us-tech.tradeoff-summary]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: written-production.multi-source-synthesis
+    cefr: B2
+    track: written-production-mediation
+    module: b2.1-technical-argumentation-and-synthesis
+    can_do: "Synthesize compatible and conflicting information from multiple short texts without presenting the sources as a list."
+    advisory_prerequisites:
+      strong: [reading.compare-source-claims, written-production.paraphrase-summary]
+      soft: [written-production.system-overview]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: us-tech.architecture-tradeoff
+    cefr: B2
+    track: us-tech-english
+    module: b2.1-technical-argumentation-and-synthesis
+    can_do: "Argue for an architecture option by relating constraints, operational risks, maintainability, and expected value."
+    advisory_prerequisites:
+      strong: [us-tech.tradeoff-summary, us-tech.requirement-rationale]
+      soft: [written-production.technical-position-paper]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: written-interaction.decision-challenge
+    cefr: B2
+    track: written-interaction
+    module: b2.1-technical-argumentation-and-synthesis
+    can_do: "Challenge a proposed decision in writing by testing its assumptions, evidence, and consequences while preserving collaboration."
+    advisory_prerequisites:
+      strong: [written-interaction.constructive-challenge, written-interaction.negotiating-scope]
+      soft: [written-production.reasoned-recommendation]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: grammar.passive.reporting-structures
+    cefr: B2
+    track: grammar-engine
+    module: b2.2-advanced-grammar-and-style
+    can_do: "Use passive reporting structures to present attributed claims while controlling distance and certainty."
+    advisory_prerequisites:
+      strong: [grammar.passive.expanded-process, grammar.reported-speech.work-updates]
+      soft: [grammar.modals.deduction-obligation]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: tail
+    lexicon: []
+
+  - id: grammar.inversion.emphasis
+    cefr: B2
+    track: grammar-engine
+    module: b2.2-advanced-grammar-and-style
+    can_do: "Use inversion after a restrictive or negative opening to emphasize an exceptional condition or outcome."
+    advisory_prerequisites:
+      strong: [grammar.basic-word-order, grammar.connectors.cause-contrast]
+      soft: [grammar.past-perfect.sequence]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: tail
+    lexicon: []
+
+  - id: grammar.modal-perfect.speculation
+    cefr: B2
+    track: grammar-engine
+    module: b2.2-advanced-grammar-and-style
+    can_do: "Evaluate possible, probable, and counterfactual explanations for a past event with modal perfect forms."
+    advisory_prerequisites:
+      strong: [grammar.modals.deduction-obligation, grammar.past-perfect.sequence]
+      soft: [us-tech.incident-root-cause]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: tail
+    lexicon: []
+
+  - id: grammar.participle-clauses.compression
+    cefr: B2
+    track: grammar-engine
+    module: b2.2-advanced-grammar-and-style
+    can_do: "Compress related information with a participle clause while keeping its actor and time relationship unambiguous."
+    advisory_prerequisites:
+      strong: [grammar.relative-clauses.specification, grammar.past-participle.forms]
+      soft: [grammar.passive.expanded-process]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: tail
+    lexicon: []
+
+  - id: grammar.cleft-sentences.focus
+    cefr: B2
+    track: grammar-engine
+    module: b2.2-advanced-grammar-and-style
+    can_do: "Use a cleft sentence to place deliberate focus on the decisive person, condition, reason, or result."
+    advisory_prerequisites:
+      strong: [grammar.relative-clauses.specification, grammar.basic-word-order]
+      soft: [grammar.inversion.emphasis]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: tail
+    lexicon: []
+
+  - id: word-formation.academic-nominalization
+    cefr: B2
+    track: word-formation
+    module: b2.2-advanced-grammar-and-style
+    can_do: "Recognize and form common nominalizations to package a process, result, or quality as a concept in formal writing."
+    advisory_prerequisites:
+      strong: [word-formation.quality-suffix, word-formation.agent-and-noun-suffix]
+      soft: [written-production.technical-position-paper]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: word-formation.prefix-stance
+    cefr: B2
+    track: word-formation
+    module: b2.2-advanced-grammar-and-style
+    can_do: "Infer how an unfamiliar formal word's prefix changes degree, relation, or evaluation in its sentence."
+    advisory_prerequisites:
+      strong: [word-formation.surpass-out, word-formation.degree-over-under]
+      soft: [reading.compare-source-claims]
+    dimensions: [recognition, transfer]
+    lexicon: []
+
+  - id: reading.argument-structure
+    cefr: B2
+    track: reading
+    module: b2.3-research-and-documentation
+    can_do: "Map a text's central claim, supporting reasons, evidence, counterpoint, and conclusion."
+    advisory_prerequisites:
+      strong: [reading.compare-source-claims, reading.main-idea-details]
+      soft: [written-production.reasoned-recommendation]
+    dimensions: [recognition, transfer]
+    lexicon: []
+
+  - id: reading.author-stance-bias
+    cefr: B2
+    track: reading
+    module: b2.3-research-and-documentation
+    can_do: "Identify an author's degree of commitment, evaluative stance, and relevant signs of bias in a connected text."
+    advisory_prerequisites:
+      strong: [reading.implied-online-stance, written-production.fact-inference]
+      soft: [reading.compare-source-claims]
+    dimensions: [recognition, transfer]
+    lexicon: []
+
+  - id: reading.evidence-quality
+    cefr: B2
+    track: reading
+    module: b2.3-research-and-documentation
+    can_do: "Judge whether cited evidence is relevant and sufficient for the specific claim a text makes."
+    advisory_prerequisites:
+      strong: [reading.argument-structure, reading.author-stance-bias]
+      soft: [written-production.fact-inference]
+    dimensions: [recognition, transfer]
+    lexicon: []
+
+  - id: written-production.executive-summary
+    cefr: B2
+    track: written-production-mediation
+    module: b2.3-research-and-documentation
+    can_do: "Write a concise executive summary that prioritizes purpose, material findings, implications, and the decision required."
+    advisory_prerequisites:
+      strong: [written-production.multi-source-synthesis, written-production.system-overview]
+      soft: [reading.argument-structure]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: us-tech.specification-rationale
+    cefr: B2
+    track: us-tech-english
+    module: b2.3-research-and-documentation
+    can_do: "Write a specification rationale that links requirements to evidence, constraints, rejected alternatives, and verification."
+    advisory_prerequisites:
+      strong: [us-tech.requirement-rationale, written-production.technical-position-paper]
+      soft: [reading.evidence-quality]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: written-interaction.negotiate-priorities
+    cefr: B2
+    track: written-interaction
+    module: b2.4-professional-negotiation
+    can_do: "Negotiate competing priorities in writing and make the resulting ownership, trade-off, and decision explicit."
+    advisory_prerequisites:
+      strong: [written-interaction.negotiating-scope, written-interaction.decision-challenge]
+      soft: [us-tech.tradeoff-summary]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: written-interaction.diplomatic-escalation
+    cefr: B2
+    track: written-interaction
+    module: b2.4-professional-negotiation
+    can_do: "Escalate an unresolved issue with a factual record, proportional urgency, and a clear request for intervention."
+    advisory_prerequisites:
+      strong: [written-interaction.formal-service-request, written-interaction.project-risk-update]
+      soft: [written-interaction.constructive-challenge]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: written-interaction.resolve-ambiguity
+    cefr: B2
+    track: written-interaction
+    module: b2.4-professional-negotiation
+    can_do: "Resolve a consequential ambiguity by separating interpretations, checking evidence, and recording the agreed meaning."
+    advisory_prerequisites:
+      strong: [written-interaction.requirement-question, written-interaction.constructive-challenge]
+      soft: [grammar.relative-clauses.specification]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: written-production.counterargument-response
+    cefr: B2
+    track: written-production-mediation
+    module: b2.4-professional-negotiation
+    can_do: "Represent a credible counterargument fairly and answer it with relevant reasoning rather than dismissal."
+    advisory_prerequisites:
+      strong: [written-production.technical-position-paper, written-production.reasoned-recommendation]
+      soft: [written-interaction.decision-challenge]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: us-tech.incident-postmortem
+    cefr: B2
+    track: us-tech-english
+    module: b2.4-professional-negotiation
+    can_do: "Write an incident postmortem that separates chronology, contributing factors, impact, corrective actions, and remaining uncertainty."
+    advisory_prerequisites:
+      strong: [us-tech.incident-root-cause, written-production.cause-effect-explanation]
+      soft: [grammar.modal-perfect.speculation]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: everyday-life.complex-service-negotiation
+    cefr: B2
+    track: everyday-life
+    module: b2.5-public-and-online-discourse
+    can_do: "Negotiate a complex service outcome by responding to policy constraints, incomplete remedies, and competing practical needs."
+    advisory_prerequisites:
+      strong: [everyday-life.resolving-service-dispute, written-interaction.negotiating-scope]
+      soft: [written-interaction.diplomatic-escalation]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: everyday-life.evaluate-consumer-health-info
+    cefr: B2
+    track: everyday-life
+    module: b2.5-public-and-online-discourse
+    can_do: "Compare consumer or general health information, distinguish evidence from promotion, and explain a cautious practical choice."
+    advisory_prerequisites:
+      strong: [reading.multi-step-service-information, reading.evidence-quality]
+      soft: [everyday-life.comparing-health-travel-options]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: everyday-life.community-participation
+    cefr: B2
+    track: everyday-life
+    module: b2.5-public-and-online-discourse
+    can_do: "State and support a position on a local community issue while acknowledging legitimate competing concerns."
+    advisory_prerequisites:
+      strong: [everyday-life.explaining-personal-decision, written-production.technical-position-paper]
+      soft: [written-production.counterargument-response]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: everyday-online-informal.implied-irony
+    cefr: B2
+    track: everyday-online-informal
+    module: b2.5-public-and-online-discourse
+    can_do: "Recognize likely irony or understated criticism from the mismatch between literal wording, context, and expected stance."
+    advisory_prerequisites:
+      strong: [reading.implied-online-stance, everyday-online-informal.tone-repair]
+      soft: [reading.idioms-in-context]
+    dimensions: [recognition, transfer]
+    lexicon: []
+
+  - id: everyday-online-informal.moderation-response
+    cefr: B2
+    track: everyday-online-informal
+    module: b2.5-public-and-online-discourse
+    can_do: "Write a proportionate moderation response that states the issue, applies a community norm, and offers a constructive next step."
+    advisory_prerequisites:
+      strong: [everyday-online-informal.community-reply, written-interaction.diplomatic-escalation]
+      soft: [everyday-online-informal.tone-recognition]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: reading.public-information-comparison
+    cefr: B2
+    track: reading
+    module: b2.5-public-and-online-discourse
+    can_do: "Reconcile conditions, definitions, and exceptions across two public-information texts before choosing an action."
+    advisory_prerequisites:
+      strong: [reading.multi-step-service-information, reading.compare-source-claims]
+      soft: [reading.evidence-quality]
+    dimensions: [recognition, transfer]
+    lexicon: []

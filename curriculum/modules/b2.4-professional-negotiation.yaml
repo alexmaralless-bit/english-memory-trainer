@@ -1,0 +1,10 @@
+id: b2.4-professional-negotiation
+level: B2
+can_do: "Negotiate priorities, escalate proportionately, resolve ambiguity, and answer counterarguments in professional writing."
+tracks: [written-interaction, written-production-mediation, us-tech-english]
+topics:
+  - written-interaction.negotiate-priorities
+  - written-interaction.diplomatic-escalation
+  - written-interaction.resolve-ambiguity
+  - written-production.counterargument-response
+  - us-tech.incident-postmortem
