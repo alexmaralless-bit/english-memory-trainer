@@ -52,3 +52,13 @@ Append-only implementation trail for the ordered completion handoff.
 - New optional live fields remain absent from the historical `compose_plan` result when their inputs are omitted, preserving the default canonical shape.
 - OPEN-11 remains intentionally open. The contract requires optimistic session revision but `wiki/OPEN.md` explicitly leaves multi-aggregate CAS and idempotency scope unresolved. `staging/concepts/2026-07-22-open11-session-revision-concept.md` documents the concrete aggregate conflict and three options; coarse session fencing is recommended. The strict xfail remains a truthful executable finding.
 - Gates: full pytest `447 passed, 2 xfailed` (449 collected); `ruff check .` clean; `ruff format --check src tests` clean (144 files); `mypy src` clean (72 source files).
+
+## 2.9 — Trust contour (blocked by missing contract decisions)
+
+- Status: no runtime implementation. Two strict xfails in `tests/audit/test_trust_contour_contract.py` preserve the missing adapter-ingress and `audit.obligations` surfaces as executable findings.
+- The current adapters boundary handles Agent Skill files and parity fixtures; it receives no provider user messages. The requested `provider_message_id` + hash + span therefore has no honest capture point.
+- The event log contains domain outcomes but no persisted Command/CLI invocation or refusal facts. Inferring compliance from successful domain events would make rejected forbidden actions and read-only obligations invisible.
+- Scoring names three obligation families, but no versioned obligations payload defines applicability, effect matching, denominator, correlation rules, policy selection, or incomplete-history behavior. Skill lifecycle self-report event names also have no reporting channel by design.
+- `staging/concepts/2026-07-22-2.9-trust-contour-concept.md` presents four owner decisions and recommends: raw UTF-8 capture for this local tool, adapter-owned idempotent ingress, append-only command/result observation in the authoritative event log, and an explicit versioned obligations payload.
+- Session lease remains unimplemented as required: it is MAY and no real simultaneous-agent need was established.
+- Expected final gates after adding the two markers: `447 passed, 4 xfailed` (451 collected), with Ruff/format/mypy strict clean.
