@@ -62,3 +62,12 @@ Append-only implementation trail for the ordered completion handoff.
 - `staging/concepts/2026-07-22-2.9-trust-contour-concept.md` presents four owner decisions and recommends: raw UTF-8 capture for this local tool, adapter-owned idempotent ingress, append-only command/result observation in the authoritative event log, and an explicit versioned obligations payload.
 - Session lease remains unimplemented as required: it is MAY and no real simultaneous-agent need was established.
 - Expected final gates after adding the two markers: `447 passed, 4 xfailed` (451 collected), with Ruff/format/mypy strict clean.
+
+## Final handoff summary
+
+- Completed implementation commits: Availability `87104d4`; immutable DecisionTrace `2076a5e`; deterministic metrics `c53f18d`; bank reuse + observed errors `40b44b3`; live lessons/control wiring `7e5a172`.
+- Acceptance trail commits: `b5b6e74`, `8430712`, `8efcdaf`, `9eb673b`; 2.9 executable findings and concept: `4b514c9`.
+- Implemented behavior is active end-to-end, not only pure helpers: session composition consumes availability, signals/probes, saturation, recurring errors, deferral/starvation and bank state; decision facts and one-shot consumption are transactional.
+- Owner decisions still required: complete tunable catalogue metadata/ranges and calibration ownership; canonical scoring `STATE_TRANSITION` producer; OPEN-11 session-revision/multi-aggregate CAS; 2.9 provider ingress, command observation and obligations payload. These are represented by four strict xfails and two mini-concepts, not placeholder success paths.
+- Final verification: 451 tests collected — `447 passed, 4 xfailed`; `ruff check .` clean; `ruff format --check src tests` clean (145 files); `mypy src` strict clean (72 source files); CLI registry remains 45 commands.
+- Scope hygiene: unrelated pre-existing CRLF/noise files, `wiki/modules/control.md`, generated roadmap HTML, and root `Irregular Verbs.md` were never staged or modified by these commits.
