@@ -1,0 +1,179 @@
+topics:
+  - id: grammar.marked-word-order.rhetoric
+    cefr: C2
+    track: grammar-engine
+    module: c2.1-editorial-precision-and-audience-adaptation
+    can_do: "Use marked word order for deliberate rhetorical emphasis while preserving clarity and avoiding accidental distortion."
+    advisory_prerequisites:
+      strong: [grammar.inversion.formal-emphasis, grammar.reference-cohesion]
+      soft: [grammar.cleft-sentences.focus]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: tail
+    lexicon: []
+
+  - id: grammar.ellipsis-substitution
+    cefr: C2
+    track: grammar-engine
+    module: c2.1-editorial-precision-and-audience-adaptation
+    can_do: "Use ellipsis and substitution to remove needless repetition without making the omitted meaning or reference uncertain."
+    advisory_prerequisites:
+      strong: [grammar.reference-cohesion, grammar.relative-clauses.specification]
+      soft: [written-production.style-revision]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: core
+    lexicon: []
+
+  - id: written-production.editorial-rewrite
+    cefr: C2
+    track: written-production-mediation
+    module: c2.1-editorial-precision-and-audience-adaptation
+    can_do: "Rewrite a dense draft to near-editorial quality by improving logic, precision, rhythm, cohesion, and economy without changing its warranted claims."
+    advisory_prerequisites:
+      strong: [written-production.style-revision, written-production.critical-synthesis]
+      soft: [grammar.ellipsis-substitution]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: written-production.audience-adaptation
+    cefr: C2
+    track: written-production-mediation
+    module: c2.1-editorial-precision-and-audience-adaptation
+    can_do: "Recast the same substantive message for expert, executive, public, and peer audiences while preserving evidence and intent."
+    advisory_prerequisites:
+      strong: [written-interaction.executive-recommendation, everyday-online-informal.code-switching]
+      soft: [written-production.editorial-rewrite]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: reading.ambiguity-resolution
+    cefr: C2
+    track: reading
+    module: c2.1-editorial-precision-and-audience-adaptation
+    can_do: "Identify competing defensible readings of an ambiguous passage and determine which interpretation best fits its evidence and discourse context."
+    advisory_prerequisites:
+      strong: [toefl-reading.implicit-qualification, reading.cross-source-tension]
+      soft: [reading.implicit-assumptions]
+    dimensions: [recognition, transfer]
+    lexicon: []
+
+  - id: reading.dense-interdisciplinary-synthesis
+    cefr: C2
+    track: reading
+    module: c2.2-dense-text-and-argument
+    can_do: "Synthesize dense texts from different disciplines while preserving differences in concepts, methods, evidence, and standards of proof."
+    advisory_prerequisites:
+      strong: [written-production.critical-synthesis, toefl-reading.dense-passage-synthesis]
+      soft: [reading.methodology-limitations]
+    dimensions: [recognition, transfer]
+    lexicon: []
+
+  - id: reading.rhetorical-subtext
+    cefr: C2
+    track: reading
+    module: c2.2-dense-text-and-argument
+    can_do: "Interpret rhetorical subtext, strategic omission, and audience positioning without treating a speculative reading as explicit fact."
+    advisory_prerequisites:
+      strong: [reading.implicit-assumptions, everyday-online-informal.subtle-humor]
+      soft: [toefl-reading.implicit-qualification]
+    dimensions: [recognition, transfer]
+    lexicon: []
+
+  - id: written-production.complex-argument-architecture
+    cefr: C2
+    track: written-production-mediation
+    module: c2.2-dense-text-and-argument
+    can_do: "Design a complex argument with layered claims, qualified counterarguments, explicit warrants, and a conclusion proportionate to the evidence."
+    advisory_prerequisites:
+      strong: [written-production.evidence-qualified-argument, toefl-writing.counterargument-nuance]
+      soft: [reading.implicit-assumptions]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: written-production.source-voice-balance
+    cefr: C2
+    track: written-production-mediation
+    module: c2.2-dense-text-and-argument
+    can_do: "Balance source voices and original analysis so attribution remains exact and the writer's own contribution remains unmistakable."
+    advisory_prerequisites:
+      strong: [toefl-writing.source-integration, written-production.critical-synthesis]
+      soft: [grammar.hedging-stance.control]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: written-interaction.high-stakes-diplomacy
+    cefr: C2
+    track: written-interaction
+    module: c2.3-high-stakes-communication
+    can_do: "Manage a high-stakes written disagreement by preserving relationships, legal or operational clarity, and a viable path to resolution."
+    advisory_prerequisites:
+      strong: [written-interaction.diplomatic-refusal, written-interaction.multi-party-alignment]
+      soft: [written-production.evidence-qualified-argument]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: us-tech.executive-technical-narrative
+    cefr: C2
+    track: us-tech-english
+    module: c2.3-high-stakes-communication
+    can_do: "Build an executive technical narrative that connects system behavior, evidence, strategic consequence, and a defensible decision."
+    advisory_prerequisites:
+      strong: [us-tech.strategic-technical-brief, written-production.decision-memo]
+      soft: [written-production.audience-adaptation]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: us-tech.uncertainty-and-model-risk
+    cefr: C2
+    track: us-tech-english
+    module: c2.3-high-stakes-communication
+    can_do: "Communicate model or system uncertainty with calibrated confidence, failure boundaries, monitoring implications, and decision risk."
+    advisory_prerequisites:
+      strong: [us-tech.risk-governance-brief, written-production.evidence-qualified-argument]
+      soft: [grammar.hedging-stance.control]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: everyday-life.sensitive-interpersonal-mediation
+    cefr: C2
+    track: everyday-life
+    module: c2.3-high-stakes-communication
+    can_do: "Mediate a sensitive personal disagreement in writing while representing each position fairly and proposing language both sides can accept."
+    advisory_prerequisites:
+      strong: [everyday-life.explaining-personal-decision, written-interaction.diplomatic-refusal]
+      soft: [written-interaction.high-stakes-diplomacy]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: grammar.syntactic-ambiguity-control
+    cefr: C2
+    track: grammar-engine
+    module: c2.4-language-innovation-and-voice
+    can_do: "Detect and revise attachment, scope, reference, and coordination ambiguities in syntactically complex prose."
+    advisory_prerequisites:
+      strong: [grammar.reference-cohesion, grammar.participle-clauses.precision]
+      soft: [reading.ambiguity-resolution]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: core
+    lexicon: []
+
+  - id: word-formation.neologism-interpretation
+    cefr: C2
+    track: word-formation
+    module: c2.4-language-innovation-and-voice
+    can_do: "Infer the likely meaning, stance, and register of a plausible unfamiliar coinage from its components and discourse context."
+    advisory_prerequisites:
+      strong: [word-formation.register-shift, word-formation.prefix-stance]
+      soft: [toefl-reading.vocabulary-context]
+    dimensions: [recognition, transfer]
+    lexicon: []
+
+  - id: everyday-online-informal.audience-specific-voice
+    cefr: C2
+    track: everyday-online-informal
+    module: c2.4-language-innovation-and-voice
+    can_do: "Create an authentic informal voice for a specific online community while controlling implication, humor, accessibility, and reputational risk."
+    advisory_prerequisites:
+      strong: [everyday-online-informal.code-switching, everyday-online-informal.subtle-humor]
+      soft: [written-production.audience-adaptation]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []

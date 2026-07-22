@@ -1,0 +1,9 @@
+id: c2.3-high-stakes-communication
+level: C2
+can_do: "Communicate technical, strategic, and interpersonal risk precisely in high-stakes written situations."
+tracks: [written-interaction, us-tech-english, everyday-life]
+topics:
+  - written-interaction.high-stakes-diplomacy
+  - us-tech.executive-technical-narrative
+  - us-tech.uncertainty-and-model-risk
+  - everyday-life.sensitive-interpersonal-mediation

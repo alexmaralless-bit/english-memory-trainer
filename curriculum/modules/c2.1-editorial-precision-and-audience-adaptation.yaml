@@ -1,5 +1,10 @@
-# TODO(review): the approved concept gives only a C2 sketch; no topic decomposition is created in P.1.
 id: c2.1-editorial-precision-and-audience-adaptation
 level: C2
 can_do: "Interpret dense ambiguous texts and adapt precise near-editorial writing to different audiences."
-tracks: [grammar-engine, reading, written-interaction, written-production-mediation, us-tech-english, everyday-online-informal, toefl-reading-writing]
+tracks: [grammar-engine, reading, written-production-mediation]
+topics:
+  - grammar.marked-word-order.rhetoric
+  - grammar.ellipsis-substitution
+  - written-production.editorial-rewrite
+  - written-production.audience-adaptation
+  - reading.ambiguity-resolution

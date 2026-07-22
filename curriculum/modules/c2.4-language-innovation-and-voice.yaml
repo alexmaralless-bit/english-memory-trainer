@@ -1,0 +1,8 @@
+id: c2.4-language-innovation-and-voice
+level: C2
+can_do: "Resolve syntactic ambiguity, interpret novel formations, and control a community-specific informal voice."
+tracks: [grammar-engine, word-formation, everyday-online-informal]
+topics:
+  - grammar.syntactic-ambiguity-control
+  - word-formation.neologism-interpretation
+  - everyday-online-informal.audience-specific-voice
