@@ -22,7 +22,9 @@ from typing import Any
 
 import yaml
 
-TOPIC_FILES = ("a1.yaml", "a2.yaml", "b1.yaml")
+# One file per CEFR level, loaded in pedagogical order; missing files load as
+# empty (the skeleton grows level by level -- P.1e authors B1-C2).
+TOPIC_FILES = ("a1.yaml", "a2.yaml", "b1.yaml", "b2.yaml", "c1.yaml", "c2.yaml")
 
 
 def _read_yaml(path: Path) -> Any:
