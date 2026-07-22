@@ -10,6 +10,16 @@ topics:
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: tail
     lexicon: []
+    contexts: [editorial-argument, executive-address]
+    typical_errors:
+      - "Moving a phrase to the front as in Russian prose without supplying the English structure that marks its relation."
+      - "Using marked order so often that no element retains genuine rhetorical prominence."
+      - "Allowing emphasis to suggest an unintended contrast or exclusion."
+    examples:
+      - "What the inquiry did not establish was whether the failure had been deliberate."
+      - "Into this already fragile process came a requirement that no team had budgeted for."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 85, independent_attempts: 3}, controlled_production: {active_threshold: 88, independent_attempts: 3}, spontaneous_production: {active_threshold: 88, independent_attempts: 3}, transfer: {active_threshold: 90, independent_attempts: 3}}, mastered: {all_required_active: true, retention_stability_days: 90, retention_confirmations: 3}}
 
   - id: grammar.ellipsis-substitution
     cefr: C2
@@ -22,6 +32,16 @@ topics:
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: core
     lexicon: []
+    contexts: [formal-comparison, editorial-revision]
+    typical_errors:
+      - "Omitting a verb that English cannot recover merely because Russian permits a verbless parallel."
+      - "Using one or do so when the substitute changes number, tense, or semantic content."
+      - "Removing repeated terminology that was needed to distinguish two technical referents."
+    examples:
+      - "The first model predicts short-term demand; the second does not."
+      - "Some regions adopted the standard in 2024, and the remaining regions did so a year later."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 85, independent_attempts: 3}, controlled_production: {active_threshold: 88, independent_attempts: 3}, spontaneous_production: {active_threshold: 88, independent_attempts: 3}, transfer: {active_threshold: 90, independent_attempts: 3}}, mastered: {all_required_active: true, retention_stability_days: 90, retention_confirmations: 3}}
 
   - id: written-production.editorial-rewrite
     cefr: C2
@@ -32,7 +52,17 @@ topics:
       strong: [written-production.style-revision, written-production.critical-synthesis]
       soft: [grammar.ellipsis-substitution]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [word.summary, word.reason, word.result]
+    contexts: [policy-edit, technical-publication]
+    typical_errors:
+      - "Replacing plain English with longer cognates to imitate Russian academic prestige."
+      - "Improving sentence rhythm while accidentally strengthening or narrowing the warranted claim."
+      - "Deleting repetition without noticing that it carries the document's logical structure."
+    examples:
+      - "The rewrite replaces three abstract openings with active claims and moves the qualification beside the evidence it limits."
+      - "A dense six-line sentence becomes two: one states the finding, and the other explains its restricted scope."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 85, independent_attempts: 3}, controlled_production: {active_threshold: 88, independent_attempts: 3}, spontaneous_production: {active_threshold: 88, independent_attempts: 3}, transfer: {active_threshold: 90, independent_attempts: 3}}, mastered: {all_required_active: true, retention_stability_days: 90, retention_confirmations: 3}}
 
   - id: written-production.audience-adaptation
     cefr: C2
@@ -43,7 +73,17 @@ topics:
       strong: [written-interaction.executive-recommendation, everyday-online-informal.code-switching]
       soft: [written-production.editorial-rewrite]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [word.recommendation, chunk.the-main-risk-is, chunk.could-you-please]
+    contexts: [expert-to-executive, technical-public-notice]
+    typical_errors:
+      - "Merely shortening the expert version without changing what the new audience needs explained."
+      - "Removing uncertainty for an executive audience and turning a risk judgment into a promise."
+      - "Adopting a formal Russian bureaucratic tone for the public that obscures the required action."
+    examples:
+      - "Expert version: the classifier's recall falls under domain shift. Executive version: unfamiliar cases may be missed, so expansion requires monitored human review."
+      - "The public notice omits internal component names but preserves the affected dates, user impact, and recovery steps."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 85, independent_attempts: 3}, controlled_production: {active_threshold: 88, independent_attempts: 3}, spontaneous_production: {active_threshold: 88, independent_attempts: 3}, transfer: {active_threshold: 90, independent_attempts: 3}}, mastered: {all_required_active: true, retention_stability_days: 90, retention_confirmations: 3}}
 
   - id: reading.ambiguity-resolution
     cefr: C2
@@ -54,7 +94,17 @@ topics:
       strong: [toefl-reading.implicit-qualification, reading.cross-source-tension]
       soft: [reading.implicit-assumptions]
     dimensions: [recognition, transfer]
-    lexicon: []
+    lexicon: [word.reason, word.detail]
+    contexts: [contract-analysis, academic-argument]
+    typical_errors:
+      - "Choosing the interpretation closest to Russian syntax without testing the wider discourse."
+      - "Declaring the sentence unambiguous because one reading is more familiar."
+      - "Treating a grammatically possible reading as equally defensible despite contradictory evidence later in the text."
+    examples:
+      - "The phrase 'review of the managers' may describe a review conducted by them or an evaluation of them. The following reference to their performance favors the second reading."
+      - "Only the final paragraph clarifies that 'local control' means municipal authority, not control stored on the device."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 85, independent_attempts: 3}, transfer: {active_threshold: 90, independent_attempts: 3}}, mastered: {all_required_active: true, retention_stability_days: 90, retention_confirmations: 3}}
 
   - id: reading.dense-interdisciplinary-synthesis
     cefr: C2
@@ -65,7 +115,17 @@ topics:
       strong: [written-production.critical-synthesis, toefl-reading.dense-passage-synthesis]
       soft: [reading.methodology-limitations]
     dimensions: [recognition, transfer]
-    lexicon: []
+    lexicon: [word.summary, chunk.according-to, word.result]
+    contexts: [interdisciplinary-review, policy-research]
+    typical_errors:
+      - "Treating similarly named concepts from two disciplines as interchangeable."
+      - "Applying one field's standard of proof to a source that asks a different kind of question."
+      - "Producing a smooth Russian-style synthesis by suppressing incompatible methods."
+    examples:
+      - "The economic study measures household response to prices, whereas the ethnography explains why the same price carries different social meanings."
+      - "Both papers address resilience, but one defines it as recovery speed and the other as preservation of ecological function."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 85, independent_attempts: 3}, transfer: {active_threshold: 90, independent_attempts: 3}}, mastered: {all_required_active: true, retention_stability_days: 90, retention_confirmations: 3}}
 
   - id: reading.rhetorical-subtext
     cefr: C2
@@ -76,7 +136,17 @@ topics:
       strong: [reading.implicit-assumptions, everyday-online-informal.subtle-humor]
       soft: [toefl-reading.implicit-qualification]
     dimensions: [recognition, transfer]
-    lexicon: []
+    lexicon: [informal.yeah-right]
+    contexts: [policy-commentary, public-statement]
+    typical_errors:
+      - "Reporting an inferred strategic motive as an explicit fact."
+      - "Missing criticism conveyed through selective praise because the literal Russian translation sounds positive."
+      - "Assuming an omitted issue was intentionally concealed when genre or scope offers a simpler explanation."
+    examples:
+      - "By praising the plan's ambition while never mentioning feasibility, the reviewer signals reservation without directly rejecting it."
+      - "The statement thanks the committee for its speed but devotes the next paragraph to missing evidence, positioning haste as a weakness."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 85, independent_attempts: 3}, transfer: {active_threshold: 90, independent_attempts: 3}}, mastered: {all_required_active: true, retention_stability_days: 90, retention_confirmations: 3}}
 
   - id: written-production.complex-argument-architecture
     cefr: C2
@@ -87,7 +157,17 @@ topics:
       strong: [written-production.evidence-qualified-argument, toefl-writing.counterargument-nuance]
       soft: [reading.implicit-assumptions]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [word.reason, word.result, word.although]
+    contexts: [policy-essay, strategic-analysis]
+    typical_errors:
+      - "Accumulating claims without making the warrant between evidence and conclusion explicit."
+      - "Using a counterargument as a decorative paragraph that never changes the thesis."
+      - "Building a categorical conclusion from branches of evidence that support different scopes."
+    examples:
+      - "The argument separates the immediate safety case from the longer economic case, then states which evidence supports each."
+      - "It concedes that the control slows routine work, limits that cost to high-risk cases, and refines the recommendation accordingly."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 85, independent_attempts: 3}, controlled_production: {active_threshold: 88, independent_attempts: 3}, spontaneous_production: {active_threshold: 88, independent_attempts: 3}, transfer: {active_threshold: 90, independent_attempts: 3}}, mastered: {all_required_active: true, retention_stability_days: 90, retention_confirmations: 3}}
 
   - id: written-production.source-voice-balance
     cefr: C2
@@ -98,7 +178,17 @@ topics:
       strong: [toefl-writing.source-integration, written-production.critical-synthesis]
       soft: [grammar.hedging-stance.control]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [chunk.according-to, word.summary, word.result]
+    contexts: [research-article, evidence-based-brief]
+    typical_errors:
+      - "Letting a long paraphrase continue into personal analysis without a clear boundary."
+      - "Using according to repeatedly while failing to explain why the cited material matters."
+      - "Correcting a source's cautious language into a more categorical Russian formulation."
+    examples:
+      - "Chen reports that the intervention improved recall in one age group. This narrow result supports targeted testing, not the universal redesign Chen advocates."
+      - "The paragraph groups two compatible sources, marks their different samples, and reserves the final sentence for the writer's inference."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 85, independent_attempts: 3}, controlled_production: {active_threshold: 88, independent_attempts: 3}, spontaneous_production: {active_threshold: 88, independent_attempts: 3}, transfer: {active_threshold: 90, independent_attempts: 3}}, mastered: {all_required_active: true, retention_stability_days: 90, retention_confirmations: 3}}
 
   - id: written-interaction.high-stakes-diplomacy
     cefr: C2
@@ -109,7 +199,17 @@ topics:
       strong: [written-interaction.diplomatic-refusal, written-interaction.multi-party-alignment]
       soft: [written-production.evidence-qualified-argument]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [word.reason, word.agreement, word.option]
+    contexts: [contract-dispute, critical-partnership]
+    typical_errors:
+      - "Softening the message until legal or operational non-acceptance is no longer explicit."
+      - "Translating a forceful Russian accusation that assigns bad faith before the evidence is agreed."
+      - "Offering compromise language that silently waives an essential requirement."
+    examples:
+      - "We cannot accept the revised liability clause, but we remain prepared to extend the implementation schedule while both legal teams examine a narrower allocation."
+      - "The current delay breaches the agreed milestone. To preserve the partnership, we propose a joint recovery plan with weekly evidence and a decision checkpoint on Friday."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 85, independent_attempts: 3}, controlled_production: {active_threshold: 88, independent_attempts: 3}, spontaneous_production: {active_threshold: 88, independent_attempts: 3}, transfer: {active_threshold: 90, independent_attempts: 3}}, mastered: {all_required_active: true, retention_stability_days: 90, retention_confirmations: 3}}
 
   - id: us-tech.executive-technical-narrative
     cefr: C2
@@ -120,7 +220,17 @@ topics:
       strong: [us-tech.strategic-technical-brief, written-production.decision-memo]
       soft: [written-production.audience-adaptation]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [chunk.the-main-risk-is, word.impact, word.recommendation]
+    contexts: [board-briefing, strategic-investment]
+    typical_errors:
+      - "Presenting technical chronology without a narrative link to strategic consequence."
+      - "Using false precision in cost or reliability forecasts to make the recommendation sound stronger."
+      - "Hiding a contested assumption inside implementation detail."
+    examples:
+      - "The platform grew by adding exceptions faster than controls. That history explains today's recovery cost and supports investment in isolation rather than another feature-layer patch."
+      - "The model creates value in routine cases, but rare failures carry disproportionate regulatory exposure. We therefore recommend expansion only with auditable review."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 85, independent_attempts: 3}, controlled_production: {active_threshold: 88, independent_attempts: 3}, spontaneous_production: {active_threshold: 88, independent_attempts: 3}, transfer: {active_threshold: 90, independent_attempts: 3}}, mastered: {all_required_active: true, retention_stability_days: 90, retention_confirmations: 3}}
 
   - id: us-tech.uncertainty-and-model-risk
     cefr: C2
@@ -131,7 +241,17 @@ topics:
       strong: [us-tech.risk-governance-brief, written-production.evidence-qualified-argument]
       soft: [grammar.hedging-stance.control]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [chunk.the-main-risk-is, word.impact, word.result]
+    contexts: [model-governance, system-risk-review]
+    typical_errors:
+      - "Reporting an accuracy average without the failure boundary relevant to the decision."
+      - "Treating confidence as a subjective Russian expression of belief rather than a calibrated property of evidence or output."
+      - "Calling monitoring a mitigation without stating what action a threshold triggers."
+    examples:
+      - "Overall accuracy is high, but performance is unknown for newly regulated document types; those cases remain outside automatic approval."
+      - "If weekly disagreement exceeds three percent, the system returns to shadow mode and Risk reviews the affected decisions."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 85, independent_attempts: 3}, controlled_production: {active_threshold: 88, independent_attempts: 3}, spontaneous_production: {active_threshold: 88, independent_attempts: 3}, transfer: {active_threshold: 90, independent_attempts: 3}}, mastered: {all_required_active: true, retention_stability_days: 90, retention_confirmations: 3}}
 
   - id: everyday-life.sensitive-interpersonal-mediation
     cefr: C2
@@ -142,7 +262,17 @@ topics:
       strong: [everyday-life.explaining-personal-decision, written-interaction.diplomatic-refusal]
       soft: [written-interaction.high-stakes-diplomacy]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [word.agree, word.disagree, word.reason]
+    contexts: [family-disagreement, shared-housing-conflict]
+    typical_errors:
+      - "Translating each side's emotionally loaded words instead of representing the underlying concern neutrally."
+      - "Pushing immediate agreement when one party has only acknowledged hearing the other."
+      - "Proposing vague Russian collective language without a specific, reversible next step."
+    examples:
+      - "Alex needs predictable quiet for early shifts, while Dana needs occasional evening space for friends. They could agree on two planned evenings and review the arrangement after a month."
+      - "Both sides accept that the expense was necessary; the disagreement concerns notice, so the proposed message focuses on future approval rather than blame."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 85, independent_attempts: 3}, controlled_production: {active_threshold: 88, independent_attempts: 3}, spontaneous_production: {active_threshold: 88, independent_attempts: 3}, transfer: {active_threshold: 90, independent_attempts: 3}}, mastered: {all_required_active: true, retention_stability_days: 90, retention_confirmations: 3}}
 
   - id: grammar.syntactic-ambiguity-control
     cefr: C2
@@ -155,6 +285,16 @@ topics:
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: core
     lexicon: []
+    contexts: [contract-edit, technical-specification]
+    typical_errors:
+      - "Assuming punctuation alone resolves an attachment that the syntax leaves open."
+      - "Allowing not or only to take wider scope than intended after a Russian-style rearrangement."
+      - "Coordinating unlike constituents so the second element can attach to two different heads."
+    examples:
+      - "Ambiguous: We reviewed the report with the outdated figures. Clear: We reviewed the report that contained the outdated figures."
+      - "Ambiguous: Only managers may not export records. Clear: Managers alone are prohibited from exporting records."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 85, independent_attempts: 3}, controlled_production: {active_threshold: 88, independent_attempts: 3}, spontaneous_production: {active_threshold: 88, independent_attempts: 3}, transfer: {active_threshold: 90, independent_attempts: 3}}, mastered: {all_required_active: true, retention_stability_days: 90, retention_confirmations: 3}}
 
   - id: word-formation.neologism-interpretation
     cefr: C2
@@ -165,7 +305,17 @@ topics:
       strong: [word-formation.register-shift, word-formation.prefix-stance]
       soft: [toefl-reading.vocabulary-context]
     dimensions: [recognition, transfer]
-    lexicon: []
+    lexicon: [word.overload, word.underestimate, word.overwrite]
+    contexts: [technology-commentary, cultural-criticism]
+    typical_errors:
+      - "Assigning a standard dictionary meaning to a new formation without considering the author's stance."
+      - "Treating any unusual compound as an error because Russian would express the idea with a phrase."
+      - "Inferring register from an affix alone while ignoring the publication and surrounding irony."
+    examples:
+      - "In 'meeting-proof software,' the suffix-like element suggests software designed to resist disruption during meetings, with a mildly humorous tone."
+      - "The writer calls the policy 'underconsulted,' implying insufficient public consultation rather than a technical procedural category."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 85, independent_attempts: 3}, transfer: {active_threshold: 90, independent_attempts: 3}}, mastered: {all_required_active: true, retention_stability_days: 90, retention_confirmations: 3}}
 
   - id: everyday-online-informal.audience-specific-voice
     cefr: C2
@@ -176,4 +326,14 @@ topics:
       strong: [everyday-online-informal.code-switching, everyday-online-informal.subtle-humor]
       soft: [written-production.audience-adaptation]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [informal.ill-get-back-to-you, informal.not-sure-i-agree, informal.lets-keep-this-constructive]
+    contexts: [professional-community, hobby-forum]
+    typical_errors:
+      - "Adding fashionable slang that is current elsewhere but inauthentic for the target community."
+      - "Copying Russian in-group humor whose implied target becomes hostile in English."
+      - "Prioritizing an entertaining voice over accessibility, factual precision, or reputational risk."
+    examples:
+      - "In a developer forum, the reply is concise and evidence-led: 'I cannot reproduce this on version 4.2; could you share the configuration?'"
+      - "In a local hobby group, a warmer voice works: 'That repair has character, but let's label the loose step before it surprises anyone.'"
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 85, independent_attempts: 3}, controlled_production: {active_threshold: 88, independent_attempts: 3}, spontaneous_production: {active_threshold: 88, independent_attempts: 3}, transfer: {active_threshold: 90, independent_attempts: 3}}, mastered: {all_required_active: true, retention_stability_days: 90, retention_confirmations: 3}}
