@@ -51,6 +51,10 @@ LAYER_ALLOWLIST: dict[str, set[str]] = {
     "scoring": {"kernel", "scoring"},
     # scheduler consumes scoring's fold (Retrievability/Stability) by canon.
     "scheduler": {"kernel", "scoring", "scheduler"},
+    # assessments owns placement diagnostics: it may address curriculum targets
+    # and write placement evidence/scoring facts, but the event log is its
+    # boundary with scoring/scheduler and it never imports cli or lessons.
+    "assessments": {"kernel", "curriculum", "evidence", "scoring", "assessments"},
     # memory is a read-only projection over the folds and aggregates; it
     # renders FOR the human and never feeds anything back.
     "memory": {"kernel", "scoring", "scheduler", "memory"},
@@ -75,6 +79,7 @@ LAYER_ALLOWLIST: dict[str, set[str]] = {
         "scheduler",
         "memory",
         "adapters",
+        "assessments",
         "cli",
     },
 }

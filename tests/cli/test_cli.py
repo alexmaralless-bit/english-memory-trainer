@@ -493,6 +493,12 @@ def test_registry_matches_published_surface() -> None:
         "skills.validate",
         "adapters.compare",
         "session.resume",
+        "placement.start",
+        "placement.answer",
+        "placement.resume",
+        "placement.submit",
+        "placement.abandon",
+        "placement.decline",
     }
     assert registry["memory.render"].mutating and registry["memory.render"].requires_idempotency_key
     assert not registry["memory.check"].mutating  # drift check repairs nothing

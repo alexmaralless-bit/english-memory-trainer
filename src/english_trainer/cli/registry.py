@@ -144,6 +144,29 @@ _COMMANDS: tuple[CommandDescriptor, ...] = (
     CommandDescriptor(
         name="session.resume", owner_module="lessons", mutating=True, requires_idempotency_key=True
     ),
+    # Placement diagnostics (assessments 2-5, roadmap 2.6): fixed forms with a
+    # checkpoint/resume lifecycle and one terminal idempotent submit. Every
+    # command mutates (start creates, answer checkpoints, resume publishes
+    # RESUMED, submit scores, abandon/decline terminalize), so each requires the
+    # idempotency key in json mode.
+    CommandDescriptor(
+        name="placement.start", owner_module="assessments", mutating=True, requires_idempotency_key=True
+    ),
+    CommandDescriptor(
+        name="placement.answer", owner_module="assessments", mutating=True, requires_idempotency_key=True
+    ),
+    CommandDescriptor(
+        name="placement.resume", owner_module="assessments", mutating=True, requires_idempotency_key=True
+    ),
+    CommandDescriptor(
+        name="placement.submit", owner_module="assessments", mutating=True, requires_idempotency_key=True
+    ),
+    CommandDescriptor(
+        name="placement.abandon", owner_module="assessments", mutating=True, requires_idempotency_key=True
+    ),
+    CommandDescriptor(
+        name="placement.decline", owner_module="assessments", mutating=True, requires_idempotency_key=True
+    ),
 )
 
 

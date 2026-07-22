@@ -37,6 +37,19 @@ from english_trainer.adapters.compare import compare as adapters_compare
 from english_trainer.adapters.errors import AdapterError
 from english_trainer.adapters.skills import sync as adapters_sync
 from english_trainer.adapters.skills import validate as adapters_validate
+from english_trainer.assessments.forms import UnknownForm
+from english_trainer.assessments.placement import (
+    PlacementPrecondition,
+    abandon_placement,
+    active_placement_id,
+    answer_placement,
+    decline_placement,
+    get_placement,
+    resume_placement,
+    start_placement,
+    submit_placement,
+)
+from english_trainer.assessments.self_assessment import SelfAssessmentInvalid
 from english_trainer.cli.envelope import (
     ErrorPayload,
     ExitCode,
@@ -134,6 +147,10 @@ skills_app = typer.Typer(add_completion=False, help="Agent Skills: sync canon, v
 app.add_typer(skills_app, name="skills")
 adapters_app = typer.Typer(add_completion=False, help="Adapter parity: observable-effect comparison.")
 app.add_typer(adapters_app, name="adapters")
+placement_app = typer.Typer(
+    add_completion=False, help="Placement diagnostics: start, answer, resume, submit."
+)
+app.add_typer(placement_app, name="placement")
 
 _FormatOpt = Annotated[str, typer.Option("--format", help="Output format: text (human) or json (contract).")]
 _RootOpt = Annotated[Path, typer.Option("--root", help="Trainer home directory (storage layout root).")]
@@ -2162,6 +2179,343 @@ def status_command(
     human.append(f"  working level: {measured or 'no-data'} · learning score: {score or 'no-data'}")
     human.append(f"  xp: {xp['total']} over {xp['practice_days']} day(s), streak {xp['streak']}")
     _emit(success_envelope("status", corr, data), human, fmt, ExitCode.OK)
+
+
+_PlacementOpt = Annotated[
+    str | None, typer.Option("--placement", help="Placement id; defaults to the active placement.")
+]
+
+
+def _resolve_placement(command: str, corr: str, fmt: str, storage: Any, placement: str | None) -> str:
+    placement_id = placement if placement is not None else active_placement_id(storage.store)
+    if placement_id is None or get_placement(storage.store, placement_id) is None:
+        error = ErrorPayload(
+            error_code="PLACEMENT_NOT_FOUND",
+            message="no such placement (and no active placement to default to).",
+            allowed_actions=["placement start"],
+            next_action="placement start",
+        )
+        _emit(failure_envelope(command, corr, error), ["error: no placement"], fmt, ExitCode.NOT_FOUND)
+    return placement_id
+
+
+def _placement_command(
+    command: str,
+    hash_inputs: dict[str, Any],
+    runner: Any,
+    describe: Any,
+    fmt: str,
+    root: Path,
+    idempotency_key: str | None,
+    correlation_id: str | None,
+) -> None:
+    """Shared envelope for the placement mutations: idempotent replay first,
+    then the runner, mapping placement/self-assessment refusals to stable codes."""
+    corr = _correlation(correlation_id)
+    _require_key(command, corr, fmt, idempotency_key)
+    layout = resolve_layout(root)
+    spoken = command.replace(".", " ")
+    try:
+        with open_storage(layout) as storage:
+            request_hash = payload_hash({"command": command, "root": str(layout.root), **hash_inputs})
+            if idempotency_key:
+                with UnitOfWork(storage.store, SystemClock()) as uow:
+                    prior = uow.check_idempotency(idempotency_key, request_hash)
+                if isinstance(prior, CachedResult):
+                    _emit(
+                        success_envelope(command, corr, {**dict(prior.value), "cached": True}),
+                        [f"{spoken} (cached result)"],
+                        fmt,
+                        ExitCode.OK,
+                    )
+            result = runner(storage, corr)
+            if idempotency_key:
+                with UnitOfWork(storage.store, SystemClock()) as uow:
+                    uow.record_result(idempotency_key, request_hash, result)
+        _emit(
+            success_envelope(command, corr, {**result, "cached": False}), describe(result), fmt, ExitCode.OK
+        )
+    except IdempotencyConflict as exc:
+        error = ErrorPayload(
+            error_code="IDEMPOTENCY_CONFLICT",
+            message=str(exc),
+            allowed_actions=[f"{spoken} --idempotency-key <fresh-key>"],
+            next_action=f"{spoken} --idempotency-key <fresh-key>",
+        )
+        _emit(failure_envelope(command, corr, error), [f"error: {exc}"], fmt, ExitCode.CONFLICT)
+    except (SelfAssessmentInvalid, UnknownForm) as exc:
+        error = ErrorPayload(
+            error_code=getattr(exc, "code", "INVALID_INPUT"),
+            message=str(exc),
+            allowed_actions=["placement start", "placement decline --self-assessment <json>"],
+            next_action="fix the input and retry",
+        )
+        _emit(failure_envelope(command, corr, error), [f"error: {exc}"], fmt, ExitCode.INVALID_INPUT)
+    except PlacementPrecondition as exc:
+        error = ErrorPayload(
+            error_code=exc.code,
+            message=str(exc),
+            allowed_actions=["placement start", "placement resume", "placement abandon"],
+            next_action="placement start",
+        )
+        _emit(failure_envelope(command, corr, error), [f"error: {exc}"], fmt, ExitCode.PRECONDITION_FAILED)
+
+
+@placement_app.command("start")
+def placement_start(
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    form: Annotated[
+        str | None, typer.Option("--form", help="Form selector; defaults to the shipped form.")
+    ] = None,
+    idempotency_key: Annotated[
+        str | None, typer.Option("--idempotency-key", help="Required with --format json (cli 4.3).")
+    ] = None,
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Open a placement: select a fixed authored form (seed, version), pin the
+    policies and return the item prompts for verbatim presentation."""
+
+    def runner(storage: Any, corr: str) -> dict[str, Any]:
+        return start_placement(
+            storage.store,
+            PolicyRegistry(storage._conn, SystemClock()),
+            SystemClock(),
+            SystemRandom(),
+            form_selector=form,
+        )
+
+    def describe(result: dict[str, Any]) -> list[str]:
+        return [
+            f"placement {result['placement_id']} started (form {result['form_version']})",
+            f"  sections: {', '.join(result['sections'])} · {len(result['items'])} items",
+        ]
+
+    _placement_command(
+        "placement.start", {"form": form}, runner, describe, fmt, root, idempotency_key, correlation_id
+    )
+
+
+@placement_app.command("answer")
+def placement_answer(
+    input_file: _InputOpt,
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    placement: _PlacementOpt = None,
+    idempotency_key: Annotated[
+        str | None, typer.Option("--idempotency-key", help="Required with --format json (cli 4.3).")
+    ] = None,
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Checkpoint one section's answers. The input file carries
+    {section, answers: {item_id: raw_answer}}."""
+    corr = _correlation(correlation_id)
+    payload = _read_input_json("placement.answer", corr, fmt, input_file)
+
+    def runner(storage: Any, corr: str) -> dict[str, Any]:
+        placement_id = _resolve_placement("placement.answer", corr, fmt, storage, placement)
+        return answer_placement(
+            storage.store,
+            SystemClock(),
+            SystemRandom(),
+            placement_id,
+            section=str(payload.get("section", "")),
+            answers=dict(payload.get("answers", {})),
+        )
+
+    def describe(result: dict[str, Any]) -> list[str]:
+        nxt = result.get("next_section") or "none (ready to submit)"
+        return [
+            f"placement {result['placement_id']}: section {result['section']} checkpointed",
+            f"  next section: {nxt}",
+        ]
+
+    _placement_command(
+        "placement.answer",
+        {"placement": placement, "input": payload},
+        runner,
+        describe,
+        fmt,
+        root,
+        idempotency_key,
+        correlation_id,
+    )
+
+
+@placement_app.command("resume")
+def placement_resume(
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    placement: _PlacementOpt = None,
+    idempotency_key: Annotated[
+        str | None, typer.Option("--idempotency-key", help="Required with --format json (cli 4.3).")
+    ] = None,
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Resume a placement within its window: state + the next section."""
+
+    def runner(storage: Any, corr: str) -> dict[str, Any]:
+        placement_id = _resolve_placement("placement.resume", corr, fmt, storage, placement)
+        return resume_placement(
+            storage.store,
+            PolicyRegistry(storage._conn, SystemClock()),
+            SystemClock(),
+            SystemRandom(),
+            placement_id,
+        )
+
+    def describe(result: dict[str, Any]) -> list[str]:
+        return [
+            f"placement {result['placement_id']} resumed [{result['status']}]",
+            f"  next section: {result.get('next_section') or 'none (ready to submit)'}",
+        ]
+
+    _placement_command(
+        "placement.resume",
+        {"placement": placement},
+        runner,
+        describe,
+        fmt,
+        root,
+        idempotency_key,
+        correlation_id,
+    )
+
+
+@placement_app.command("submit")
+def placement_submit(
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    placement: _PlacementOpt = None,
+    idempotency_key: Annotated[
+        str | None, typer.Option("--idempotency-key", help="Required with --format json (cli 4.3).")
+    ] = None,
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Terminal, idempotent submit: grade the form and hand off to scoring
+    (origin=placement, ACTIVE ceiling). A repeat returns the stored result."""
+
+    def runner(storage: Any, corr: str) -> dict[str, Any]:
+        placement_id = _resolve_placement("placement.submit", corr, fmt, storage, placement)
+        return submit_placement(
+            storage.store,
+            PolicyRegistry(storage._conn, SystemClock()),
+            SystemClock(),
+            SystemRandom(),
+            placement_id,
+        )
+
+    def describe(result: dict[str, Any]) -> list[str]:
+        return [
+            f"placement {result['placement_id']} {result['status']}"
+            + (" (already scored)" if result.get("already") else ""),
+            f"  evidence: {result['evidence_count']} · outcomes: {result['outcome_count']}",
+        ]
+
+    _placement_command(
+        "placement.submit",
+        {"placement": placement},
+        runner,
+        describe,
+        fmt,
+        root,
+        idempotency_key,
+        correlation_id,
+    )
+
+
+@placement_app.command("abandon")
+def placement_abandon(
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    placement: _PlacementOpt = None,
+    idempotency_key: Annotated[
+        str | None, typer.Option("--idempotency-key", help="Required with --format json (cli 4.3).")
+    ] = None,
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Abandon a placement (STARTED/IN_PROGRESS only); forbidden after submit."""
+
+    def runner(storage: Any, corr: str) -> dict[str, Any]:
+        placement_id = _resolve_placement("placement.abandon", corr, fmt, storage, placement)
+        event = abandon_placement(storage.store, SystemClock(), SystemRandom(), placement_id)
+        return {"placement_id": placement_id, "status": "ABANDONED", "event_id": event.id}
+
+    def describe(result: dict[str, Any]) -> list[str]:
+        return [f"placement {result['placement_id']}: ABANDONED"]
+
+    _placement_command(
+        "placement.abandon",
+        {"placement": placement},
+        runner,
+        describe,
+        fmt,
+        root,
+        idempotency_key,
+        correlation_id,
+    )
+
+
+@placement_app.command("decline")
+def placement_decline(
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    self_assessment: Annotated[
+        str | None,
+        typer.Option(
+            "--self-assessment", help='Per-skill object, e.g. {"schema_version":1,"levels":{"grammar":"A2"}}.'
+        ),
+    ] = None,
+    idempotency_key: Annotated[
+        str | None, typer.Option("--idempotency-key", help="Required with --format json (cli 4.3).")
+    ] = None,
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Decline placement (blocks nothing). --self-assessment is a per-core-skill
+    object (a scalar is rejected); each level is a provisional working estimate."""
+    corr = _correlation(correlation_id)
+    parsed_self: Any | None = None
+    if self_assessment is not None:
+        try:
+            parsed_self = json.loads(self_assessment)
+        except ValueError as exc:
+            error = ErrorPayload(
+                error_code="INVALID_INPUT",
+                message=f"--self-assessment is not valid JSON: {exc}",
+                allowed_actions=['placement decline --self-assessment \'{"schema_version":1,"levels":{}}\''],
+                next_action="fix the JSON and retry",
+            )
+            _emit(
+                failure_envelope("placement.decline", corr, error),
+                [f"error: {exc}"],
+                fmt,
+                ExitCode.INVALID_INPUT,
+            )
+
+    def runner(storage: Any, corr: str) -> dict[str, Any]:
+        return decline_placement(
+            storage.store,
+            PolicyRegistry(storage._conn, SystemClock()),
+            SystemClock(),
+            SystemRandom(),
+            self_assessment=parsed_self,
+        )
+
+    def describe(result: dict[str, Any]) -> list[str]:
+        levels = result.get("self_reported_levels") or {}
+        rendered = ", ".join(f"{skill}={level}" for skill, level in levels.items()) or "none"
+        return [f"placement declined ({result['placement_id']})", f"  self-reported: {rendered}"]
+
+    _placement_command(
+        "placement.decline",
+        {"self_assessment": parsed_self},
+        runner,
+        describe,
+        fmt,
+        root,
+        idempotency_key,
+        correlation_id,
+    )
 
 
 def _wants_json(argv: list[str]) -> bool:
