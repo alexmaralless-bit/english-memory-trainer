@@ -1,11 +1,11 @@
 # Platform: Application Foundation (kernel)
 
 > **Status**: current
-> **Last updated**: 2026-07-20
+> **Last updated**: 2026-07-22
 > **Sources**: `docs/design-direction.md` §4 (kernel-состав) · build-prompt §15 · [[../product/learning-model]] · review triage journals · foundation-review (`staging/reviews/2026-07-19-foundation-review-codex.md`) · Concept Gate [PD-2026-07-19], event-store [PD-2026-07-20]
 > **Роль**: технический фундамент, строится **до** бизнес-модулей. Определяет примитивы, на которых работают curriculum/evidence/scoring/scheduler/lessons/… . Kernel не содержит бизнес-логики (README): он даёт механизмы, правила живут в модулях (owner-матрица — [[../OPEN]]).
 
-> Спека — **target**. Фазы — тегами `[mvp]` / `[post-mvp]`. Термины — [[../glossary]].
+> Спека — **target**. Одна цель продукта, без фазовых тегов (Принцип 4). Термины — [[../glossary]].
 
 ---
 
@@ -62,7 +62,7 @@ Kernel даёт детерминизм, аудит и целостность, б
 ### 3.4 Идемпотентность и compound-команды
 - **MUST — cached/error ветки**: повтор с тем же `idempotency_key` и тем же `payload_hash` возвращает **прежний результат** (cached response); тот же ключ с другим payload — стабильная ошибка. Точные `payload_hash`-алгоритм, cached-result schema и retention/eviction **должны быть зафиксированы в 1.2** по [[../OPEN]] OPEN-11/OPEN-20 (rereview H-1 — здесь заявлены как обязательные, но не специфицированы).
 - **MUST — key namespace задан в 0.2**: kernel фиксирует generic namespace ключа (`{aggregate_type, aggregate_id, command_type}` + пользовательский суффикс). **Продуктовая гранулярность scope** (per-learner/global/…) для конкретных команд — открытый вопрос ([[../OPEN]] OPEN-11); контракт **не** утверждает, что она уже выбрана (устранено C-3).
-- **MUST — compound-команда** [ревью C-1]: `session start --abandon-active` разложен на **две независимые идемпотентные команды** (`session abandon`, затем `session start`), не одну атомарную. Recovery определён и benign: crash между ними оставляет старую сессию `ABANDONED` и **нет** активной; следующий `start` создаёт новую. (Атомарный compound-envelope — `[post-mvp]`, если понадобится.)
+- **MUST — compound-команда** [ревью C-1]: `session start --abandon-active` разложен на **две независимые идемпотентные команды** (`session abandon`, затем `session start`), не одну атомарную. Recovery определён и benign: crash между ними оставляет старую сессию `ABANDONED` и **нет** активной; следующий `start` создаёт новую. Атомарный compound-envelope в контракт **не входит**: одиночные идемпотентные команды поверх UoW покрывают потребность; появится реальная нужда — это новый вопрос в [[../OPEN]], а не молчаливое обещание.
 
 ### 3.5 Optimistic concurrency (CAS)
 - **MUST**: изменяемые агрегаты имеют `revision`; запись — compare-and-set; конкурентная запись с устаревшей ревизией отклоняется стабильной ошибкой.
@@ -142,6 +142,7 @@ Agent-facing вывод — JSON в stdout, диагностика в stderr, с
 
 ## История изменений
 
+- **2026-07-22**: фазовые теги `[mvp]`/`[post-mvp]` сняты [PD-2026-07-22]: спека описывает одну цель продукта, порядок и статус — только в roadmap (Принцип 4). compound-envelope изъят из контракта (уклончивое обещание).
 - **2026-07-20 (2)**: foundation-rereview (PASS-with-findings) — JSONL lag ≠ integrity error, сверка до high-water mark (E-1); `prior_steady_state` явное поле проекции, `self_reported_level` влияет на working estimate/рекомендации (A-1); safety-correction хранит обе версии (C-1); replay-тесты разделены на order-independence + детерминированный append-order (B-1); cached-schema/retention «зафиксировать в 1.2» (H-1); `sequence` в глоссарий (I-1).
 - **2026-07-20**: foundation-review триаж — **event store: SQLite event-таблица authoritative, JSONL derived export** [PD-2026-07-20] (A-1/E-1 BLOCKER); capture-into-event и boundary-manifest (A-2/A-3/A-4/H-1); `sequence`/canonical encoding/hash (B-1); outbox delivery + rebuild protocol (B-2/E-2); compound-команда как две идемпотентные (C-1); generic correction envelope (C-2); idempotency scope — противоречие устранено (C-3); pinned retention + `PinnedPolicyUnavailable` (F-1); multi-aggregate CAS (G-1); command registry (G-2); CI-gate арх-чеков (H-2); kernel не перечисляет business-типы (D-1); lifecycle-wording (D-2). Заведены OPEN-19/20/21.
 - **2026-07-19**: создан (roadmap 0.2). Гибрид event-sourcing и тонкий sqlite3-слой — [PD-2026-07-19]. Kernel как механизм-носитель с owner-границей.

@@ -1,11 +1,11 @@
 # Модуль: curriculum
 
 > **Status**: current
-> **Last updated**: 2026-07-21
+> **Last updated**: 2026-07-22
 > **Sources**: концепт Codex (одобрен, `staging/journal/2026-07-19-codex-curriculum-concept.md`) · red-team триаж (`staging/journal/2026-07-19-concept-review-triage.md`) · [[../product/learning-model]] §9 · [[../product/lexical-system]] · flows [[../flows/session]], [[../flows/placement]] · лицензии проверены 2026-07-19 ([PD-2026-07-19])
 > **Bounded context**: `src/english_trainer/curriculum/`
 
-> Спека — **target**. Фазы — тегами `[mvp]` / `[post-mvp]`. Термины — из [[../glossary]]; поведение — полностью inline. Это контракт формата и правил программы (roadmap 0.3); само наполнение — фаза П.
+> Спека — **target**. Одна цель продукта, без фазовых тегов (Принцип 4). Термины — из [[../glossary]]; поведение — полностью inline. Это контракт формата и правил программы (roadmap 0.3); само наполнение — фаза П.
 
 ---
 
@@ -68,7 +68,7 @@ explanation_language: ru-allowed   # когда допустим русский
 | 10 | Word Formation (`word-formation`) — морфология как отдельная ось: продуктивные аффиксы (un-, re-, mis-, over-, out-, -er, -tion…) | A1 |
 
 - **Десять треков; `everyday-life` отделён от `everyday-online-informal`** [PD-2026-07-20, P0-8]: первый задаёт **домен** (о чём речь), второй — **регистр и канал** (как пишут онлайн). Смешение домена с регистром повторило бы склейку, уже распутанную для частоты и педагогического приоритета. Бытовой пласт паритетен рабочему. Трек `word-formation` добавлен П.1d [PD-2026-07-21]: тема-паттерн и слово — разные targets, паттерн — помощь узнаванию, не генератор.
-- **TOEFL-трек — в продукте, без отложек** [PD-2026-07-21]: тег `[post-mvp]` снят — пользователь готовится к TOEFL, трек полноценная часть программы (с B1; тем ниже B1 не порождает, §5). Прежняя пометка отражала фазировку MVP-продукта, которой у личного тренажёра нет.
+- **TOEFL-трек — в продукте, без отложек** [PD-2026-07-21]: прежняя фазовая отметка снята — пользователь готовится к TOEFL, трек полноценная часть программы (с B1; тем ниже B1 не порождает, §5). Прежняя пометка отражала фазировку MVP-продукта, которой у личного тренажёра нет.
 - **Vocabulary & Chunks — lexicon-layer трек** [PD-2026-07-20, content-review C-1]: не несёт отдельных Topic'ов; реализуется как `LexicalItem` (chunks/слова), привязанные к темам через `topic.lexicon`, и отслеживается через LearnerLexicalState ([[../product/lexical-system]]). Пустой topic-инвентарь этого трека — намеренно, не пробел.
 
 ### Частотное взвешивание грамматики [PD-2026-07-21]
@@ -127,22 +127,22 @@ explanation_language: ru-allowed   # когда допустим русский
 
 ## 4. Публичный API и события
 
-| Операция / Событие | Тип | Что делает | Фаза |
-|---|---|---|---|
-| `get_topic(id)` | API | тема с полным содержимым | `[mvp]` |
-| `recommendations(learner_state)` | API | темы с флагом `recommended / early` по advisory-графу и уровням | `[mvp]` |
-| `lexicon_query(filter)` | API | выборка LexicalItem (frequency_band, curriculum_priority_band, track, usage_policy, currency) | `[mvp]` |
-| `get_version(v)` | API | иммутабельный snapshot указанной версии (для replay/pin) | `[mvp]` |
-| `validate(version_or_candidate)` | API | валидация **кандидата или версии** до активации (rereview E-R2), включая living-layer no-excerpt/currency/usage-поля | `[mvp]` |
-| `activate(version, expected_active)` | API | атомарная активация: требует успешный validate + CAS по expected_active, публикует событие | `[mvp]` |
-| `record_living_candidate(candidate, idempotency_key)` | API | сохраняет `LivingLexicalCandidate` из сессии; evidence не создаёт | `[mvp]` [П.3] |
-| `review_living_candidate(candidate_id, decision, idempotency_key)` | API | `maintain-english-curriculum` принимает/отклоняет candidate; promotion идёт через новую curriculum-версию | `[mvp]` [П.3] |
-| `record_currency_review(item_id, decision, idempotency_key)` | API | фиксирует currency review, меняет active safety через новую версию/overlay | `[mvp]` [П.3] |
-| `CURRICULUM_VERSION_ACTIVATED` | publishes | активация новой версии (эмитится `activate`) | `[mvp]` |
-| `LIVING_LEXICAL_CANDIDATE_OBSERVED` | publishes | candidate из живой сессии; хранит source pointer/hash и авторское summary, не excerpt | `[mvp]` [П.3] |
-| `LEXICAL_ITEM_ADDED` | publishes | promotion living-layer candidate в LexicalItem | `[mvp]` [PD-2026-07-21] |
-| `LEXICAL_CURRENCY_REVIEW_DUE` | publishes | истёк review interval; production приостановлена до проверки | `[mvp]` [П.3] |
-| `LEXICAL_CURRENCY_CHANGED` | publishes | append-only изменение effective currency/safety со старой и новой active-версиями | `[mvp]` [П.3, PD-6 A] |
+| Операция / Событие | Тип | Что делает |
+|---|---|---|
+| `get_topic(id)` | API | тема с полным содержимым |
+| `recommendations(learner_state)` | API | темы с флагом `recommended / early` по advisory-графу и уровням |
+| `lexicon_query(filter)` | API | выборка LexicalItem (frequency_band, curriculum_priority_band, track, usage_policy, currency) |
+| `get_version(v)` | API | иммутабельный snapshot указанной версии (для replay/pin) |
+| `validate(version_or_candidate)` | API | валидация **кандидата или версии** до активации (rereview E-R2), включая living-layer no-excerpt/currency/usage-поля |
+| `activate(version, expected_active)` | API | атомарная активация: требует успешный validate + CAS по expected_active, публикует событие |
+| `record_living_candidate(candidate, idempotency_key)` | API | сохраняет `LivingLexicalCandidate` из сессии; evidence не создаёт [П.3] |
+| `review_living_candidate(candidate_id, decision, idempotency_key)` | API | `maintain-english-curriculum` принимает/отклоняет candidate; promotion идёт через новую curriculum-версию [П.3] |
+| `record_currency_review(item_id, decision, idempotency_key)` | API | фиксирует currency review, меняет active safety через новую версию/overlay [П.3] |
+| `CURRICULUM_VERSION_ACTIVATED` | publishes | активация новой версии (эмитится `activate`) |
+| `LIVING_LEXICAL_CANDIDATE_OBSERVED` | publishes | candidate из живой сессии; хранит source pointer/hash и авторское summary, не excerpt [П.3] |
+| `LEXICAL_ITEM_ADDED` | publishes | promotion living-layer candidate в LexicalItem [PD-2026-07-21] |
+| `LEXICAL_CURRENCY_REVIEW_DUE` | publishes | истёк review interval; production приостановлена до проверки [П.3] |
+| `LEXICAL_CURRENCY_CHANGED` | publishes | append-only изменение effective currency/safety со старой и новой active-версиями [П.3, PD-6 A] |
 
 ## 5. Поведение
 
@@ -187,6 +187,7 @@ OPEN-6 решён (источники + build-time режим). Остаточн
 
 ## История изменений
 
+- **2026-07-22**: фазовые теги `[mvp]`/`[post-mvp]` сняты [PD-2026-07-22]: спека описывает одну цель продукта, порядок и статус — только в roadmap (Принцип 4). формулировка о снятой отсрочке TOEFL-трека очищена от упразднённого термина.
 - **2026-07-21 (5)**: **П.3 фаза 2 применена [PD-2026-07-21]**: living-layer candidate/promotion workflow, гибридное currency-старение, `dated` recognition-only, lexicon-first micro lane + auto-link candidates, active-safety хуки и доменные lifecycle-события добавлены как контракт реализации `generation@1`; OPEN-14 закрыт здесь. Патчи Codex, верификация и применение — владелец.
 - **2026-07-21 (4)**: **`frequency_tier` расширен до трёх значений [PD-2026-07-21]**: `big-five | core | tail`. Находка независимой проверки П.2: бинарный enum вытолкнул фундаментную не-временную грамматику (be, порядок слов, can, императивы, here-is…) в tail = recognition-only, породив противоречие «can_do обещает производство, критериев производства нет» в 17 темах. `core` — частая не-временная грамматика с естественными dimensions и приоритетом наравне с big-five; `tail` сужен до редких глагольных форм (его can_do может описывать целевое умение — производство активируется на B1–B2).
 - **2026-07-21 (3)**: **living layer — в продукте [PD-2026-07-21]**, supersedes P0-9: workflow-пополнение, currency-lifecycle и авто-устаревание строятся (работа — П.3, вместе с OPEN-14); `LEXICAL_ITEM_ADDED` → `[mvp]`. Provenance-поля и постоянный запрет сторонних excerpts не меняются.

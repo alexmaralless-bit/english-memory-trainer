@@ -1,11 +1,11 @@
 # Модуль: lessons
 
 > **Status**: current
-> **Last updated**: 2026-07-21
+> **Last updated**: 2026-07-22
 > **Sources**: [[../flows/session]] · [[../flows/continuation]] · [[evidence]] · [[../platform/foundation]] (UoW, CAS, outbox) · Concept Gate 0.5 2026-07-20 (3 развилки, [PD-2026-07-20]) · часть контракта 0.5
 > **Bounded context**: `src/english_trainer/lessons/`
 
-> Спека — **target**. Фазы `[mvp]`/`[post-mvp]`. Термины — [[../glossary]]. Часть контракта 0.5 (lessons + [[assessments]]).
+> Спека — **target**. Одна цель продукта, без фазовых тегов (Принцип 4). Термины — [[../glossary]]. Часть контракта 0.5 (lessons + [[assessments]]).
 
 ---
 
@@ -64,22 +64,22 @@ stateDiagram-v2
 
 ## 5. Публичный API и события
 
-| Операция / Событие | Тип | Что делает | Фаза |
-|---|---|---|---|
-| `start(duration?, provider, mode?)` | API | создаёт сессию + Session Manifest (pinned versions + `required_skills` + план композиции) | `[mvp]` |
-| `resume(session_id)` | API | полное состояние сессии + tutor briefing ([[../flows/continuation]]) | `[mvp]` |
-| `abandon(session_id)` | API | идемпотентная терминализация без summary | `[mvp]` |
-| `finish(session_id, summary_draft?)` | API | проверка postconditions → атомарная терминализация | `[mvp]` |
-| `peek_next_step(session_id)` | API (read-only) | следующий шаг + текущий `plan_version`, без факта выдачи | `[mvp]` |
-| `claim_next_step(session_id, expected_plan_version, idempotency_key)` | API (mutating, CAS) | выдача шага по протоколу [[control]] §4.2; возвращает bank item или generation directive | `[mvp]` |
-| `record_rendered_exercise(session_id, step_id, exercise_instance, idempotency_key)` | API (mutating) | фиксирует иммутабельный rendered-exercise снапшот до предъявления ученику | `[mvp]` [П.3] |
-| `replan(session_id, expected_plan_version, idempotency_key)` | API (mutating, CAS) | новая композиционная ревизия остатка бюджета | `[mvp]` |
-| `SESSION_STARTED` / `FINISHED` / `ABANDONED` / `SESSION_STALE_ABANDONED` | publishes | lifecycle-факты | `[mvp]` |
-| `EXERCISE_RENDERED` | publishes | rendered-exercise снапшот, привязанный к `step_id`; источник для исторических попыток/replay | `[mvp]` [П.3, PD-1 A] |
-| `EXERCISE_ACCEPTED` / `EXERCISE_REJECTED` / `EXERCISE_RETIRED` | publishes | lifecycle банка упражнений; приём только после оценённой попытки или maintainer fast-path | `[mvp]` [П.3, PD-2 A] |
-| `ATTEMPT_STATE_CHANGED` | publishes | draft/recorded/assessed | `[mvp]` |
-| `attach_agent(session_id, provider, skills)` | API | фиксирует подключение агента к сессии | `[mvp]` |
-| `AGENT_ATTACHED` | publishes | к сессии подключился агент: провайдер, версии skills, момент ([[../flows/continuation]]) | `[mvp]` |
+| Операция / Событие | Тип | Что делает |
+|---|---|---|
+| `start(duration?, provider, mode?)` | API | создаёт сессию + Session Manifest (pinned versions + `required_skills` + план композиции) |
+| `resume(session_id)` | API | полное состояние сессии + tutor briefing ([[../flows/continuation]]) |
+| `abandon(session_id)` | API | идемпотентная терминализация без summary |
+| `finish(session_id, summary_draft?)` | API | проверка postconditions → атомарная терминализация |
+| `peek_next_step(session_id)` | API (read-only) | следующий шаг + текущий `plan_version`, без факта выдачи |
+| `claim_next_step(session_id, expected_plan_version, idempotency_key)` | API (mutating, CAS) | выдача шага по протоколу [[control]] §4.2; возвращает bank item или generation directive |
+| `record_rendered_exercise(session_id, step_id, exercise_instance, idempotency_key)` | API (mutating) | фиксирует иммутабельный rendered-exercise снапшот до предъявления ученику [П.3] |
+| `replan(session_id, expected_plan_version, idempotency_key)` | API (mutating, CAS) | новая композиционная ревизия остатка бюджета |
+| `SESSION_STARTED` / `FINISHED` / `ABANDONED` / `SESSION_STALE_ABANDONED` | publishes | lifecycle-факты |
+| `EXERCISE_RENDERED` | publishes | rendered-exercise снапшот, привязанный к `step_id`; источник для исторических попыток/replay [П.3, PD-1 A] |
+| `EXERCISE_ACCEPTED` / `EXERCISE_REJECTED` / `EXERCISE_RETIRED` | publishes | lifecycle банка упражнений; приём только после оценённой попытки или maintainer fast-path [П.3, PD-2 A] |
+| `ATTEMPT_STATE_CHANGED` | publishes | draft/recorded/assessed |
+| `attach_agent(session_id, provider, skills)` | API | фиксирует подключение агента к сессии |
+| `AGENT_ATTACHED` | publishes | к сессии подключился агент: провайдер, версии skills, момент ([[../flows/continuation]]) |
 
 - **MUST — session facade не второй владелец алгоритма**: `peek_next_step`, `claim_next_step` и `replan` здесь — транзакционная CLI-фасада lessons; она без собственной сортировки и бюджетных правил делегирует одноимённым операциям [[control]] §3b. Нормативное поведение композиции и CAS живёт только в control.
 - **MUST — владелец `AGENT_ATTACHED` — lessons** [P0-5]: событие сессионное, поэтому живёт здесь, а не в audit; audit его только читает. Flow [[../flows/continuation]] требовал события, но ни один owner его не публиковал — обязательство flow без владельца не исполнимо.
@@ -114,6 +114,7 @@ stateDiagram-v2
 
 ## История изменений
 
+- **2026-07-22**: фазовые теги `[mvp]`/`[post-mvp]` сняты [PD-2026-07-22]: спека описывает одну цель продукта, порядок и статус — только в roadmap (Принцип 4).
 - **2026-07-21**: синхронизированы терминальная диспозиция `ReviewOutcome | CANCELLED` и единый CAS-протокол `plan_version` для `peek → next/replan`.
 - **2026-07-20 (0.7)**: добавлен §4b — содержимое Session Manifest и **`required_skills`** с версиями. Поле требовалось брифом §11 и [[adapters]], но нигде не было объявлено: манифест упоминался только как «pinned versions». Без него Tutor Compliance ([[scoring]] §5) не имеет базы для обязательства «вызван нужный skill нужной версии».
 - **2026-07-20**: создан (контракт 0.5, часть 1). Attempt `draft→recorded→assessed` и stale-сессия как replayable событие [PD-2026-07-20]; closure trigger, uniqueness поверх CAS, атомарная терминализация с post-commit проекцией.

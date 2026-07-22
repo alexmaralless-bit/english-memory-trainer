@@ -16,6 +16,7 @@ level inversions, track floors) apply to everything unconditionally.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -28,6 +29,12 @@ FREQUENCY_TIERS = {"big-five", "core", "tail"}
 TRANSFORMATIONS = {"identity", "authored", "corpus-enriched", "lemma-form-sum", "reclassified-from-chunk"}
 AFFIX_TYPES = {"prefix", "suffix"}
 LEXICON_ONLY_TRACKS = {"vocabulary-chunks"}
+
+# Phase markers are banned from the program [PD-2026-07-22]: priority governs
+# order and intensity, never scope. A stale deferral field once slipped into an
+# activated snapshot (its hash included), so the ban is a validator invariant,
+# not a review convention. Covers spelling variants and the observed typo family.
+PHASE_MARKER = re.compile(r"(?:post|psot)[-_ ]?(?:beta|mvp)|\[mvp\]", re.IGNORECASE)
 
 
 @dataclass(frozen=True)
@@ -52,6 +59,23 @@ def validate_program(
     topics = {topic.get("id"): topic for topic in program["topics"]}
     lexicon = {item.get("id"): item for item in program["lexicon"]}
     artifacts = {artifact.get("id") for artifact in program["provenance"].get("source_artifacts", [])}
+
+    # -- no phase markers, no phase fields [PD-2026-07-22] --------------------
+    def _reject_phase(value: Any, path: str) -> None:
+        if isinstance(value, str):
+            if PHASE_MARKER.search(value):
+                errors.append(f"{path}: phase marker {value!r} is banned (PD-2026-07-22)")
+        elif isinstance(value, dict):
+            for key, item in value.items():
+                if str(key) == "phase":
+                    errors.append(f"{path}.phase: phase fields are banned (PD-2026-07-22)")
+                _reject_phase(item, f"{path}.{key}")
+        elif isinstance(value, list):
+            for index, item in enumerate(value):
+                _reject_phase(item, f"{path}[{index}]")
+
+    for section in ("levels", "tracks", "modules", "topics", "lexicon"):
+        _reject_phase(program[section], section)
 
     # -- unique ids -----------------------------------------------------------
     for kind, items in (

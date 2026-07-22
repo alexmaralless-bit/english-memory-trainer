@@ -1,7 +1,7 @@
 # Модуль: assessments
 
 > **Status**: current
-> **Last updated**: 2026-07-20
+> **Last updated**: 2026-07-22
 > **Sources**: [[../flows/placement]] · [[../product/learning-model]] §6 · [[scoring]] §4/§4b · [[lessons]] · Concept Gate 0.5 2026-07-20 ([PD-2026-07-20]) · часть контракта 0.5
 > **Bounded context**: `src/english_trainer/assessments/`
 
@@ -40,14 +40,14 @@ stateDiagram-v2
 
 ## 4. Публичный API и события
 
-| Операция / Событие | Тип | Что делает | Фаза |
-|---|---|---|---|
-| `start(form_selector?)` | API | выбирает форму (seed, версия, pinned), создаёт placement | `[mvp]` |
-| `answer(placement_id, section, answers)` | API | инкрементальная фиксация + checkpoint | `[mvp]` |
-| `resume(placement_id)` | API | состояние + следующая секция (в пределах окна) | `[mvp]` |
-| `submit(placement_id)` | API | идемпотентный терминальный submit | `[mvp]` |
-| `abandon(placement_id)` / `decline(self_assessment?)` | API | терминализация / отказ. `self_assessment` — **объект по core-skill ID**, не скаляр (R-5) | `[mvp]` |
-| `PLACEMENT_STARTED / CHECKPOINT / RESUMED / SUBMITTED / SCORED / DECLINED / ABANDONED / EXPIRED` | publishes | lifecycle-факты | `[mvp]` |
+| Операция / Событие | Тип | Что делает |
+|---|---|---|
+| `start(form_selector?)` | API | выбирает форму (seed, версия, pinned), создаёт placement |
+| `answer(placement_id, section, answers)` | API | инкрементальная фиксация + checkpoint |
+| `resume(placement_id)` | API | состояние + следующая секция (в пределах окна) |
+| `submit(placement_id)` | API | идемпотентный терминальный submit |
+| `abandon(placement_id)` / `decline(self_assessment?)` | API | терминализация / отказ. `self_assessment` — **объект по core-skill ID**, не скаляр (R-5) |
+| `PLACEMENT_STARTED / CHECKPOINT / RESUMED / SUBMITTED / SCORED / DECLINED / ABANDONED / EXPIRED` | publishes | lifecycle-факты |
 
 ## 5. CLI-поверхность
 
@@ -79,4 +79,5 @@ stateDiagram-v2
 
 ## История изменений
 
+- **2026-07-22**: фазовые теги `[mvp]`/`[post-mvp]` сняты [PD-2026-07-22]: спека описывает одну цель продукта, порядок и статус — только в roadmap (Принцип 4).
 - **2026-07-20**: создан (контракт 0.5, часть 2). Placement lifecycle с окном resume и `PLACEMENT_EXPIRED` как replayable-событием [PD-2026-07-20]; терминальный идемпотентный submit; exposure/cooldown с capture-into-event; origin=placement и потолок ACTIVE. Закрывает OPEN-17.

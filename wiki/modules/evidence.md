@@ -1,11 +1,11 @@
 # Модуль: evidence
 
 > **Status**: current
-> **Last updated**: 2026-07-21
+> **Last updated**: 2026-07-22
 > **Sources**: [[../product/learning-model]] §3 · [[../flows/session]] · [[../flows/placement]] · [[../platform/foundation]] (envelopes, capture-into-event) · review triage journals (OPEN-7/10) · часть контракта 0.4
 > **Bounded context**: `src/english_trainer/evidence/`
 
-> Спека — **target**. Фазы `[mvp]`/`[post-mvp]`. Термины — [[../glossary]]. Часть контракта 0.4 (evidence + [[scoring]] + [[scheduler]]).
+> Спека — **target**. Одна цель продукта, без фазовых тегов (Принцип 4). Термины — [[../glossary]]. Часть контракта 0.4 (evidence + [[scoring]] + [[scheduler]]).
 
 ---
 
@@ -29,19 +29,19 @@ Evidence event-sourced ([[../platform/foundation]] §2); Attempt operational (fi
 
 ## 3. Публичный API и события
 
-| Операция / Событие | Тип | Что делает | Фаза |
-|---|---|---|---|
-| `finalize_attempt(id)` / `recover` | API | финализация draft-attempt (idempotent) | `[mvp]` |
-| `close_review(review_id)` | API | вычисление единственного ReviewOutcome | `[mvp]` |
-| `cancel_review(review_id, reason)` | internal API | терминальная системная отмена без ReviewOutcome; v1 reason: `replanned` | `[mvp]` |
-| `record_attempt(step_id, exercise_instance_id?, raw_answer, observations, hints)` | API | фиксация попытки **по выданному шагу**; для structured/generated задач валидирует сохранённый `EXERCISE_RENDERED`; target/dimension/mode и `origin` движок берёт из `PlannedStep`, клиент их не задаёт [RR2-3] | `[mvp]` |
-| `SessionNote` | сущность | untrusted-заметка агента при фиксации: `session_id`, `author_provider`, `created_at`, `text`; **не evidence**, в scoring не участвует ([[../flows/continuation]], P0-5) | `[mvp]` |
-| `list_notes(session_id)` | API | заметки сессии в хронологическом порядке, отдельным блоком от state | `[mvp]` |
+| Операция / Событие | Тип | Что делает |
+|---|---|---|
+| `finalize_attempt(id)` / `recover` | API | финализация draft-attempt (idempotent) |
+| `close_review(review_id)` | API | вычисление единственного ReviewOutcome |
+| `cancel_review(review_id, reason)` | internal API | терминальная системная отмена без ReviewOutcome; v1 reason: `replanned` |
+| `record_attempt(step_id, exercise_instance_id?, raw_answer, observations, hints)` | API | фиксация попытки **по выданному шагу**; для structured/generated задач валидирует сохранённый `EXERCISE_RENDERED`; target/dimension/mode и `origin` движок берёт из `PlannedStep`, клиент их не задаёт [RR2-3] |
+| `SessionNote` | сущность | untrusted-заметка агента при фиксации: `session_id`, `author_provider`, `created_at`, `text`; **не evidence**, в scoring не участвует ([[../flows/continuation]], P0-5) |
+| `list_notes(session_id)` | API | заметки сессии в хронологическом порядке, отдельным блоком от state |
 
 - **MUST — у заметки есть путь записи и путь чтения** [R-3]: `--note "..."` — необязательный параметр `trainer attempt record` и `trainer observed record`; чтение — `list_notes`, которое [[lessons]] включает в ответ `session resume` отдельным блоком. Объявить сущность без обеих сторон означало бы контракт, по которому заметку нельзя ни сохранить, ни получить.
 - **MUST — заметка не влияет на исход**: её наличие, отсутствие и содержание не меняют ни admissibility фиксации, ни scoring. Автор (`author_provider`) сохраняется, чтобы при смене тьютора было видно, кто что записал.
-| `record_observed(kind, ...)` | API | error/vocabulary/chunk observed | `[mvp]` |
-| `ATTEMPT_RECORDED` / `EVIDENCE_ADDED` / `REVIEW_OUTCOME` / `REVIEW_ASSIGNMENT_CANCELLED` / `ERROR_OBSERVED` | publishes | append-only факты | `[mvp]` |
+| `record_observed(kind, ...)` | API | error/vocabulary/chunk observed |
+| `ATTEMPT_RECORDED` / `EVIDENCE_ADDED` / `REVIEW_OUTCOME` / `REVIEW_ASSIGNMENT_CANCELLED` / `ERROR_OBSERVED` | publishes | append-only факты |
 
 ## 4. Поведение
 
@@ -59,7 +59,7 @@ Evidence event-sourced ([[../platform/foundation]] §2); Attempt operational (fi
 - **MUST — непроверенная observation** [ревью 0.4-5]: observation, не подтверждаемая raw_answer, → **`rejected`** (не участвует в scoring), с audit-`reason`. Единственная ветка; «помечается» без участия в scoring исключено.
 
 ### 4.2 Trust model [PD-2026-07-19]
-- **MUST**: MVP — агент trusted reporter `raw_answer`; допущение зафиксировано, границы — Tutor Compliance ([[scoring]]). Untrusted-захват user-turn — `[post-mvp]`.
+- **MUST**: агент — trusted reporter `raw_answer` [PD-2026-07-19]; допущение зафиксировано, границы — Tutor Compliance ([[scoring]]). Untrusted-захват user-turn — в продукте; порядок — [[../roadmap]].
 - **MUST — объяснение ≠ evidence**: evidence появляется только при отдельном сохранённом learner response; объяснение агентом единицы даёт enrollment, не evidence знания.
 
 ### 4.3 AttemptAssessment vs ReviewOutcome (OPEN-10 evidence-часть)
@@ -103,6 +103,7 @@ Evidence event-sourced ([[../platform/foundation]] §2); Attempt operational (fi
 
 ## История изменений
 
+- **2026-07-22**: фазовые теги `[mvp]`/`[post-mvp]` сняты [PD-2026-07-22]: спека описывает одну цель продукта, порядок и статус — только в roadmap (Принцип 4). untrusted-захват — в продукте (порядок в roadmap).
 - **2026-07-21**: удалена конкурирующая сигнатура `record_attempt`; attempt валидируется по факту `STEP_PRESENTED`, а не по текущей композиционной ревизии; закрытие формализовано как `ReviewOutcome | CANCELLED`.
 - **2026-07-20 (3)**: 0.4-rereview — единственное правило precedence для primary target + `selection_basis` в событии (R-4); явная граница закрытия ReviewAssignment, терминальность, идемпотентный повторный close, correction ≠ второй outcome (R-5).
 - **2026-07-20 (2)**: 0.4-review триаж — детерминированный `CreditAllocation` record и единственная ветка для непроверенной observation (`rejected`, 0.4-5); cardinality `contribution_scope` (primary + contributions[], 0.4-10); immutable `origin` для placement-ceiling (0.4-4).

@@ -1,7 +1,7 @@
 # Модуль: scheduler
 
 > **Status**: current
-> **Last updated**: 2026-07-21
+> **Last updated**: 2026-07-22
 > **Sources**: [[../product/learning-model]] §7 · [[scoring]] · [[../flows/session]] · review triage journals (OPEN-18) · часть контракта 0.4
 > **Bounded context**: `src/english_trainer/scheduler/`
 
@@ -24,10 +24,10 @@
 
 Review_status — **не** knowledge state ([[scoring]] §3); operational, управляется часами.
 
-## 3. Модель интервалов [mvp]
+## 3. Модель интервалов
 
 - **MUST**: базовая последовательность `1 → 3 → 7 → 14 → 30 → 60 → 120 → 180` дней (*tunable*), адаптируется по outcome: CONFIRMED/RECOVERED — шаг вперёд; REGRESSION — шаг назад/сброс; PROGRESS — удержание; **`INSUFFICIENT_EVIDENCE` — hold** для любого значения `reason`, включая `abandoned` (интервал не сдвигается, назначается короткий retry `retry_days`, *tunable* дефолт 1) [ревью 0.4-7]; неизвестный `reason` сохраняется для аудита, но не создаёт новую scheduler-ветку. **`CANCELLED` — не исход**: расписание не трогается вовсе, retry не назначается [RR2-4]. Интервал по **прошедшему времени** (elapsed 24h), не по календарю.
-- **MUST — интерфейс отделён от формулы**: scheduler потребляет Retrievability/Stability из [[scoring]] и `target_recall` (*tunable*, дефолт 0.9); конкретная формула next-review за интерфейсом, FSRS — `[post-mvp]` без смены модели.
+- **MUST — интерфейс отделён от формулы**: scheduler потребляет Retrievability/Stability из [[scoring]] и `target_recall` (*tunable*, дефолт 0.9); конкретная формула next-review за интерфейсом; FSRS — MAY, замена формулы без смены модели.
 - **MUST**: `due` когда `now ≥ next_review_at`; `overdue` когда просрочка > `overdue_factor × interval` (*tunable*).
 
 ## 4. re-entry и overdue→AT_RISK (OPEN-18) [PD-2026-07-19]
@@ -60,10 +60,11 @@ Review_status — **не** knowledge state ([[scoring]] §3); operational, уп�
 
 ## 8. Открытые вопросы
 
-Контракт **закрывает** OPEN-18 (scheduler-policy: re-entry trigger, overdue→AT_RISK, адаптация интервалов) на уровне модели. Остаётся калибровка *tunable*-порогов и переход на FSRS — `[post-mvp]`.
+Контракт **закрывает** OPEN-18 (scheduler-policy: re-entry trigger, overdue→AT_RISK, адаптация интервалов) на уровне модели. Остаётся калибровка *tunable*-порогов; переход на FSRS — MAY (замена формулы за интерфейсом).
 
 ## История изменений
 
+- **2026-07-22**: фазовые теги `[mvp]`/`[post-mvp]` сняты [PD-2026-07-22]: спека описывает одну цель продукта, порядок и статус — только в roadmap (Принцип 4). FSRS — MAY (замена формулы за интерфейсом).
 - **2026-07-21**: `CANCELLED` закреплён как отдельное событие-terminal no-op; ветка `INSUFFICIENT_EVIDENCE` тотальна по `reason`; исправлена ссылка на control §4.5.
 - **2026-07-20 (3)**: 0.4-rereview — `schedule_epoch` в ReviewSchedule/событии/ключе идемпотентности + pin scoring policy в STATE_TRANSITION и одна UoW (R-1); tie-break расширен `dimension_id` (R-2).
 - **2026-07-20 (2)**: 0.4-review триаж — overdue→AT_RISK стал replayable-событием `OVERDUE_AT_RISK_TRIGGERED` с идемпотентным sweep (BLOCKER 0.4-2); добавлена ветка `INSUFFICIENT_EVIDENCE` (hold+retry, 0.4-7); canonical priority tuple со стабильным tie-breaker `target_id` (0.4-7).

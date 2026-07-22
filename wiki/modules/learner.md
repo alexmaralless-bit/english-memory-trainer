@@ -1,11 +1,11 @@
 # Модуль: learner
 
 > **Status**: current
-> **Last updated**: 2026-07-20
+> **Last updated**: 2026-07-22
 > **Sources**: P0-4/OPEN-25 (контракт отсутствовал, команды уже были назначены) · [[../flows/continuation]] (tutor briefing) · [[../flows/placement]] §88 (уровни, self_reported_level) · [[../product/lexical-system]] §3 (личный словарь) · [[scoring]] §4/§7 (что вычисляет НЕ этот модуль) · контракт 0.11
 > **Bounded context**: `src/english_trainer/learner/`
 
-> Спека — **target**. Фазы — тегами `[mvp]` / `[post-mvp]`. Термины — по [[../glossary]].
+> Спека — **target**. Одна цель продукта, без фазовых тегов (Принцип 4). Термины — по [[../glossary]].
 
 ---
 
@@ -28,28 +28,28 @@
 
 ## 3. Публичный API и события
 
-| Операция / Событие | Тип | Что делает | Фаза |
-|---|---|---|---|
-| `get_profile()` / `update_profile(patch)` | API | настройки ученика | `[mvp]` |
-| `status()` | API | сводка: уровни (measured и provisional), активная сессия, просроченное, XP/streak, метрики control | `[mvp]` |
-| `briefing(session_id)` | API | сборка `TutorBriefing` для агента | `[mvp]` |
-| `set_self_report(levels)` | API | заявленные уровни per-skill (из `placement decline` либо явно) | `[mvp]` |
-| `lexicon_add(entry)` / `lexicon_list(filter)` | API | личный словарь ученика | `[mvp]` |
-| `SELF_REPORT_DECLARED` | publishes | заявлен уровень (не измерение) | `[mvp]` |
-| `LEARNER_LEXICON_ENTRY_ADDED` | publishes | пополнение личного словаря | `[mvp]` |
+| Операция / Событие | Тип | Что делает |
+|---|---|---|
+| `get_profile()` / `update_profile(patch)` | API | настройки ученика |
+| `status()` | API | сводка: уровни (measured и provisional), активная сессия, просроченное, XP/streak, метрики control |
+| `briefing(session_id)` | API | сборка `TutorBriefing` для агента |
+| `set_self_report(levels)` | API | заявленные уровни per-skill (из `placement decline` либо явно) |
+| `lexicon_add(entry)` / `lexicon_list(filter)` | API | личный словарь ученика |
+| `SELF_REPORT_DECLARED` | publishes | заявлен уровень (не измерение) |
+| `LEARNER_LEXICON_ENTRY_ADDED` | publishes | пополнение личного словаря |
 
 Модуль **не публикует** событий об изменении знания, уровня или XP: их источники — [[scoring]] и [[evidence]].
 
 ## 4. Поведение
 
-- **MUST — заявленное отделено от измеренного** `[mvp]`: `self_reported_level` хранится и отдаётся **отдельным полем**, никогда не смешиваясь с `measured_working_level`. В `provisional_working_estimate` он участвует с явной пометкой ([[scoring]] §4). Смешение сделало бы самооценку неотличимой от evidence.
-- **MUST — замещение per-skill** `[mvp]` [rereview A-R3]: заявленный уровень навыка перестаёт учитываться после **первого допустимого evidence по этому навыку**, а не глобально. Ученик может верно оценить чтение и ошибиться в письме.
-- **MUST — модуль ничего не вычисляет из evidence** `[mvp]`: Mastery, Stability, knowledge state, CEFR-уровни, confidence, XP и streak вычисляет [[scoring]] ([[scoring]] §4, §7). Learner их **читает**. Дублирование расчёта в двух модулях гарантированно разъедется.
-- **MUST — briefing это read-model, не истина** `[mvp]`: сборка briefing не создаёт и не меняет состояния; агент не может изменить учебное состояние, «ответив» на briefing. Содержимое — уровни с confidence, недавние ошибки, актуальный словарь, рекомендации curriculum, результаты placement и `self_reported_level` с пометкой ([[../flows/continuation]], [[../flows/placement]]).
-- **MUST — briefing выдаётся одним документом** `[mvp]`: агент получает его целиком при `session start`/`resume`, а не собирает по кускам. Иначе поведение зависит от того, сколько запросов агент успел сделать.
-- **MUST — личный словарь не влияет на scoring** `[mvp]`: `LearnerLexiconEntry` — заметка ученика. Она может быть связана с `LexicalItem` (`linked_item_id`), и тогда влияет на `learner_relevance` при планировании ([[control]] §4.5), но **никогда** не даёт Mastery. Добавить слово в словарь не значит его знать.
-- **MUST — личный словарь не редактирует программу** `[mvp]`: запись в личный словарь не создаёт `LexicalItem` в curriculum. Пополнение и stable core, и living layer — только через workflow [[curriculum]] (living layer в продукте — [PD-2026-07-21]); прямой путь из личного словаря в программу отсутствует в любом случае.
-- **MUST — цели ученика влияют только на приоритет** `[mvp]`: `goals[]` (например, «скоро поездка») повышают `learner_relevance` в [[control]] и не объявляют темы изученными.
+- **MUST — заявленное отделено от измеренного**: `self_reported_level` хранится и отдаётся **отдельным полем**, никогда не смешиваясь с `measured_working_level`. В `provisional_working_estimate` он участвует с явной пометкой ([[scoring]] §4). Смешение сделало бы самооценку неотличимой от evidence.
+- **MUST — замещение per-skill** [rereview A-R3]: заявленный уровень навыка перестаёт учитываться после **первого допустимого evidence по этому навыку**, а не глобально. Ученик может верно оценить чтение и ошибиться в письме.
+- **MUST — модуль ничего не вычисляет из evidence**: Mastery, Stability, knowledge state, CEFR-уровни, confidence, XP и streak вычисляет [[scoring]] ([[scoring]] §4, §7). Learner их **читает**. Дублирование расчёта в двух модулях гарантированно разъедется.
+- **MUST — briefing это read-model, не истина**: сборка briefing не создаёт и не меняет состояния; агент не может изменить учебное состояние, «ответив» на briefing. Содержимое — уровни с confidence, недавние ошибки, актуальный словарь, рекомендации curriculum, результаты placement и `self_reported_level` с пометкой ([[../flows/continuation]], [[../flows/placement]]).
+- **MUST — briefing выдаётся одним документом**: агент получает его целиком при `session start`/`resume`, а не собирает по кускам. Иначе поведение зависит от того, сколько запросов агент успел сделать.
+- **MUST — личный словарь не влияет на scoring**: `LearnerLexiconEntry` — заметка ученика. Она может быть связана с `LexicalItem` (`linked_item_id`), и тогда влияет на `learner_relevance` при планировании ([[control]] §4.5), но **никогда** не даёт Mastery. Добавить слово в словарь не значит его знать.
+- **MUST — личный словарь не редактирует программу**: запись в личный словарь не создаёт `LexicalItem` в curriculum. Пополнение и stable core, и living layer — только через workflow [[curriculum]] (living layer в продукте — [PD-2026-07-21]); прямой путь из личного словаря в программу отсутствует в любом случае.
+- **MUST — цели ученика влияют только на приоритет**: `goals[]` (например, «скоро поездка») повышают `learner_relevance` в [[control]] и не объявляют темы изученными.
 
 ## 5. CLI-поверхность
 
@@ -75,4 +75,5 @@
 
 ## История изменений
 
+- **2026-07-22**: фазовые теги `[mvp]`/`[post-mvp]` сняты [PD-2026-07-22]: спека описывает одну цель продукта, порядок и статус — только в roadmap (Принцип 4).
 - **2026-07-20**: создан (контракт 0.11, P0-4/OPEN-25). Граница проведена по источнику истины: заявленное — здесь, измеренное — в scoring. Снято лишнее присвоение из [[../flows/session]], где XP-ledger и streak числились за learner, хотя описаны в [[scoring]] §7.

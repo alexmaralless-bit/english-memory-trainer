@@ -1,7 +1,7 @@
 # Flow: продолжение без старого чата (continuation)
 
 > **Status**: current
-> **Last updated**: 2026-07-19
+> **Last updated**: 2026-07-22
 > **Sources**: [[session]] · [[../product/learning-model]] · Concept Gate 2026-07-19 (три развилки, [PD-2026-07-19]) · концепт одобрен («ок»)
 > **Роль**: спинной сценарий (roadmap 0.8). Ключевое свойство системы: контекст чата — не память; любой агент продолжает обучение из состояния движка. Проверяется демо 2.7.
 
@@ -11,7 +11,7 @@
 
 1. **Session notes — опциональные и untrusted.** При любой фиксации агент МОЖЕТ добавить короткую заметку (о чём говорили, на чём остановились). Resume возвращает заметки хронологически. **Заметки — untrusted non-evidence** [ревью C-8]: они не имеют пути в scoring, экранируются в briefing и никогда не интерпретируются как состояние. Даже если заметка утверждает «ученик уверенно освоил X», источник истины — вычисленный state, а не текст агента.
 2. **Tutor briefing в манифесте.** Движок отдаёт полную картину ученика одним JSON внутри Session Manifest (и в ответе resume). Чтение Obsidian агенту не требуется — vault остаётся проекцией для человека; briefing генерится из state. В briefing вычисленный state и свободный текст заметок физически разделены (trust boundary).
-3. **Без блокировок, с учётом.** Lease/блокировки сессий в MVP не вводятся: ученик один, реальная одновременность агентов маловероятна ([PD-2026-07-19]). `start`/`resume` регистрируют провайдера событием `AGENT_ATTACHED`. Transport-idempotency не решает семантический конфликт двух агентов [ревью G-8]: MUST — **уникальный терминальный outcome на review-assignment** и **optimistic session revision** (конкурентная запись с устаревшей ревизией отклоняется); полный correction protocol — [[../OPEN]] OPEN-11. Lease — `[post-mvp]`.
+3. **Без блокировок, с учётом.** Lease/блокировки сессий в MVP не вводятся: ученик один, реальная одновременность агентов маловероятна ([PD-2026-07-19]). `start`/`resume` регистрируют провайдера событием `AGENT_ATTACHED`. Transport-idempotency не решает семантический конфликт двух агентов [ревью G-8]: MUST — **уникальный терминальный outcome на review-assignment** и **optimistic session revision** (конкурентная запись с устаревшей ревизией отклоняется); полный correction protocol — [[../OPEN]] OPEN-11. Lease — MAY: необязательное усиление поверх этой защиты.
 
 ## Состав tutor briefing
 
@@ -85,10 +85,11 @@ sequenceDiagram
 
 ## Открытые вопросы
 
-Механизм — [[../OPEN]] OPEN-11 (idempotency scope, optimistic concurrency; kernel даёт CAS, uniqueness-правило — 0.5). Lease на сессию — `[post-mvp]`.
+Механизм — [[../OPEN]] OPEN-11 (idempotency scope, optimistic concurrency; kernel даёт CAS, uniqueness-правило — 0.5). Lease на сессию — MAY (см. инвариант 3).
 
 ## История изменений
 
+- **2026-07-22**: фазовые теги `[mvp]`/`[post-mvp]` сняты [PD-2026-07-22]: спека описывает одну цель продукта, порядок и статус — только в roadmap (Принцип 4). lease — MAY.
 - **2026-07-19 (3)**: rereview — boundary J-R1: kernel даёт CAS/optimistic revision (механизм), уникальность терминального outcome на ReviewAssignment — бизнес-правило 0.5 (README: platform без бизнес-логики).
 - **2026-07-19 (2)**: red-team триаж — session notes untrusted non-evidence с trust boundary в briefing (C-8); optimistic session revision и уникальный терминальный outcome против двух агентов (G-8).
 - **2026-07-19**: создан по Concept Gate: опциональные session notes, tutor briefing в манифесте, без блокировок с событием AGENT_ATTACHED. Все решения [PD-2026-07-19].

@@ -36,4 +36,3 @@ tracks:
   - id: toefl-reading-writing
     title: "TOEFL Reading & Writing"
     from_level: B1
-    phase: "[post-mvp]"

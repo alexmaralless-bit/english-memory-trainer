@@ -1,11 +1,11 @@
 # Learning Model Requirements
 
 > **Status**: current
-> **Last updated**: 2026-07-19
+> **Last updated**: 2026-07-22
 > **Sources**: `docs/design-direction.md` (v0.2) · бриф §6–§10 · `staging/journal/2026-07-19-concept-v02-and-wiki.md` и `staging/journal/2026-07-19-concept-review-triage.md` (Concept Gate + red-team триаж, решения [PD-2026-07-19]) · концепт одобрен пользователем («ок») 2026-07-19
 > **Роль**: продуктовый контракт учебной модели (roadmap 0.1). Определяет, ЧТО измеряется и подтверждается. Численные формулы — 0.4 (OPEN-1); anti-gaming/coverage/confidence — 0.4 (OPEN-7/8); XP-ledger — 0.4 (OPEN-12); Informal-профиль — 0.4 (OPEN-13); lifecycle/pinning — 0.5/0.2 (OPEN-9/10); содержание программы — фаза П.
 
-> Спека — **target**. Фазы — тегами `[mvp]` / `[post-mvp]`. Термины — по имени из [[../glossary]].
+> Спека — **target**. Одна цель продукта, без фазовых тегов (Принцип 4). Термины — по имени из [[../glossary]].
 
 ---
 
@@ -31,13 +31,13 @@
 - **MUST — семантическая идентичность и multi-credit** [PD-2026-07-19, ревью C-3]: idempotency key защищает только транспорт; помимо него evidence имеет семантическую идентичность (hash source-span ответа/цитаты, item-exposure ID упражнения). Один source-span засчитывается **не более чем раз** на пару (LearningTarget, dimension); переотправка того же ответа/цитаты/упражнения с новыми ключами и session ID не создаёт нового evidence. Правила admissibility, независимости (новый prompt/контекст/интервал) и multi-credit allocation — механизм в 0.4/0.2 ([[../OPEN]] OPEN-7).
 - **MUST — классификацию считает движок** [ревью A-1/C-1]: агент передаёт только проверяемые наблюдения (raw answer, контекст, hints, rubric-observations); итоговый review outcome вычисляет движок по versioned policy. Клиентская готовая классификация запрещена.
 - **MUST — observation ссылается на span, не готовый вердикт** [rereview C-R1]: rubric-observation обязана ссылаться на конкретный rubric-criterion и на span/error в raw answer, а не быть булевым флагом `criterion_satisfied=true`. Определены machine-checkable часть (проверяется кодом), subjective часть (под cap/trust) и consistency-check; observation, не подтверждаемая raw answer, **отклоняется** (`rejected` + audit-reason; ветки «помечается и всё равно учитывается» нет — [[../modules/evidence]] §4.1). Точная schema — 0.4 ([[../OPEN]] OPEN-7).
-- **Trust model [PD-2026-07-19, rereview C-R3]**: в MVP агент — **trusted reporter** raw_answer (агент и есть интерфейс; единственный ученик — сам пользователь). Допущение зафиксировано явно; границы аудита — через Tutor Compliance Score. Untrusted-захват user-turn на adapter boundary (`provider_message_id` + content hash + span) — `[post-mvp]`, не ломающий evidence-модель.
+- **Trust model [PD-2026-07-19, rereview C-R3]**: агент — **trusted reporter** raw_answer (агент и есть интерфейс; единственный ученик — сам пользователь). Допущение зафиксировано явно; границы аудита — через Tutor Compliance Score. Untrusted-захват user-turn на adapter boundary (`provider_message_id` + content hash + span) — в продукте, не ломающий evidence-модель; порядок — [[../roadmap]].
 - **MUST — объяснение агента ≠ evidence** [rereview C-R2]: evidence появляется только при отдельном сохранённом learner response. Целенаправленное объяснение единицы агентом даёт enrollment, но не evidence знания.
 - Источники evidence:
-  1. **объективные задания** — проверяются кодом (выбор, трансформация, порядок слов, cloze) `[mvp]`;
-  2. **rubric-оценки письма** — агент даёт rubric-observations по versioned rubric; scoring считает движок `[mvp]`;
-  3. **подмешанные проверки** (ReviewAssignment) — движок выдаёт в Session Manifest цели с `review_id`, ReviewTarget, dimension и критериями; агент встраивает их в разговор и фиксирует наблюдения `[mvp]`;
-  4. **скрытые подтверждения** — агент фиксирует спонтанное корректное/некорректное употребление активной темы через CLI с цитатой; source-span цитаты уникален (см. выше) `[mvp]`.
+  1. **объективные задания** — проверяются кодом (выбор, трансформация, порядок слов, cloze);
+  2. **rubric-оценки письма** — агент даёт rubric-observations по versioned rubric; scoring считает движок;
+  3. **подмешанные проверки** (ReviewAssignment) — движок выдаёт в Session Manifest цели с `review_id`, ReviewTarget, dimension и критериями; агент встраивает их в разговор и фиксирует наблюдения;
+  4. **скрытые подтверждения** — агент фиксирует спонтанное корректное/некорректное употребление активной темы через CLI с цитатой; source-span цитаты уникален (см. выше).
 - **MUST**: результат каждого повторения классифицируется движком: `PROGRESS / CONFIRMED / REGRESSION / RECOVERED / INSUFFICIENT_EVIDENCE` ([[../glossary]]).
 - **Правило rubric-оценок [PD-2026-07-19]**:
   - **MUST**: вклад rubric-оценок в Mastery ограничен (cap — численно в 0.4);
@@ -98,16 +98,16 @@ stateDiagram-v2
 
 ## 6. Placement [PD-2026-07-19]
 
-- **SHOULD** `[mvp]`: короткий текстовый placement, целевая медиана ~30–40 минут (time-box/число items — контракт assessments; `~` не проверяемо как MUST, ревью E-9): grammar, vocabulary, reading — объективно; writing — короткий фрагмент по rubric.
+- **SHOULD**: короткий текстовый placement, целевая медиана ~30–40 минут (time-box/число items — контракт assessments; `~` не проверяемо как MUST, ревью E-9): grammar, vocabulary, reading — объективно; writing — короткий фрагмент по rubric.
 - **MUST — потолок** [PD-2026-07-19, ревью D-9]: placement выдаёт объективно проверенным темам максимум `ACTIVE`, **никогда `MASTERED`** (нет retention во времени); writing из одного rubric-фрагмента — только provisional (полный writing-уровень — ≥2 независимых items в сессиях).
 - **MUST**: результат — стартовые оценки по навыкам с пометкой `low-confidence`; confidence повышается rolling-уточнением по evidence первых сессий. Точное окно, coverage и снижение confidence — versioned policy, контракт 0.4 ([[../OPEN]] OPEN-8), не «после 3–5» на глаз.
 - **MUST**: deterministic seed и минимум две формы теста; exposure-history и cooldown повторных прохождений — [[../flows/placement]] / [[../OPEN]] OPEN-17.
 - **SHOULD**: повторный placement по запросу ученика; после длительного перерыва движок предлагает re-entry тест (§7), не полный placement.
-- Полный placement из брифа (веса разделов, несколько сессий) — `[post-mvp]`.
+- Принятый placement-контракт ([[../flows/placement]]) и есть целевой placement; «полный placement из брифа» отдельной целью не является — расширения (веса разделов, несколько сессий) потребуют нового решения через [[../OPEN]].
 
 ## 7. Повторения и re-entry
 
-- **MUST** `[mvp]`: базовые интервалы `1 → 3 → 7 → 14 → 30 → 60 → 120 → 180` дней, адаптация по результату; интерфейс scheduler отделён от формулы (FSRS — `[post-mvp]`).
+- **MUST**: базовые интервалы `1 → 3 → 7 → 14 → 30 → 60 → 120 → 180` дней, адаптация по результату; интерфейс scheduler отделён от формулы; FSRS — MAY, возможная замена формулы за интерфейсом без смены модели.
 - **MUST — время** [PD-2026-07-19, ревью G-10]: всё хранится в UTC-инстантах; у ученика настраиваемая IANA-таймзона. Интервалы повторений считаются по **прошедшему времени** (elapsed 24h), не по календарю. Streak — по локальной календарной дате (§8).
 - **MUST**: повторение бывает явным (тест/упражнение), подмешанным (`review_id` в Session Manifest) и скрытым (conversation evidence).
 - **MUST NOT**: блокировать темы из-за overdue backlog; backlog влияет только на рекомендации и состав Session Manifest.
@@ -161,6 +161,7 @@ stateDiagram-v2
 
 ## История изменений
 
+- **2026-07-22**: фазовые теги `[mvp]`/`[post-mvp]` сняты [PD-2026-07-22]: спека описывает одну цель продукта, порядок и статус — только в roadmap (Принцип 4). untrusted-захват — в продукте (порядок в roadmap); «полный placement из брифа» упразднён как отдельная цель; FSRS — MAY.
 - **2026-07-19 (5)**: rereview — три оси состояния, REVIEW_DUE устранён (D-R1); AT_RISK только подтверждённый/overdue (D-R2); AttemptAssessment vs ReviewOutcome (A-R1); observation ссылается на span (C-R1); trusted-reporter модель (C-R3); объяснение агента ≠ evidence (C-R2); half-step → OPEN-8 (E-R4); per-skill self-report (A-R3); day-attribution streak (G-R3); re-entry порог → OPEN-18 (J-R3).
 - **2026-07-19 (4)**: red-team триаж — evidence семантическая идентичность и вычисление классификации движком (C-1/C-3); restore-on-confirm, review-status слой и тотальность переходов (D-1/D-2/D-3); CEFR coverage и unknown-as-unknown (C-4); Informal→CEFR через contribution_scope с cap (C-5); self_reported_level отдельно (A-2); placement потолок ACTIVE и SHOULD по времени (D-9/E-9); UTC+IANA и streak по локальной дате (G-10); XP award-once (A-6/C-7/E-6); `strong/soft`, mastery_criteria→0.4, банк SHOULD (A-4/E-1/E-4).
 - **2026-07-19 (3)**: в §5 добавлен профиль Informal Online Competence (informal-трек, концепт Codex).

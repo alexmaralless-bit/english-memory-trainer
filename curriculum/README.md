@@ -5,7 +5,7 @@
 ## Раскладка
 
 - `levels.yaml` — шесть CEFR уровней с главным can-do.
-- `tracks.yaml` — **десять** сквозных треков; `everyday-life` — доменный (быт), `everyday-online-informal` — регистровый (онлайн), `word-formation` — морфология (продуктивные аффиксы); `toefl-reading-writing` начинается с B1 и имеет `phase: post-mvp`.
+- `tracks.yaml` — **десять** сквозных треков; `everyday-life` — доменный (быт), `everyday-online-informal` — регистровый (онлайн), `word-formation` — морфология (продуктивные аффиксы); `toefl-reading-writing` начинается с B1 (тем ниже B1 не порождает) — полноценная часть программы [PD-2026-07-21].
 - `modules/` — один YAML на module. A1.1–A2.8 (работа) и A1.9–A2.13 (быт) содержат список Topic ID; B1–C2 — только module-level sketches без тем.
 - `topics/a1.yaml`, `topics/a2.yaml`, `topics/b1.yaml` — минимальные Topic skeletons (b1.yaml: первые детальные B1-темы — трек `word-formation`): ID, CEFR, track, module, can-do и advisory prerequisites.
 

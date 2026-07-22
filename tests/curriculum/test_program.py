@@ -179,6 +179,11 @@ def test_minimal_program_is_valid() -> None:
             ),
             "affix_type must be",
         ),
+        # Phase markers are banned from the program [PD-2026-07-22]: a stale
+        # deferral once entered an activated snapshot and its hash.
+        (lambda p: p["tracks"][0].update(phase="[post-mvp]"), "phase fields are banned"),
+        (lambda p: p["tracks"][0].update(note="deferred to psot-beta"), "phase marker"),
+        (lambda p: p["topics"][0].update(can_do="Do this later (post-mvp)."), "phase marker"),
     ],
 )
 def test_validator_catches_each_violation(mutate: Any, fragment: str) -> None:

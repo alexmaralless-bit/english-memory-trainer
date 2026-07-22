@@ -1,7 +1,7 @@
 # Глоссарий
 
 > **Status**: living
-> **Last updated**: 2026-07-21
+> **Last updated**: 2026-07-22
 
 Термины определяются здесь один раз (Принцип 3) и везде используются по имени. Новый термин сначала вводится сюда, потом в спеки. Где термин — machine-ID (enum/поле схемы), он записан `code`-шрифтом; человекочитаемая подпись даётся отдельно.
 
@@ -52,7 +52,7 @@
 ## Оценивание
 
 - **Attempt** — одна попытка ученика (ответ, фраза, упражнение). Имеет lifecycle и finalization: незавершённый (draft) attempt не участвует в scoring до финализации (механизм — [[OPEN]] OPEN-10).
-- **Evidence** — сохранённое свидетельство владения: исходный ответ + контекст + оценка + версии policy/rubric + идентичность (source-span, item-exposure). Каждая оценка обязана иметь evidence; упоминание темы — не evidence. Один source-span засчитывается не более раза на target/dimension ([[OPEN]] OPEN-7). Raw answer в MVP предоставляет агент как **trusted reporter** (untrusted-захват — post-mvp, [[OPEN]] OPEN-7).
+- **Evidence** — сохранённое свидетельство владения: исходный ответ + контекст + оценка + версии policy/rubric + идентичность (source-span, item-exposure). Каждая оценка обязана иметь evidence; упоминание темы — не evidence. Один source-span засчитывается не более раза на target/dimension ([[OPEN]] OPEN-7). Raw answer предоставляет агент как **trusted reporter** [PD-2026-07-19]; untrusted-захват user-turn — в продукте, порядок — [[roadmap]] ([[OPEN]] OPEN-7).
 - **AttemptAssessment** — оценка отдельного attempt (может быть несколько на один `review_id`). **Не** терминальна.
 - **ReviewOutcome** — терминальный **учебный** исход ReviewAssignment (см. Review outcome выше), вычисляемый движком при закрытии по evidence; не совпадает с per-attempt оценкой. Системная отмена `CANCELLED` закрывает assignment, но ReviewOutcome не является.
 - **Mastery** — качество владения LearningTarget, 0–100. Меняется только scoring engine.
@@ -137,6 +137,7 @@
 
 ## История изменений
 
+- **2026-07-22**: фазовые теги `[mvp]`/`[post-mvp]` сняты [PD-2026-07-22]: спека описывает одну цель продукта, порядок и статус — только в roadmap (Принцип 4). untrusted-захват — в продукте (порядок в roadmap).
 - **2026-07-21**: разведены `SessionBudget` и `DeliveryLedger`, введён `plan_version`; `STEP_PRESENTED` исправлен до наблюдаемой границы тьютора; ReviewAssignment получил диспозицию `ReviewOutcome | CANCELLED`; availability приведена к §4.7a.
 - **2026-07-20 (6)**: 0.4 — Learning Score и Tutor Compliance получили конкретные определения (владение текущим уровнем / доля соблюдённых обязательств).
 - **2026-07-20 (5)**: foundation-rereview — добавлено обязательное поле `sequence` в конверт (I-1); Event log уточнён (SQLite-таблица authoritative, JSONL export).
