@@ -9,7 +9,17 @@ topics:
       soft: [written-production.cause-effect-explanation]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: tail
-    lexicon: []
+    lexicon: [word.if, word.result, word.because]
+    contexts: [incident-retrospective, missed-deadline-review]
+    typical_errors:
+      - "Using would in the if-clause (If we would have tested), mirroring Russian conditional symmetry."
+      - "Replacing had + past participle with Past Simple because Russian does not mark the earlier counterfactual with a separate form."
+      - "Describing a real past sequence instead of an unreal alternative and its imagined result."
+    examples:
+      - "If we had tested the migration earlier, we would have found the encoding fault."
+      - "The delivery would not have failed if the address had been confirmed."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 75, independent_attempts: 2}, controlled_production: {active_threshold: 78, independent_attempts: 2}, spontaneous_production: {active_threshold: 78, independent_attempts: 2}, transfer: {active_threshold: 80, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 45, retention_confirmations: 2}}
 
   - id: grammar.mixed-conditionals.consequences
     cefr: B2
@@ -21,7 +31,17 @@ topics:
       soft: [grammar.present-perfect.duration]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: tail
-    lexicon: []
+    lexicon: [word.if, word.result, word.cause]
+    contexts: [current-system-consequence, career-decision-reflection]
+    typical_errors:
+      - "Using the same time reference in both clauses when the condition is past but the consequence is present."
+      - "Choosing would have in the result clause merely because the Russian sentence mentions the past."
+      - "Mixing a factual present condition with a counterfactual result without signaling unreality."
+    examples:
+      - "If we had documented the workaround, the support team would know what to do now."
+      - "If the service were easier to configure, we would have adopted it last year."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 75, independent_attempts: 2}, controlled_production: {active_threshold: 78, independent_attempts: 2}, spontaneous_production: {active_threshold: 78, independent_attempts: 2}, transfer: {active_threshold: 80, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 45, retention_confirmations: 2}}
 
   - id: reading.compare-source-claims
     cefr: B2
@@ -32,7 +52,17 @@ topics:
       strong: [reading.connected-technical-explanation, reading.implied-online-stance]
       soft: [written-production.fact-inference]
     dimensions: [recognition, transfer]
-    lexicon: []
+    lexicon: [chunk.according-to, word.reason, word.result]
+    contexts: [vendor-comparison, policy-briefing]
+    typical_errors:
+      - "Treating two texts as equivalent because they share vocabulary while overlooking different claims."
+      - "Reporting each source separately instead of comparing the same issue across them."
+      - "Reading a cautious English qualifier as firm agreement because Russian summaries often omit hedging."
+    examples:
+      - "The vendor says the delay was unavoidable, whereas the audit links it to late planning."
+      - "Both notices permit refunds, but only the second defines what counts as a cancellation."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 80, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 45, retention_confirmations: 2}}
 
   - id: written-production.technical-position-paper
     cefr: B2
@@ -43,7 +73,17 @@ topics:
       strong: [written-production.reasoned-recommendation, written-production.system-overview]
       soft: [us-tech.tradeoff-summary]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [chunk.i-suggest, word.recommendation, word.impact]
+    contexts: [architecture-decision, tool-adoption-proposal]
+    typical_errors:
+      - "Opening with background for too long and leaving the actual position implicit."
+      - "Using categorical Russian-style claims without evidence or calibrated limits."
+      - "Listing advantages and disadvantages without connecting them to the stated decision criteria."
+    examples:
+      - "I recommend retaining the queue because it isolates traffic spikes and limits data loss. Its added operational cost is justified for the payment path."
+      - "The local model is cheaper to run, but it does not meet the accuracy requirement. We should therefore keep the hosted option for final classification."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 75, independent_attempts: 2}, controlled_production: {active_threshold: 78, independent_attempts: 2}, spontaneous_production: {active_threshold: 78, independent_attempts: 2}, transfer: {active_threshold: 80, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 45, retention_confirmations: 2}}
 
   - id: written-production.multi-source-synthesis
     cefr: B2
@@ -54,7 +94,17 @@ topics:
       strong: [reading.compare-source-claims, written-production.paraphrase-summary]
       soft: [written-production.system-overview]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [word.summary, chunk.according-to, word.result]
+    contexts: [research-summary, incident-evidence-synthesis]
+    typical_errors:
+      - "Writing one paragraph per source and never combining related findings."
+      - "Copying source wording too closely instead of producing an independent paraphrase."
+      - "Suppressing a genuine disagreement to make the Russian summary sound more definite."
+    examples:
+      - "The logs and customer reports both place the first failures after the release, but they disagree about which region was affected first."
+      - "Across the three reviews, setup time is the consistent weakness; only the internal trial also identifies unstable exports."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 75, independent_attempts: 2}, controlled_production: {active_threshold: 78, independent_attempts: 2}, spontaneous_production: {active_threshold: 78, independent_attempts: 2}, transfer: {active_threshold: 80, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 45, retention_confirmations: 2}}
 
   - id: us-tech.architecture-tradeoff
     cefr: B2
@@ -65,7 +115,17 @@ topics:
       strong: [us-tech.tradeoff-summary, us-tech.requirement-rationale]
       soft: [written-production.technical-position-paper]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [chunk.the-main-risk-is, word.option, word.impact]
+    contexts: [design-review, platform-migration]
+    typical_errors:
+      - "Calling one architecture the best without naming the constraint that makes it preferable."
+      - "Using the false friend actual to mean current when describing the present system."
+      - "Treating maintainability, cost, and reliability as isolated lists rather than interacting trade-offs."
+    examples:
+      - "A managed queue reduces operational effort, but it increases vendor dependence and per-request cost."
+      - "The modular design delays the first release; in return, it contains failures and makes later replacement cheaper."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 75, independent_attempts: 2}, controlled_production: {active_threshold: 78, independent_attempts: 2}, spontaneous_production: {active_threshold: 78, independent_attempts: 2}, transfer: {active_threshold: 80, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 45, retention_confirmations: 2}}
 
   - id: written-interaction.decision-challenge
     cefr: B2
@@ -76,7 +136,17 @@ topics:
       strong: [written-interaction.constructive-challenge, written-interaction.negotiating-scope]
       soft: [written-production.reasoned-recommendation]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [informal.not-sure-i-agree, word.reason, word.option]
+    contexts: [design-review-comment, planning-thread]
+    typical_errors:
+      - "Translating «я не согласен» as a bare I disagree without acknowledging the shared goal."
+      - "Challenging the person or their competence instead of the decision's assumption."
+      - "Raising a risk without proposing evidence, a test, or an alternative."
+    examples:
+      - "I share the goal of simplifying deployment, but the proposal assumes every client can upgrade at once. Could we test that assumption against the support data?"
+      - "The faster option may work for this release; however, it leaves the recovery requirement unmet."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 75, independent_attempts: 2}, controlled_production: {active_threshold: 78, independent_attempts: 2}, spontaneous_production: {active_threshold: 78, independent_attempts: 2}, transfer: {active_threshold: 80, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 45, retention_confirmations: 2}}
 
   - id: grammar.passive.reporting-structures
     cefr: B2
@@ -88,7 +158,17 @@ topics:
       soft: [grammar.modals.deduction-obligation]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: tail
-    lexicon: []
+    lexicon: [chunk.according-to, word.result, word.reason]
+    contexts: [research-summary, incident-communication]
+    typical_errors:
+      - "Using It is said that without a real source, copying an impersonal Russian reporting pattern."
+      - "Confusing He is believed to fix with He is believed to have fixed for a prior action."
+      - "Using the passive structure to hide essential attribution rather than to calibrate distance."
+    examples:
+      - "The outage is believed to have started during the certificate rotation."
+      - "It has been reported that the new filter reduces false alerts."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 75, independent_attempts: 2}, controlled_production: {active_threshold: 78, independent_attempts: 2}, spontaneous_production: {active_threshold: 78, independent_attempts: 2}, transfer: {active_threshold: 80, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 45, retention_confirmations: 2}}
 
   - id: grammar.inversion.emphasis
     cefr: B2
@@ -101,6 +181,16 @@ topics:
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: tail
     lexicon: []
+    contexts: [formal-recommendation, incident-emphasis]
+    typical_errors:
+      - "Keeping normal statement order after Never or Only then because Russian does not require auxiliary inversion."
+      - "Inverting the verb inside the subordinate clause after Only when instead of the main clause."
+      - "Using formal inversion repeatedly in ordinary chat, creating an unnatural register."
+    examples:
+      - "Only after the rollback did the error rate return to normal."
+      - "Rarely have we seen such a clear difference between the two models."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 75, independent_attempts: 2}, controlled_production: {active_threshold: 78, independent_attempts: 2}, spontaneous_production: {active_threshold: 78, independent_attempts: 2}, transfer: {active_threshold: 80, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 45, retention_confirmations: 2}}
 
   - id: grammar.modal-perfect.speculation
     cefr: B2
@@ -112,7 +202,17 @@ topics:
       soft: [us-tech.incident-root-cause]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: tail
-    lexicon: []
+    lexicon: [word.reason, word.cause, word.result]
+    contexts: [fault-investigation, missed-appointment-explanation]
+    typical_errors:
+      - "Using must have for an obligation in the past instead of a strong inference."
+      - "Replacing might have failed with maybe it failed and losing the calibrated degree of certainty."
+      - "Using could have not instead of could not have or might not have."
+    examples:
+      - "The worker may have retried the request before the lock expired."
+      - "She cannot have received the notice because the address was incomplete."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 75, independent_attempts: 2}, controlled_production: {active_threshold: 78, independent_attempts: 2}, spontaneous_production: {active_threshold: 78, independent_attempts: 2}, transfer: {active_threshold: 80, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 45, retention_confirmations: 2}}
 
   - id: grammar.participle-clauses.compression
     cefr: B2
@@ -124,7 +224,17 @@ topics:
       soft: [grammar.passive.expanded-process]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: tail
-    lexicon: []
+    lexicon: [word.because, word.result]
+    contexts: [technical-report, formal-process-description]
+    typical_errors:
+      - "Creating a dangling participle whose understood actor differs from the main-clause subject."
+      - "Using an -ing clause for an earlier completed action when having + past participle is needed."
+      - "Compressing too many relations and leaving cause, time, or contrast ambiguous."
+    examples:
+      - "Having verified the backup, the engineer started the migration."
+      - "Running on a smaller instance, the service reaches its memory limit sooner."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 75, independent_attempts: 2}, controlled_production: {active_threshold: 78, independent_attempts: 2}, spontaneous_production: {active_threshold: 78, independent_attempts: 2}, transfer: {active_threshold: 80, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 45, retention_confirmations: 2}}
 
   - id: grammar.cleft-sentences.focus
     cefr: B2
@@ -136,7 +246,17 @@ topics:
       soft: [grammar.inversion.emphasis]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: tail
-    lexicon: []
+    lexicon: [word.reason, word.result]
+    contexts: [root-cause-emphasis, decision-clarification]
+    typical_errors:
+      - "Copying Russian free word order instead of building the full It was ... that structure."
+      - "Using which after a person in a cleft when who or that is expected."
+      - "Focusing information that is already obvious and making the sentence needlessly heavy."
+    examples:
+      - "It was the expired token that caused the repeated failures."
+      - "What the client needs is a stable export format."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 75, independent_attempts: 2}, controlled_production: {active_threshold: 78, independent_attempts: 2}, spontaneous_production: {active_threshold: 78, independent_attempts: 2}, transfer: {active_threshold: 80, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 45, retention_confirmations: 2}}
 
   - id: word-formation.academic-nominalization
     cefr: B2
@@ -147,7 +267,17 @@ topics:
       strong: [word-formation.quality-suffix, word-formation.agent-and-noun-suffix]
       soft: [written-production.technical-position-paper]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [word.requirement, word.improvement, word.agreement]
+    contexts: [formal-report, research-summary]
+    typical_errors:
+      - "Adding -tion or -ment mechanically to a verb when English uses a different noun form."
+      - "Overusing nominalizations under the influence of Russian official style and obscuring who acts."
+      - "Using the noun where the sentence requires an adjective or verb."
+    examples:
+      - "The evaluation revealed a substantial improvement in response time."
+      - "Implementation of the control requires approval from the security team."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 75, independent_attempts: 2}, controlled_production: {active_threshold: 78, independent_attempts: 2}, spontaneous_production: {active_threshold: 78, independent_attempts: 2}, transfer: {active_threshold: 80, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 45, retention_confirmations: 2}}
 
   - id: word-formation.prefix-stance
     cefr: B2
@@ -158,7 +288,17 @@ topics:
       strong: [word-formation.surpass-out, word-formation.degree-over-under]
       soft: [reading.compare-source-claims]
     dimensions: [recognition, transfer]
-    lexicon: []
+    lexicon: [word.overload, word.underestimate, word.overwrite]
+    contexts: [academic-reading, technical-analysis]
+    typical_errors:
+      - "Assigning the same Russian translation to a prefix in every word regardless of context."
+      - "Treating an apparent initial sequence as a prefix when the word is not productively derived."
+      - "Inferring a negative stance from under- or over- without checking whether it marks degree instead."
+    examples:
+      - "The report may underestimate the maintenance cost."
+      - "A semi-automated review combines scripted checks with human judgment."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 80, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 45, retention_confirmations: 2}}
 
   - id: reading.argument-structure
     cefr: B2
@@ -169,7 +309,17 @@ topics:
       strong: [reading.compare-source-claims, reading.main-idea-details]
       soft: [written-production.reasoned-recommendation]
     dimensions: [recognition, transfer]
-    lexicon: []
+    lexicon: [word.reason, word.result, word.because]
+    contexts: [opinion-article, technical-proposal]
+    typical_errors:
+      - "Calling the topic the claim instead of identifying the position the author defends."
+      - "Treating an illustrative example as independent evidence for a different conclusion."
+      - "Missing an implicit Russian-to-English contrast marker and attaching a counterpoint to the wrong claim."
+    examples:
+      - "The proposal argues for staged deployment. Its main reason is that failures can be isolated before all users are affected."
+      - "Although setup is slower, the author concludes that the control is worthwhile because recovery becomes predictable."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 80, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 45, retention_confirmations: 2}}
 
   - id: reading.author-stance-bias
     cefr: B2
@@ -180,7 +330,17 @@ topics:
       strong: [reading.implied-online-stance, written-production.fact-inference]
       soft: [reading.compare-source-claims]
     dimensions: [recognition, transfer]
-    lexicon: []
+    lexicon: [word.agree, word.disagree, informal.not-sure-i-agree]
+    contexts: [product-review, public-commentary]
+    typical_errors:
+      - "Reading probably or appears to as certainty because the qualifier has no prominent Russian equivalent."
+      - "Equating a critical tone with factual inaccuracy without examining the evidence."
+      - "Ignoring loaded adjectives that reveal evaluation while focusing only on explicit opinion phrases."
+    examples:
+      - "The reviewer calls the redesign 'supposedly simpler,' signaling doubt about the claim."
+      - "The report cautiously supports the change but notes that the sample is unusually small."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 80, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 45, retention_confirmations: 2}}
 
   - id: reading.evidence-quality
     cefr: B2
@@ -191,7 +351,17 @@ topics:
       strong: [reading.argument-structure, reading.author-stance-bias]
       soft: [written-production.fact-inference]
     dimensions: [recognition, transfer]
-    lexicon: []
+    lexicon: [informal.do-you-have-a-source, word.reason, word.result]
+    contexts: [consumer-claim-review, technical-proposal]
+    typical_errors:
+      - "Accepting a statistic as strong evidence without checking what population it describes."
+      - "Treating correlation as proof of cause, a common shortcut in translated summaries."
+      - "Rejecting relevant qualitative evidence merely because it is not numerical."
+    examples:
+      - "A survey of ten volunteers cannot support a claim about all customers."
+      - "The benchmark is relevant to speed, but it does not test the reliability claim."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 80, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 45, retention_confirmations: 2}}
 
   - id: written-production.executive-summary
     cefr: B2
@@ -202,7 +372,17 @@ topics:
       strong: [written-production.multi-source-synthesis, written-production.system-overview]
       soft: [reading.argument-structure]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [word.summary, chunk.the-main-risk-is, word.recommendation]
+    contexts: [leadership-brief, project-decision]
+    typical_errors:
+      - "Retelling the document in chronological order instead of prioritizing decision-relevant findings."
+      - "Using Russian bureaucratic openings that delay the purpose of the summary."
+      - "Including detail without stating its implication or the decision requested."
+    examples:
+      - "The pilot met its accuracy target but doubled review time. We recommend a limited rollout while the workflow is simplified."
+      - "The migration remains feasible for Friday; the main risk is an untested recovery path, so approval is needed for an additional rehearsal."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 75, independent_attempts: 2}, controlled_production: {active_threshold: 78, independent_attempts: 2}, spontaneous_production: {active_threshold: 78, independent_attempts: 2}, transfer: {active_threshold: 80, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 45, retention_confirmations: 2}}
 
   - id: us-tech.specification-rationale
     cefr: B2
@@ -213,7 +393,17 @@ topics:
       strong: [us-tech.requirement-rationale, written-production.technical-position-paper]
       soft: [reading.evidence-quality]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [chunk.the-main-requirement-is, word.requirement, chunk.expected-result]
+    contexts: [api-specification, security-control-design]
+    typical_errors:
+      - "Restating the requirement as its own justification instead of linking it to evidence or a constraint."
+      - "Using actual for current and control for inspection under Russian false-friend influence."
+      - "Naming a rejected alternative without explaining the criterion it failed."
+    examples:
+      - "Requests carry an idempotency key because mobile clients may retry after a timeout. Server-generated keys were rejected because they cannot identify the original attempt."
+      - "The field is required so that every export can be traced to its policy version."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 75, independent_attempts: 2}, controlled_production: {active_threshold: 78, independent_attempts: 2}, spontaneous_production: {active_threshold: 78, independent_attempts: 2}, transfer: {active_threshold: 80, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 45, retention_confirmations: 2}}
 
   - id: written-interaction.negotiate-priorities
     cefr: B2
@@ -224,7 +414,17 @@ topics:
       strong: [written-interaction.negotiating-scope, written-interaction.decision-challenge]
       soft: [us-tech.tradeoff-summary]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [word.priority, word.option, word.agreement]
+    contexts: [sprint-planning, cross-team-dependency]
+    typical_errors:
+      - "Treating «приоритетно» as an absolute demand without explaining the business consequence."
+      - "Agreeing vaguely to do both tasks without recording ownership or the displaced work."
+      - "Presenting a preferred option as the only possible choice before acknowledging the other party's constraint."
+    examples:
+      - "If the export must ship Friday, we can postpone the dashboard review and assign Mia to the recovery test. Does that trade-off work for your team?"
+      - "Security is the higher priority because approval blocks release; I will own the documentation while you finish the patch."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 75, independent_attempts: 2}, controlled_production: {active_threshold: 78, independent_attempts: 2}, spontaneous_production: {active_threshold: 78, independent_attempts: 2}, transfer: {active_threshold: 80, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 45, retention_confirmations: 2}}
 
   - id: written-interaction.diplomatic-escalation
     cefr: B2
@@ -235,7 +435,17 @@ topics:
       strong: [written-interaction.formal-service-request, written-interaction.project-risk-update]
       soft: [written-interaction.constructive-challenge]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [chunk.we-have-run-into-an-issue, word.impact, word.action]
+    contexts: [manager-escalation, vendor-support-escalation]
+    typical_errors:
+      - "Opening with an accusation translated from Russian instead of a verifiable chronology."
+      - "Marking every request urgent without describing actual impact or deadline."
+      - "Escalating the issue without a specific decision, owner, or intervention request."
+    examples:
+      - "We requested access on 3 and 7 July, but the account remains disabled. This now blocks the audit, so please assign an owner by noon tomorrow."
+      - "The vendor has reproduced the defect but has not provided a recovery plan. Could you confirm whether we should pause the rollout?"
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 75, independent_attempts: 2}, controlled_production: {active_threshold: 78, independent_attempts: 2}, spontaneous_production: {active_threshold: 78, independent_attempts: 2}, transfer: {active_threshold: 80, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 45, retention_confirmations: 2}}
 
   - id: written-interaction.resolve-ambiguity
     cefr: B2
@@ -246,7 +456,17 @@ topics:
       strong: [written-interaction.requirement-question, written-interaction.constructive-challenge]
       soft: [grammar.relative-clauses.specification]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [informal.could-you-clarify, word.requirement, word.agreement]
+    contexts: [requirement-review, contract-clarification]
+    typical_errors:
+      - "Asking What do you mean? without naming the two plausible interpretations."
+      - "Assuming a broad Russian cognate has the same technical scope in English."
+      - "Resolving the wording in chat but failing to record the agreed definition."
+    examples:
+      - "By 'daily export,' do you mean once per calendar day or within twenty-four hours of each change?"
+      - "The examples suggest that 'owner' means the accountable team, not the individual assignee. Please confirm, and I will update the requirement."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 75, independent_attempts: 2}, controlled_production: {active_threshold: 78, independent_attempts: 2}, spontaneous_production: {active_threshold: 78, independent_attempts: 2}, transfer: {active_threshold: 80, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 45, retention_confirmations: 2}}
 
   - id: written-production.counterargument-response
     cefr: B2
@@ -257,7 +477,17 @@ topics:
       strong: [written-production.technical-position-paper, written-production.reasoned-recommendation]
       soft: [written-interaction.decision-challenge]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [informal.not-sure-i-agree, word.reason, word.because]
+    contexts: [proposal-response, academic-discussion]
+    typical_errors:
+      - "Reducing the opposing view to an obviously weak claim instead of representing its strongest reasonable form."
+      - "Answering with however alone and no evidence, following a translated debate template."
+      - "Using emotional evaluation such as absurd where a precise limitation is needed."
+    examples:
+      - "Critics reasonably note that the control slows deployment. That cost is real, but the measured delay is smaller than the recovery time it prevents."
+      - "The local option protects data, yet this benefit does not address the documented accuracy gap."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 75, independent_attempts: 2}, controlled_production: {active_threshold: 78, independent_attempts: 2}, spontaneous_production: {active_threshold: 78, independent_attempts: 2}, transfer: {active_threshold: 80, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 45, retention_confirmations: 2}}
 
   - id: us-tech.incident-postmortem
     cefr: B2
@@ -268,7 +498,17 @@ topics:
       strong: [us-tech.incident-root-cause, written-production.cause-effect-explanation]
       soft: [grammar.modal-perfect.speculation]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [chunk.the-root-cause-was, chunk.actual-result, word.action]
+    contexts: [service-incident, data-quality-failure]
+    typical_errors:
+      - "Calling the first visible error the root cause without tracing contributing conditions."
+      - "Using guilty language translated from Russian instead of separating system factors from individual actions."
+      - "Listing corrective actions that have no owner, verification method, or link to the failure."
+    examples:
+      - "At 09:14 the cache began returning stale permissions. A missing invalidation step amplified the impact; the certificate change only exposed the latent defect."
+      - "We restored service in twenty minutes. The remaining action is to test cache invalidation during every credential rotation."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 75, independent_attempts: 2}, controlled_production: {active_threshold: 78, independent_attempts: 2}, spontaneous_production: {active_threshold: 78, independent_attempts: 2}, transfer: {active_threshold: 80, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 45, retention_confirmations: 2}}
 
   - id: everyday-life.complex-service-negotiation
     cefr: B2
@@ -279,7 +519,17 @@ topics:
       strong: [everyday-life.resolving-service-dispute, written-interaction.negotiating-scope]
       soft: [written-interaction.diplomatic-escalation]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [word.service, word.option, word.agreement]
+    contexts: [travel-disruption, subscription-dispute]
+    typical_errors:
+      - "Demanding I want my money back without responding to the stated policy or available remedy."
+      - "Using pretend for «претендовать» when asking what compensation one is entitled to."
+      - "Accepting a partial solution without confirming dates, costs, and what remains unresolved."
+    examples:
+      - "I understand that the original fare is non-refundable, but the replacement leaves a two-day gap. Could you offer a hotel credit or an earlier route?"
+      - "The extension helps, but it does not restore the data I paid to export. Please confirm whether recovery is still possible."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 75, independent_attempts: 2}, controlled_production: {active_threshold: 78, independent_attempts: 2}, spontaneous_production: {active_threshold: 78, independent_attempts: 2}, transfer: {active_threshold: 80, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 45, retention_confirmations: 2}}
 
   - id: everyday-life.evaluate-consumer-health-info
     cefr: B2
@@ -290,7 +540,17 @@ topics:
       strong: [reading.multi-step-service-information, reading.evidence-quality]
       soft: [everyday-life.comparing-health-travel-options]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [informal.do-you-have-a-source, word.recommendation, word.reason]
+    contexts: [health-product-comparison, treatment-information-review]
+    typical_errors:
+      - "Treating claims that a product is natural as proof that it is safe."
+      - "Using the false friend cure as a broad equivalent of Russian «лечение» when the source only discusses management."
+      - "Turning cautious population-level evidence into a definite personal recommendation."
+    examples:
+      - "The advertisement cites testimonials, while the public-health page summarizes a controlled study and lists its limits."
+      - "Because the evidence concerns short-term symptoms, I would ask a clinician before changing long-term treatment."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 75, independent_attempts: 2}, controlled_production: {active_threshold: 78, independent_attempts: 2}, spontaneous_production: {active_threshold: 78, independent_attempts: 2}, transfer: {active_threshold: 80, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 45, retention_confirmations: 2}}
 
   - id: everyday-life.community-participation
     cefr: B2
@@ -301,7 +561,17 @@ topics:
       strong: [everyday-life.explaining-personal-decision, written-production.technical-position-paper]
       soft: [written-production.counterargument-response]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [word.agree, word.disagree, word.reason]
+    contexts: [neighborhood-consultation, school-community-forum]
+    typical_errors:
+      - "Translating a blunt Russian disagreement without acknowledging the competing local concern."
+      - "Speaking for all residents when the evidence reflects only a personal experience."
+      - "Offering a general value statement without a concrete consequence or feasible proposal."
+    examples:
+      - "Later closing hours would help commuters, but residents near the entrance have a legitimate noise concern. A one-month trial with a quiet-hours rule could test both needs."
+      - "I support the crossing because children currently walk between parked cars; the parking loss can be limited to two spaces."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 75, independent_attempts: 2}, controlled_production: {active_threshold: 78, independent_attempts: 2}, spontaneous_production: {active_threshold: 78, independent_attempts: 2}, transfer: {active_threshold: 80, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 45, retention_confirmations: 2}}
 
   - id: everyday-online-informal.implied-irony
     cefr: B2
@@ -312,7 +582,17 @@ topics:
       strong: [reading.implied-online-stance, everyday-online-informal.tone-repair]
       soft: [reading.idioms-in-context]
     dimensions: [recognition, transfer]
-    lexicon: []
+    lexicon: [informal.yeah-right]
+    contexts: [forum-thread, group-chat]
+    typical_errors:
+      - "Reading Yeah, right as literal agreement because Russian punctuation and intonation cues are absent in text."
+      - "Assuming every positive adjective is ironic whenever the surrounding message is critical."
+      - "Missing understatement when the stated reaction is far weaker than the described failure."
+    examples:
+      - "The update deleted every saved filter. Brilliant improvement."
+      - "Sure, because restarting the server for every login is completely practical."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 80, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 45, retention_confirmations: 2}}
 
   - id: everyday-online-informal.moderation-response
     cefr: B2
@@ -323,7 +603,17 @@ topics:
       strong: [everyday-online-informal.community-reply, written-interaction.diplomatic-escalation]
       soft: [everyday-online-informal.tone-recognition]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [informal.lets-keep-this-constructive, informal.thanks-for-the-context, word.reason]
+    contexts: [community-forum, team-channel]
+    typical_errors:
+      - "Translating an authoritarian Russian warning that attacks the writer rather than naming the behavior."
+      - "Quoting the offensive wording unnecessarily and amplifying it."
+      - "Removing a post without stating the relevant norm or a constructive way to revise it."
+    examples:
+      - "Please address the proposal rather than the author. You may repost the criticism with evidence and without personal remarks."
+      - "This thread is paused because it includes private account details. Remove those details, and the technical question can remain."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 75, independent_attempts: 2}, controlled_production: {active_threshold: 78, independent_attempts: 2}, spontaneous_production: {active_threshold: 78, independent_attempts: 2}, transfer: {active_threshold: 80, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 45, retention_confirmations: 2}}
 
   - id: reading.public-information-comparison
     cefr: B2
@@ -334,7 +624,17 @@ topics:
       strong: [reading.multi-step-service-information, reading.compare-source-claims]
       soft: [reading.evidence-quality]
     dimensions: [recognition, transfer]
-    lexicon: []
+    lexicon: [word.service, word.option, word.requirement]
+    contexts: [benefit-eligibility, travel-regulation]
+    typical_errors:
+      - "Assuming the same familiar word has an identical legal or administrative definition in both texts."
+      - "Reading a general rule and overlooking a later exception introduced by unless or except."
+      - "Choosing an action from one page before reconciling its deadline with the second page."
+    examples:
+      - "The city page allows online renewal, but the identity guide requires an in-person check for expired documents."
+      - "Both fares include changes; only the flexible fare waives the fee after departure."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 80, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 45, retention_confirmations: 2}}
 
   - id: toefl-reading.academic-main-idea
     cefr: B2
