@@ -48,22 +48,19 @@ def _next_state(
     return None
 
 
-def build_state_transition(
+def _build_transition_fact(
     store: EventStore,
     registry: PolicyRegistry,
     source: DomainEvent,
     *,
     before_override: tuple[str, str | None] | None = None,
 ) -> DomainEvent | None:
-    """Build the one transition fact caused by ``source``.
+    """Construct the transition fact caused by ``source`` (no existence check).
 
-    Recognised scoring inputs also get a same-state fact.  That makes coverage
-    total and auditable without having to infer whether an absent transition
-    means "no state change" or "producer failed before appending it".
+    ``fold_scores`` is only run when ``before_override`` is absent -- a caller
+    that already knows the prior state (e.g. the backfill loop threading state
+    across sources) skips the O(n) fold entirely.
     """
-    existing = _already_exists(store, source.id)
-    if existing is not None:
-        return existing
     scoring_version = source.pinned_versions.get("scoring")
     if scoring_version is None:
         return None
@@ -71,11 +68,14 @@ def build_state_transition(
     target_ref = str(source.payload.get("target_ref") or "")
     if not target_ref:
         return None
-    folded = fold_scores(store, policy).get(target_ref)
-    before = before_override or (
-        folded.knowledge_state if folded is not None else "NEW",
-        folded.prior_steady_state if folded is not None else None,
-    )
+    if before_override is not None:
+        before = before_override
+    else:
+        folded = fold_scores(store, policy).get(target_ref)
+        before = (
+            folded.knowledge_state if folded is not None else "NEW",
+            folded.prior_steady_state if folded is not None else None,
+        )
     from_state, prior = before
     next_state = _next_state(policy, source, from_state, prior)
     if next_state is None:
@@ -102,6 +102,25 @@ def build_state_transition(
     )
 
 
+def build_state_transition(
+    store: EventStore,
+    registry: PolicyRegistry,
+    source: DomainEvent,
+    *,
+    before_override: tuple[str, str | None] | None = None,
+) -> DomainEvent | None:
+    """Build the one transition fact caused by ``source``.
+
+    Recognised scoring inputs also get a same-state fact.  That makes coverage
+    total and auditable without having to infer whether an absent transition
+    means "no state change" or "producer failed before appending it".
+    """
+    existing = _already_exists(store, source.id)
+    if existing is not None:
+        return existing
+    return _build_transition_fact(store, registry, source, before_override=before_override)
+
+
 def backfill_state_transitions(
     store: EventStore, registry: PolicyRegistry, uow: UnitOfWork
 ) -> dict[str, int]:
@@ -109,6 +128,11 @@ def backfill_state_transitions(
     created: list[DomainEvent] = []
     states: dict[str, tuple[str, str | None]] = {}
     scanned = 0
+    covered = {
+        event.causation_id
+        for event in store.read()
+        if event.type == EVENT_STATE_TRANSITION and event.causation_id is not None
+    }
     for source in store.read():
         if source.type not in (REVIEW_OUTCOME_EVENT, OVERDUE_AT_RISK_EVENT):
             continue
@@ -123,14 +147,16 @@ def backfill_state_transitions(
         if next_state is None:
             continue
         to_state, next_prior, _ = next_state
-        transition_event = build_state_transition(
+        states[target_ref] = (to_state, next_prior)
+        if source.id in covered:
+            continue
+        transition_event = _build_transition_fact(
             store,
             registry,
             source,
             before_override=before,
         )
-        states[target_ref] = (to_state, next_prior)
-        if transition_event is not None and _already_exists(store, source.id) is None:
+        if transition_event is not None:
             created.append(transition_event)
     if created:
         uow.append(created)
