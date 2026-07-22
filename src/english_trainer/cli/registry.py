@@ -134,6 +134,19 @@ _COMMANDS: tuple[CommandDescriptor, ...] = (
         requires_idempotency_key=True,
     ),
     CommandDescriptor(name="status", owner_module="scoring", mutating=False, requires_idempotency_key=False),
+    # The learner's personal lexicon (learner 0.11, roadmap living-layer): add /
+    # encounter are mutating (they append LEARNER_LEXICON_ENTRY_ADDED and, when
+    # session-bound, advance the fence), so they require the key in json mode;
+    # list is a read-only fold.
+    CommandDescriptor(
+        name="lexicon.add", owner_module="learner", mutating=True, requires_idempotency_key=True
+    ),
+    CommandDescriptor(
+        name="lexicon.encounter", owner_module="learner", mutating=True, requires_idempotency_key=True
+    ),
+    CommandDescriptor(
+        name="lexicon.list", owner_module="learner", mutating=False, requires_idempotency_key=False
+    ),
     # Scheduler (0.4 part 3): the backlog recommends, never blocks.
     CommandDescriptor(
         name="review.due", owner_module="scheduler", mutating=False, requires_idempotency_key=False

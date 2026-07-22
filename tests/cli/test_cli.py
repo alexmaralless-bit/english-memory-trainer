@@ -716,6 +716,9 @@ def test_registry_matches_published_surface() -> None:
         "scoring.replay",
         "scoring.transitions.backfill",
         "status",
+        "lexicon.add",
+        "lexicon.encounter",
+        "lexicon.list",
         "review.due",
         "review.close",
         "attempt.finalize",
@@ -745,6 +748,9 @@ def test_registry_matches_published_surface() -> None:
     assert not registry["review.due"].mutating  # the backlog recommends, never blocks
     assert not registry["scoring.replay"].mutating  # scores ARE the fold
     assert not registry["status"].mutating
+    assert registry["lexicon.add"].mutating and registry["lexicon.add"].requires_idempotency_key
+    assert registry["lexicon.encounter"].mutating and registry["lexicon.encounter"].requires_idempotency_key
+    assert not registry["lexicon.list"].mutating  # a read-only fold
     assert registry["exercise.accept"].mutating and registry["exercise.accept"].requires_idempotency_key
     assert not registry["exercise.bank"].mutating
     assert registry["exercise.rendered"].mutating and registry["exercise.rendered"].requires_idempotency_key

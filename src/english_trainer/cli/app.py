@@ -123,6 +123,7 @@ from english_trainer.kernel.encoding import payload_hash
 from english_trainer.kernel.errors import (
     IdempotencyConflict,
     KernelError,
+    NoActivePolicy,
     SessionRevisionConflict,
     StaleRevision,
 )
@@ -131,6 +132,13 @@ from english_trainer.kernel.ids import new_ulid
 from english_trainer.kernel.policy import PolicyRegistry
 from english_trainer.kernel.store import SCHEMA_VERSION, EventStore, connect, migrate
 from english_trainer.kernel.uow import CachedResult, UnitOfWork
+from english_trainer.learner.errors import LexiconEntryInvalid, LinkedItemNotFound
+from english_trainer.learner.lexicon import (
+    lexicon_add,
+    lexicon_encounter,
+    lexicon_list,
+    personal_lexicon_summary,
+)
 from english_trainer.lessons.bank import (
     BankPrecondition,
     accept_exercise,
@@ -210,6 +218,8 @@ calibration_app = typer.Typer(add_completion=False, help="Propose and confirm po
 app.add_typer(calibration_app, name="calibration")
 audit_app = typer.Typer(add_completion=False, help="Read-only views over authoritative facts.")
 app.add_typer(audit_app, name="audit")
+lexicon_app = typer.Typer(add_completion=False, help="The learner's personal lexicon (layer 3).")
+app.add_typer(lexicon_app, name="lexicon")
 
 _RUN_CORRELATION: ContextVar[str | None] = ContextVar("cli_run_correlation", default=None)
 _LAST_ENVELOPE: ContextVar[dict[str, Any] | None] = ContextVar("cli_last_envelope", default=None)
@@ -3278,6 +3288,270 @@ def status_command(
     )
     human.append(f"  xp: {xp['total']} over {xp['practice_days']} day(s), streak {xp['streak']}")
     _emit(success_envelope("status", corr, data), human, fmt, ExitCode.OK)
+
+
+def _lexicon_write(
+    command: str,
+    source: str,
+    fmt: str,
+    root: Path,
+    surface: str,
+    note_ru: str | None,
+    linked_item: str | None,
+    session: str | None,
+    provider: str | None,
+    expected_session_revision: int | None,
+    idempotency_key: str | None,
+    correlation_id: str | None,
+) -> None:
+    """Shared shape of ``lexicon add`` / ``lexicon encounter`` (learner 3): the
+    engine accepts only facts (surface, note, source, explicit linked_item,
+    provenance) -- there is no path to a Mastery/knowledge value. Idempotent
+    replay is answered before the write; a dangling link is NOT_FOUND, a bad
+    surface INVALID_INPUT, a stale fence CONFLICT."""
+    corr = _correlation(correlation_id)
+    _require_key(command, corr, fmt, idempotency_key)
+    spoken = command.replace(".", " ")
+    layout = resolve_layout(root)
+    try:
+        with open_storage(layout) as storage:
+            program: dict[str, Any] | None = None
+            if linked_item is not None:
+                try:
+                    _, program = PolicyRegistry(storage._conn, SystemClock()).resolve_active("curriculum")
+                except NoActivePolicy as exc:
+                    error = ErrorPayload(
+                        error_code="NO_ACTIVE_CURRICULUM",
+                        message=f"{exc}; a linked entry needs an active curriculum to resolve against.",
+                        allowed_actions=["curriculum activate", f"{spoken} (without --linked-item)"],
+                        next_action="curriculum activate",
+                    )
+                    _emit(
+                        failure_envelope(command, corr, error),
+                        [f"error: {exc}"],
+                        fmt,
+                        ExitCode.PRECONDITION_FAILED,
+                    )
+            request_hash = payload_hash(
+                {
+                    "command": command,
+                    "surface": surface,
+                    "note_ru": note_ru,
+                    "source": source,
+                    "linked_item": linked_item,
+                    "session": session,
+                    "provider": provider,
+                    "expected_session_revision": expected_session_revision,
+                    "root": str(layout.root),
+                }
+            )
+            if idempotency_key:
+                with UnitOfWork(storage.store, SystemClock()) as uow:
+                    prior = uow.check_idempotency(idempotency_key, request_hash)
+                if isinstance(prior, CachedResult):
+                    _emit(
+                        success_envelope(command, corr, {**dict(prior.value), "cached": True}),
+                        [f"{spoken} (cached result)"],
+                        fmt,
+                        ExitCode.OK,
+                    )
+            if command == "lexicon.encounter":
+                assert session is not None and expected_session_revision is not None
+                result = lexicon_encounter(
+                    storage.store,
+                    SystemClock(),
+                    SystemRandom(),
+                    session,
+                    surface=surface,
+                    note_ru=note_ru,
+                    linked_item_id=linked_item,
+                    program=program,
+                    provider=provider,
+                    expected_session_revision=expected_session_revision,
+                )
+            else:
+                result = lexicon_add(
+                    storage.store,
+                    SystemClock(),
+                    SystemRandom(),
+                    surface=surface,
+                    note_ru=note_ru,
+                    source=source,
+                    linked_item_id=linked_item,
+                    program=program,
+                    session_id=session,
+                    provider=provider,
+                    expected_session_revision=expected_session_revision,
+                )
+            if idempotency_key:
+                with UnitOfWork(storage.store, SystemClock()) as uow:
+                    uow.record_result(idempotency_key, request_hash, result)
+        human = [
+            f"{result['source']} lexicon entry {result['surface']!r} "
+            + (f"→ {result['linked_item_id']}" if result.get("linked_item_id") else "(unlinked)")
+        ]
+        _emit(
+            success_envelope(command, corr, {**result, "cached": result.get("cached", False)}),
+            human,
+            fmt,
+            ExitCode.OK,
+        )
+    except IdempotencyConflict as exc:
+        error = ErrorPayload(
+            error_code="IDEMPOTENCY_CONFLICT",
+            message=str(exc),
+            allowed_actions=[f"{spoken} --idempotency-key <fresh-key>"],
+            next_action=f"{spoken} --idempotency-key <fresh-key>",
+        )
+        _emit(failure_envelope(command, corr, error), [f"error: {exc}"], fmt, ExitCode.CONFLICT)
+    except LinkedItemNotFound as exc:
+        error = ErrorPayload(
+            error_code=exc.code,
+            message=str(exc),
+            allowed_actions=["curriculum lexicon", f"{spoken} (without --linked-item)"],
+            next_action="curriculum lexicon",
+        )
+        _emit(failure_envelope(command, corr, error), [f"error: {exc}"], fmt, ExitCode.NOT_FOUND)
+    except LexiconEntryInvalid as exc:
+        error = ErrorPayload(
+            error_code=exc.code,
+            message=str(exc),
+            allowed_actions=[f"{spoken} --surface <word>"],
+            next_action="fix the input and retry",
+        )
+        _emit(failure_envelope(command, corr, error), [f"error: {exc}"], fmt, ExitCode.INVALID_INPUT)
+    except SessionRevisionConflict as exc:
+        error = ErrorPayload(
+            error_code=exc.code,
+            message=str(exc),
+            allowed_actions=["session status", "session resume"],
+            next_action="session status",
+        )
+        _emit(failure_envelope(command, corr, error), [f"error: {exc}"], fmt, ExitCode.CONFLICT)
+
+
+_SurfaceOpt = Annotated[str, typer.Option("--surface", help="The word or chunk (surface form).")]
+_NoteRuOpt = Annotated[
+    str | None, typer.Option("--note-ru", help="Optional Russian note/translation for the entry.")
+]
+_LinkedItemOpt = Annotated[
+    str | None,
+    typer.Option("--linked-item", help="Explicit ACTIVE-curriculum LexicalItem id (leave empty if unknown)."),
+]
+
+
+@lexicon_app.command("add")
+def lexicon_add_cmd(
+    surface: _SurfaceOpt,
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    note_ru: _NoteRuOpt = None,
+    linked_item: _LinkedItemOpt = None,
+    session: _SessionOpt = None,
+    provider: Annotated[
+        str | None, typer.Option("--provider", help="Provider provenance, when session-bound.")
+    ] = None,
+    expected_session_revision: Annotated[
+        int | None,
+        typer.Option("--expected-session-revision", help="CAS token; required when --session is given."),
+    ] = None,
+    idempotency_key: Annotated[
+        str | None, typer.Option("--idempotency-key", help="Required with --format json (cli 4.3).")
+    ] = None,
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Add a word to the learner's personal lexicon (source=learner).
+
+    Enrollment, never evidence: no Mastery, no XP, no review schedule. Optional
+    ``--linked-item`` references an existing curriculum LexicalItem (never a
+    topic); leave it empty for an unknown word."""
+    _lexicon_write(
+        "lexicon.add",
+        "learner",
+        fmt,
+        root,
+        surface,
+        note_ru,
+        linked_item,
+        session,
+        provider,
+        expected_session_revision,
+        idempotency_key,
+        correlation_id,
+    )
+
+
+@lexicon_app.command("encounter")
+def lexicon_encounter_cmd(
+    surface: _SurfaceOpt,
+    session: Annotated[str, typer.Option("--session", help="Active session the encounter happened in.")],
+    expected_session_revision: _SessionRevisionOpt,
+    provider: Annotated[str, typer.Option("--provider", help="Tutor provider that used/explained the word.")],
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    note_ru: _NoteRuOpt = None,
+    linked_item: _LinkedItemOpt = None,
+    idempotency_key: Annotated[
+        str | None, typer.Option("--idempotency-key", help="Required with --format json (cli 4.3).")
+    ] = None,
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Record a session-driven encounter (source=encountered): the tutor used or
+    explained a word the learner did not know / asked to translate.
+
+    Explaining a word is enrollment, not evidence -- it never moves Mastery.
+    Leave ``--linked-item`` empty when the word is not in the curriculum."""
+    _lexicon_write(
+        "lexicon.encounter",
+        "encountered",
+        fmt,
+        root,
+        surface,
+        note_ru,
+        linked_item,
+        session,
+        provider,
+        expected_session_revision,
+        idempotency_key,
+        correlation_id,
+    )
+
+
+@lexicon_app.command("list")
+def lexicon_list_cmd(
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    source: Annotated[
+        str | None, typer.Option("--source", help="Filter by source: learner | encountered.")
+    ] = None,
+    linked: Annotated[
+        bool | None, typer.Option("--linked/--unlinked", help="Filter linked or unlinked entries.")
+    ] = None,
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """List the personal lexicon (read-only fold). Deterministic order."""
+    corr = _correlation(correlation_id)
+    layout = resolve_layout(root)
+    if not layout.db.exists():
+        error = ErrorPayload(
+            error_code="DATABASE_NOT_FOUND",
+            message=f"{layout.db} does not exist.",
+            allowed_actions=["init"],
+            next_action="init",
+        )
+        _emit(
+            failure_envelope("lexicon.list", corr, error), ["error: not initialized"], fmt, ExitCode.NOT_FOUND
+        )
+    with open_storage(layout) as storage:
+        entries = lexicon_list(storage.store, source=source, linked=linked)
+        summary = personal_lexicon_summary(storage.store)
+    data = {"count": len(entries), "entries": entries, "summary": summary}
+    human = [f"{len(entries)} personal-lexicon entr{'y' if len(entries) == 1 else 'ies'}"] + [
+        f"  {e['surface']} [{e['source']}]"
+        + (f" → {e['linked_item_id']}" if e.get("linked_item_id") else " (unlinked)")
+        for e in entries
+    ]
+    _emit(success_envelope("lexicon.list", corr, data), human, fmt, ExitCode.OK)
 
 
 _PlacementOpt = Annotated[

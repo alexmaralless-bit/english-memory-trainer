@@ -92,6 +92,7 @@ LAYER_ALLOWLIST: dict[str, set[str]] = {
         "adapters",
         "assessments",
         "audit",
+        "learner",
         "cli",
     },
 }
