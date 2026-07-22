@@ -213,6 +213,7 @@ def compose_plan(
     probe: dict[str, Any] | None = None,
     starvation_candidates: list[Candidate] | None = None,
     availability_long_break: bool = False,
+    bank_items: list[dict[str, Any]] | None = None,
     pinned_versions: dict[str, str] | None = None,
     active_safety_version: str | None = None,
     new_id: NewId,
@@ -235,6 +236,12 @@ def compose_plan(
     (``SIGNAL_CONSUMED``) in the same UnitOfWork that saves this plan; when it
     does not fit, ``PROBE_BUDGET_UNAVAILABLE`` is waived and the signal is NOT
     consumed. Both default empty -- the pipeline is byte-identical without them.
+
+    ``bank_items`` is the already-accepted, caller-revalidated exercise-bank
+    view. Matching is deterministic and conservative: step type, target,
+    dimension and context must agree exactly, and an item already presented in
+    this session is not selected again. The default empty view preserves the
+    original generation-directive path byte-for-byte.
 
     ``starvation_candidates`` are the qualified review candidates (control 4.5
     [CTRL-7], a subset of ``review_candidates`` by ``candidate_id``, each carrying
@@ -487,6 +494,35 @@ def compose_plan(
     # interleaving is produced by the consecutive-mode quota at admission).
     next_index = max((int(s["order_index"]) for s in presented_steps), default=-1) + 1
     steps: list[dict[str, Any]] = [dict(s) for s in presented_steps]
+    available_bank = sorted(
+        [item for item in (bank_items or []) if item.get("status") == "accepted"],
+        key=lambda item: str(item.get("exercise_instance_id") or ""),
+    )
+    used_bank_ids = {
+        str(step["bank_item_id"]) for step in presented_steps if step.get("bank_item_id") is not None
+    }
+
+    def matching_bank_item(candidate: Candidate) -> dict[str, Any] | None:
+        target = candidate.get("target_ref")
+        expected_targets = [str(target)] if target is not None else []
+        dimension = candidate.get("dimension")
+        expected_dimensions = [str(dimension)] if dimension is not None else []
+        for item in available_bank:
+            item_id = str(item.get("exercise_instance_id") or "")
+            if not item_id or item_id in used_bank_ids:
+                continue
+            if str(item.get("step_type") or "") != str(candidate["step_type"]):
+                continue
+            if sorted(str(ref) for ref in item.get("target_refs") or []) != expected_targets:
+                continue
+            if sorted(str(dim) for dim in item.get("dimensions") or []) != expected_dimensions:
+                continue
+            if str(item.get("context_id") or "") != str(candidate.get("context_id") or ""):
+                continue
+            used_bank_ids.add(item_id)
+            return item
+        return None
+
     for offset, candidate in enumerate(admitted):
         decision_id = new_id()
         occupancy = admission_occupancy[str(candidate["candidate_id"])]
@@ -504,6 +540,7 @@ def compose_plan(
         if candidate["kind"] == "probe":
             # The probe tells the tutor which context to steer clear of (4.7).
             directive["avoid_context"] = candidate.get("avoid_context")
+        bank_item = matching_bank_item(candidate)
         step = {
             "step_id": keep_step_ids.get(candidate["candidate_id"]) or new_id(),
             "decision_id": decision_id,
@@ -516,8 +553,8 @@ def compose_plan(
             "presented_at": None,
             "context_id": candidate["context_id"],
             "lexicon_first": candidate["lexicon_first"],
-            "bank_item_id": None,
-            "generation_directive": directive,
+            "bank_item_id": (str(bank_item["exercise_instance_id"]) if bank_item is not None else None),
+            "generation_directive": None if bank_item is not None else directive,
             "decision_trace": build_decision_trace(
                 candidate,
                 decision_id=decision_id,

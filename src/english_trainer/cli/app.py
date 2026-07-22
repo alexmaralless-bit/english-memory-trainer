@@ -83,6 +83,7 @@ from english_trainer.curriculum.service import (
 from english_trainer.curriculum.validate import validate_program
 from english_trainer.evidence.assessment import finalize_attempt
 from english_trainer.evidence.attempts import EvidencePrecondition, list_notes, record_attempt
+from english_trainer.evidence.observed import record_observed
 from english_trainer.evidence.reviews import close_review
 from english_trainer.evidence.rubric import RUBRIC_KIND, RubricPolicyInvalid
 from english_trainer.evidence.rubric import require_valid as require_valid_rubric
@@ -144,6 +145,8 @@ exercise_app = typer.Typer(add_completion=False, help="Rendered-exercise snapsho
 app.add_typer(exercise_app, name="exercise")
 attempt_app = typer.Typer(add_completion=False, help="Learner attempts against delivered steps.")
 app.add_typer(attempt_app, name="attempt")
+observed_app = typer.Typer(add_completion=False, help="Concrete observed learner facts.")
+app.add_typer(observed_app, name="observed")
 scoring_app = typer.Typer(add_completion=False, help="Deterministic scores from the event log.")
 app.add_typer(scoring_app, name="scoring")
 review_app = typer.Typer(add_completion=False, help="Review scheduling: what is due, and when.")
@@ -1388,6 +1391,94 @@ def attempt_record(
         )
         _emit(
             failure_envelope("attempt.record", corr, error),
+            [f"error: {exc}"],
+            fmt,
+            ExitCode.PRECONDITION_FAILED,
+        )
+
+
+@observed_app.command("record")
+def observed_record(
+    attempt: Annotated[str, typer.Option("--attempt", help="Assessed attempt id.")],
+    input_file: _InputOpt,
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    session: _SessionOpt = None,
+    kind: Annotated[str, typer.Option("--kind", help="Observed fact kind; v1 supports error.")] = "error",
+    note: Annotated[str | None, typer.Option("--note", help="Untrusted agent note; never evidence.")] = None,
+    idempotency_key: Annotated[
+        str | None, typer.Option("--idempotency-key", help="Required with --format json (cli 4.3).")
+    ] = None,
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Record a concrete negative finding anchored to an assessed answer span.
+
+    The JSON input is the observation object. Target, dimension, severity and
+    score are engine-owned and must not be supplied by the caller.
+    """
+    corr = _correlation(correlation_id)
+    _require_key("observed.record", corr, fmt, idempotency_key)
+    observation = _read_input_json("observed.record", corr, fmt, input_file)
+    layout = resolve_layout(root)
+    try:
+        with open_storage(layout) as storage:
+            session_id = _resolve_session("observed.record", corr, fmt, storage, session)
+            request_hash = payload_hash(
+                {
+                    "command": "observed.record",
+                    "session": session_id,
+                    "attempt": attempt,
+                    "kind": kind,
+                    "observation": observation,
+                }
+            )
+            if idempotency_key:
+                with UnitOfWork(storage.store, SystemClock()) as uow:
+                    prior = uow.check_idempotency(idempotency_key, request_hash)
+                if isinstance(prior, CachedResult):
+                    _emit(
+                        success_envelope("observed.record", corr, {**dict(prior.value), "cached": True}),
+                        ["observed fact (cached result)"],
+                        fmt,
+                        ExitCode.OK,
+                    )
+            result = record_observed(
+                storage.store,
+                PolicyRegistry(storage._conn, SystemClock()),
+                SystemClock(),
+                SystemRandom(),
+                session_id,
+                kind=kind,
+                attempt_id=attempt,
+                observation=observation,
+                note=note,
+            )
+            if idempotency_key:
+                with UnitOfWork(storage.store, SystemClock()) as uow:
+                    uow.record_result(idempotency_key, request_hash, result)
+        _emit(
+            success_envelope("observed.record", corr, {**result, "cached": False}),
+            [f"observed error {result['observed_error_id']}"],
+            fmt,
+            ExitCode.OK,
+        )
+    except IdempotencyConflict as exc:
+        error = ErrorPayload(
+            error_code="IDEMPOTENCY_CONFLICT",
+            message=str(exc),
+            allowed_actions=["observed record --idempotency-key <fresh-key>"],
+            next_action="observed record --idempotency-key <fresh-key>",
+        )
+        _emit(failure_envelope("observed.record", corr, error), [f"error: {exc}"], fmt, ExitCode.CONFLICT)
+    except EvidencePrecondition as exc:
+        error = ErrorPayload(
+            error_code=exc.code,
+            message=str(exc),
+            allowed_actions=["attempt finalize", "attempt record", "session status"],
+            next_action="attempt finalize",
+        )
+        _emit(
+            failure_envelope("observed.record", corr, error),
             [f"error: {exc}"],
             fmt,
             ExitCode.PRECONDITION_FAILED,

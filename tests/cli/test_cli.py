@@ -607,6 +607,7 @@ def test_registry_matches_published_surface() -> None:
         "session.replan",
         "exercise.rendered",
         "attempt.record",
+        "observed.record",
         "exercise.accept",
         "exercise.reject",
         "exercise.retire",
@@ -646,6 +647,7 @@ def test_registry_matches_published_surface() -> None:
     assert not registry["exercise.bank"].mutating
     assert registry["exercise.rendered"].mutating and registry["exercise.rendered"].requires_idempotency_key
     assert registry["attempt.record"].mutating and registry["attempt.record"].requires_idempotency_key
+    assert registry["observed.record"].mutating and registry["observed.record"].requires_idempotency_key
     assert registry["session.next"].mutating and registry["session.next"].requires_idempotency_key
     assert registry["session.replan"].mutating and registry["session.replan"].requires_idempotency_key
     assert not registry["session.peek"].mutating

@@ -54,6 +54,7 @@ SESSION_STARTED_EVENT = "session.started"
 SESSION_CLOSED_EVENTS = ("session.finished", "session.abandoned")
 STEP_PRESENTED_EVENT = "session.step_presented"
 EXERCISE_RENDERED_EVENT = "exercise.rendered"
+EXERCISE_USED_EVENT = "exercise.used"
 
 EVENT_ATTEMPT_RECORDED = "attempt.recorded"
 EVENT_ATTEMPT_STATE_CHANGED = "attempt.state_changed"
@@ -125,6 +126,28 @@ def _rendered_exercise(store: EventStore, session_id: str, instance_id: str) -> 
             and str(event.payload.get("exercise_instance_id")) == instance_id
         ):
             return dict(event.payload)
+    use: dict[str, Any] | None = None
+    for event in store.read():
+        if (
+            event.type == EXERCISE_USED_EVENT
+            and event.correlation_id == session_id
+            and str(event.payload.get("exercise_instance_id")) == instance_id
+        ):
+            use = dict(event.payload)
+            break
+    if use is not None:
+        for event in store.read():
+            if (
+                event.type == EXERCISE_RENDERED_EVENT
+                and str(event.payload.get("exercise_instance_id")) == instance_id
+                and event.payload.get("content_hash") == use.get("content_hash")
+            ):
+                return {
+                    **dict(event.payload),
+                    "session_id": session_id,
+                    "step_id": use["step_id"],
+                    "reused_from_session_id": event.payload.get("session_id"),
+                }
     raise EvidencePrecondition(
         f"exercise instance {instance_id} has no EXERCISE_RENDERED in session {session_id}"
     )

@@ -39,6 +39,7 @@ from english_trainer.control.errors import PlanVersionConflict
 from english_trainer.control.policy import CONTROL_KIND, PRODUCTION_STEP_TYPES, require_valid
 from english_trainer.control.trace import save_decision_traces
 from english_trainer.evidence.reviews import cancel_assignment
+from english_trainer.kernel.aggregates import read_aggregate
 from english_trainer.kernel.clock import Clock, RandomSource
 from english_trainer.kernel.encoding import payload_hash
 from english_trainer.kernel.envelopes import make_event
@@ -48,6 +49,7 @@ from english_trainer.kernel.store import EventStore
 from english_trainer.kernel.uow import UnitOfWork
 from english_trainer.lessons.sessions import (
     EVENT_COMPOSED,
+    EVENT_EXERCISE_USED,
     EVENT_SAFETY_REJECTED,
     EVENT_STEP_PRESENTED,
     IN_PROGRESS,
@@ -59,6 +61,7 @@ from english_trainer.lessons.sessions import (
     get_session,
     plan_summary,
     presented_targets,
+    reusable_bank_items,
     review_candidates_for,
     save_new_review_assignments,
 )
@@ -116,6 +119,65 @@ def production_eligible(step: dict[str, Any], active_program: dict[str, Any]) ->
         if str(unit.get("currency", "current")) != "current":
             return False, f"unit {ref} is no longer current ({unit.get('currency')})"
     return True, None
+
+
+def _bank_reuse_snapshot(
+    store: EventStore,
+    step: dict[str, Any],
+    active_program: dict[str, Any],
+) -> tuple[dict[str, Any] | None, str | None]:
+    """Resolve and revalidate a bank-backed step at the delivery boundary.
+
+    The plan's ``bank_item_id`` is only a proposal. The authoritative bank
+    aggregate and the active curriculum are checked again immediately before
+    the claim transaction. This makes retirement or a safety change between
+    composition and delivery fail closed without rewriting the historical
+    rendered exercise.
+    """
+    item_id = step.get("bank_item_id")
+    if item_id is None:
+        return None, None
+    found = read_aggregate(store._conn, "bank_item", str(item_id))
+    if found is None or found[0].get("status") != "accepted":
+        return None, f"bank item {item_id} is not accepted anymore"
+    item = dict(found[0])
+    expected_targets = sorted(str(target["target_ref"]) for target in step_targets(step))
+    expected_dimensions = sorted(
+        str(target["dimension"]) for target in step_targets(step) if target.get("dimension") is not None
+    )
+    if sorted(str(ref) for ref in item.get("target_refs") or []) != expected_targets:
+        return None, f"bank item {item_id} no longer matches the planned targets"
+    if sorted(str(dim) for dim in item.get("dimensions") or []) != expected_dimensions:
+        return None, f"bank item {item_id} no longer matches the planned dimensions"
+    if str(item.get("step_type") or "") != str(step.get("step_type") or ""):
+        return None, f"bank item {item_id} no longer matches the planned step type"
+    if str(item.get("context_id") or "") != str(step.get("context_id") or ""):
+        return None, f"bank item {item_id} no longer matches the planned context"
+
+    known_targets = {str(topic.get("id")) for topic in active_program.get("topics", [])} | {
+        str(unit.get("id")) for unit in active_program.get("lexicon", [])
+    }
+    missing = sorted(set(expected_targets) - known_targets)
+    if missing:
+        return None, f"bank target {missing[0]} no longer exists in the active curriculum"
+    safety_step = {
+        **step,
+        "generation_directive": {"lexicon_refs": list(item.get("lexicon_refs") or [])},
+    }
+    eligible, reason = production_eligible(safety_step, active_program)
+    if not eligible:
+        return None, reason
+
+    rendered: dict[str, Any] | None = None
+    for event in store.read():
+        if event.type == "exercise.rendered" and str(event.payload.get("exercise_instance_id")) == str(
+            item_id
+        ):
+            rendered = dict(event.payload)
+            break
+    if rendered is None or rendered.get("content_hash") != item.get("content_hash"):
+        return None, f"bank item {item_id} has no matching immutable rendered snapshot"
+    return rendered, None
 
 
 def peek_step(store: EventStore, session_id: str) -> dict[str, Any]:
@@ -194,7 +256,10 @@ def next_step(
     # refusal leaves version and ledger untouched (the rejection event is the
     # only thing written).
     active_safety_version, active_program = registry.resolve_active("curriculum")
+    bank_snapshot, bank_reason = _bank_reuse_snapshot(store, step, active_program)
     eligible, reason = production_eligible(step, active_program)
+    if bank_reason is not None:
+        eligible, reason = False, bank_reason
     if not eligible:
         with UnitOfWork(store, clock) as uow:
             uow.append(
@@ -283,21 +348,49 @@ def next_step(
                 {**session_state, "status": IN_PROGRESS},
                 expected_revision=session_revision,
             )
-        uow.append(
-            [
+        events = [
+            make_event(
+                id=new_ulid(clock, random_source),
+                type=EVENT_STEP_PRESENTED,
+                occurred_at=clock.now(),
+                actor=actor,
+                provider=manifest.get("provider"),
+                correlation_id=session_id,
+                payload=payload,
+                pinned_versions=dict(manifest.get("pinned_versions") or {}),
+            )
+        ]
+        if bank_snapshot is not None:
+            events.append(
                 make_event(
                     id=new_ulid(clock, random_source),
-                    type=EVENT_STEP_PRESENTED,
+                    type=EVENT_EXERCISE_USED,
                     occurred_at=clock.now(),
                     actor=actor,
                     provider=manifest.get("provider"),
                     correlation_id=session_id,
-                    payload=payload,
+                    causation_id=events[0].id,
+                    payload={
+                        "exercise_instance_id": step["bank_item_id"],
+                        "session_id": session_id,
+                        "step_id": step["step_id"],
+                        "content_hash": bank_snapshot["content_hash"],
+                        "presented_at": presented_at,
+                        "active_safety_version": active_safety_version,
+                        "outcome_event_id": None,
+                    },
                     pinned_versions=dict(manifest.get("pinned_versions") or {}),
                 )
-            ]
-        )
-    return {"session_id": session_id, "plan_version": new_version, "step": presented_step}
+            )
+        uow.append(events)
+    result: dict[str, Any] = {
+        "session_id": session_id,
+        "plan_version": new_version,
+        "step": presented_step,
+    }
+    if bank_snapshot is not None:
+        result["bank_item"] = bank_snapshot
+    return result
 
 
 def replan_session(
@@ -318,7 +411,7 @@ def replan_session(
     pinned = dict(manifest.get("pinned_versions") or {})
     program = registry.resolve_pinned("curriculum", pinned["curriculum"])
     policy = require_valid(registry.resolve_pinned(CONTROL_KIND, pinned[CONTROL_KIND]))
-    active_safety_version, _ = registry.resolve_active("curriculum")
+    active_safety_version, active_program = registry.resolve_active("curriculum")
 
     kept = [step for step in plan_state["steps"] if step["presented_at"] is not None]
     unpresented = [step for step in plan_state["steps"] if step["presented_at"] is None]
@@ -340,6 +433,7 @@ def replan_session(
         keep_step_ids=keep_step_ids,
         review_candidates=review_candidates_for(store, registry, pinned, program, policy, clock),
         keep_review_ids=keep_review_ids,
+        bank_items=reusable_bank_items(store, active_program),
         pinned_versions=pinned,
         active_safety_version=active_safety_version,
         new_id=lambda: new_ulid(clock, random_source),

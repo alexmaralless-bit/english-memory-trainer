@@ -97,6 +97,26 @@ def test_two_executions_produce_byte_identical_plans() -> None:
     assert canonical_json(compose()) == canonical_json(compose())
 
 
+def test_matching_accepted_bank_item_replaces_generation_directive() -> None:
+    bank_item = {
+        "exercise_instance_id": "bank-001",
+        "status": "accepted",
+        "step_type": "new_material_intro",
+        "target_refs": ["grammar.be.identity"],
+        "dimensions": ["recognition"],
+        "context_id": "team-introduction|new_material_intro",
+        "lexicon_refs": ["role.engineer"],
+    }
+    plan = compose(bank_items=[bank_item])
+    step = plan["steps"][0]
+    assert step["bank_item_id"] == "bank-001"
+    assert step["generation_directive"] is None
+    assert all(
+        bool(candidate.get("bank_item_id")) != bool(candidate.get("generation_directive"))
+        for candidate in plan["steps"]
+    )
+
+
 def test_budget_below_the_policy_minimum_is_refused() -> None:
     with pytest.raises(BudgetTooSmall):
         compose(total_seconds=9 * 60)

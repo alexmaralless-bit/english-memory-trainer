@@ -59,6 +59,7 @@ EVENT_ABANDONED = "session.abandoned"
 EVENT_COMPOSED = "session.composed"
 EVENT_STEP_PRESENTED = "session.step_presented"
 EVENT_SAFETY_REJECTED = "session.step_safety_rejected"
+EVENT_EXERCISE_USED = "exercise.used"
 # Owned by lessons (lessons 5): both `session start` and `session resume`
 # attach the tutor in the same UoW as the operation. Defined here so both call
 # sites (start below, resume via import) share one source of truth.
@@ -194,6 +195,38 @@ def presented_targets(store: EventStore) -> frozenset[str]:
             if ref:
                 seen.add(str(ref))
     return frozenset(seen)
+
+
+def reusable_bank_items(store: EventStore, active_program: dict[str, Any]) -> list[dict[str, Any]]:
+    """Accepted bank items that pass the current safety overlay.
+
+    This is a composition-time optimization only. ``session next`` repeats
+    the same checks against the authoritative aggregate and then-current
+    policy so a change between composition and claim still fails closed.
+    """
+    from english_trainer.kernel.aggregates import list_aggregates
+    from english_trainer.lessons.delivery import production_eligible
+
+    known_targets = {str(topic.get("id")) for topic in active_program.get("topics", [])} | {
+        str(unit.get("id")) for unit in active_program.get("lexicon", [])
+    }
+    reusable: list[dict[str, Any]] = []
+    for _, state, _ in list_aggregates(store._conn, "bank_item"):
+        if state.get("status") != "accepted":
+            continue
+        if any(str(ref) not in known_targets for ref in state.get("target_refs") or []):
+            continue
+        eligible, _ = production_eligible(
+            {
+                "step_type": state.get("step_type"),
+                "context_id": state.get("context_id"),
+                "generation_directive": {"lexicon_refs": list(state.get("lexicon_refs") or [])},
+            },
+            active_program,
+        )
+        if eligible:
+            reusable.append(dict(state))
+    return reusable
 
 
 def plan_summary(plan_state: dict[str, Any]) -> list[dict[str, Any]]:
@@ -351,6 +384,7 @@ def start_session(
         total_seconds=total_seconds,
         presented_targets=presented_targets(store),
         review_candidates=review_candidates_for(store, registry, pinned, program, policy, clock),
+        bank_items=reusable_bank_items(store, program),
         pinned_versions=pinned,
         active_safety_version=pinned["curriculum"],
         new_id=lambda: new_ulid(clock, random_source),

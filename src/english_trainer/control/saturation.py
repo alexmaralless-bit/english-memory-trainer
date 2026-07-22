@@ -21,10 +21,8 @@ in :func:`is_saturated`, where the transfer-staleness branch compares ``now``
 against ``last_transfer_check_at`` in whole seconds (``timedelta`` floor
 division -- no IEEE float on the decision path).
 
-``ERROR_OBSERVED`` is consumed IF present (:func:`recurring_error_keys`) but is
-not emitted by any module yet -- observed-record is a later sub-increment -- so
-recurring-error detection honestly returns the empty set until it appears. Its
-event name here is provisional and will be reconciled when evidence emits it.
+``ERROR_OBSERVED`` is emitted by evidence's observed-record path and consumed
+by :func:`recurring_error_keys`.
 
 The live wiring that feeds this state from lessons into ``classify``/``compose``
 at composition time is DEFERRED (lessons domain, a later pass): these are pure
@@ -48,8 +46,8 @@ EVENT_SESSION_STARTED = "session.started"
 EVENT_STEP_PRESENTED = "session.step_presented"
 EVENT_EVIDENCE_ADDED = "evidence.added"
 EVENT_REVIEW_OUTCOME = "review.outcome"
-# Provisional: ERROR_OBSERVED is not emitted yet (observed-record is later);
-# the reducer consumes it if present and is otherwise empty (a documented gap).
+# Published by evidence.observed. The literal preserves the event boundary:
+# control may not import the evidence package.
 EVENT_ERROR_OBSERVED = "evidence.error_observed"
 
 Key = tuple[str, str]
@@ -260,8 +258,7 @@ def recurring_error_keys(events: Iterable[DomainEvent], policy: dict[str, Any]) 
 
     A pair recurs when it accumulates ``>= recurring_error_min_occurrences``
     ``ERROR_OBSERVED`` events within the last ``recurring_error_window_sessions``
-    sessions. Returns the empty set when no such events exist -- the honest state
-    until observed-record ships.
+    sessions. Returns the empty set when no such events exist.
     """
     classification = policy["classification"]
     window = int(classification["recurring_error_window_sessions"])

@@ -22,6 +22,7 @@ from english_trainer.evidence.attempts import (
     record_attempt,
     session_attempts,
 )
+from english_trainer.evidence.observed import EVENT_ERROR_OBSERVED, record_observed
 
 __all__ = [
     "ASSESSED",
@@ -29,6 +30,7 @@ __all__ = [
     "CLOSED_UNASSESSED",
     "EVENT_ATTEMPT_RECORDED",
     "EVENT_ATTEMPT_STATE_CHANGED",
+    "EVENT_ERROR_OBSERVED",
     "RECORDED",
     "REQUIRES_EXERCISE_INSTANCE",
     "EvidencePrecondition",
@@ -36,5 +38,6 @@ __all__ = [
     "list_notes",
     "pending_attempts",
     "record_attempt",
+    "record_observed",
     "session_attempts",
 ]

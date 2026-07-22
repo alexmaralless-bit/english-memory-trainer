@@ -6,8 +6,7 @@ exist today and name their absent ones honestly:
 
 - ``risk`` = knowledge state AT_RISK, OR a recurring live error (control 4.6),
   OR retrievability below the critical floor. The recurring-error clause joins
-  when ``recurring_errors`` is supplied -- an empty set (no ``ERROR_OBSERVED``
-  events) leaves it false.
+  when ``recurring_errors`` is supplied -- an empty set leaves it false.
 - ``stake`` = CORE/HIGH priority band (lexical targets), OR strong-prerequisite
   leverage from the pinned program. The relevance clause (active goals,
   personal dictionary) joins with the learner module.
