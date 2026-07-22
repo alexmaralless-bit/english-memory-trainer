@@ -11,6 +11,11 @@ that assignment without an import cycle.
 
 from english_trainer.control.classify import CLASS_ORDER, classify_review_candidates
 from english_trainer.control.compose import compose_plan, step_targets
+from english_trainer.control.deferral import (
+    DeferralState,
+    qualified_candidates,
+    reduce_deferrals,
+)
 from english_trainer.control.errors import (
     BudgetTooSmall,
     ControlPolicyInvalid,
@@ -26,6 +31,12 @@ from english_trainer.control.policy import (
     require_valid,
     step_cost,
     validate_control_policy,
+)
+from english_trainer.control.saturation import (
+    SaturationState,
+    is_saturated,
+    recurring_error_keys,
+    reduce_saturation,
 )
 from english_trainer.control.signals import (
     active_signals,
@@ -44,9 +55,11 @@ __all__ = [
     "PRODUCTION_STEP_TYPES",
     "BudgetTooSmall",
     "ControlPolicyInvalid",
+    "DeferralState",
     "NoCandidates",
     "PlanVersionConflict",
     "ProbePrecondition",
+    "SaturationState",
     "SignalInvalid",
     "active_signals",
     "apply_signals",
@@ -57,8 +70,13 @@ __all__ = [
     "current_session_seq",
     "derive_probe",
     "is_excluded",
+    "is_saturated",
     "mode_shares",
+    "qualified_candidates",
     "record_signal",
+    "recurring_error_keys",
+    "reduce_deferrals",
+    "reduce_saturation",
     "require_valid",
     "step_cost",
     "step_targets",

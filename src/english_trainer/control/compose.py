@@ -173,6 +173,25 @@ def _canonical_sort(candidates: list[Candidate]) -> list[Candidate]:
     )
 
 
+_MAX_SEQ = 1 << 62  # an unqualified candidate sorts last (defensive; reserve is qualified)
+
+
+def _reserve_sort(candidates: list[Candidate]) -> list[Candidate]:
+    """The starvation reserve order (control 4.5 [R-6, RR2-8]): oldest
+    qualification episode first, so a younger episode never overtakes an open one.
+    """
+    return sorted(
+        candidates,
+        key=lambda c: (
+            int(c["qualified_at_session_seq"]) if c.get("qualified_at_session_seq") is not None else _MAX_SEQ,
+            -int(c.get("deferral_count", 0)),
+            int(c.get("retrievability_ppm", 0)),
+            str(c.get("target_ref") or ""),
+            str(c.get("dimension") or ""),
+        ),
+    )
+
+
 # -- the pipeline ------------------------------------------------------------
 
 
@@ -191,6 +210,7 @@ def compose_plan(
     keep_review_ids: dict[str, str] | None = None,
     signals: list[dict[str, Any]] | None = None,
     probe: dict[str, Any] | None = None,
+    starvation_candidates: list[Candidate] | None = None,
     new_id: NewId,
 ) -> dict[str, Any]:
     """Compose the plan slice of the ``session_plan`` aggregate state.
@@ -211,6 +231,18 @@ def compose_plan(
     (``SIGNAL_CONSUMED``) in the same UnitOfWork that saves this plan; when it
     does not fit, ``PROBE_BUDGET_UNAVAILABLE`` is waived and the signal is NOT
     consumed. Both default empty -- the pipeline is byte-identical without them.
+
+    ``starvation_candidates`` are the qualified review candidates (control 4.5
+    [CTRL-7], a subset of ``review_candidates`` by ``candidate_id``, each carrying
+    ``qualified_at_session_seq``). Before review fills by class (step 6) up to
+    ``reserved_steps_per_session`` of them are admitted UNCONDITIONALLY -- bypassing
+    ``review_max``; only the overall remainder and the already-secured non-zero
+    floors bound them -- in the reserve order (qualified_at_session_seq asc,
+    deferral_count desc, retrievability asc, target_id asc, dimension_id asc). A
+    step that does not fit records ``STARVATION_STEP_DOES_NOT_FIT`` and stops the
+    reserve, so a younger episode never overtakes an older one (the FIFO the
+    waiting bound needs). Default ``None`` -- the pipeline is byte-identical
+    without it.
     """
     minimum = int(policy["budget"]["min_total_minutes"]) * 60
     if total_seconds < minimum:
@@ -329,6 +361,35 @@ def compose_plan(
             waivers.append(
                 f"{bucket.upper()}_CANDIDATES_EXHAUSTED" if admitted_any else f"NO_{bucket.upper()}_STEP_FITS"
             )
+
+    # Step 6: starvation reserve (4.4 step 6 / 4.5 [CTRL-7]). Before review fills
+    # by class, admit up to reserved_steps_per_session qualified review candidates
+    # UNCONDITIONALLY -- bypassing review_cap; only the overall remainder bounds
+    # them, and the non-zero floors were already secured in step 5. In the reserve
+    # order; a step that does not fit stops the reserve so a younger episode never
+    # overtakes an older open one (the FIFO the waiting bound depends on).
+    if starvation_candidates:
+        reserve_limit = int(policy["starvation"]["reserved_steps_per_session"])
+        by_id = {c["candidate_id"]: c for c in pool["review"]}
+        reserve = _reserve_sort(
+            [by_id[c["candidate_id"]] for c in starvation_candidates if c["candidate_id"] in by_id]
+        )
+        seen_reserved: set[str] = set()
+        reserved_admitted = 0
+        for candidate in reserve:
+            candidate_id = candidate["candidate_id"]
+            if candidate_id in seen_reserved:
+                continue
+            seen_reserved.add(candidate_id)
+            if reserved_admitted >= reserve_limit:
+                break
+            if candidate["expected_seconds"] + planned_total() > capacity:
+                # The session is too short for the oldest reserved step: the
+                # episode is not consumed and stays open for the next composition.
+                waivers.append("STARVATION_STEP_DOES_NOT_FIT")
+                break
+            admit(candidate)  # into the review bucket, above review_cap by design
+            reserved_admitted += 1
 
     # Step 6a: first-fit the pending probe into the remainder (4.7). The probe
     # is a choice-bucket step (source_rank 0). On admission its signal id is

@@ -1,28 +1,36 @@
-"""Urgency classification of review candidates (control 4.5; roadmap 2.3).
+"""Urgency classification of review candidates (control 4.5; roadmap 2.3, 2.8b).
 
 Risk is checked FIRST [R-4]: a critical target must never be silenced by a
-saturation or maintenance shortcut. The v1 predicates use exactly the inputs
-that exist today and name their absent ones honestly:
+saturation or maintenance shortcut. The predicates use exactly the inputs that
+exist today and name their absent ones honestly:
 
-- ``risk`` = knowledge state AT_RISK, OR retrievability below the critical
-  floor. The recurring-error clause joins when ``ERROR_OBSERVED`` events
-  exist (observed record, later in 2.3).
+- ``risk`` = knowledge state AT_RISK, OR a recurring live error (control 4.6),
+  OR retrievability below the critical floor. The recurring-error clause joins
+  when ``recurring_errors`` is supplied -- an empty set (no ``ERROR_OBSERVED``
+  events) leaves it false.
 - ``stake`` = CORE/HIGH priority band (lexical targets), OR strong-prerequisite
   leverage from the pinned program. The relevance clause (active goals,
   personal dictionary) joins with the learner module.
-- ``saturated`` is always false until saturation state has inputs (control
-  4.6 needs presented/exposure history per dimension).
+- ``saturated`` (rule 3, AFTER risk) reads the per-dimension ``SaturationState``
+  (control 4.6) via ``is_saturated``; it stays false while ``saturation``/``now``
+  are absent, so the ``deferrable`` class is unreachable without inputs.
+- ``deferral_count`` / ``qualified_at_session_seq`` come from the starvation
+  fold (control 4.5); both default to ``0`` / ``None`` without ``deferrals``.
 
 The function is pure over plain dicts -- control never imports the scheduler;
-lessons glues the backlog to the classifier at composition time.
+lessons glues the backlog, saturation, recurring-error and deferral state to the
+classifier at composition time (that wiring is DEFERRED to the lessons domain).
 """
 
 from __future__ import annotations
 
+from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
+from english_trainer.control.deferral import DeferralState
 from english_trainer.control.policy import step_cost
+from english_trainer.control.saturation import Key, SaturationState, is_saturated
 
 CRITICAL = "critical"
 IMPORTANT = "important"
@@ -57,12 +65,22 @@ def classify_review_candidates(
     backlog: list[dict[str, Any]],
     program: dict[str, Any],
     control_policy: dict[str, Any],
+    *,
+    saturation: dict[Key, SaturationState] | None = None,
+    recurring_errors: frozenset[Key] | None = None,
+    deferrals: dict[Key, DeferralState] | None = None,
+    now: datetime | None = None,
 ) -> list[dict[str, Any]]:
     """Turn scheduler backlog entries into classified review candidates.
 
     First match wins, risk first (control 4.5): risk∧stake → critical,
-    risk → important, retrievability ≥ maintenance floor → maintenance,
-    else normal.
+    risk → important, saturated → deferrable, retrievability ≥ maintenance floor
+    → maintenance, else normal.
+
+    The keyword inputs are the DEFERRED composition-time state; each defaults to
+    the honest empty case (no saturation, no recurring error, no deferrals), so
+    an existing caller that passes none gets byte-identical output to before.
+    ``now`` is required only to evaluate the saturation transfer-staleness branch.
     """
     classification = control_policy["classification"]
     critical_floor = int(classification["critical_floor_retrievability_ppm"])
@@ -82,17 +100,36 @@ def classify_review_candidates(
         dimension = str(entry["dimension"])
         step_type = STEP_TYPE_BY_DIMENSION.get(dimension, "recognition_check")
         retrievability_ppm = int(Decimal(str(entry.get("retrievability") or "0")) * _PPM)
+        key: Key = (target, dimension)
 
-        risk = entry.get("knowledge_state") == "AT_RISK" or retrievability_ppm < critical_floor
+        recurring = recurring_errors is not None and key in recurring_errors
+        risk = entry.get("knowledge_state") == "AT_RISK" or recurring or retrievability_ppm < critical_floor
         stake = bands.get(target) in ("CORE", "HIGH") or leverage.get(target, 0) >= min_dependents
+
+        saturated = False
+        if saturation is not None and now is not None:
+            state = saturation.get(key)
+            saturated = state is not None and is_saturated(state, control_policy, now)
+
+        # The total ordered §4.5 table, first match wins, risk before saturation.
         if risk and stake:
             urgency = CRITICAL
         elif risk:
             urgency = IMPORTANT
+        elif saturated:
+            urgency = DEFERRABLE
         elif retrievability_ppm >= maintenance_floor:
             urgency = MAINTENANCE
         else:
             urgency = NORMAL
+
+        deferral_count = 0
+        qualified_at_session_seq: int | None = None
+        if deferrals is not None:
+            deferral_state = deferrals.get(key)
+            if deferral_state is not None:
+                deferral_count = deferral_state.deferral_count
+                qualified_at_session_seq = deferral_state.qualified_at_session_seq
 
         topic = topics.get(target)
         criteria_ref = f"criteria:{target}" if topic and topic.get("mastery_criteria") else None
@@ -108,7 +145,8 @@ def classify_review_candidates(
                 "urgency_class": urgency,
                 "stake_rank": 1 if stake else 2,  # 0 = relevance, joins with learner
                 "retrievability_ppm": retrievability_ppm,
-                "deferral_count": 0,  # joins with the starvation reserve (2.8)
+                "deferral_count": deferral_count,  # from the starvation fold (4.5)
+                "qualified_at_session_seq": qualified_at_session_seq,  # reserve order key
                 "criteria_ref": criteria_ref,
                 "context_id": f"review|{step_type}",
                 "lexicon_first": False,
