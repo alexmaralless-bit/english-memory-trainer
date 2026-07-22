@@ -222,6 +222,20 @@ def test_backlog_nearest_rank_lapse_rate_and_transfer_gap(tmp_path: Path) -> Non
                     target,
                 )
             )
+            batch.append(
+                event(
+                    clock,
+                    random_source,
+                    "scoring.state_transition",
+                    {
+                        "target_ref": target,
+                        "from_state": "MASTERED",
+                        "to_state": "ACTIVE",
+                        "trigger": "REGRESSION",
+                    },
+                    target,
+                )
+            )
     for index in range(50):
         target = f"transfer-{index}"
         for suffix, outcome in (

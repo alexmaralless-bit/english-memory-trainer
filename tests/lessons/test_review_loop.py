@@ -12,6 +12,7 @@ import pytest
 from english_trainer.evidence.attempts import record_attempt
 from english_trainer.evidence.reviews import close_review, pending_assignments
 from english_trainer.kernel.clock import FixedClock
+from english_trainer.kernel.session_fence import current_session_revision
 from english_trainer.lessons.delivery import next_step, replan_session
 from english_trainer.lessons.rendering import record_rendered_exercise
 from english_trainer.lessons.sessions import (
@@ -23,6 +24,7 @@ from english_trainer.lessons.sessions import (
 )
 from english_trainer.scheduler.engine import fold_schedules
 from english_trainer.scoring.engine import fold_scores
+from english_trainer.scoring.transitions import EVENT_STATE_TRANSITION, transition_coverage
 
 EPOCH = datetime(2026, 7, 21, 12, 0, 0, tzinfo=UTC)  # matches the conftest clock
 
@@ -38,28 +40,58 @@ def _first_session_with_evidence(store, full_registry, clock, rnd) -> str:
     manifest = start_session(store, full_registry, clock, rnd, provider="claude-code")
     session_id = str(manifest["session_id"])
     assert manifest["pinned_versions"]["scheduler"] == "scheduler@1"
-    result = next_step(store, full_registry, clock, rnd, session_id, expected_plan_version=1)
+    result = next_step(
+        store,
+        full_registry,
+        clock,
+        rnd,
+        session_id,
+        expected_session_revision=current_session_revision(store, session_id),
+        expected_plan_version=1,
+    )
     step_id = str(result["step"]["step_id"])
     rendered = record_rendered_exercise(
-        store, full_registry, clock, rnd, session_id, step_id=step_id, exercise=dict(EXERCISE)
+        store,
+        full_registry,
+        clock,
+        rnd,
+        session_id,
+        expected_session_revision=current_session_revision(store, session_id),
+        step_id=step_id,
+        exercise=dict(EXERCISE),
     )
     record_attempt(
         store,
         clock,
         rnd,
         session_id,
+        expected_session_revision=current_session_revision(store, session_id),
         step_id=step_id,
         raw_answer="am",
         exercise_instance_id=rendered["exercise_instance_id"],
     )
-    finish_session(store, clock, rnd, session_id)
+    finish_session(
+        store,
+        clock,
+        rnd,
+        session_id,
+        expected_session_revision=current_session_revision(store, session_id),
+    )
     return session_id
 
 
 def _next_until_review(store, registry, clock, rnd, session_id) -> dict:
     version = 1
     while True:
-        result = next_step(store, registry, clock, rnd, session_id, expected_plan_version=version)
+        result = next_step(
+            store,
+            registry,
+            clock,
+            rnd,
+            session_id,
+            expected_session_revision=current_session_revision(store, session_id),
+            expected_plan_version=version,
+        )
         version = result["plan_version"]
         if result["step"]["kind"] == "review":
             return result["step"]
@@ -96,13 +128,20 @@ def test_review_loop_closes_end_to_end(store, full_registry, clock, random_sourc
     issued_prediction_ppm = int(Decimal(presented[-1].payload["predicted_retrievability"]) * 1_000_000)
     assert issued_prediction_ppm < composition_prediction_ppm
     with pytest.raises(SessionPrecondition, match="review assignment"):
-        finish_session(store, later, random_source, session_id)
+        finish_session(
+            store,
+            later,
+            random_source,
+            session_id,
+            expected_session_revision=current_session_revision(store, session_id),
+        )
     rendered = record_rendered_exercise(
         store,
         full_registry,
         later,
         random_source,
         session_id,
+        expected_session_revision=current_session_revision(store, session_id),
         step_id=step["step_id"],
         exercise=dict(EXERCISE),
     )
@@ -111,13 +150,28 @@ def test_review_loop_closes_end_to_end(store, full_registry, clock, random_sourc
         later,
         random_source,
         session_id,
+        expected_session_revision=current_session_revision(store, session_id),
         step_id=step["step_id"],
         raw_answer="AM",
         exercise_instance_id=rendered["exercise_instance_id"],
     )
-    closed = close_review(store, later, random_source, session_id, review_id)
+    closed = close_review(
+        store,
+        later,
+        random_source,
+        session_id,
+        review_id,
+        expected_session_revision=current_session_revision(store, session_id),
+    )
     assert closed["outcome"] == "CONFIRMED" and closed["already"] is False
-    again = close_review(store, later, random_source, session_id, review_id)
+    again = close_review(
+        store,
+        later,
+        random_source,
+        session_id,
+        review_id,
+        expected_session_revision=current_session_revision(store, session_id),
+    )
     assert again["already"] is True and again["outcome"] == "CONFIRMED"  # idempotent, one outcome
 
     # The outcome moved BOTH consumers: scoring state and the schedule.
@@ -129,7 +183,13 @@ def test_review_loop_closes_end_to_end(store, full_registry, clock, random_sourc
 
     # Pending set is empty now; finish succeeds.
     assert pending_assignments(store, session_id) == []
-    finish_session(store, later, random_source, session_id)
+    finish_session(
+        store,
+        later,
+        random_source,
+        session_id,
+        expected_session_revision=current_session_revision(store, session_id),
+    )
 
 
 def test_abandon_converts_open_assignments(store, full_registry, clock, random_source) -> None:
@@ -139,13 +199,24 @@ def test_abandon_converts_open_assignments(store, full_registry, clock, random_s
     session_id = str(manifest["session_id"])
     (assignment,) = pending_assignments(store, session_id)
 
-    event = abandon_session(store, later, random_source, session_id)
+    event = abandon_session(
+        store,
+        later,
+        random_source,
+        session_id,
+        expected_session_revision=current_session_revision(store, session_id),
+    )
     assert event.payload["closed_assignments"] == [assignment["review_id"]]
     assert pending_assignments(store, session_id) == []
 
     outcomes = [e for e in store.read() if e.type == "review.outcome"]
     assert outcomes[-1].payload["outcome"] == "INSUFFICIENT_EVIDENCE"
     assert outcomes[-1].payload["reason"] == "abandoned"
+    transitions = [e for e in store.read() if e.type == EVENT_STATE_TRANSITION]
+    assert transitions[-1].causation_id == outcomes[-1].id
+    assert transitions[-1].payload["from_state"] == transitions[-1].payload["to_state"]
+    assert transition_coverage(store)["missing"] == 0
+    assert transition_coverage(store)["complete"] is True
     # The scheduler holds the interval and books the short retry -- no punishment.
     schedules = fold_schedules(store, full_registry.resolve_pinned("scheduler", "scheduler@1"))
     schedule = schedules[("grammar.be.identity", "recognition")]
@@ -160,7 +231,15 @@ def test_replan_keeps_the_surviving_assignment_id(store, full_registry, clock, r
     _, plan, _ = get_plan(store, session_id)
     (before,) = [s for s in plan["steps"] if s["kind"] == "review"]
 
-    replan_session(store, full_registry, later, random_source, session_id, expected_plan_version=1)
+    replan_session(
+        store,
+        full_registry,
+        later,
+        random_source,
+        session_id,
+        expected_session_revision=current_session_revision(store, session_id),
+        expected_plan_version=1,
+    )
     _, plan2, _ = get_plan(store, session_id)
     (after,) = [s for s in plan2["steps"] if s["kind"] == "review"]
     # Still due, still the same goal: assignment and step ids are stable, no

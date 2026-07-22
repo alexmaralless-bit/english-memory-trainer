@@ -7,6 +7,7 @@ import pytest
 
 from english_trainer.evidence.attempts import record_attempt
 from english_trainer.kernel.policy import PolicyRegistry
+from english_trainer.kernel.session_fence import current_session_revision
 from english_trainer.kernel.store import EventStore
 from english_trainer.lessons.bank import (
     EVENT_EXERCISE_ACCEPTED,
@@ -30,13 +31,28 @@ EXERCISE = {
 def _present(store: EventStore, registry: PolicyRegistry, clock, rnd) -> tuple[str, str]:
     manifest = start_session(store, registry, clock, rnd, provider="claude-code")
     session_id = str(manifest["session_id"])
-    result = next_step(store, registry, clock, rnd, session_id, expected_plan_version=1)
+    result = next_step(
+        store,
+        registry,
+        clock,
+        rnd,
+        session_id,
+        expected_session_revision=current_session_revision(store, session_id),
+        expected_plan_version=1,
+    )
     return session_id, str(result["step"]["step_id"])
 
 
 def _render(store, registry, clock, rnd, session_id, step_id, exercise=None) -> str:
     result = record_rendered_exercise(
-        store, registry, clock, rnd, session_id, step_id=step_id, exercise=dict(exercise or EXERCISE)
+        store,
+        registry,
+        clock,
+        rnd,
+        session_id,
+        expected_session_revision=current_session_revision(store, session_id),
+        step_id=step_id,
+        exercise=dict(exercise or EXERCISE),
     )
     return str(result["exercise_instance_id"])
 
@@ -53,6 +69,7 @@ def test_admission_requires_an_assessed_attempt(store, registry, clock, random_s
         clock,
         random_source,
         session_id,
+        expected_session_revision=current_session_revision(store, session_id),
         step_id=step_id,
         raw_answer="am",
         exercise_instance_id=instance,

@@ -27,6 +27,7 @@ from __future__ import annotations
 import json
 import platform
 import sys
+from contextvars import ContextVar
 from pathlib import Path
 from typing import Annotated, Any, NoReturn
 
@@ -35,6 +36,7 @@ import typer
 from english_trainer.adapters.compare import DEFAULT_FIXTURES
 from english_trainer.adapters.compare import compare as adapters_compare
 from english_trainer.adapters.errors import AdapterError
+from english_trainer.adapters.ingress import capture_user_turn, report_skill
 from english_trainer.adapters.skills import sync as adapters_sync
 from english_trainer.adapters.skills import validate as adapters_validate
 from english_trainer.assessments.forms import UnknownForm
@@ -49,7 +51,12 @@ from english_trainer.assessments.placement import (
     start_placement,
     submit_placement,
 )
+from english_trainer.assessments.policy import ASSESSMENTS_KIND
+from english_trainer.assessments.policy import require_valid as require_valid_assessments
 from english_trainer.assessments.self_assessment import SelfAssessmentInvalid
+from english_trainer.audit import correlation_view, obligations, session_view, target_history
+from english_trainer.audit.policy import OBLIGATIONS_KIND
+from english_trainer.audit.policy import require_valid as require_valid_obligations
 from english_trainer.cli.envelope import (
     ErrorPayload,
     ExitCode,
@@ -59,6 +66,19 @@ from english_trainer.cli.envelope import (
     success_envelope,
 )
 from english_trainer.cli.registry import command_registry
+from english_trainer.cli.telemetry import (
+    command_name as telemetry_command_name,
+)
+from english_trainer.cli.telemetry import (
+    database_path as telemetry_database_path,
+)
+from english_trainer.cli.telemetry import (
+    record_invocation,
+    record_terminal,
+)
+from english_trainer.cli.telemetry import (
+    session_hint as telemetry_session_hint,
+)
 from english_trainer.control.availability import availability_get, availability_set
 from english_trainer.control.errors import (
     AvailabilityInvalid,
@@ -73,6 +93,14 @@ from english_trainer.control.metrics import metrics as policy_metrics
 from english_trainer.control.policy import CONTROL_KIND, require_valid
 from english_trainer.control.signals import record_signal
 from english_trainer.control.trace import DecisionTraceUnavailable, explain
+from english_trainer.control.tunables import (
+    CalibrationPrecondition,
+    TunableCatalogueInvalid,
+    confirm_calibration,
+    list_calibrations,
+    list_tunables,
+    propose_calibration,
+)
 from english_trainer.curriculum.loader import load_policies, load_program
 from english_trainer.curriculum.service import (
     activate_version,
@@ -84,13 +112,20 @@ from english_trainer.curriculum.validate import validate_program
 from english_trainer.evidence.assessment import finalize_attempt
 from english_trainer.evidence.attempts import EvidencePrecondition, list_notes, record_attempt
 from english_trainer.evidence.observed import record_observed
+from english_trainer.evidence.policy import EVIDENCE_KIND
+from english_trainer.evidence.policy import require_valid as require_valid_evidence
 from english_trainer.evidence.reviews import close_review
 from english_trainer.evidence.rubric import RUBRIC_KIND, RubricPolicyInvalid
 from english_trainer.evidence.rubric import require_valid as require_valid_rubric
 from english_trainer.kernel.check import database_check
 from english_trainer.kernel.clock import SystemClock, SystemRandom
 from english_trainer.kernel.encoding import payload_hash
-from english_trainer.kernel.errors import IdempotencyConflict, KernelError, StaleRevision
+from english_trainer.kernel.errors import (
+    IdempotencyConflict,
+    KernelError,
+    SessionRevisionConflict,
+    StaleRevision,
+)
 from english_trainer.kernel.export import JsonlExporter
 from english_trainer.kernel.ids import new_ulid
 from english_trainer.kernel.policy import PolicyRegistry
@@ -104,6 +139,8 @@ from english_trainer.lessons.bank import (
     retire_exercise,
 )
 from english_trainer.lessons.delivery import next_step, peek_step, replan_session
+from english_trainer.lessons.policy import LESSONS_KIND
+from english_trainer.lessons.policy import require_valid as require_valid_lessons
 from english_trainer.lessons.rendering import record_rendered_exercise
 from english_trainer.lessons.resume import resume_session
 from english_trainer.lessons.sessions import (
@@ -125,10 +162,12 @@ from english_trainer.scoring.aggregates import (
     working_levels,
     xp_ledger,
 )
+from english_trainer.scoring.compliance import tutor_compliance
 from english_trainer.scoring.engine import fold_scores
 from english_trainer.scoring.policy import SCORING_KIND, ScoringPolicyInvalid
 from english_trainer.scoring.policy import require_valid as require_valid_scoring
 from english_trainer.scoring.replay import replay_scores
+from english_trainer.scoring.transitions import backfill_state_transitions, transition_coverage
 from english_trainer.storage.layout import StorageLayout, open_storage, resolve_layout
 from english_trainer.storage.snapshot import create_snapshot
 
@@ -149,6 +188,8 @@ observed_app = typer.Typer(add_completion=False, help="Concrete observed learner
 app.add_typer(observed_app, name="observed")
 scoring_app = typer.Typer(add_completion=False, help="Deterministic scores from the event log.")
 app.add_typer(scoring_app, name="scoring")
+scoring_transitions_app = typer.Typer(add_completion=False, help="Canonical score-state facts.")
+scoring_app.add_typer(scoring_transitions_app, name="transitions")
 review_app = typer.Typer(add_completion=False, help="Review scheduling: what is due, and when.")
 app.add_typer(review_app, name="review")
 memory_app = typer.Typer(add_completion=False, help="The Obsidian projection (generated zone).")
@@ -163,6 +204,15 @@ placement_app = typer.Typer(
 app.add_typer(placement_app, name="placement")
 availability_app = typer.Typer(add_completion=False, help="Declared and observed learning rhythm.")
 app.add_typer(availability_app, name="availability")
+tunables_app = typer.Typer(add_completion=False, help="Versioned calibration catalogue.")
+app.add_typer(tunables_app, name="tunables")
+calibration_app = typer.Typer(add_completion=False, help="Propose and confirm policy calibration.")
+app.add_typer(calibration_app, name="calibration")
+audit_app = typer.Typer(add_completion=False, help="Read-only views over authoritative facts.")
+app.add_typer(audit_app, name="audit")
+
+_RUN_CORRELATION: ContextVar[str | None] = ContextVar("cli_run_correlation", default=None)
+_LAST_ENVELOPE: ContextVar[dict[str, Any] | None] = ContextVar("cli_last_envelope", default=None)
 
 _FormatOpt = Annotated[str, typer.Option("--format", help="Output format: text (human) or json (contract).")]
 _RootOpt = Annotated[Path, typer.Option("--root", help="Trainer home directory (storage layout root).")]
@@ -190,10 +240,11 @@ def _paths(root: Path, db: Path | None, export: Path | None) -> tuple[StorageLay
 def _correlation(provided: str | None) -> str:
     # The CLI edge is the one layer allowed to touch the system clock/random
     # (foundation 8): the id must exist before any engine call it correlates.
-    return provided if provided else new_ulid(SystemClock(), SystemRandom())
+    return provided if provided else _RUN_CORRELATION.get() or new_ulid(SystemClock(), SystemRandom())
 
 
 def _emit(envelope: dict[str, Any], human: list[str], fmt: str, code: ExitCode) -> NoReturn:
+    _LAST_ENVELOPE.set(envelope)
     if fmt == "json":
         print_json_envelope(envelope)
     else:
@@ -623,8 +674,20 @@ def curriculum_activate(
                     require_valid_scheduler(payload)
                 elif kind == RUBRIC_KIND:
                     require_valid_rubric(payload)
+                elif kind == ASSESSMENTS_KIND:
+                    require_valid_assessments(payload)
+                elif kind == EVIDENCE_KIND:
+                    require_valid_evidence(payload)
+                elif kind == LESSONS_KIND:
+                    require_valid_lessons(payload)
+                elif kind == OBLIGATIONS_KIND:
+                    require_valid_obligations(payload)
                 registry.register(kind, policy_version, payload)
                 registry.activate(kind, policy_version)
+            if any(kind == "tunables" for kind, _, _ in policies):
+                # Validate only after every owner policy has been activated;
+                # completeness and current-value-in-range are bidirectional.
+                list_tunables(registry)
             event = activate_version(
                 storage.store, registry, SystemClock(), SystemRandom(), version, expected_active
             )
@@ -783,6 +846,7 @@ def _close_command(
     fmt: str,
     root: Path,
     session: str | None,
+    expected_session_revision: int,
     idempotency_key: str | None,
     correlation_id: str | None,
 ) -> None:
@@ -800,7 +864,14 @@ def _close_command(
                     next_action="session status",
                 )
                 _emit(failure_envelope(command, corr, error), ["error: no session"], fmt, ExitCode.NOT_FOUND)
-            request_hash = payload_hash({"command": command, "session": session_id, "root": str(layout.root)})
+            request_hash = payload_hash(
+                {
+                    "command": command,
+                    "session": session_id,
+                    "expected_session_revision": expected_session_revision,
+                    "root": str(layout.root),
+                }
+            )
             if idempotency_key:
                 with UnitOfWork(storage.store, SystemClock()) as uow:
                     prior = uow.check_idempotency(idempotency_key, request_hash)
@@ -811,8 +882,19 @@ def _close_command(
                         fmt,
                         ExitCode.OK,
                     )
-            event = closer(storage.store, SystemClock(), SystemRandom(), session_id)
-            result = {"session_id": session_id, "event_id": event.id, "status_event": event.type}
+            event = closer(
+                storage.store,
+                SystemClock(),
+                SystemRandom(),
+                session_id,
+                expected_session_revision=expected_session_revision,
+            )
+            result = {
+                "session_id": session_id,
+                "event_id": event.id,
+                "status_event": event.type,
+                "session_revision": event.payload["session_revision"],
+            }
             if idempotency_key:
                 with UnitOfWork(storage.store, SystemClock()) as uow:
                     uow.record_result(idempotency_key, request_hash, result)
@@ -830,6 +912,14 @@ def _close_command(
             next_action=f"{command.replace('.', ' ')} --idempotency-key <fresh-key>",
         )
         _emit(failure_envelope(command, corr, error), [f"error: {exc}"], fmt, ExitCode.CONFLICT)
+    except SessionRevisionConflict as exc:
+        error = ErrorPayload(
+            error_code=exc.code,
+            message=str(exc),
+            allowed_actions=["session status"],
+            next_action="session status",
+        )
+        _emit(failure_envelope(command, corr, error), [f"error: {exc}"], fmt, ExitCode.CONFLICT)
     except SessionPrecondition as exc:
         error = ErrorPayload(
             error_code="SESSION_PRECONDITION",
@@ -842,6 +932,9 @@ def _close_command(
 
 @session_app.command("finish")
 def session_finish(
+    expected_session_revision: Annotated[
+        int, typer.Option("--expected-session-revision", help="CAS token from status/resume.")
+    ],
     fmt: _FormatOpt = "text",
     root: _RootOpt = Path(),
     session: Annotated[
@@ -853,11 +946,23 @@ def session_finish(
     correlation_id: _CorrOpt = None,
 ) -> None:
     """Finish the session (the only way to complete one). Requires IN_PROGRESS."""
-    _close_command("session.finish", finish_session, fmt, root, session, idempotency_key, correlation_id)
+    _close_command(
+        "session.finish",
+        finish_session,
+        fmt,
+        root,
+        session,
+        expected_session_revision,
+        idempotency_key,
+        correlation_id,
+    )
 
 
 @session_app.command("abandon")
 def session_abandon(
+    expected_session_revision: Annotated[
+        int, typer.Option("--expected-session-revision", help="CAS token from status/resume.")
+    ],
     fmt: _FormatOpt = "text",
     root: _RootOpt = Path(),
     session: Annotated[
@@ -869,7 +974,16 @@ def session_abandon(
     correlation_id: _CorrOpt = None,
 ) -> None:
     """Explicitly abandon the session; everything already recorded is kept."""
-    _close_command("session.abandon", abandon_session, fmt, root, session, idempotency_key, correlation_id)
+    _close_command(
+        "session.abandon",
+        abandon_session,
+        fmt,
+        root,
+        session,
+        expected_session_revision,
+        idempotency_key,
+        correlation_id,
+    )
 
 
 @session_app.command("status")
@@ -902,10 +1016,12 @@ def session_status(
         else:
             found = get_session(storage.store, session_id)
             state = found[0] if found else {}
+            revision = found[1] if found else None
             notes = list_notes(storage.store, session_id)
             data = {
                 "active": session_id,
                 "status": state.get("status"),
+                "session_revision": revision,
                 "manifest": state.get("manifest"),
                 # Untrusted agent notes ride along as their own block, never
                 # mixed into state (evidence 3 [R-3], P0-5).
@@ -923,6 +1039,9 @@ _SessionOpt = Annotated[
 _PlanVersionOpt = Annotated[
     int, typer.Option("--expected-plan-version", help="CAS token from peek/start (control 4.2).")
 ]
+_SessionRevisionOpt = Annotated[
+    int, typer.Option("--expected-session-revision", help="CAS token from status/resume.")
+]
 
 
 def _resolve_session(command: str, corr: str, fmt: str, storage: Any, session: str | None) -> str:
@@ -936,6 +1055,16 @@ def _resolve_session(command: str, corr: str, fmt: str, storage: Any, session: s
         )
         _emit(failure_envelope(command, corr, error), ["error: no session"], fmt, ExitCode.NOT_FOUND)
     return session_id
+
+
+def _session_conflict(command: str, corr: str, fmt: str, exc: SessionRevisionConflict) -> NoReturn:
+    error = ErrorPayload(
+        error_code=exc.code,
+        message=str(exc),
+        allowed_actions=["session status", "session resume"],
+        next_action="session status",
+    )
+    _emit(failure_envelope(command, corr, error), [f"error: {exc}"], fmt, ExitCode.CONFLICT)
 
 
 @session_app.command("peek")
@@ -986,6 +1115,7 @@ def _plan_mutation(
     root: Path,
     session: str | None,
     expected_plan_version: int,
+    expected_session_revision: int,
     idempotency_key: str | None,
     correlation_id: str | None,
     describe: Any,
@@ -1005,6 +1135,7 @@ def _plan_mutation(
                     "command": command,
                     "session": session_id,
                     "expected_plan_version": expected_plan_version,
+                    "expected_session_revision": expected_session_revision,
                     "root": str(layout.root),
                 }
             )
@@ -1024,6 +1155,7 @@ def _plan_mutation(
                 SystemClock(),
                 SystemRandom(),
                 session_id,
+                expected_session_revision=expected_session_revision,
                 expected_plan_version=expected_plan_version,
             )
             if idempotency_key:
@@ -1043,7 +1175,7 @@ def _plan_mutation(
             next_action=f"{spoken} --idempotency-key <fresh-key>",
         )
         _emit(failure_envelope(command, corr, error), [f"error: {exc}"], fmt, ExitCode.CONFLICT)
-    except PlanVersionConflict as exc:
+    except (PlanVersionConflict, SessionRevisionConflict) as exc:
         error = ErrorPayload(
             error_code=exc.code,
             message=str(exc),
@@ -1064,6 +1196,7 @@ def _plan_mutation(
 @session_app.command("next")
 def session_next(
     expected_plan_version: _PlanVersionOpt,
+    expected_session_revision: _SessionRevisionOpt,
     fmt: _FormatOpt = "text",
     root: _RootOpt = Path(),
     session: _SessionOpt = None,
@@ -1090,6 +1223,7 @@ def session_next(
         root,
         session,
         expected_plan_version,
+        expected_session_revision,
         idempotency_key,
         correlation_id,
         describe,
@@ -1099,6 +1233,7 @@ def session_next(
 @session_app.command("replan")
 def session_replan(
     expected_plan_version: _PlanVersionOpt,
+    expected_session_revision: _SessionRevisionOpt,
     fmt: _FormatOpt = "text",
     root: _RootOpt = Path(),
     session: _SessionOpt = None,
@@ -1123,6 +1258,7 @@ def session_replan(
         root,
         session,
         expected_plan_version,
+        expected_session_revision,
         idempotency_key,
         correlation_id,
         describe,
@@ -1234,6 +1370,7 @@ _StepOpt = Annotated[str, typer.Option("--step", help="Step id from `session nex
 def exercise_rendered(
     step: _StepOpt,
     input_file: _InputOpt,
+    expected_session_revision: _SessionRevisionOpt,
     fmt: _FormatOpt = "text",
     root: _RootOpt = Path(),
     session: _SessionOpt = None,
@@ -1252,7 +1389,13 @@ def exercise_rendered(
         with open_storage(layout) as storage:
             session_id = _resolve_session("exercise.rendered", corr, fmt, storage, session)
             request_hash = payload_hash(
-                {"command": "exercise.rendered", "session": session_id, "step": step, "exercise": exercise}
+                {
+                    "command": "exercise.rendered",
+                    "session": session_id,
+                    "step": step,
+                    "exercise": exercise,
+                    "expected_session_revision": expected_session_revision,
+                }
             )
             if idempotency_key:
                 with UnitOfWork(storage.store, SystemClock()) as uow:
@@ -1270,6 +1413,7 @@ def exercise_rendered(
                 SystemClock(),
                 SystemRandom(),
                 session_id,
+                expected_session_revision=expected_session_revision,
                 step_id=step,
                 exercise=exercise,
             )
@@ -1293,6 +1437,8 @@ def exercise_rendered(
             next_action="exercise rendered --idempotency-key <fresh-key>",
         )
         _emit(failure_envelope("exercise.rendered", corr, error), [f"error: {exc}"], fmt, ExitCode.CONFLICT)
+    except SessionRevisionConflict as exc:
+        _session_conflict("exercise.rendered", corr, fmt, exc)
     except SessionPrecondition as exc:
         error = ErrorPayload(
             error_code=exc.code,
@@ -1312,6 +1458,7 @@ def exercise_rendered(
 def attempt_record(
     step: _StepOpt,
     input_file: _InputOpt,
+    expected_session_revision: _SessionRevisionOpt,
     fmt: _FormatOpt = "text",
     root: _RootOpt = Path(),
     session: _SessionOpt = None,
@@ -1342,6 +1489,7 @@ def attempt_record(
                     "step": step,
                     "exercise_instance": exercise_instance,
                     "input": payload,
+                    "expected_session_revision": expected_session_revision,
                 }
             )
             if idempotency_key:
@@ -1359,12 +1507,14 @@ def attempt_record(
                 SystemClock(),
                 SystemRandom(),
                 session_id,
+                expected_session_revision=expected_session_revision,
                 step_id=step,
                 raw_answer=str(payload.get("raw_answer", "")),
                 exercise_instance_id=exercise_instance,
                 observations=list(payload.get("observations", [])),
                 hints=int(payload.get("hints", 0)),
                 note=note,
+                registry=PolicyRegistry(storage._conn, SystemClock()),
             )
             if idempotency_key:
                 with UnitOfWork(storage.store, SystemClock()) as uow:
@@ -1382,6 +1532,8 @@ def attempt_record(
             next_action="attempt record --idempotency-key <fresh-key>",
         )
         _emit(failure_envelope("attempt.record", corr, error), [f"error: {exc}"], fmt, ExitCode.CONFLICT)
+    except SessionRevisionConflict as exc:
+        _session_conflict("attempt.record", corr, fmt, exc)
     except (EvidencePrecondition, SessionPrecondition) as exc:
         error = ErrorPayload(
             error_code=exc.code,
@@ -1401,6 +1553,7 @@ def attempt_record(
 def observed_record(
     attempt: Annotated[str, typer.Option("--attempt", help="Assessed attempt id.")],
     input_file: _InputOpt,
+    expected_session_revision: _SessionRevisionOpt,
     fmt: _FormatOpt = "text",
     root: _RootOpt = Path(),
     session: _SessionOpt = None,
@@ -1430,6 +1583,7 @@ def observed_record(
                     "attempt": attempt,
                     "kind": kind,
                     "observation": observation,
+                    "expected_session_revision": expected_session_revision,
                 }
             )
             if idempotency_key:
@@ -1448,6 +1602,7 @@ def observed_record(
                 SystemClock(),
                 SystemRandom(),
                 session_id,
+                expected_session_revision=expected_session_revision,
                 kind=kind,
                 attempt_id=attempt,
                 observation=observation,
@@ -1470,6 +1625,8 @@ def observed_record(
             next_action="observed record --idempotency-key <fresh-key>",
         )
         _emit(failure_envelope("observed.record", corr, error), [f"error: {exc}"], fmt, ExitCode.CONFLICT)
+    except SessionRevisionConflict as exc:
+        _session_conflict("observed.record", corr, fmt, exc)
     except EvidencePrecondition as exc:
         error = ErrorPayload(
             error_code=exc.code,
@@ -1711,6 +1868,68 @@ def scoring_replay(
     _emit(success_envelope("scoring.replay", corr, report), human, fmt, ExitCode.OK)
 
 
+@scoring_transitions_app.command("backfill")
+def scoring_transitions_backfill(
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    idempotency_key: Annotated[
+        str | None, typer.Option("--idempotency-key", help="Required with --format json (cli 4.3).")
+    ] = None,
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Append missing canonical state-transition facts in source order."""
+    command = "scoring.transitions.backfill"
+    corr = _correlation(correlation_id)
+    _require_key(command, corr, fmt, idempotency_key)
+    layout = resolve_layout(root)
+    if not layout.db.exists():
+        error = ErrorPayload(
+            error_code="DATABASE_NOT_FOUND",
+            message=f"{layout.db} does not exist.",
+            allowed_actions=["init"],
+            next_action="init",
+        )
+        _emit(failure_envelope(command, corr, error), ["error: not initialized"], fmt, ExitCode.NOT_FOUND)
+    request_hash = payload_hash({"command": command, "root": str(layout.root)})
+    try:
+        with open_storage(layout) as storage:
+            registry = PolicyRegistry(storage._conn, SystemClock())
+            with UnitOfWork(storage.store, SystemClock()) as uow:
+                if idempotency_key:
+                    prior = uow.check_idempotency(idempotency_key, request_hash)
+                    if isinstance(prior, CachedResult):
+                        _emit(
+                            success_envelope(command, corr, {**dict(prior.value), "cached": True}),
+                            ["score transitions backfill (cached result)"],
+                            fmt,
+                            ExitCode.OK,
+                        )
+                backfill_result = backfill_state_transitions(storage.store, registry, uow)
+                if idempotency_key:
+                    uow.record_result(idempotency_key, request_hash, dict(backfill_result))
+            result: dict[str, object] = {
+                **backfill_result,
+                "coverage": transition_coverage(storage.store),
+            }
+        _emit(
+            success_envelope(command, corr, {**result, "cached": False}),
+            [f"state transitions: {result['created']} created / {result['scanned']} sources"],
+            fmt,
+            ExitCode.OK,
+        )
+    except (IdempotencyConflict, KernelError) as exc:
+        error = ErrorPayload(
+            error_code=exc.code,
+            message=str(exc),
+            allowed_actions=["curriculum activate", "scoring replay"],
+            next_action="curriculum activate",
+        )
+        exit_code = (
+            ExitCode.CONFLICT if isinstance(exc, IdempotencyConflict) else ExitCode.PRECONDITION_FAILED
+        )
+        _emit(failure_envelope(command, corr, error), [f"error: {exc}"], fmt, exit_code)
+
+
 @review_app.command("due")
 def review_due(
     fmt: _FormatOpt = "text",
@@ -1766,6 +1985,7 @@ def review_due(
 @attempt_app.command("finalize")
 def attempt_finalize(
     attempt: Annotated[str, typer.Option("--attempt", help="attempt_id from `attempt record`.")],
+    expected_session_revision: _SessionRevisionOpt,
     fmt: _FormatOpt = "text",
     root: _RootOpt = Path(),
     session: _SessionOpt = None,
@@ -1792,7 +2012,13 @@ def attempt_finalize(
         with open_storage(layout) as storage:
             session_id = _resolve_session("attempt.finalize", corr, fmt, storage, session)
             request_hash = payload_hash(
-                {"command": "attempt.finalize", "session": session_id, "attempt": attempt, "extra": extra}
+                {
+                    "command": "attempt.finalize",
+                    "session": session_id,
+                    "attempt": attempt,
+                    "extra": extra,
+                    "expected_session_revision": expected_session_revision,
+                }
             )
             if idempotency_key:
                 with UnitOfWork(storage.store, SystemClock()) as uow:
@@ -1811,6 +2037,7 @@ def attempt_finalize(
                 SystemRandom(),
                 session_id,
                 attempt,
+                expected_session_revision=expected_session_revision,
                 extra_observations=extra,
             )
             if idempotency_key:
@@ -1832,6 +2059,8 @@ def attempt_finalize(
             next_action="attempt finalize --idempotency-key <fresh-key>",
         )
         _emit(failure_envelope("attempt.finalize", corr, error), [f"error: {exc}"], fmt, ExitCode.CONFLICT)
+    except SessionRevisionConflict as exc:
+        _session_conflict("attempt.finalize", corr, fmt, exc)
     except (EvidencePrecondition, SessionPrecondition) as exc:
         error = ErrorPayload(
             error_code=exc.code,
@@ -1850,6 +2079,7 @@ def attempt_finalize(
 @review_app.command("close")
 def review_close(
     review: Annotated[str, typer.Option("--review", help="review_assignment_id from the delivered step.")],
+    expected_session_revision: _SessionRevisionOpt,
     fmt: _FormatOpt = "text",
     root: _RootOpt = Path(),
     session: _SessionOpt = None,
@@ -1868,7 +2098,13 @@ def review_close(
         with open_storage(layout) as storage:
             session_id = _resolve_session("review.close", corr, fmt, storage, session)
             request_hash = payload_hash(
-                {"command": "review.close", "session": session_id, "review": review, "root": str(layout.root)}
+                {
+                    "command": "review.close",
+                    "session": session_id,
+                    "review": review,
+                    "expected_session_revision": expected_session_revision,
+                    "root": str(layout.root),
+                }
             )
             if idempotency_key:
                 with UnitOfWork(storage.store, SystemClock()) as uow:
@@ -1880,7 +2116,14 @@ def review_close(
                         fmt,
                         ExitCode.OK,
                     )
-            result = close_review(storage.store, SystemClock(), SystemRandom(), session_id, review)
+            result = close_review(
+                storage.store,
+                SystemClock(),
+                SystemRandom(),
+                session_id,
+                review,
+                expected_session_revision=expected_session_revision,
+            )
             if idempotency_key:
                 with UnitOfWork(storage.store, SystemClock()) as uow:
                     uow.record_result(idempotency_key, request_hash, result)
@@ -1901,6 +2144,8 @@ def review_close(
             next_action="review close --idempotency-key <fresh-key>",
         )
         _emit(failure_envelope("review.close", corr, error), [f"error: {exc}"], fmt, ExitCode.CONFLICT)
+    except SessionRevisionConflict as exc:
+        _session_conflict("review.close", corr, fmt, exc)
     except (EvidencePrecondition, SessionPrecondition) as exc:
         error = ErrorPayload(
             error_code=exc.code,
@@ -2178,6 +2423,163 @@ def skills_validate(
     _emit(failure_envelope("skills.validate", corr, error), human, fmt, ExitCode.PRECONDITION_FAILED)
 
 
+@skills_app.command("report")
+def skills_report_command(
+    skill: Annotated[str, typer.Option("--skill", help="Session-pinned skill name.")],
+    version: Annotated[str, typer.Option("--version", help="Session-pinned skill version.")],
+    status: Annotated[str, typer.Option("--status", help="started | completed | failed")],
+    provider: Annotated[str, typer.Option("--provider", help="Reporting tutor provider.")],
+    expected_session_revision: _SessionRevisionOpt,
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    session: _SessionOpt = None,
+    idempotency_key: Annotated[
+        str | None, typer.Option("--idempotency-key", help="Required with --format json (cli 4.3).")
+    ] = None,
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Record an untrusted skill lifecycle self-report for audit comparison."""
+    command = "skills.report"
+    corr = _correlation(correlation_id)
+    _require_key(command, corr, fmt, idempotency_key)
+    layout = resolve_layout(root)
+    request_hash = payload_hash(
+        {
+            "command": command,
+            "session": session,
+            "skill": skill,
+            "version": version,
+            "status": status,
+            "provider": provider,
+            "expected_session_revision": expected_session_revision,
+        }
+    )
+    try:
+        with open_storage(layout) as storage:
+            session_id = _resolve_session(command, corr, fmt, storage, session)
+            if idempotency_key:
+                with UnitOfWork(storage.store, SystemClock()) as uow:
+                    prior = uow.check_idempotency(idempotency_key, request_hash)
+                if isinstance(prior, CachedResult):
+                    _emit(
+                        success_envelope(command, corr, {**dict(prior.value), "cached": True}),
+                        ["skill report (cached result)"],
+                        fmt,
+                        ExitCode.OK,
+                    )
+            result = report_skill(
+                storage.store,
+                SystemClock(),
+                SystemRandom(),
+                session_id,
+                skill_name=skill,
+                version=version,
+                status=status,
+                expected_session_revision=expected_session_revision,
+                provider=provider,
+            )
+            if idempotency_key:
+                with UnitOfWork(storage.store, SystemClock()) as uow:
+                    uow.record_result(idempotency_key, request_hash, result)
+        _emit(
+            success_envelope(command, corr, result), [f"skill {skill}@{version}: {status}"], fmt, ExitCode.OK
+        )
+    except (AdapterError, SessionRevisionConflict, IdempotencyConflict) as exc:
+        error = ErrorPayload(
+            error_code=exc.code,
+            message=str(exc),
+            allowed_actions=["session status", "skills report"],
+            next_action="session status",
+        )
+        code = (
+            ExitCode.CONFLICT
+            if isinstance(exc, (SessionRevisionConflict, IdempotencyConflict))
+            else ExitCode.INVALID_INPUT
+        )
+        _emit(failure_envelope(command, corr, error), [f"error: {exc}"], fmt, code)
+
+
+@adapters_app.command("capture-turn")
+def adapters_capture_turn_command(
+    provider: Annotated[str, typer.Option("--provider", help="Provider identity.")],
+    provider_message_id: Annotated[
+        str, typer.Option("--provider-message-id", help="Provider-global immutable message id.")
+    ],
+    content: Annotated[str, typer.Option("--content", help="Exact local raw user-turn text.")],
+    expected_session_revision: _SessionRevisionOpt,
+    byte_start: Annotated[int, typer.Option("--byte-start", help="Inclusive UTF-8 byte offset.")] = 0,
+    byte_end: Annotated[
+        int | None, typer.Option("--byte-end", help="Exclusive UTF-8 byte offset; defaults to full text.")
+    ] = None,
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    session: _SessionOpt = None,
+    idempotency_key: Annotated[
+        str | None, typer.Option("--idempotency-key", help="Required with --format json (cli 4.3).")
+    ] = None,
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Capture an untrusted user turn before learner-facing processing."""
+    command = "adapters.capture-turn"
+    corr = _correlation(correlation_id)
+    _require_key(command, corr, fmt, idempotency_key)
+    layout = resolve_layout(root)
+    request_hash = payload_hash(
+        {
+            "command": command,
+            "session": session,
+            "provider": provider,
+            "provider_message_id": provider_message_id,
+            "content": content,
+            "byte_start": byte_start,
+            "byte_end": byte_end,
+            "expected_session_revision": expected_session_revision,
+        }
+    )
+    try:
+        with open_storage(layout) as storage:
+            session_id = _resolve_session(command, corr, fmt, storage, session)
+            if idempotency_key:
+                with UnitOfWork(storage.store, SystemClock()) as uow:
+                    prior = uow.check_idempotency(idempotency_key, request_hash)
+                if isinstance(prior, CachedResult):
+                    _emit(
+                        success_envelope(command, corr, {**dict(prior.value), "cached": True}),
+                        ["user turn capture (cached result)"],
+                        fmt,
+                        ExitCode.OK,
+                    )
+            result = capture_user_turn(
+                storage.store,
+                SystemClock(),
+                SystemRandom(),
+                session_id,
+                provider=provider,
+                provider_message_id=provider_message_id,
+                content=content,
+                expected_session_revision=expected_session_revision,
+                byte_start=byte_start,
+                byte_end=byte_end,
+            )
+            if idempotency_key:
+                with UnitOfWork(storage.store, SystemClock()) as uow:
+                    uow.record_result(idempotency_key, request_hash, result)
+        _emit(success_envelope(command, corr, result), ["user turn captured"], fmt, ExitCode.OK)
+    except (AdapterError, SessionRevisionConflict, IdempotencyConflict) as exc:
+        error = ErrorPayload(
+            error_code=exc.code,
+            message=str(exc),
+            allowed_actions=["session status", "adapters capture-turn"],
+            next_action="session status",
+        )
+        code = (
+            ExitCode.CONFLICT
+            if isinstance(exc, (SessionRevisionConflict, IdempotencyConflict))
+            else ExitCode.INVALID_INPUT
+        )
+        _emit(failure_envelope(command, corr, error), [f"error: {exc}"], fmt, code)
+
+
 @adapters_app.command("compare")
 def adapters_compare_cmd(
     fmt: _FormatOpt = "text",
@@ -2213,6 +2615,56 @@ def adapters_compare_cmd(
         next_action="adapters compare",
     )
     _emit(failure_envelope("adapters.compare", corr, error), human, fmt, ExitCode.PRECONDITION_FAILED)
+
+
+@audit_app.command("session")
+def audit_session_command(
+    session_id: Annotated[str, typer.Argument(help="Session id.")],
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Read the complete authoritative session trail and obligations."""
+    corr = _correlation(correlation_id)
+    with open_storage(resolve_layout(root)) as storage:
+        registry = PolicyRegistry(storage._conn, SystemClock())
+        view = session_view(storage.store, session_id)
+        data = {**view, "obligations": obligations(storage.store, registry, session_id)}
+    _emit(success_envelope("audit.session", corr, data), [f"audit session {session_id}"], fmt, ExitCode.OK)
+
+
+@audit_app.command("correlation")
+def audit_correlation_command(
+    correlation_id_value: Annotated[str, typer.Argument(help="CLI correlation id.")],
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Read all facts emitted by one CLI invocation."""
+    corr = _correlation(correlation_id)
+    with open_storage(resolve_layout(root)) as storage:
+        data = correlation_view(storage.store, correlation_id_value)
+    _emit(
+        success_envelope("audit.correlation", corr, data),
+        [f"audit correlation {correlation_id_value}"],
+        fmt,
+        ExitCode.OK,
+    )
+
+
+@audit_app.command("target")
+def audit_target_command(
+    target_id: Annotated[str, typer.Argument(help="Topic or lexicon target id.")],
+    dimension: Annotated[str | None, typer.Option("--dimension", help="Optional dimension filter.")] = None,
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Read the causally ordered history of one learner target."""
+    corr = _correlation(correlation_id)
+    with open_storage(resolve_layout(root)) as storage:
+        data = target_history(storage.store, target_id, dimension)
+    _emit(success_envelope("audit.target", corr, data), [f"audit target {target_id}"], fmt, ExitCode.OK)
 
 
 @app.command("signal")
@@ -2516,6 +2968,180 @@ def availability_set_command(
         )
 
 
+@tunables_app.command("list")
+def tunables_list_command(
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    owner: Annotated[str | None, typer.Option("--owner", help="Exact catalogue owner label.")] = None,
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """List every versioned tunable and its allowed range."""
+    command = "tunables.list"
+    corr = _correlation(correlation_id)
+    layout = resolve_layout(root)
+    try:
+        with open_storage(layout) as storage:
+            items = list_tunables(PolicyRegistry(storage._conn, SystemClock()), owner=owner)
+        result = {"count": len(items), "parameters": items}
+        _emit(
+            success_envelope(command, corr, result),
+            [f"{len(items)} tunable parameter(s)", *[f"  {item['parameter_id']}" for item in items]],
+            fmt,
+            ExitCode.OK,
+        )
+    except (KernelError, TunableCatalogueInvalid) as exc:
+        error = ErrorPayload(
+            error_code=exc.code,
+            message=str(exc),
+            allowed_actions=["curriculum activate"],
+            next_action="curriculum activate",
+        )
+        _emit(failure_envelope(command, corr, error), [f"error: {exc}"], fmt, ExitCode.PRECONDITION_FAILED)
+
+
+@calibration_app.command("list")
+def calibration_list_command(
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """List pending and applied calibration proposals."""
+    command = "calibration.list"
+    corr = _correlation(correlation_id)
+    layout = resolve_layout(root)
+    with open_storage(layout) as storage:
+        items = list_calibrations(storage.store)
+    result = {"count": len(items), "proposals": items}
+    _emit(
+        success_envelope(command, corr, result),
+        [f"{len(items)} calibration proposal(s)"],
+        fmt,
+        ExitCode.OK,
+    )
+
+
+def _calibration_mutation(
+    command: str,
+    request: dict[str, Any],
+    runner: Any,
+    fmt: str,
+    root: Path,
+    idempotency_key: str | None,
+    correlation_id: str | None,
+) -> None:
+    corr = _correlation(correlation_id)
+    _require_key(command, corr, fmt, idempotency_key)
+    layout = resolve_layout(root)
+    request_hash = payload_hash({"command": command, **request})
+    try:
+        with open_storage(layout) as storage:
+            if idempotency_key:
+                with UnitOfWork(storage.store, SystemClock()) as uow:
+                    prior = uow.check_idempotency(idempotency_key, request_hash)
+                if isinstance(prior, CachedResult):
+                    _emit(
+                        success_envelope(command, corr, {**dict(prior.value), "cached": True}),
+                        [f"{command} (cached result)"],
+                        fmt,
+                        ExitCode.OK,
+                    )
+            result = runner(storage)
+            if idempotency_key:
+                with UnitOfWork(storage.store, SystemClock()) as uow:
+                    uow.record_result(idempotency_key, request_hash, result)
+        _emit(
+            success_envelope(command, corr, {**result, "cached": False}),
+            [f"{command}: {result.get('proposal_id')}"],
+            fmt,
+            ExitCode.OK,
+        )
+    except IdempotencyConflict as exc:
+        error = ErrorPayload(
+            error_code=exc.code,
+            message=str(exc),
+            allowed_actions=[f"{command.replace('.', ' ')} --idempotency-key <fresh-key>"],
+            next_action=f"{command.replace('.', ' ')} --idempotency-key <fresh-key>",
+        )
+        _emit(failure_envelope(command, corr, error), [f"error: {exc}"], fmt, ExitCode.CONFLICT)
+    except (CalibrationPrecondition, TunableCatalogueInvalid) as exc:
+        error = ErrorPayload(
+            error_code=exc.code,
+            message=str(exc),
+            allowed_actions=["tunables list", "calibration list"],
+            next_action="tunables list",
+        )
+        _emit(failure_envelope(command, corr, error), [f"error: {exc}"], fmt, ExitCode.PRECONDITION_FAILED)
+
+
+@calibration_app.command("propose")
+def calibration_propose_command(
+    parameter: Annotated[str, typer.Option("--parameter", help="Tunable parameter_id.")],
+    value: Annotated[str, typer.Option("--value", help="Integer or decimal string.")],
+    rationale: Annotated[str, typer.Option("--rationale", help="Evidence behind the proposal.")],
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    idempotency_key: Annotated[
+        str | None, typer.Option("--idempotency-key", help="Required with --format json (cli 4.3).")
+    ] = None,
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Create a pending proposal without changing any active value."""
+    parsed: int | str = int(value) if value.lstrip("-").isdigit() else value
+
+    def runner(storage: Any) -> dict[str, Any]:
+        return propose_calibration(
+            storage.store,
+            PolicyRegistry(storage._conn, SystemClock()),
+            SystemClock(),
+            SystemRandom(),
+            parameter,
+            parsed,
+            rationale=rationale,
+        )
+
+    _calibration_mutation(
+        "calibration.propose",
+        {"parameter": parameter, "value": parsed, "rationale": rationale},
+        runner,
+        fmt,
+        root,
+        idempotency_key,
+        correlation_id,
+    )
+
+
+@calibration_app.command("confirm")
+def calibration_confirm_command(
+    proposal: Annotated[str, typer.Option("--proposal", help="Pending proposal id.")],
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    idempotency_key: Annotated[
+        str | None, typer.Option("--idempotency-key", help="Required with --format json (cli 4.3).")
+    ] = None,
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Confirm a proposal and atomically activate its owner-policy successor."""
+
+    def runner(storage: Any) -> dict[str, Any]:
+        return confirm_calibration(
+            storage.store,
+            PolicyRegistry(storage._conn, SystemClock()),
+            SystemClock(),
+            SystemRandom(),
+            proposal,
+        )
+
+    _calibration_mutation(
+        "calibration.confirm",
+        {"proposal": proposal},
+        runner,
+        fmt,
+        root,
+        idempotency_key,
+        correlation_id,
+    )
+
+
 @app.command("metrics")
 def metrics_command(
     fmt: _FormatOpt = "text",
@@ -2623,6 +3249,7 @@ def status_command(
         measured = measured_working_level(levels)
         score = learning_score(folded, program, scoring_policy, measured)
         xp = xp_ledger(storage.store, scoring_policy)
+        compliance = tutor_compliance(storage.store, registry)
     data = {
         "targets": scores,
         "target_count": len(scores),
@@ -2630,6 +3257,7 @@ def status_command(
         "skills": levels,
         "measured_working_level": measured,  # None = no-data, never A1 by default
         "learning_score": score,  # None = no-data, never 0
+        "tutor_compliance": compliance,
         "xp": {
             "total": xp["total"],
             "practice_days": xp["practice_days"],
@@ -2644,6 +3272,10 @@ def status_command(
         shown = info["level"] or "no-data"
         human.append(f"  {skill}: {shown} (confidence {info['confidence']}, {info['active_topics']} active)")
     human.append(f"  working level: {measured or 'no-data'} · learning score: {score or 'no-data'}")
+    human.append(
+        "  tutor compliance: "
+        + (str(compliance["score"]) if compliance["status"] == "measured" else "no-data")
+    )
     human.append(f"  xp: {xp['total']} over {xp['practice_days']} day(s), streak {xp['streak']}")
     _emit(success_envelope("status", corr, data), human, fmt, ExitCode.OK)
 
@@ -2991,6 +3623,15 @@ def _wants_json(argv: list[str]) -> bool:
     return any(arg == "--format" and argv[i + 1 : i + 2] == ["json"] for i, arg in enumerate(argv))
 
 
+def _provided_correlation(argv: list[str]) -> str | None:
+    for index, item in enumerate(argv):
+        if item.startswith("--correlation-id="):
+            return item.split("=", 1)[1]
+        if item == "--correlation-id" and index + 1 < len(argv):
+            return argv[index + 1]
+    return None
+
+
 def run(argv: list[str]) -> int:
     """Invoke the app; guarantee an envelope and a closed exit code (cli 4.1/4.2).
 
@@ -3000,14 +3641,30 @@ def run(argv: list[str]) -> int:
     by class: typer vendors its argument-parsing library, so the concrete
     exception type is not part of any public surface we could import.
     """
+    correlation_id = _provided_correlation(argv) or new_ulid(SystemClock(), SystemRandom())
+    correlation_token = _RUN_CORRELATION.set(correlation_id)
+    envelope_token = _LAST_ENVELOPE.set(None)
+    command = telemetry_command_name(argv)
+    db = telemetry_database_path(argv)
+    telemetry_session_id = telemetry_session_hint(argv, db)
+    invocation_id = record_invocation(
+        db,
+        SystemClock(),
+        SystemRandom(),
+        command=command,
+        correlation_id=correlation_id,
+        argv=argv,
+        session_id=telemetry_session_id,
+    )
+    exit_code = int(ExitCode.OK)
     try:
         # In non-standalone mode the framework *returns* the exit code carried
         # by a raised Exit instead of re-raising it; both paths are honored.
         result = app(args=argv, standalone_mode=False)
         if isinstance(result, int):
-            return result
+            exit_code = result
     except typer.Exit as exc:
-        return int(exc.exit_code)
+        exit_code = int(exc.exit_code)
     except Exception as exc:  # the contract demands a valid envelope, never a traceback
         format_message = getattr(exc, "format_message", None)
         if callable(format_message):  # argument-parsing refusal (UsageError protocol)
@@ -3019,22 +3676,56 @@ def run(argv: list[str]) -> int:
                     allowed_actions=["--help"],
                     next_action="--help",
                 )
-                print_json_envelope(failure_envelope("usage", _correlation(None), error))
+                envelope = failure_envelope("usage", correlation_id, error)
+                _LAST_ENVELOPE.set(envelope)
+                print_json_envelope(envelope)
             else:
                 sys.stderr.write(f"error: {message}\n")
-            return int(ExitCode.USAGE)
-        if _wants_json(argv):
+            exit_code = int(ExitCode.USAGE)
+        elif _wants_json(argv):
             error = ErrorPayload(
                 error_code="INTERNAL",
                 message=f"{type(exc).__name__}: {exc}",
                 allowed_actions=["doctor"],
                 next_action="doctor",
             )
-            print_json_envelope(failure_envelope("internal", _correlation(None), error))
+            envelope = failure_envelope("internal", correlation_id, error)
+            _LAST_ENVELOPE.set(envelope)
+            print_json_envelope(envelope)
+            exit_code = int(ExitCode.INTERNAL)
         else:
             sys.stderr.write(f"internal error: {type(exc).__name__}: {exc}\n")
-        return int(ExitCode.INTERNAL)
-    return int(ExitCode.OK)
+            exit_code = int(ExitCode.INTERNAL)
+    finally:
+        last_envelope = _LAST_ENVELOPE.get()
+        # ``init`` creates the database during dispatch; in that one case the
+        # invocation fact is appended immediately afterwards and still precedes
+        # its terminal fact in canonical sequence.
+        if invocation_id is None:
+            invocation_id = record_invocation(
+                db,
+                SystemClock(),
+                SystemRandom(),
+                command=command,
+                correlation_id=correlation_id,
+                argv=argv,
+                session_id=telemetry_session_id,
+            )
+        if invocation_id is not None:
+            record_terminal(
+                db,
+                SystemClock(),
+                SystemRandom(),
+                command=command,
+                correlation_id=correlation_id,
+                invocation_id=invocation_id,
+                exit_code=exit_code,
+                envelope=last_envelope,
+                session_id=telemetry_session_id,
+            )
+        _LAST_ENVELOPE.reset(envelope_token)
+        _RUN_CORRELATION.reset(correlation_token)
+    return exit_code
 
 
 def main() -> None:

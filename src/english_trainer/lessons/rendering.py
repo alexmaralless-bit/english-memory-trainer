@@ -32,6 +32,7 @@ from english_trainer.kernel.encoding import payload_hash
 from english_trainer.kernel.envelopes import make_event
 from english_trainer.kernel.ids import new_ulid
 from english_trainer.kernel.policy import PolicyRegistry
+from english_trainer.kernel.session_fence import bump_session, load_session_for_update
 from english_trainer.kernel.store import EventStore
 from english_trainer.kernel.uow import UnitOfWork
 from english_trainer.lessons.delivery import production_eligible
@@ -40,7 +41,6 @@ from english_trainer.lessons.sessions import (
     IN_PROGRESS,
     STARTED,
     SessionPrecondition,
-    get_session,
 )
 
 EVENT_EXERCISE_RENDERED = "exercise.rendered"
@@ -91,16 +91,14 @@ def record_rendered_exercise(
     random_source: RandomSource,
     session_id: str,
     *,
+    expected_session_revision: int,
     step_id: str,
     exercise: dict[str, Any],
     provider: str | None = None,
     actor: str = "agent",
 ) -> dict[str, Any]:
     """Persist the rendered-exercise snapshot; returns instance id and hash."""
-    found = get_session(store, session_id)
-    if found is None:
-        raise SessionPrecondition(f"session {session_id} does not exist")
-    state, _ = found
+    state, session_revision = load_session_for_update(store, session_id, expected_session_revision)
     if state.get("status") not in (STARTED, IN_PROGRESS):
         raise SessionPrecondition(
             f"session {session_id} is {state.get('status')}; exercises render only in an active session"
@@ -193,6 +191,7 @@ def record_rendered_exercise(
         "provenance": exercise["provenance"],
     }
     with UnitOfWork(store, clock) as uow:
+        new_session_revision = bump_session(uow, session_id, state, session_revision, clock.now())
         (event,) = uow.append(
             [
                 make_event(
@@ -212,6 +211,7 @@ def record_rendered_exercise(
         "content_hash": content_hash,
         "step_id": step_id,
         "event_id": event.id,
+        "session_revision": new_session_revision,
     }
 
 

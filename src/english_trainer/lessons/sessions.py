@@ -25,6 +25,7 @@ not at all.
 from __future__ import annotations
 
 from collections.abc import Sequence
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -48,6 +49,7 @@ from english_trainer.kernel.envelopes import DomainEvent, make_event
 from english_trainer.kernel.errors import KernelError, NoActivePolicy
 from english_trainer.kernel.ids import new_ulid
 from english_trainer.kernel.policy import KNOWN_KINDS, PolicyRegistry
+from english_trainer.kernel.session_fence import bump_session, load_session_for_update
 from english_trainer.kernel.store import EventStore
 from english_trainer.kernel.uow import UnitOfWork
 
@@ -65,6 +67,7 @@ POINTER_ID = "active"
 EVENT_STARTED = "session.started"
 EVENT_FINISHED = "session.finished"
 EVENT_ABANDONED = "session.abandoned"
+EVENT_STALE_ABANDONED = "session.stale_abandoned"
 EVENT_COMPOSED = "session.composed"
 EVENT_STEP_PRESENTED = "session.step_presented"
 EVENT_SAFETY_REJECTED = "session.step_safety_rejected"
@@ -132,6 +135,93 @@ def get_plan(store: EventStore, session_id: str) -> tuple[str, dict[str, Any], i
         raise KernelError(f"session {session_id} has no plan aggregate {plan_id}")
     state, revision = plan
     return plan_id, state, revision
+
+
+def sweep_stale_session(
+    store: EventStore,
+    registry: PolicyRegistry,
+    clock: Clock,
+    random_source: RandomSource,
+    *,
+    actor: str = "engine",
+) -> DomainEvent | None:
+    """Abandon the one active session at its deterministic stale boundary.
+
+    The session's pinned ``lessons`` policy supplies the threshold. Legacy
+    sessions without that pin use the accepted v1 default of seven elapsed
+    days. Repeated sweeps are no-ops because terminalization clears the active
+    pointer in the same transaction.
+    """
+    session_id = active_session_id(store)
+    if session_id is None:
+        return None
+    found = get_session(store, session_id)
+    if found is None:
+        raise KernelError(f"active-session pointer names missing session {session_id}")
+    state, revision = found
+    if state.get("status") not in _ACTIVE_STATES:
+        return None
+    manifest = dict(state.get("manifest") or {})
+    pinned = dict(manifest.get("pinned_versions") or {})
+    threshold_days = 7
+    lessons_version = pinned.get("lessons")
+    if lessons_version is not None:
+        policy = registry.resolve_pinned("lessons", lessons_version)
+        threshold_days = int(policy["stale_session_days"])
+    last_activity = datetime.fromisoformat(str(state.get("last_activity_at") or manifest.get("started_at")))
+    boundary_at = last_activity + timedelta(days=threshold_days)
+    if clock.now() < boundary_at:
+        return None
+
+    from english_trainer.evidence.attempts import close_pending_attempts
+    from english_trainer.evidence.reviews import close_pending_assignments
+
+    with UnitOfWork(store, clock) as uow:
+        closed_attempts = close_pending_attempts(
+            store, uow, clock, random_source, session_id, reason="stale", actor=actor
+        )
+        closed_assignments = close_pending_assignments(
+            store, uow, clock, random_source, session_id, reason="stale", actor=actor
+        )
+        new_revision = bump_session(
+            uow,
+            session_id,
+            state,
+            revision,
+            boundary_at,
+            changes={"status": ABANDONED, "closed_at": boundary_at.isoformat()},
+        )
+        pointer = uow.get_aggregate(POINTER_AGGREGATE, POINTER_ID)
+        if pointer is not None and pointer[0].get("session_id") == session_id:
+            uow.save_aggregate(
+                POINTER_AGGREGATE,
+                POINTER_ID,
+                {"session_id": None},
+                expected_revision=pointer[1],
+            )
+        (event,) = uow.append(
+            [
+                make_event(
+                    id=new_ulid(clock, random_source),
+                    type=EVENT_STALE_ABANDONED,
+                    occurred_at=boundary_at,
+                    actor=actor,
+                    provider=manifest.get("provider"),
+                    correlation_id=session_id,
+                    payload={
+                        "session_id": session_id,
+                        "from_status": state.get("status"),
+                        "boundary_at": boundary_at.isoformat(),
+                        "stale_session_days": threshold_days,
+                        "closed_attempts": closed_attempts,
+                        "closed_assignments": closed_assignments,
+                        "session_revision": new_revision,
+                    },
+                    pinned_versions=pinned,
+                )
+            ]
+        )
+    return event
 
 
 def review_candidates_for(
@@ -342,7 +432,7 @@ def plan_summary(plan_state: dict[str, Any]) -> list[dict[str, Any]]:
 def _resolve_required_skills(
     agent_skills_dir: Path | str | None,
     required_skills: Sequence[tuple[str, str]] | None,
-) -> list[dict[str, str]]:
+) -> list[dict[str, Any]]:
     """Resolve every required skill synchronously, before any session
     aggregate is written (adapters 4.2; lessons 4b [P0-Q1]): an unresolvable
     pin fails ``start`` outright, with no session created.
@@ -369,7 +459,7 @@ def _resolve_required_skills(
     else:
         return []
 
-    resolved: list[dict[str, str]] = []
+    resolved: list[dict[str, Any]] = []
     for name, version in pairs:
         try:
             skill = resolve_skill(name, version, agent_skills_dir)
@@ -377,7 +467,14 @@ def _resolve_required_skills(
             raise SessionPrecondition(
                 f"required skill {name}@{version} is unavailable: {exc}; run `trainer skills sync` first"
             ) from exc
-        resolved.append({"skill_name": skill.name, "version": skill.version})
+        resolved.append(
+            {
+                "skill_name": skill.name,
+                "version": skill.version,
+                "content_hash": skill.content_hash,
+                "cli_calls": list(skill.cli_calls),
+            }
+        )
     return resolved
 
 
@@ -413,6 +510,7 @@ def start_session(
     ``required_skills`` (adapters 4.2, lessons 4b [P0-Q1]); see
     :func:`_resolve_required_skills` for the exact defaulting rule.
     """
+    sweep_stale_session(store, registry, clock, random_source, actor=actor)
     pinned = _pin_versions(registry)
     for kind, hint in (
         ("curriculum", "run `trainer curriculum activate` first"),
@@ -518,7 +616,11 @@ def start_session(
         uow.save_aggregate(
             SESSION_AGGREGATE,
             session_id,
-            {"status": STARTED, "manifest": manifest},
+            {
+                "status": STARTED,
+                "manifest": manifest,
+                "last_activity_at": clock.now().isoformat(),
+            },
             expected_revision=0,
         )
         uow.save_aggregate(PLAN_AGGREGATE, manifest["session_plan_id"], plan_state, expected_revision=0)
@@ -635,24 +737,27 @@ def start_session(
     from english_trainer.lessons.resume import build_briefing
 
     briefing = build_briefing(store, registry, clock, session_id, manifest)
-    return {**manifest, "briefing": briefing}
+    return {**manifest, "briefing": briefing, "session_revision": 1}
 
 
-def mark_in_progress(store: EventStore, clock: Clock, session_id: str) -> None:
+def mark_in_progress(
+    store: EventStore, clock: Clock, session_id: str, *, expected_session_revision: int
+) -> int:
     """STARTED → IN_PROGRESS: the first real work arrived (a presented step or
     a recorded attempt flips this in later increments)."""
-    found = get_session(store, session_id)
-    if found is None:
-        raise KernelError(f"session {session_id} does not exist")
-    state, revision = found
+    state, revision = load_session_for_update(store, session_id, expected_session_revision)
     if state.get("status") != STARTED:
         if state.get("status") == IN_PROGRESS:
-            return  # already there; idempotent
+            return revision  # already there; idempotent
         raise SessionPrecondition(f"session {session_id} is {state.get('status')}, not {STARTED}")
     with UnitOfWork(store, clock) as uow:
         uow.save_aggregate(
-            SESSION_AGGREGATE, session_id, {**state, "status": IN_PROGRESS}, expected_revision=revision
+            SESSION_AGGREGATE,
+            session_id,
+            {**state, "status": IN_PROGRESS, "last_activity_at": clock.now().isoformat()},
+            expected_revision=revision,
         )
+    return revision + 1
 
 
 def _close_session(
@@ -661,6 +766,7 @@ def _close_session(
     random_source: RandomSource,
     session_id: str,
     *,
+    expected_session_revision: int,
     target_status: str,
     event_type: str,
     allowed_from: tuple[str, ...],
@@ -672,10 +778,7 @@ def _close_session(
     from english_trainer.evidence.attempts import close_pending_attempts, pending_attempts
     from english_trainer.evidence.reviews import close_pending_assignments, pending_assignments
 
-    found = get_session(store, session_id)
-    if found is None:
-        raise KernelError(f"session {session_id} does not exist")
-    state, revision = found
+    state, revision = load_session_for_update(store, session_id, expected_session_revision)
     status = state.get("status")
     if status not in allowed_from:
         raise SessionPrecondition(refusal.format(session_id=session_id, status=status))
@@ -717,18 +820,24 @@ def _close_session(
             closed_assignments = close_pending_assignments(
                 store, uow, clock, random_source, session_id, reason=close_pending_reason, actor=actor
             )
-        uow.save_aggregate(
-            SESSION_AGGREGATE,
+        new_session_revision = bump_session(
+            uow,
             session_id,
-            {**state, "status": target_status, "closed_at": clock.now().isoformat()},
-            expected_revision=revision,
+            state,
+            revision,
+            clock.now(),
+            changes={"status": target_status, "closed_at": clock.now().isoformat()},
         )
         pointer = uow.get_aggregate(POINTER_AGGREGATE, POINTER_ID)
         if pointer is not None and pointer[0].get("session_id") == session_id:
             uow.save_aggregate(
                 POINTER_AGGREGATE, POINTER_ID, {"session_id": None}, expected_revision=pointer[1]
             )
-        payload: dict[str, Any] = {"session_id": session_id, "from_status": status}
+        payload: dict[str, Any] = {
+            "session_id": session_id,
+            "from_status": status,
+            "session_revision": new_session_revision,
+        }
         if close_pending_reason is not None:
             payload["closed_attempts"] = closed_attempts
             payload["closed_assignments"] = closed_assignments
@@ -754,6 +863,8 @@ def finish_session(
     clock: Clock,
     random_source: RandomSource,
     session_id: str,
+    *,
+    expected_session_revision: int,
     actor: str = "engine",
 ) -> DomainEvent:
     """IN_PROGRESS → FINISHED. A session that recorded nothing cannot finish:
@@ -769,6 +880,7 @@ def finish_session(
         clock,
         random_source,
         session_id,
+        expected_session_revision=expected_session_revision,
         target_status=FINISHED,
         event_type=EVENT_FINISHED,
         allowed_from=(IN_PROGRESS,),
@@ -786,6 +898,8 @@ def abandon_session(
     clock: Clock,
     random_source: RandomSource,
     session_id: str,
+    *,
+    expected_session_revision: int,
     actor: str = "engine",
 ) -> DomainEvent:
     """STARTED | IN_PROGRESS → ABANDONED. Keeps everything already recorded;
@@ -796,6 +910,7 @@ def abandon_session(
         clock,
         random_source,
         session_id,
+        expected_session_revision=expected_session_revision,
         target_status=ABANDONED,
         event_type=EVENT_ABANDONED,
         allowed_from=_ACTIVE_STATES,

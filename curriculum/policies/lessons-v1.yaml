@@ -1,0 +1,6 @@
+# lessons@1 -- lifecycle timing decisions. The session aggregate pins this
+# snapshot, so a stale boundary is replayable and does not follow later policy.
+policy_id: "lessons@1"
+schema_version: 1
+status: "accepted"
+stale_session_days: 7

@@ -170,6 +170,24 @@ def _backlog_metrics(
 
 
 def _lapse_metric(store: EventStore, now: datetime) -> dict[str, Any]:
+    eligible_sources = {
+        event.id
+        for event in store.read()
+        if event.type in {"review.outcome", "review.overdue_at_risk"} and "scoring" in event.pinned_versions
+    }
+    covered_sources = {
+        str(event.causation_id)
+        for event in store.read()
+        if event.type == "scoring.state_transition" and event.causation_id is not None
+    }
+    if eligible_sources - covered_sources:
+        return _metric(
+            "lapse_rate_after_mastered",
+            "pending",
+            unit="ppm",
+            window="90_days",
+            sample_count=0,
+        )
     boundary = now.astimezone(UTC) - timedelta(days=90)
     mastered: dict[str, datetime] = {}
     lapsed: set[str] = set()
@@ -179,7 +197,11 @@ def _lapse_metric(store: EventStore, now: datetime) -> dict[str, Any]:
         payload = event.payload
         if event.type == "scoring.state_transition" and payload.get("to_state") == "MASTERED":
             mastered[str(payload.get("target_ref") or "")] = event.occurred_at
-        elif event.type == "review.outcome" and payload.get("outcome") == "REGRESSION":
+        elif (
+            event.type == "scoring.state_transition"
+            and payload.get("from_state") == "MASTERED"
+            and payload.get("to_state") != "MASTERED"
+        ):
             target = str(payload.get("target_ref") or "")
             mastered_at = mastered.get(target)
             if mastered_at is not None and event.occurred_at >= mastered_at:

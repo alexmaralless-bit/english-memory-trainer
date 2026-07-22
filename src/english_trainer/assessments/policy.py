@@ -44,6 +44,8 @@ class AssessmentsPolicyInvalid(KernelError):
 # event so replay reproduces the contribution.
 _DEFAULT_POLICY: dict[str, Any] = {
     "policy_id": ASSESSMENTS_VERSION,
+    "schema_version": 1,
+    "status": "accepted",
     "resume_window_hours": 48,
     "form_cooldown_days": 30,
     "reseen_exposure_weight": "0",

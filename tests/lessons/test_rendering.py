@@ -7,6 +7,7 @@ import pytest
 
 from english_trainer.kernel.encoding import payload_hash
 from english_trainer.kernel.policy import PolicyRegistry
+from english_trainer.kernel.session_fence import current_session_revision
 from english_trainer.kernel.store import EventStore
 from english_trainer.lessons.delivery import next_step
 from english_trainer.lessons.rendering import (
@@ -28,14 +29,29 @@ EXERCISE = {
 def _start_and_present(store: EventStore, registry: PolicyRegistry, clock, rnd) -> tuple[str, str]:
     manifest = start_session(store, registry, clock, rnd, provider="claude-code")
     session_id = str(manifest["session_id"])
-    result = next_step(store, registry, clock, rnd, session_id, expected_plan_version=1)
+    result = next_step(
+        store,
+        registry,
+        clock,
+        rnd,
+        session_id,
+        expected_session_revision=current_session_revision(store, session_id),
+        expected_plan_version=1,
+    )
     return session_id, str(result["step"]["step_id"])
 
 
 def test_rendered_snapshot_is_complete_and_hashed(store, registry, clock, random_source) -> None:
     session_id, step_id = _start_and_present(store, registry, clock, random_source)
     result = record_rendered_exercise(
-        store, registry, clock, random_source, session_id, step_id=step_id, exercise=dict(EXERCISE)
+        store,
+        registry,
+        clock,
+        random_source,
+        session_id,
+        expected_session_revision=current_session_revision(store, session_id),
+        step_id=step_id,
+        exercise=dict(EXERCISE),
     )
     stored = find_rendered_exercise(store, session_id, result["exercise_instance_id"])
     assert stored is not None
@@ -65,10 +81,24 @@ def test_rendered_snapshot_is_complete_and_hashed(store, registry, clock, random
 def test_same_content_same_hash_new_instance(store, registry, clock, random_source) -> None:
     session_id, step_id = _start_and_present(store, registry, clock, random_source)
     first = record_rendered_exercise(
-        store, registry, clock, random_source, session_id, step_id=step_id, exercise=dict(EXERCISE)
+        store,
+        registry,
+        clock,
+        random_source,
+        session_id,
+        expected_session_revision=current_session_revision(store, session_id),
+        step_id=step_id,
+        exercise=dict(EXERCISE),
     )
     second = record_rendered_exercise(
-        store, registry, clock, random_source, session_id, step_id=step_id, exercise=dict(EXERCISE)
+        store,
+        registry,
+        clock,
+        random_source,
+        session_id,
+        expected_session_revision=current_session_revision(store, session_id),
+        step_id=step_id,
+        exercise=dict(EXERCISE),
     )
     assert first["content_hash"] == second["content_hash"]
     assert first["exercise_instance_id"] != second["exercise_instance_id"]
@@ -85,6 +115,7 @@ def test_render_requires_a_presented_step(store, registry, clock, random_source)
             clock,
             random_source,
             str(manifest["session_id"]),
+            expected_session_revision=current_session_revision(store, str(manifest["session_id"])),
             step_id="nonexistent-step",
             exercise=dict(EXERCISE),
         )
@@ -92,10 +123,23 @@ def test_render_requires_a_presented_step(store, registry, clock, random_source)
 
 def test_render_refuses_a_closed_session(store, registry, clock, random_source) -> None:
     session_id, step_id = _start_and_present(store, registry, clock, random_source)
-    abandon_session(store, clock, random_source, session_id)
+    abandon_session(
+        store,
+        clock,
+        random_source,
+        session_id,
+        expected_session_revision=current_session_revision(store, session_id),
+    )
     with pytest.raises(SessionPrecondition, match="active"):
         record_rendered_exercise(
-            store, registry, clock, random_source, session_id, step_id=step_id, exercise=dict(EXERCISE)
+            store,
+            registry,
+            clock,
+            random_source,
+            session_id,
+            expected_session_revision=current_session_revision(store, session_id),
+            step_id=step_id,
+            exercise=dict(EXERCISE),
         )
 
 
@@ -114,6 +158,13 @@ def test_invalid_exercises_are_refused(store, registry, clock, random_source, br
     exercise = {**EXERCISE, **broken}
     with pytest.raises(SessionPrecondition, match=complaint):
         record_rendered_exercise(
-            store, registry, clock, random_source, session_id, step_id=step_id, exercise=exercise
+            store,
+            registry,
+            clock,
+            random_source,
+            session_id,
+            expected_session_revision=current_session_revision(store, session_id),
+            step_id=step_id,
+            exercise=exercise,
         )
     assert not [e for e in store.read() if e.type == EVENT_EXERCISE_RENDERED]  # nothing written

@@ -10,6 +10,7 @@ from english_trainer.evidence.attempts import record_attempt
 from english_trainer.kernel.aggregates import read_aggregate
 from english_trainer.kernel.envelopes import make_event
 from english_trainer.kernel.ids import new_ulid
+from english_trainer.kernel.session_fence import current_session_revision
 from english_trainer.kernel.store import EventStore
 from english_trainer.kernel.uow import UnitOfWork
 from english_trainer.lessons.delivery import next_step
@@ -72,7 +73,15 @@ def test_bank_item_is_reused_and_use_is_atomic_with_delivery(store, registry, cl
     manifest = start_session(store, registry, clock, random_source, provider="claude-code")
     session_id = str(manifest["session_id"])
 
-    claimed = next_step(store, registry, clock, random_source, session_id, expected_plan_version=1)
+    claimed = next_step(
+        store,
+        registry,
+        clock,
+        random_source,
+        session_id,
+        expected_session_revision=current_session_revision(store, session_id),
+        expected_plan_version=1,
+    )
     assert claimed["step"]["bank_item_id"] == instance_id
     assert claimed["step"]["generation_directive"] is None
     assert claimed["bank_item"]["prompt"] == "Complete: I ___ an engineer."
@@ -87,6 +96,7 @@ def test_bank_item_is_reused_and_use_is_atomic_with_delivery(store, registry, cl
         clock,
         random_source,
         session_id,
+        expected_session_revision=current_session_revision(store, session_id),
         step_id=str(claimed["step"]["step_id"]),
         exercise_instance_id=instance_id,
         raw_answer="am",
@@ -105,6 +115,14 @@ def test_claim_revalidates_bank_item_against_active_safety(store, registry, cloc
     registry.activate("curriculum", "v-unsafe")
 
     with pytest.raises(SessionPrecondition, match="safety_changed"):
-        next_step(store, registry, clock, random_source, session_id, expected_plan_version=1)
+        next_step(
+            store,
+            registry,
+            clock,
+            random_source,
+            session_id,
+            expected_session_revision=current_session_revision(store, session_id),
+            expected_plan_version=1,
+        )
     assert [event for event in store.read() if event.type == EVENT_EXERCISE_USED] == []
     assert read_aggregate(store._conn, "session_plan", manifest["session_plan_id"])[0]["plan_version"] == 1

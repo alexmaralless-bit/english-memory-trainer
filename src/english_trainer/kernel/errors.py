@@ -34,6 +34,21 @@ class StaleRevision(KernelError):
     code = "STALE_REVISION"
 
 
+class SessionRevisionConflict(KernelError):
+    """A session-bound mutation used an obsolete public fence token."""
+
+    code = "SESSION_REVISION_CONFLICT"
+
+    def __init__(self, *, session_id: str, expected: int, current: int) -> None:
+        super().__init__(
+            f"session {session_id} is at revision {current}, caller expected {expected}; "
+            "resume or status and retry with a fresh idempotency key"
+        )
+        self.session_id = session_id
+        self.expected_session_revision = expected
+        self.current_session_revision = current
+
+
 class AppendOnlyViolation(KernelError):
     """An attempt to update or delete the append-only event log (foundation 3.3)."""
 

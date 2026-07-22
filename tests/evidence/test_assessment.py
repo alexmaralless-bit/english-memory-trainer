@@ -17,6 +17,7 @@ from english_trainer.evidence.assessment import (
 )
 from english_trainer.evidence.attempts import EvidencePrecondition, record_attempt
 from english_trainer.kernel.policy import PolicyRegistry
+from english_trainer.kernel.session_fence import current_session_revision
 from english_trainer.kernel.store import EventStore
 from english_trainer.lessons.delivery import next_step
 from english_trainer.lessons.sessions import finish_session, start_session
@@ -69,7 +70,15 @@ def _conversation_attempt(store, registry, clock, rnd, observations) -> tuple[st
     session_id = str(manifest["session_id"])
     version = 1
     while True:
-        result = next_step(store, registry, clock, rnd, session_id, expected_plan_version=version)
+        result = next_step(
+            store,
+            registry,
+            clock,
+            rnd,
+            session_id,
+            expected_session_revision=current_session_revision(store, session_id),
+            expected_plan_version=version,
+        )
         version = result["plan_version"]
         if result["step"]["step_type"] == "free_conversation":
             step = result["step"]
@@ -79,6 +88,7 @@ def _conversation_attempt(store, registry, clock, rnd, observations) -> tuple[st
         clock,
         rnd,
         session_id,
+        expected_session_revision=current_session_revision(store, session_id),
         step_id=str(step["step_id"]),
         raw_answer=ANSWER,
         observations=observations,
@@ -132,19 +142,41 @@ def test_conversational_attempt_scores_and_the_session_finishes(
     session_id, attempt_id = _conversation_attempt(
         store, full_registry, clock, random_source, _full_coverage()
     )
-    result = finalize_attempt(store, full_registry, clock, random_source, session_id, attempt_id)
+    result = finalize_attempt(
+        store,
+        full_registry,
+        clock,
+        random_source,
+        session_id,
+        attempt_id,
+        expected_session_revision=current_session_revision(store, session_id),
+    )
     assert result["disposition"] == "scored" and result["rejected"] == 0
     # Every required criterion got one finding; levels come from finding units
     # (2 or 3 per the catalog), so the score lands strictly inside the scale.
     assert 0 < result["score_ppm"] <= 1_000_000
     assert result["contributing"] is False or result["contributing"] is True  # target-less → audit-only
 
-    again = finalize_attempt(store, full_registry, clock, random_source, session_id, attempt_id)
+    again = finalize_attempt(
+        store,
+        full_registry,
+        clock,
+        random_source,
+        session_id,
+        attempt_id,
+        expected_session_revision=current_session_revision(store, session_id),
+    )
     assert again["already"] is True and again["score_ppm"] == result["score_ppm"]
 
     # The pending set is settled: the conversational session finishes. THIS is
     # the payoff of P.5 -- finish is no longer blocked by open answers.
-    finish_session(store, clock, random_source, session_id)
+    finish_session(
+        store,
+        clock,
+        random_source,
+        session_id,
+        expected_session_revision=current_session_revision(store, session_id),
+    )
 
 
 def test_rejected_observations_do_not_count(store, full_registry, clock, random_source) -> None:
@@ -158,13 +190,27 @@ def test_rejected_observations_do_not_count(store, full_registry, clock, random_
     session_id, attempt_id = _conversation_attempt(
         store, full_registry, clock, random_source, [bad_span, wrong_criterion]
     )
-    result = finalize_attempt(store, full_registry, clock, random_source, session_id, attempt_id)
+    result = finalize_attempt(
+        store,
+        full_registry,
+        clock,
+        random_source,
+        session_id,
+        attempt_id,
+        expected_session_revision=current_session_revision(store, session_id),
+    )
     # Both rejected -> zero required coverage -> non-contributing
     # insufficient_evidence: assessor failure is never a learner zero (PD-7 C).
     assert result["rejected"] == 2
     assert result["disposition"] == "insufficient_evidence"
     assert result["score_ppm"] is None and result["contributing"] is False
-    finish_session(store, clock, random_source, session_id)  # settled => finish passes
+    finish_session(
+        store,
+        clock,
+        random_source,
+        session_id,
+        expected_session_revision=current_session_revision(store, session_id),
+    )  # settled => finish passes
 
 
 def test_growth_attempt_with_rubric_contributes_to_scoring(
@@ -178,13 +224,22 @@ def test_growth_attempt_with_rubric_contributes_to_scoring(
     # consumption: finalize a conversation attempt whose step carried a target.
     manifest = start_session(store, full_registry, clock, random_source, provider="claude-code")
     session_id = str(manifest["session_id"])
-    result = next_step(store, full_registry, clock, random_source, session_id, expected_plan_version=1)
+    result = next_step(
+        store,
+        full_registry,
+        clock,
+        random_source,
+        session_id,
+        expected_session_revision=current_session_revision(store, session_id),
+        expected_plan_version=1,
+    )
     step = result["step"]  # growth intro: targeted
     recorded = record_attempt(
         store,
         clock,
         random_source,
         session_id,
+        expected_session_revision=current_session_revision(store, session_id),
         step_id=str(step["step_id"]),
         raw_answer=ANSWER,
         observations=[],
@@ -192,7 +247,15 @@ def test_growth_attempt_with_rubric_contributes_to_scoring(
     with pytest.raises(EvidencePrecondition, match="no exact default"):
         # new_material_intro deliberately has no default rubric (PD-6 B):
         # generic prose scoring of an intro step would be hidden best-match.
-        finalize_attempt(store, full_registry, clock, random_source, session_id, recorded["attempt_id"])
+        finalize_attempt(
+            store,
+            full_registry,
+            clock,
+            random_source,
+            session_id,
+            recorded["attempt_id"],
+            expected_session_revision=current_session_revision(store, session_id),
+        )
 
 
 def test_targetless_assessment_is_audit_only(store, full_registry, clock, random_source) -> None:
@@ -202,7 +265,15 @@ def test_targetless_assessment_is_audit_only(store, full_registry, clock, random
     session_id, attempt_id = _conversation_attempt(
         store, full_registry, clock, random_source, _full_coverage()
     )
-    result = finalize_attempt(store, full_registry, clock, random_source, session_id, attempt_id)
+    result = finalize_attempt(
+        store,
+        full_registry,
+        clock,
+        random_source,
+        session_id,
+        attempt_id,
+        expected_session_revision=current_session_revision(store, session_id),
+    )
     assert result["disposition"] == "scored" and result["contributing"] is False
     assert [e for e in store.read() if e.type == "evidence.added"] == []
     (change,) = [e for e in store.read() if e.type == "attempt.state_changed"]

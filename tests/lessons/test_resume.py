@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 from english_trainer.adapters.events import SKILL_REQUIRED
+from english_trainer.kernel.session_fence import current_session_revision
 from english_trainer.lessons.resume import EVENT_AGENT_ATTACHED, resume_session
 from english_trainer.lessons.sessions import (
     SessionPrecondition,
@@ -77,12 +78,18 @@ def test_start_resolves_the_default_required_skill(
         provider="claude-code",
         agent_skills_dir=agent_skills_dir,
     )
-    assert manifest["required_skills"] == [{"skill_name": "run-english-session", "version": "1"}]
+    required_skill = manifest["required_skills"][0]
+    assert required_skill["skill_name"] == "run-english-session"
+    assert required_skill["version"] == "1"
+    assert required_skill["content_hash"]
+    assert "session.start" in required_skill["cli_calls"]
     events = list(store.read())
     required = [event for event in events if event.type == SKILL_REQUIRED]
     assert len(required) == 1
     assert required[0].payload["skill_name"] == "run-english-session"
     assert required[0].payload["version"] == "1"
+    assert required[0].payload["content_hash"] == required_skill["content_hash"]
+    assert required[0].payload["cli_calls"] == required_skill["cli_calls"]
 
 
 def test_start_fails_outright_when_a_required_skill_is_unavailable(
@@ -176,7 +183,13 @@ def test_start_returns_the_same_contract_complete_briefing(
 def test_resume_refuses_a_terminal_session(store, full_registry, clock, random_source) -> None:
     manifest = start_session(store, full_registry, clock, random_source, provider="claude-code")
     session_id = str(manifest["session_id"])
-    event = abandon_session(store, clock, random_source, session_id)
+    event = abandon_session(
+        store,
+        clock,
+        random_source,
+        session_id,
+        expected_session_revision=current_session_revision(store, session_id),
+    )
     assert event.type.endswith("abandoned")
 
     with pytest.raises(SessionPrecondition):

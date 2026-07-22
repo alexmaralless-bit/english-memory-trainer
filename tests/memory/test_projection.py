@@ -4,6 +4,7 @@ idempotent render, rebuild removes orphans, drift is caught, notes/ untouched.""
 from __future__ import annotations
 
 from english_trainer.kernel.policy import PolicyRegistry
+from english_trainer.kernel.session_fence import current_session_revision
 from english_trainer.kernel.store import EventStore
 from english_trainer.lessons.delivery import next_step
 from english_trainer.lessons.sessions import finish_session, start_session
@@ -15,7 +16,15 @@ def _session_with_state(store: EventStore, registry: PolicyRegistry, clock, rnd)
     session page, a plan page and delivered-step schedules to render."""
     manifest = start_session(store, registry, clock, rnd, provider="claude-code")
     session_id = str(manifest["session_id"])
-    next_step(store, registry, clock, rnd, session_id, expected_plan_version=1)
+    next_step(
+        store,
+        registry,
+        clock,
+        rnd,
+        session_id,
+        expected_session_revision=current_session_revision(store, session_id),
+        expected_plan_version=1,
+    )
     return session_id
 
 
@@ -91,12 +100,23 @@ def test_notes_zone_is_never_touched(tmp_path, store, registry, clock, random_so
 def test_finished_session_projects_its_status(tmp_path, store, registry, clock, random_source) -> None:
     manifest = start_session(store, registry, clock, random_source, provider="claude-code")
     session_id = str(manifest["session_id"])
-    next_step(store, registry, clock, random_source, session_id, expected_plan_version=1)
-    # mark in_progress already happened via next_step; finish it
-    from english_trainer.lessons.sessions import mark_in_progress
-
-    mark_in_progress(store, clock, session_id)
-    finish_session(store, clock, random_source, session_id)
+    next_step(
+        store,
+        registry,
+        clock,
+        random_source,
+        session_id,
+        expected_session_revision=current_session_revision(store, session_id),
+        expected_plan_version=1,
+    )
+    # next_step already moved the session to IN_PROGRESS; finish it.
+    finish_session(
+        store,
+        clock,
+        random_source,
+        session_id,
+        expected_session_revision=current_session_revision(store, session_id),
+    )
     pages = render_pages(store, registry)
     session_pages = [p for p in pages if p.startswith("sessions/")]
     assert len(session_pages) == 1

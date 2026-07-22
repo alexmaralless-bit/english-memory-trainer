@@ -46,3 +46,21 @@ class SkillUnavailable(AdapterError):
     """
 
     code = "SKILL_UNAVAILABLE"
+
+
+class ProviderMessageConflict(AdapterError):
+    """A provider reused its global message id for different immutable bytes."""
+
+    code = "PROVIDER_MESSAGE_CONFLICT"
+
+
+class UserTurnInvalid(AdapterError):
+    """A captured user turn or its UTF-8 byte span is malformed."""
+
+    code = "USER_TURN_INVALID"
+
+
+class SkillReportInvalid(AdapterError):
+    """A skill report does not match a skill pinned by the session."""
+
+    code = "SKILL_REPORT_INVALID"

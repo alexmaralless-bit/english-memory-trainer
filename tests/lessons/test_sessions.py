@@ -4,16 +4,24 @@ FINISHED | ABANDONED (no STARTED → FINISHED edge)."""
 
 from __future__ import annotations
 
-import pytest
+from datetime import timedelta
+from pathlib import Path
 
+import pytest
+import yaml
+
+from english_trainer.kernel.errors import SessionRevisionConflict
 from english_trainer.kernel.policy import PolicyRegistry
+from english_trainer.kernel.session_fence import current_session_revision
 from english_trainer.kernel.store import EventStore
+from english_trainer.lessons.delivery import next_step
 from english_trainer.lessons.sessions import (
     ABANDONED,
     EVENT_ABANDONED,
     EVENT_AGENT_ATTACHED,
     EVENT_COMPOSED,
     EVENT_FINISHED,
+    EVENT_STALE_ABANDONED,
     EVENT_STARTED,
     FINISHED,
     IN_PROGRESS,
@@ -25,7 +33,10 @@ from english_trainer.lessons.sessions import (
     get_session,
     mark_in_progress,
     start_session,
+    sweep_stale_session,
 )
+
+REPO = Path(__file__).resolve().parents[2]
 
 PINNED = {"control": "control@1", "curriculum": "v-test", "generation": "generation@1"}
 
@@ -79,11 +90,23 @@ def test_second_start_requires_explicit_closure(store, registry, clock, random_s
 def test_started_session_cannot_finish_only_abandon(store, registry, clock, random_source) -> None:
     session_id = _start(store, registry, clock, random_source)
     with pytest.raises(SessionPrecondition, match="cannot finish"):
-        finish_session(store, clock, random_source, session_id)
+        finish_session(
+            store,
+            clock,
+            random_source,
+            session_id,
+            expected_session_revision=current_session_revision(store, session_id),
+        )
     state, _ = get_session(store, session_id)
     assert state["status"] == STARTED  # refusal left no trace
 
-    event = abandon_session(store, clock, random_source, session_id)
+    event = abandon_session(
+        store,
+        clock,
+        random_source,
+        session_id,
+        expected_session_revision=current_session_revision(store, session_id),
+    )
     assert event.type == EVENT_ABANDONED
     assert active_session_id(store) is None
     state, _ = get_session(store, session_id)
@@ -92,14 +115,24 @@ def test_started_session_cannot_finish_only_abandon(store, registry, clock, rand
 
 def test_in_progress_session_finishes_and_frees_the_slot(store, registry, clock, random_source) -> None:
     session_id = _start(store, registry, clock, random_source)
-    mark_in_progress(store, clock, session_id)
-    mark_in_progress(store, clock, session_id)  # idempotent
+    revision = mark_in_progress(store, clock, session_id, expected_session_revision=1)
+    mark_in_progress(store, clock, session_id, expected_session_revision=revision)  # idempotent
     state, _ = get_session(store, session_id)
     assert state["status"] == IN_PROGRESS
 
-    event = finish_session(store, clock, random_source, session_id)
+    event = finish_session(
+        store,
+        clock,
+        random_source,
+        session_id,
+        expected_session_revision=current_session_revision(store, session_id),
+    )
     assert event.type == EVENT_FINISHED
-    assert event.payload == {"session_id": session_id, "from_status": IN_PROGRESS}
+    assert event.payload == {
+        "session_id": session_id,
+        "from_status": IN_PROGRESS,
+        "session_revision": 3,
+    }
     assert event.pinned_versions == PINNED
     state, _ = get_session(store, session_id)
     assert state["status"] == FINISHED
@@ -112,19 +145,103 @@ def test_in_progress_session_finishes_and_frees_the_slot(store, registry, clock,
 
 def test_closed_session_cannot_close_again(store, registry, clock, random_source) -> None:
     session_id = _start(store, registry, clock, random_source)
-    abandon_session(store, clock, random_source, session_id)
+    abandon_session(
+        store,
+        clock,
+        random_source,
+        session_id,
+        expected_session_revision=current_session_revision(store, session_id),
+    )
     with pytest.raises(SessionPrecondition, match="already"):
-        abandon_session(store, clock, random_source, session_id)
+        abandon_session(
+            store,
+            clock,
+            random_source,
+            session_id,
+            expected_session_revision=current_session_revision(store, session_id),
+        )
     with pytest.raises(SessionPrecondition):
-        finish_session(store, clock, random_source, session_id)
+        finish_session(
+            store,
+            clock,
+            random_source,
+            session_id,
+            expected_session_revision=current_session_revision(store, session_id),
+        )
     with pytest.raises(SessionPrecondition):
-        mark_in_progress(store, clock, session_id)
+        mark_in_progress(store, clock, session_id, expected_session_revision=2)
 
 
 def test_lifecycle_events_and_outbox_stay_paired(store, registry, clock, random_source) -> None:
     session_id = _start(store, registry, clock, random_source)
-    mark_in_progress(store, clock, session_id)
-    finish_session(store, clock, random_source, session_id)
+    mark_in_progress(store, clock, session_id, expected_session_revision=1)
+    finish_session(
+        store,
+        clock,
+        random_source,
+        session_id,
+        expected_session_revision=current_session_revision(store, session_id),
+    )
     assert store.count() == 4  # started + composed + agent_attached + finished
     outbox = store._conn.execute("SELECT COUNT(*) AS n FROM outbox;").fetchone()["n"]
     assert outbox == 4  # every lifecycle event rode the transactional outbox
+
+
+def test_coarse_session_fence_allows_one_writer_and_rejects_the_stale_one(
+    store, registry, clock, random_source
+) -> None:
+    manifest = start_session(store, registry, clock, random_source, provider="codex")
+    session_id = str(manifest["session_id"])
+    before = store.count()
+    winner = next_step(
+        store,
+        registry,
+        clock,
+        random_source,
+        session_id,
+        expected_session_revision=1,
+        expected_plan_version=1,
+    )
+    assert winner["session_revision"] == 2
+    after_winner = store.count()
+    assert after_winner > before
+    with pytest.raises(SessionRevisionConflict) as caught:
+        next_step(
+            store,
+            registry,
+            clock,
+            random_source,
+            session_id,
+            expected_session_revision=1,
+            expected_plan_version=2,
+        )
+    assert caught.value.code == "SESSION_REVISION_CONFLICT"
+    assert caught.value.current_session_revision == 2
+    assert store.count() == after_winner
+
+
+def test_stale_sweep_uses_pinned_boundary_is_idempotent_and_frees_slot(
+    store, registry, clock, random_source
+) -> None:
+    lessons = yaml.safe_load(
+        (REPO / "curriculum" / "policies" / "lessons-v1.yaml").read_text(encoding="utf-8")
+    )
+    registry.register("lessons", "lessons@1", lessons)
+    registry.activate("lessons", "lessons@1")
+    manifest = start_session(store, registry, clock, random_source, provider="codex")
+    session_id = str(manifest["session_id"])
+    started_at = clock.now()
+    clock.advance(seconds=7 * 24 * 60 * 60)
+
+    event = sweep_stale_session(store, registry, clock, random_source)
+    assert event is not None and event.type == EVENT_STALE_ABANDONED
+    assert event.occurred_at == started_at + timedelta(days=7)
+    assert event.payload["boundary_at"] == event.occurred_at.isoformat()
+    state, revision = get_session(store, session_id)
+    assert state["status"] == ABANDONED and revision == 2
+    count = store.count()
+    assert sweep_stale_session(store, registry, clock, random_source) is None
+    assert store.count() == count
+
+    replacement = start_session(store, registry, clock, random_source, provider="codex")
+    assert replacement["session_id"] != session_id

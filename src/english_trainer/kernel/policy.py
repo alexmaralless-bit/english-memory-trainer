@@ -40,7 +40,21 @@ from english_trainer.kernel.errors import KernelError, NoActivePolicy, PinnedPol
 
 # The policy kinds the platform expects (foundation 3.6). Not enforced -- the
 # kernel is a mechanism and modules own their kinds -- but named for reference.
-KNOWN_KINDS = frozenset({"curriculum", "scoring", "scheduler", "control", "generation", "rubric"})
+KNOWN_KINDS = frozenset(
+    {
+        "assessments",
+        "control",
+        "curriculum",
+        "evidence",
+        "generation",
+        "lessons",
+        "obligations",
+        "rubric",
+        "scheduler",
+        "scoring",
+        "tunables",
+    }
+)
 
 
 class PolicyRegistry:

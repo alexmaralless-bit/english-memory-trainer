@@ -19,6 +19,7 @@ from english_trainer.kernel.aggregates import read_aggregate
 from english_trainer.kernel.envelopes import make_event
 from english_trainer.kernel.ids import new_ulid
 from english_trainer.kernel.policy import PolicyRegistry
+from english_trainer.kernel.session_fence import current_session_revision
 from english_trainer.kernel.store import EventStore
 from english_trainer.kernel.uow import UnitOfWork
 from english_trainer.lessons.delivery import next_step
@@ -35,7 +36,15 @@ EXERCISE = {
 def _present(store: EventStore, registry: PolicyRegistry, clock, rnd) -> tuple[str, str]:
     manifest = start_session(store, registry, clock, rnd, provider="claude-code")
     session_id = str(manifest["session_id"])
-    result = next_step(store, registry, clock, rnd, session_id, expected_plan_version=1)
+    result = next_step(
+        store,
+        registry,
+        clock,
+        rnd,
+        session_id,
+        expected_session_revision=current_session_revision(store, session_id),
+        expected_plan_version=1,
+    )
     return session_id, str(result["step"]["step_id"])
 
 
@@ -73,6 +82,7 @@ def test_open_attempt_records_with_derived_facts(store, registry, clock, random_
         clock,
         random_source,
         session_id,
+        expected_session_revision=current_session_revision(store, session_id),
         step_id=step_id,
         raw_answer="I am an engineer at Vercel.",
         note="learner asked to focus on work vocabulary",
@@ -99,7 +109,14 @@ def test_open_attempt_records_with_derived_facts(store, registry, clock, random_
 def test_objective_check_assesses_against_the_stored_snapshot(store, registry, clock, random_source) -> None:
     session_id, step_id = _present(store, registry, clock, random_source)
     rendered = record_rendered_exercise(
-        store, registry, clock, random_source, session_id, step_id=step_id, exercise=dict(EXERCISE)
+        store,
+        registry,
+        clock,
+        random_source,
+        session_id,
+        expected_session_revision=current_session_revision(store, session_id),
+        step_id=step_id,
+        exercise=dict(EXERCISE),
     )
     instance = rendered["exercise_instance_id"]
 
@@ -108,6 +125,7 @@ def test_objective_check_assesses_against_the_stored_snapshot(store, registry, c
         clock,
         random_source,
         session_id,
+        expected_session_revision=current_session_revision(store, session_id),
         step_id=step_id,
         raw_answer="  AM ",  # normalization: NFC + casefold + whitespace collapse
         exercise_instance_id=instance,
@@ -124,6 +142,7 @@ def test_objective_check_assesses_against_the_stored_snapshot(store, registry, c
         clock,
         random_source,
         session_id,
+        expected_session_revision=current_session_revision(store, session_id),
         step_id=step_id,
         raw_answer="is",
         exercise_instance_id=instance,
@@ -137,7 +156,15 @@ def test_structured_step_requires_the_snapshot(store, registry, clock, random_so
         store, clock, random_source, session_id, step_id="rc-1", step_type="recognition_check", kind="review"
     )
     with pytest.raises(EvidencePrecondition, match="structured check"):
-        record_attempt(store, clock, random_source, session_id, step_id="rc-1", raw_answer="b")
+        record_attempt(
+            store,
+            clock,
+            random_source,
+            session_id,
+            expected_session_revision=current_session_revision(store, session_id),
+            step_id="rc-1",
+            raw_answer="b",
+        )
 
 
 def test_probe_origin_is_derived_never_claimed(store, registry, clock, random_source) -> None:
@@ -146,7 +173,13 @@ def test_probe_origin_is_derived_never_claimed(store, registry, clock, random_so
         store, clock, random_source, session_id, step_id="pr-1", step_type="transfer_task", kind="probe"
     )
     result = record_attempt(
-        store, clock, random_source, session_id, step_id="pr-1", raw_answer="I have been an engineer."
+        store,
+        clock,
+        random_source,
+        session_id,
+        expected_session_revision=current_session_revision(store, session_id),
+        step_id="pr-1",
+        raw_answer="I have been an engineer.",
     )
     assert result["origin"] == "control_probe"  # no CLI flag can produce this
 
@@ -156,21 +189,66 @@ def test_attempt_requires_a_delivered_step_and_an_active_session(
 ) -> None:
     session_id, step_id = _present(store, registry, clock, random_source)
     with pytest.raises(EvidencePrecondition, match="STEP_PRESENTED"):
-        record_attempt(store, clock, random_source, session_id, step_id="ghost", raw_answer="x")
+        record_attempt(
+            store,
+            clock,
+            random_source,
+            session_id,
+            expected_session_revision=current_session_revision(store, session_id),
+            step_id="ghost",
+            raw_answer="x",
+        )
     with pytest.raises(EvidencePrecondition, match="empty"):
-        record_attempt(store, clock, random_source, session_id, step_id=step_id, raw_answer="   ")
+        record_attempt(
+            store,
+            clock,
+            random_source,
+            session_id,
+            expected_session_revision=current_session_revision(store, session_id),
+            step_id=step_id,
+            raw_answer="   ",
+        )
 
-    abandon_session(store, clock, random_source, session_id)
+    abandon_session(
+        store,
+        clock,
+        random_source,
+        session_id,
+        expected_session_revision=current_session_revision(store, session_id),
+    )
     with pytest.raises(EvidencePrecondition, match="closed"):
-        record_attempt(store, clock, random_source, session_id, step_id=step_id, raw_answer="I am here.")
+        record_attempt(
+            store,
+            clock,
+            random_source,
+            session_id,
+            expected_session_revision=current_session_revision(store, session_id),
+            step_id=step_id,
+            raw_answer="I am here.",
+        )
 
 
 def test_exercise_instance_must_match_the_step(store, registry, clock, random_source) -> None:
     session_id, step_id = _present(store, registry, clock, random_source)
     rendered = record_rendered_exercise(
-        store, registry, clock, random_source, session_id, step_id=step_id, exercise=dict(EXERCISE)
+        store,
+        registry,
+        clock,
+        random_source,
+        session_id,
+        expected_session_revision=current_session_revision(store, session_id),
+        step_id=step_id,
+        exercise=dict(EXERCISE),
     )
-    result = next_step(store, registry, clock, random_source, session_id, expected_plan_version=2)
+    result = next_step(
+        store,
+        registry,
+        clock,
+        random_source,
+        session_id,
+        expected_session_revision=current_session_revision(store, session_id),
+        expected_plan_version=2,
+    )
     other_step = str(result["step"]["step_id"])
     with pytest.raises(EvidencePrecondition, match="rendered for step"):
         record_attempt(
@@ -178,6 +256,7 @@ def test_exercise_instance_must_match_the_step(store, registry, clock, random_so
             clock,
             random_source,
             session_id,
+            expected_session_revision=current_session_revision(store, session_id),
             step_id=other_step,
             raw_answer="am",
             exercise_instance_id=rendered["exercise_instance_id"],
@@ -186,18 +265,41 @@ def test_exercise_instance_must_match_the_step(store, registry, clock, random_so
 
 def test_same_span_same_target_is_refused(store, registry, clock, random_source) -> None:
     session_id, step_id = _present(store, registry, clock, random_source)
-    record_attempt(store, clock, random_source, session_id, step_id=step_id, raw_answer="I am an engineer.")
+    record_attempt(
+        store,
+        clock,
+        random_source,
+        session_id,
+        expected_session_revision=current_session_revision(store, session_id),
+        step_id=step_id,
+        raw_answer="I am an engineer.",
+    )
     with pytest.raises(EvidencePrecondition, match="already recorded"):
         record_attempt(
-            store, clock, random_source, session_id, step_id=step_id, raw_answer="I am an engineer."
+            store,
+            clock,
+            random_source,
+            session_id,
+            expected_session_revision=current_session_revision(store, session_id),
+            step_id=step_id,
+            raw_answer="I am an engineer.",
         )
     # The same words aimed at a DIFFERENT target are a new fact, not a replay.
-    result = next_step(store, registry, clock, random_source, session_id, expected_plan_version=2)
+    result = next_step(
+        store,
+        registry,
+        clock,
+        random_source,
+        session_id,
+        expected_session_revision=current_session_revision(store, session_id),
+        expected_plan_version=2,
+    )
     other = record_attempt(
         store,
         clock,
         random_source,
         session_id,
+        expected_session_revision=current_session_revision(store, session_id),
         step_id=str(result["step"]["step_id"]),
         raw_answer="I am an engineer.",
     )

@@ -110,10 +110,28 @@ _COMMANDS: tuple[CommandDescriptor, ...] = (
     ),
     CommandDescriptor(name="why", owner_module="control", mutating=False, requires_idempotency_key=False),
     CommandDescriptor(name="metrics", owner_module="control", mutating=False, requires_idempotency_key=False),
+    CommandDescriptor(
+        name="tunables.list", owner_module="control", mutating=False, requires_idempotency_key=False
+    ),
+    CommandDescriptor(
+        name="calibration.list", owner_module="control", mutating=False, requires_idempotency_key=False
+    ),
+    CommandDescriptor(
+        name="calibration.propose", owner_module="control", mutating=True, requires_idempotency_key=True
+    ),
+    CommandDescriptor(
+        name="calibration.confirm", owner_module="control", mutating=True, requires_idempotency_key=True
+    ),
     # Scoring (0.4 part 2): scores are a pure fold over the event log -- both
     # commands are read-only by construction.
     CommandDescriptor(
         name="scoring.replay", owner_module="scoring", mutating=False, requires_idempotency_key=False
+    ),
+    CommandDescriptor(
+        name="scoring.transitions.backfill",
+        owner_module="scoring",
+        mutating=True,
+        requires_idempotency_key=True,
     ),
     CommandDescriptor(name="status", owner_module="scoring", mutating=False, requires_idempotency_key=False),
     # Scheduler (0.4 part 3): the backlog recommends, never blocks.
@@ -149,10 +167,28 @@ _COMMANDS: tuple[CommandDescriptor, ...] = (
     CommandDescriptor(
         name="skills.validate", owner_module="adapters", mutating=False, requires_idempotency_key=False
     ),
+    CommandDescriptor(
+        name="skills.report", owner_module="adapters", mutating=True, requires_idempotency_key=True
+    ),
     # Adapter parity (adapters 4.4): diagnostic over recorded effect sets,
     # never a live agent run (OPEN-24) -- mutates nothing.
     CommandDescriptor(
         name="adapters.compare", owner_module="adapters", mutating=False, requires_idempotency_key=False
+    ),
+    CommandDescriptor(
+        name="adapters.capture-turn",
+        owner_module="adapters",
+        mutating=True,
+        requires_idempotency_key=True,
+    ),
+    CommandDescriptor(
+        name="audit.session", owner_module="audit", mutating=False, requires_idempotency_key=False
+    ),
+    CommandDescriptor(
+        name="audit.correlation", owner_module="audit", mutating=False, requires_idempotency_key=False
+    ),
+    CommandDescriptor(
+        name="audit.target", owner_module="audit", mutating=False, requires_idempotency_key=False
     ),
     # Session resume (lessons 4b/5): full state + tutor briefing + notes,
     # attaching the resuming agent (AGENT_ATTACHED) in the same UoW.

@@ -13,6 +13,7 @@ from english_trainer.evidence.assessment import span_hash
 from english_trainer.evidence.attempts import EvidencePrecondition, record_attempt
 from english_trainer.evidence.observed import EVENT_ERROR_OBSERVED, record_observed
 from english_trainer.kernel.policy import PolicyRegistry
+from english_trainer.kernel.session_fence import current_session_revision
 from english_trainer.kernel.store import EventStore
 from english_trainer.lessons.delivery import next_step
 from english_trainer.lessons.rendering import record_rendered_exercise
@@ -42,13 +43,22 @@ def observed_registry(store: EventStore, clock) -> PolicyRegistry:
 def _objective_context(store, registry, clock, rnd) -> tuple[str, str, str]:
     manifest = start_session(store, registry, clock, rnd, provider="claude-code")
     session_id = str(manifest["session_id"])
-    claimed = next_step(store, registry, clock, rnd, session_id, expected_plan_version=1)
+    claimed = next_step(
+        store,
+        registry,
+        clock,
+        rnd,
+        session_id,
+        expected_session_revision=current_session_revision(store, session_id),
+        expected_plan_version=1,
+    )
     rendered = record_rendered_exercise(
         store,
         registry,
         clock,
         rnd,
         session_id,
+        expected_session_revision=current_session_revision(store, session_id),
         step_id=str(claimed["step"]["step_id"]),
         exercise={
             "prompt": "Complete: I ___ an engineer.",
@@ -66,6 +76,7 @@ def _objective_attempt(store, clock, rnd, context: tuple[str, str, str], answer:
         clock,
         rnd,
         session_id,
+        expected_session_revision=current_session_revision(store, session_id),
         step_id=step_id,
         exercise_instance_id=instance_id,
         raw_answer=answer,
@@ -95,6 +106,7 @@ def test_real_observed_events_activate_recurring_error_risk(
             clock,
             random_source,
             session_id,
+            expected_session_revision=current_session_revision(store, session_id),
             kind="error",
             attempt_id=attempt_id,
             observation=_negative_observation(answer),
@@ -138,6 +150,7 @@ def test_observed_error_that_contradicts_objective_result_is_rejected(
             clock,
             random_source,
             session_id,
+            expected_session_revision=current_session_revision(store, session_id),
             kind="error",
             attempt_id=attempt_id,
             observation=_negative_observation("am"),

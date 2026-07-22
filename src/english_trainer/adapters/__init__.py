@@ -17,13 +17,22 @@ from english_trainer.adapters.compare import (
     ParityFixture,
     compare,
 )
-from english_trainer.adapters.errors import AdapterError, SkillDrift, SkillInvalid, SkillUnavailable
+from english_trainer.adapters.errors import (
+    AdapterError,
+    ProviderMessageConflict,
+    SkillDrift,
+    SkillInvalid,
+    SkillReportInvalid,
+    SkillUnavailable,
+    UserTurnInvalid,
+)
 from english_trainer.adapters.events import (
     SKILL_COMPLETED,
     SKILL_FAILED,
     SKILL_REQUIRED,
     SKILL_STARTED,
 )
+from english_trainer.adapters.ingress import USER_TURN_CAPTURED, capture_user_turn, report_skill
 from english_trainer.adapters.skills import (
     CANONICAL_SKILL_NAMES,
     ParsedSkill,
@@ -44,19 +53,25 @@ __all__ = [
     "SKILL_FAILED",
     "SKILL_REQUIRED",
     "SKILL_STARTED",
+    "USER_TURN_CAPTURED",
     "AdapterError",
     "FixtureResult",
     "ParityFixture",
     "ParsedSkill",
+    "ProviderMessageConflict",
     "SkillDrift",
     "SkillInvalid",
+    "SkillReportInvalid",
     "SkillSyncManifest",
     "SkillUnavailable",
+    "UserTurnInvalid",
+    "capture_user_turn",
     "compare",
     "discover_canonical_skills",
     "load_canonical_skill",
     "manifest_path_for",
     "parse_skill",
+    "report_skill",
     "resolve",
     "sync",
     "validate",

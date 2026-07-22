@@ -1,0 +1,9 @@
+# evidence@1 -- attribution decisions for one assessed attempt.
+# Decimal values are strings; binary floats are forbidden by canonical encoding.
+policy_id: "evidence@1"
+schema_version: 1
+status: "accepted"
+multi_credit:
+  primary_weight: "1.0"
+  secondary_weight: "0.5"
+  total_weight_cap: "2.0"

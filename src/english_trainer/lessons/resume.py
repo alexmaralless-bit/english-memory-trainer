@@ -25,6 +25,7 @@ from english_trainer.kernel.envelopes import DomainEvent, make_event
 from english_trainer.kernel.errors import KernelError
 from english_trainer.kernel.ids import new_ulid
 from english_trainer.kernel.policy import PolicyRegistry
+from english_trainer.kernel.session_fence import bump_session, load_session_for_update
 from english_trainer.kernel.store import EventStore
 from english_trainer.kernel.uow import UnitOfWork
 from english_trainer.lessons.delivery import peek_step
@@ -36,6 +37,7 @@ from english_trainer.lessons.sessions import (
     SessionPrecondition,
     get_plan,
     get_session,
+    sweep_stale_session,
 )
 from english_trainer.scheduler.engine import due_backlog
 from english_trainer.scoring.aggregates import (
@@ -84,9 +86,10 @@ def attach_agent(
     session_id: str,
     *,
     provider: str,
-    skills: list[dict[str, str]],
+    skills: list[dict[str, Any]],
+    expected_session_revision: int,
     actor: str = "agent",
-) -> DomainEvent:
+) -> tuple[DomainEvent, int]:
     """Record a tutor's connection to ``session_id`` (lessons 5 [R-3]).
 
     ``session start`` and ``session resume`` are the only callers -- there is
@@ -97,16 +100,14 @@ def attach_agent(
     ``resume_session`` this is the ONLY write the operation performs, so it is
     -- in effect -- the same transaction as the operation itself.
     """
-    found = get_session(store, session_id)
-    if found is None:
-        raise SessionPrecondition(f"session {session_id} does not exist")
-    state, _ = found
+    state, session_revision = load_session_for_update(store, session_id, expected_session_revision)
     if state.get("status") not in _ACTIVE_STATES:
         raise SessionPrecondition(
             f"session {session_id} is {state.get('status')}; an agent attaches only to an active session"
         )
     manifest = state.get("manifest") or {}
     with UnitOfWork(store, clock) as uow:
+        new_session_revision = bump_session(uow, session_id, state, session_revision, clock.now())
         (event,) = uow.append(
             [
                 make_event(
@@ -126,7 +127,7 @@ def attach_agent(
                 )
             ]
         )
-    return event
+    return event, new_session_revision
 
 
 def _active_topics(scores: dict[str, TargetState], program: dict[str, Any]) -> list[dict[str, Any]]:
@@ -404,10 +405,11 @@ def resume_session(
     stable error, not a way to peek at history). The briefing and notes ride
     as SEPARATE blocks from ``state`` -- never mixed in (lessons [P0-5]).
     """
+    sweep_stale_session(store, registry, clock, random_source, actor=actor)
     found = get_session(store, session_id)
     if found is None:
         raise SessionPrecondition(f"session {session_id} does not exist")
-    state, _ = found
+    state, session_revision = found
     if state.get("status") not in _ACTIVE_STATES:
         raise SessionPrecondition(
             f"session {session_id} is {state.get('status')}; resume works only on an active session "
@@ -416,13 +418,14 @@ def resume_session(
     manifest = dict(state.get("manifest") or {})
     required_skills = list(manifest.get("required_skills") or [])
 
-    event = attach_agent(
+    event, new_session_revision = attach_agent(
         store,
         clock,
         random_source,
         session_id,
         provider=provider,
         skills=required_skills,
+        expected_session_revision=session_revision,
         actor=actor,
     )
 
@@ -430,6 +433,7 @@ def resume_session(
     notes = list_notes(store, session_id)
     return {
         "session_id": session_id,
+        "session_revision": new_session_revision,
         "status": state.get("status"),
         "manifest": manifest,
         "agent_attached_event_id": event.id,

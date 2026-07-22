@@ -42,6 +42,7 @@ from english_trainer.kernel.errors import (
     KernelError,
     NoActivePolicy,
     PinnedPolicyUnavailable,
+    SessionRevisionConflict,
     StaleRevision,
 )
 from english_trainer.kernel.export import (
@@ -79,6 +80,7 @@ __all__ = [
     "PolicyRegistry",
     "RandomSource",
     "SeededRandomSource",
+    "SessionRevisionConflict",
     "SqlProjection",
     "StaleRevision",
     "SystemClock",

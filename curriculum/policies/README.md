@@ -3,9 +3,12 @@
 This directory stores curriculum-authored policy payloads before they are
 registered in the kernel policy registry.
 
-`generation-v1.yaml` is the proposed payload for `generation@1`: how lesson
-exercises may be generated, rendered, admitted to the exercise bank, reused, and
-revalidated against active lexical safety. It is data, not executable code.
+Each YAML document is the immutable payload of one registry version. Alongside
+generation/rubric/control/scoring/scheduler, the catalogue includes lifecycle
+decisions (`lessons@1`, `assessments@1`), multi-target evidence allocation
+(`evidence@1`), Tutor Compliance matching (`obligations@1`) and the metadata-only
+calibration catalogue (`tunables@1`). Active values remain in their owner policy;
+the tunables catalogue never duplicates them.
 
 Policy files here must remain deterministic and canon-compatible:
 

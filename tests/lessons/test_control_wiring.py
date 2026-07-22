@@ -11,6 +11,7 @@ from english_trainer.evidence.attempts import record_attempt
 from english_trainer.kernel.clock import FixedClock
 from english_trainer.kernel.envelopes import make_event
 from english_trainer.kernel.ids import new_ulid
+from english_trainer.kernel.session_fence import current_session_revision
 from english_trainer.kernel.uow import UnitOfWork
 from english_trainer.lessons.delivery import next_step, replan_session
 from english_trainer.lessons.rendering import record_rendered_exercise
@@ -32,7 +33,15 @@ EXERCISE = {
 def _seed_due_review(store, registry, clock, rnd) -> None:
     manifest = start_session(store, registry, clock, rnd, provider="claude-code")
     session_id = str(manifest["session_id"])
-    claimed = next_step(store, registry, clock, rnd, session_id, expected_plan_version=1)
+    claimed = next_step(
+        store,
+        registry,
+        clock,
+        rnd,
+        session_id,
+        expected_session_revision=current_session_revision(store, session_id),
+        expected_plan_version=1,
+    )
     step_id = str(claimed["step"]["step_id"])
     rendered = record_rendered_exercise(
         store,
@@ -40,6 +49,7 @@ def _seed_due_review(store, registry, clock, rnd) -> None:
         clock,
         rnd,
         session_id,
+        expected_session_revision=current_session_revision(store, session_id),
         step_id=step_id,
         exercise=dict(EXERCISE),
     )
@@ -48,11 +58,18 @@ def _seed_due_review(store, registry, clock, rnd) -> None:
         clock,
         rnd,
         session_id,
+        expected_session_revision=current_session_revision(store, session_id),
         step_id=step_id,
         exercise_instance_id=str(rendered["exercise_instance_id"]),
         raw_answer="am",
     )
-    finish_session(store, clock, rnd, session_id)
+    finish_session(
+        store,
+        clock,
+        rnd,
+        session_id,
+        expected_session_revision=current_session_revision(store, session_id),
+    )
 
 
 def test_too_easy_replan_materializes_probe_and_consumes_signal_atomically(
@@ -60,7 +77,15 @@ def test_too_easy_replan_materializes_probe_and_consumes_signal_atomically(
 ) -> None:
     manifest = start_session(store, registry, clock, random_source, provider="claude-code")
     session_id = str(manifest["session_id"])
-    first = next_step(store, registry, clock, random_source, session_id, expected_plan_version=1)
+    first = next_step(
+        store,
+        registry,
+        clock,
+        random_source,
+        session_id,
+        expected_session_revision=current_session_revision(store, session_id),
+        expected_plan_version=1,
+    )
     target = str(first["step"]["target_ref"])
     policy = registry.resolve_pinned("control", "control@1")
     signal = record_signal(
@@ -73,7 +98,15 @@ def test_too_easy_replan_materializes_probe_and_consumes_signal_atomically(
         idempotency_key="too-easy-live",
     )
 
-    replan_session(store, registry, clock, random_source, session_id, expected_plan_version=2)
+    replan_session(
+        store,
+        registry,
+        clock,
+        random_source,
+        session_id,
+        expected_session_revision=current_session_revision(store, session_id),
+        expected_plan_version=2,
+    )
     _, plan, _ = get_plan(store, session_id)
     probes = [step for step in plan["steps"] if step.get("kind") == "probe"]
     assert len(probes) == 1 and probes[0]["probe_id"] == signal["probe_id"]
@@ -185,7 +218,13 @@ def test_terminal_sessions_feed_deferrals_and_live_starvation_reserve(
         session_id = str(manifest["session_id"])
         _, plan, _ = get_plan(store, session_id)
         assert not [step for step in plan["steps"] if step.get("kind") == "review"]
-        abandon_session(store, due_at, random_source, session_id)
+        abandon_session(
+            store,
+            due_at,
+            random_source,
+            session_id,
+            expected_session_revision=current_session_revision(store, session_id),
+        )
 
     policy = full_registry.resolve_pinned("control", "control@1")
     standing = reduce_deferrals(store.read(), policy)[("grammar.be.identity", "recognition")]

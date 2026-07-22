@@ -70,6 +70,7 @@ from english_trainer.kernel.ids import new_ulid
 from english_trainer.kernel.policy import KNOWN_KINDS, PolicyRegistry
 from english_trainer.kernel.store import EventStore
 from english_trainer.kernel.uow import UnitOfWork
+from english_trainer.scoring.transitions import build_state_transition
 
 PLACEMENT_AGGREGATE = "placement"
 POINTER_AGGREGATE = "placement_pointer"
@@ -86,7 +87,8 @@ EVENT_EXPIRED = "placement.expired"
 
 # Cross-module facts. Events ARE the module boundary (foundation 4): assessments
 # emits the same evidence/outcome shapes the scoring and scheduler folds consume,
-# with string literals on purpose -- never importing their code.
+# with string literals for the consumed shapes. The narrow transition-event
+# producer is imported so source outcome + canonical transition stay atomic.
 EVIDENCE_ADDED_EVENT = "evidence.added"
 REVIEW_OUTCOME_EVENT = "review.outcome"
 
@@ -774,6 +776,22 @@ def submit_placement(
             )
             for payload in outcome_payloads
         ]
+        transition_events = []
+        state_overrides: dict[str, tuple[str, str | None]] = {}
+        for outcome_event in outcome_events:
+            target_ref = str(outcome_event.payload["target_ref"])
+            transition_event = build_state_transition(
+                store,
+                registry,
+                outcome_event,
+                before_override=state_overrides.get(target_ref),
+            )
+            if transition_event is not None:
+                transition_events.append(transition_event)
+                state_overrides[target_ref] = (
+                    str(transition_event.payload["to_state"]),
+                    None,
+                )
         scored_event = make_event(
             id=new_ulid(clock, random_source),
             type=EVENT_SCORED,
@@ -783,7 +801,7 @@ def submit_placement(
             payload={"placement_id": placement_id, **scored_result},
             pinned_versions=pinned,
         )
-        uow.append([submitted_event, *evidence_events, *outcome_events, scored_event])
+        uow.append([submitted_event, *evidence_events, *outcome_events, *transition_events, scored_event])
 
     return {**scored_result, "placement_id": placement_id, "status": SCORED, "already": False}
 

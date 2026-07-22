@@ -39,11 +39,14 @@ from __future__ import annotations
 import unicodedata
 from typing import Any
 
+from english_trainer.evidence.policy import allocate_credit, multi_credit_policy
 from english_trainer.kernel.clock import Clock, RandomSource
 from english_trainer.kernel.encoding import payload_hash
 from english_trainer.kernel.envelopes import make_event
 from english_trainer.kernel.errors import KernelError
 from english_trainer.kernel.ids import new_ulid
+from english_trainer.kernel.policy import PolicyRegistry
+from english_trainer.kernel.session_fence import bump_session, load_session_for_update
 from english_trainer.kernel.store import EventStore
 from english_trainer.kernel.uow import UnitOfWork
 
@@ -183,6 +186,7 @@ def record_attempt(
     random_source: RandomSource,
     session_id: str,
     *,
+    expected_session_revision: int,
     step_id: str,
     raw_answer: str,
     exercise_instance_id: str | None = None,
@@ -190,12 +194,14 @@ def record_attempt(
     hints: int = 0,
     note: str | None = None,
     provider: str | None = None,
+    registry: PolicyRegistry | None = None,
     actor: str = "agent",
 ) -> dict[str, Any]:
     """Record one learner attempt against a delivered step."""
     if not raw_answer or not raw_answer.strip():
         raise EvidencePrecondition("raw_answer is empty: an explanation is not evidence (0.4 4.2)")
 
+    session_state, session_revision = load_session_for_update(store, session_id, expected_session_revision)
     manifest = _session_manifest(store, session_id)
     step = _presented_step(store, session_id, step_id)
     step_type = str(step.get("step_type"))
@@ -271,6 +277,7 @@ def record_attempt(
     }
 
     with UnitOfWork(store, clock) as uow:
+        new_session_revision = bump_session(uow, session_id, session_state, session_revision, clock.now())
         uow.save_aggregate(ATTEMPT_AGGREGATE, attempt_id, payload, expected_revision=0)
         if note is not None and note.strip():
             entry = {
@@ -305,8 +312,9 @@ def record_attempt(
         if assessment is not None:
             # The assessed attempt IS admissible evidence: EVIDENCE_ADDED rides
             # the same transaction (capture-into-event, 0.4 4.5) with the full
-            # CreditAllocation. v1 allocation: the single primary pair at full
-            # weight -- multi-credit spans arrive with integration steps.
+            # CreditAllocation. Multi-target spans are weighted and capped by
+            # the pinned evidence policy. Capped targets remain explicit.
+            allocations = allocate_credit(targets, primary_target, multi_credit_policy(registry, pinned))
             batch.append(
                 make_event(
                     id=new_ulid(clock, random_source),
@@ -326,17 +334,7 @@ def record_attempt(
                         "mode": step_type,
                         "primary_target": primary_target,
                         "selection_basis": selection_basis,
-                        "credit_allocations": [
-                            {
-                                "target_ref": primary_target["target_ref"],
-                                "dimension": primary_target.get("dimension"),
-                                "contribution": "1.0",
-                                "used": True,
-                                "reason": "primary",
-                            }
-                        ]
-                        if primary_target
-                        else [],
+                        "credit_allocations": allocations,
                         "span_hash": span_hash,
                         "assessment_basis": assessment["basis"],
                         "correct": assessment["correct"],
@@ -355,6 +353,7 @@ def record_attempt(
         "primary_target": primary_target,
         "selection_basis": selection_basis,
         "origin": origin,
+        "session_revision": new_session_revision,
     }
 
 

@@ -36,11 +36,14 @@ from typing import Any
 
 from english_trainer.kernel.clock import Clock, RandomSource
 from english_trainer.kernel.envelopes import make_event
+from english_trainer.kernel.errors import NoActivePolicy
 from english_trainer.kernel.ids import new_ulid
+from english_trainer.kernel.policy import PolicyRegistry
 from english_trainer.kernel.store import EventStore
 from english_trainer.kernel.uow import UnitOfWork
 from english_trainer.scoring.engine import fold_scores
 from english_trainer.scoring.policy import scoring_context
+from english_trainer.scoring.transitions import build_state_transition
 
 # Consumed event contracts; literals on purpose -- events are the boundary.
 EVIDENCE_ADDED_EVENT = "evidence.added"
@@ -253,25 +256,46 @@ def sweep_overdue(
             crossings.append((key, state, boundary))
     if not crossings:
         return []
-    with UnitOfWork(store, clock) as uow:
-        uow.append(
-            [
-                make_event(
-                    id=new_ulid(clock, random_source),
-                    type=EVENT_OVERDUE_AT_RISK,
-                    occurred_at=boundary,  # the deterministic crossing, not the sweep clock
-                    actor=actor,
-                    correlation_id=new_ulid(clock, random_source),
-                    payload={
-                        "target_ref": key[0],
-                        "dimension": key[1],
-                        "schedule_epoch": state.schedule_epoch,
-                        "boundary_at": boundary.isoformat(),
-                        "next_review_at": state.next_review_at.isoformat(),
-                    },
-                    pinned_versions={"scheduler": scheduler_version},
-                )
-                for key, state, boundary in crossings
-            ]
+    registry = PolicyRegistry(store._conn, clock)
+    try:
+        scoring_version = registry.active_version("scoring")
+    except NoActivePolicy:
+        scoring_version = None
+    source_events = []
+    transition_events = []
+    state_overrides: dict[str, tuple[str, str | None]] = {}
+    for key, state, boundary in crossings:
+        pins = {"scheduler": scheduler_version}
+        if scoring_version is not None:
+            pins["scoring"] = scoring_version
+        source = make_event(
+            id=new_ulid(clock, random_source),
+            type=EVENT_OVERDUE_AT_RISK,
+            occurred_at=boundary,
+            actor=actor,
+            correlation_id=new_ulid(clock, random_source),
+            payload={
+                "target_ref": key[0],
+                "dimension": key[1],
+                "schedule_epoch": state.schedule_epoch,
+                "boundary_at": boundary.isoformat(),
+                "next_review_at": state.next_review_at.isoformat(),
+            },
+            pinned_versions=pins,
         )
+        source_events.append(source)
+        transition_event = build_state_transition(
+            store,
+            registry,
+            source,
+            before_override=state_overrides.get(key[0]),
+        )
+        if transition_event is not None:
+            transition_events.append(transition_event)
+            state_overrides[key[0]] = (
+                str(transition_event.payload["to_state"]),
+                str(transition_event.payload["from_state"]),
+            )
+    with UnitOfWork(store, clock) as uow:
+        uow.append([*source_events, *transition_events])
     return [key[0] for key, _, _ in crossings]

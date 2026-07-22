@@ -44,6 +44,7 @@ from english_trainer.evidence.attempts import (
     EvidencePrecondition,
     _session_manifest,
 )
+from english_trainer.evidence.policy import allocate_credit, multi_credit_policy
 from english_trainer.evidence.rubric import RUBRIC_KIND, require_valid
 from english_trainer.kernel.aggregates import read_aggregate
 from english_trainer.kernel.clock import Clock, RandomSource
@@ -51,6 +52,7 @@ from english_trainer.kernel.encoding import payload_hash
 from english_trainer.kernel.envelopes import make_event
 from english_trainer.kernel.ids import new_ulid
 from english_trainer.kernel.policy import PolicyRegistry
+from english_trainer.kernel.session_fence import bump_session, load_session_for_update
 from english_trainer.kernel.store import EventStore
 from english_trainer.kernel.uow import UnitOfWork
 
@@ -288,10 +290,12 @@ def finalize_attempt(
     session_id: str,
     attempt_id: str,
     *,
+    expected_session_revision: int,
     extra_observations: list[dict[str, Any]] | None = None,
     actor: str = "agent",
 ) -> dict[str, Any]:
     """Assess and atomically settle a recorded open attempt."""
+    session_state, session_revision = load_session_for_update(store, session_id, expected_session_revision)
     manifest = _session_manifest(store, session_id)
     found = read_aggregate(store._conn, ATTEMPT_AGGREGATE, attempt_id)
     if found is None:
@@ -447,6 +451,7 @@ def finalize_attempt(
 
     finalized_at = clock.now().isoformat()
     with UnitOfWork(store, clock) as uow:
+        new_session_revision = bump_session(uow, session_id, session_state, session_revision, clock.now())
         uow.save_aggregate(
             ATTEMPT_AGGREGATE,
             attempt_id,
@@ -493,15 +498,11 @@ def finalize_attempt(
                         "mode": step_type,
                         "primary_target": primary,
                         "selection_basis": attempt.get("selection_basis"),
-                        "credit_allocations": [
-                            {
-                                "target_ref": primary.get("target_ref"),
-                                "dimension": primary.get("dimension"),
-                                "contribution": "1.0",
-                                "used": True,
-                                "reason": "primary",
-                            }
-                        ],
+                        "credit_allocations": allocate_credit(
+                            [dict(item) for item in attempt.get("targets") or []],
+                            primary,
+                            multi_credit_policy(registry, pinned),
+                        ),
                         "span_hash": attempt.get("span_hash"),
                         "assessment_basis": "rubric",
                         "score_ppm": score_ppm,
@@ -523,4 +524,5 @@ def finalize_attempt(
         "contributing": contributing,
         "rejected": len(rejected),
         "criteria": trace,
+        "session_revision": new_session_revision,
     }

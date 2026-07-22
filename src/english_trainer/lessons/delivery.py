@@ -47,6 +47,7 @@ from english_trainer.kernel.encoding import payload_hash
 from english_trainer.kernel.envelopes import make_event
 from english_trainer.kernel.ids import new_ulid
 from english_trainer.kernel.policy import PolicyRegistry
+from english_trainer.kernel.session_fence import bump_session, load_session_for_update
 from english_trainer.kernel.store import EventStore
 from english_trainer.kernel.uow import UnitOfWork
 from english_trainer.lessons.sessions import (
@@ -56,7 +57,6 @@ from english_trainer.lessons.sessions import (
     EVENT_STEP_PRESENTED,
     IN_PROGRESS,
     PLAN_AGGREGATE,
-    SESSION_AGGREGATE,
     STARTED,
     SessionPrecondition,
     get_plan,
@@ -185,11 +185,12 @@ def _bank_reuse_snapshot(
 def peek_step(store: EventStore, session_id: str) -> dict[str, Any]:
     """Read-only view of the next step and the CAS token (control 4.2):
     nothing is marked, nothing is published."""
-    _active_session(store, session_id)
+    _, session_revision, _ = _active_session(store, session_id)
     _, plan_state, _ = get_plan(store, session_id)
     step = _next_unpresented(plan_state)
     return {
         "session_id": session_id,
+        "session_revision": session_revision,
         "plan_version": int(plan_state["plan_version"]),
         "composition_revision": int(plan_state["composition_revision"]),
         "steps_remaining": sum(1 for s in plan_state["steps"] if s["presented_at"] is None),
@@ -239,11 +240,17 @@ def next_step(
     random_source: RandomSource,
     session_id: str,
     *,
+    expected_session_revision: int,
     expected_plan_version: int,
     actor: str = "engine",
 ) -> dict[str, Any]:
     """Atomically claim the next step; returns it with the new plan version."""
-    session_state, session_revision, manifest = _active_session(store, session_id)
+    session_state, session_revision = load_session_for_update(store, session_id, expected_session_revision)
+    if session_state.get("status") not in (STARTED, IN_PROGRESS):
+        raise SessionPrecondition(
+            f"session {session_id} is {session_state.get('status')}; step delivery requires an active session"
+        )
+    manifest = dict(session_state.get("manifest") or {})
     plan_id, plan_state, plan_revision = get_plan(store, session_id)
     _check_version(plan_state, expected_plan_version)
 
@@ -264,6 +271,7 @@ def next_step(
         eligible, reason = False, bank_reason
     if not eligible:
         with UnitOfWork(store, clock) as uow:
+            bump_session(uow, session_id, session_state, session_revision, clock.now())
             uow.append(
                 [
                     make_event(
@@ -341,15 +349,16 @@ def next_step(
 
     with UnitOfWork(store, clock) as uow:
         uow.save_aggregate(PLAN_AGGREGATE, plan_id, new_state, expected_revision=plan_revision)
-        if session_state.get("status") == STARTED:
-            # The first delivered step is the "first real work" edge
-            # STARTED -> IN_PROGRESS, in the same transaction as the claim.
-            uow.save_aggregate(
-                SESSION_AGGREGATE,
-                session_id,
-                {**session_state, "status": IN_PROGRESS},
-                expected_revision=session_revision,
-            )
+        # The claim always advances the coarse session fence. The first claim
+        # also performs STARTED -> IN_PROGRESS in this same transaction.
+        new_session_revision = bump_session(
+            uow,
+            session_id,
+            session_state,
+            session_revision,
+            clock.now(),
+            changes={"status": IN_PROGRESS} if session_state.get("status") == STARTED else None,
+        )
         events = [
             make_event(
                 id=new_ulid(clock, random_source),
@@ -387,6 +396,7 @@ def next_step(
         uow.append(events)
     result: dict[str, Any] = {
         "session_id": session_id,
+        "session_revision": new_session_revision,
         "plan_version": new_version,
         "step": presented_step,
     }
@@ -402,11 +412,17 @@ def replan_session(
     random_source: RandomSource,
     session_id: str,
     *,
+    expected_session_revision: int,
     expected_plan_version: int,
     actor: str = "engine",
 ) -> dict[str, Any]:
     """Recompose the unpresented remainder as ``composition_revision + 1``."""
-    _, _, manifest = _active_session(store, session_id)
+    session_state, session_revision = load_session_for_update(store, session_id, expected_session_revision)
+    if session_state.get("status") not in (STARTED, IN_PROGRESS):
+        raise SessionPrecondition(
+            f"session {session_id} is {session_state.get('status')}; replan requires an active session"
+        )
+    manifest = dict(session_state.get("manifest") or {})
     plan_id, plan_state, plan_revision = get_plan(store, session_id)
     _check_version(plan_state, expected_plan_version)
 
@@ -472,6 +488,7 @@ def replan_session(
     }
     with UnitOfWork(store, clock) as uow:
         uow.save_aggregate(PLAN_AGGREGATE, plan_id, new_state, expected_revision=plan_revision)
+        new_session_revision = bump_session(uow, session_id, session_state, session_revision, clock.now())
         save_decision_traces(uow, new_state)
         # Replan leaves no orphans and creates no debt (4.2 [RR2-4]): an
         # unpresented review step dropped from the new revision is CANCELLED
@@ -538,6 +555,7 @@ def replan_session(
         )
     return {
         "session_id": session_id,
+        "session_revision": new_session_revision,
         "composition_revision": new_revision,
         "plan_version": new_version,
         "steps_planned": sum(1 for s in new_state["steps"] if s["presented_at"] is None),

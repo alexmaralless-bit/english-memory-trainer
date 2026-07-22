@@ -140,7 +140,8 @@ def test_database_check_ok_with_pending_export(tmp_path: Path, capsys) -> None:
     env = _json_stdout(capsys)
     _envelope_shape_ok(env)
     assert code == ExitCode.OK
-    assert env["data"]["pending"]["unexported_events"] == 1
+    # Two init telemetry facts + the demo + this read command's invocation.
+    assert env["data"]["pending"]["unexported_events"] == 4
 
 
 def test_database_check_integrity_error_is_precondition_failed(tmp_path: Path, capsys) -> None:
@@ -230,6 +231,7 @@ def test_session_lifecycle_through_the_cli(tmp_path: Path, capsys) -> None:
     _envelope_shape_ok(env)
     assert code == ExitCode.OK
     session_id = env["data"]["session_id"]
+    session_revision = env["data"]["session_revision"]
     assert env["data"]["pinned_versions"]["curriculum"] == "v1"
 
     # A second start is a precondition failure, not a silent abandon.
@@ -256,7 +258,20 @@ def test_session_lifecycle_through_the_cli(tmp_path: Path, capsys) -> None:
     env = _json_stdout(capsys)
     assert code == ExitCode.OK and env["data"]["active"] == session_id
 
-    code = run(["session", "finish", "--format", "json", "--root", root, "--idempotency-key", "f1"])
+    code = run(
+        [
+            "session",
+            "finish",
+            "--expected-session-revision",
+            str(session_revision),
+            "--format",
+            "json",
+            "--root",
+            root,
+            "--idempotency-key",
+            "f1",
+        ]
+    )
     env = _json_stdout(capsys)
     assert code == ExitCode.PRECONDITION_FAILED  # nothing recorded -> abandon instead
 
@@ -267,15 +282,40 @@ def test_session_lifecycle_through_the_cli(tmp_path: Path, capsys) -> None:
     assert code == ExitCode.OK and env["data"]["plan_version"] == 1
     assert env["data"]["step"] is not None and env["data"]["steps_remaining"] > 0
 
-    code = run(["session", "next", "--expected-plan-version", "1", "--format", "json", "--root", root])
+    code = run(
+        [
+            "session",
+            "next",
+            "--expected-plan-version",
+            "1",
+            "--expected-session-revision",
+            str(session_revision),
+            "--format",
+            "json",
+            "--root",
+            root,
+        ]
+    )
     env = _json_stdout(capsys)
     assert code == ExitCode.USAGE and env["error"]["error_code"] == "MISSING_IDEMPOTENCY_KEY"
 
-    next_args = ["session", "next", "--expected-plan-version", "1", "--format", "json", "--root", root]
+    next_args = [
+        "session",
+        "next",
+        "--expected-plan-version",
+        "1",
+        "--expected-session-revision",
+        str(session_revision),
+        "--format",
+        "json",
+        "--root",
+        root,
+    ]
     code = run([*next_args, "--idempotency-key", "n1"])
     env = _json_stdout(capsys)
     _envelope_shape_ok(env)
     assert code == ExitCode.OK and env["data"]["plan_version"] == 2
+    session_revision = env["data"]["session_revision"]
     first_step_id = env["data"]["step"]["step_id"]
 
     # Same key replays the same step from the cache -- no second STEP_PRESENTED.
@@ -285,7 +325,22 @@ def test_session_lifecycle_through_the_cli(tmp_path: Path, capsys) -> None:
     assert env["data"]["step"]["step_id"] == first_step_id
 
     # A fresh key with the stale version is a CONFLICT naming the current one.
-    code = run([*next_args, "--idempotency-key", "n2"])
+    code = run(
+        [
+            "session",
+            "next",
+            "--expected-plan-version",
+            "1",
+            "--expected-session-revision",
+            str(session_revision),
+            "--format",
+            "json",
+            "--root",
+            root,
+            "--idempotency-key",
+            "n2",
+        ]
+    )
     env = _json_stdout(capsys)
     assert code == ExitCode.CONFLICT and env["error"]["error_code"] == "PLAN_VERSION_CONFLICT"
     assert "version 2" in env["error"]["message"]
@@ -296,6 +351,8 @@ def test_session_lifecycle_through_the_cli(tmp_path: Path, capsys) -> None:
             "replan",
             "--expected-plan-version",
             "2",
+            "--expected-session-revision",
+            str(session_revision),
             "--format",
             "json",
             "--root",
@@ -307,6 +364,7 @@ def test_session_lifecycle_through_the_cli(tmp_path: Path, capsys) -> None:
     env = _json_stdout(capsys)
     _envelope_shape_ok(env)
     assert code == ExitCode.OK
+    session_revision = env["data"]["session_revision"]
     assert env["data"]["composition_revision"] == 2 and env["data"]["plan_version"] == 3
 
     # -- evidence: EXERCISE_RENDERED before the learner sees it, then the attempt
@@ -329,6 +387,8 @@ def test_session_lifecycle_through_the_cli(tmp_path: Path, capsys) -> None:
             first_step_id,
             "--input",
             str(exercise_file),
+            "--expected-session-revision",
+            str(session_revision),
             "--format",
             "json",
             "--root",
@@ -340,6 +400,7 @@ def test_session_lifecycle_through_the_cli(tmp_path: Path, capsys) -> None:
     env = _json_stdout(capsys)
     _envelope_shape_ok(env)
     assert code == ExitCode.OK
+    session_revision = env["data"]["session_revision"]
     instance_id = env["data"]["exercise_instance_id"]
 
     attempt_file = tmp_path / "attempt.json"
@@ -354,6 +415,8 @@ def test_session_lifecycle_through_the_cli(tmp_path: Path, capsys) -> None:
             instance_id,
             "--input",
             str(attempt_file),
+            "--expected-session-revision",
+            str(session_revision),
             "--note",
             "confident answer",
             "--format",
@@ -367,6 +430,7 @@ def test_session_lifecycle_through_the_cli(tmp_path: Path, capsys) -> None:
     env = _json_stdout(capsys)
     _envelope_shape_ok(env)
     assert code == ExitCode.OK
+    session_revision = env["data"]["session_revision"]
     assert env["data"]["status"] == "assessed"
     assert env["data"]["assessment"]["correct"] is True
 
@@ -402,6 +466,8 @@ def test_session_lifecycle_through_the_cli(tmp_path: Path, capsys) -> None:
             first_step_id,
             "--input",
             str(open_file),
+            "--expected-session-revision",
+            str(session_revision),
             "--format",
             "json",
             "--root",
@@ -412,8 +478,22 @@ def test_session_lifecycle_through_the_cli(tmp_path: Path, capsys) -> None:
     )
     env = _json_stdout(capsys)
     assert code == ExitCode.OK and env["data"]["status"] == "recorded"
+    session_revision = env["data"]["session_revision"]
 
-    code = run(["session", "finish", "--format", "json", "--root", root, "--idempotency-key", "f2"])
+    code = run(
+        [
+            "session",
+            "finish",
+            "--expected-session-revision",
+            str(session_revision),
+            "--format",
+            "json",
+            "--root",
+            root,
+            "--idempotency-key",
+            "f2",
+        ]
+    )
     env = _json_stdout(capsys)
     assert code == ExitCode.PRECONDITION_FAILED
     assert "pending" in env["error"]["message"]
@@ -442,13 +522,25 @@ def test_session_lifecycle_through_the_cli(tmp_path: Path, capsys) -> None:
     assert code == ExitCode.OK and env["data"]["count"] == 1
     assert env["data"]["items"][0]["admission_basis"] == "assessed_attempt"
 
-    code = run(["session", "abandon", "--format", "json", "--root", root, "--idempotency-key", "ab1"])
+    abandon_args = [
+        "session",
+        "abandon",
+        "--expected-session-revision",
+        str(session_revision),
+        "--format",
+        "json",
+        "--root",
+        root,
+        "--idempotency-key",
+        "ab1",
+    ]
+    code = run(abandon_args)
     env = _json_stdout(capsys)
     _envelope_shape_ok(env)
     assert code == ExitCode.OK and env["data"]["session_id"] == session_id
 
     # Replay of the same abandon returns the cached result, not an error.
-    code = run(["session", "abandon", "--format", "json", "--root", root, "--idempotency-key", "ab1"])
+    code = run(abandon_args)
     env = _json_stdout(capsys)
     assert code == ExitCode.NOT_FOUND or env["data"].get("cached") is True
 
@@ -617,7 +709,12 @@ def test_registry_matches_published_surface() -> None:
         "availability.set",
         "why",
         "metrics",
+        "tunables.list",
+        "calibration.list",
+        "calibration.propose",
+        "calibration.confirm",
         "scoring.replay",
+        "scoring.transitions.backfill",
         "status",
         "review.due",
         "review.close",
@@ -627,7 +724,12 @@ def test_registry_matches_published_surface() -> None:
         "memory.check",
         "skills.sync",
         "skills.validate",
+        "skills.report",
         "adapters.compare",
+        "adapters.capture-turn",
+        "audit.session",
+        "audit.correlation",
+        "audit.target",
         "session.resume",
         "placement.start",
         "placement.answer",

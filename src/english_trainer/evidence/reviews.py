@@ -42,8 +42,11 @@ from english_trainer.kernel.aggregates import list_aggregates, read_aggregate
 from english_trainer.kernel.clock import Clock, RandomSource
 from english_trainer.kernel.envelopes import make_event
 from english_trainer.kernel.ids import new_ulid
+from english_trainer.kernel.policy import PolicyRegistry
+from english_trainer.kernel.session_fence import bump_session, load_session_for_update
 from english_trainer.kernel.store import EventStore
 from english_trainer.kernel.uow import UnitOfWork
+from english_trainer.scoring.transitions import build_state_transition
 
 REVIEW_AGGREGATE = "review_assignment"
 
@@ -124,9 +127,11 @@ def close_review(
     session_id: str,
     review_id: str,
     *,
+    expected_session_revision: int,
     actor: str = "agent",
 ) -> dict[str, Any]:
     """Compute and record the single terminal ReviewOutcome for an assignment."""
+    session_state, session_revision = load_session_for_update(store, session_id, expected_session_revision)
     manifest = _session_manifest(store, session_id)
     found = read_aggregate(store._conn, REVIEW_AGGREGATE, review_id)
     if found is None:
@@ -162,38 +167,43 @@ def close_review(
     closed_at = clock.now().isoformat()
     pinned = dict(manifest.get("pinned_versions") or {})
     with UnitOfWork(store, clock) as uow:
+        new_session_revision = bump_session(uow, session_id, session_state, session_revision, clock.now())
         uow.save_aggregate(
             REVIEW_AGGREGATE,
             review_id,
             {**state, "status": CLOSED, "outcome": outcome, "reason": reason, "closed_at": closed_at},
             expected_revision=revision,
         )
-        uow.append(
-            [
-                make_event(
-                    id=new_ulid(clock, random_source),
-                    type=EVENT_REVIEW_OUTCOME,
-                    occurred_at=clock.now(),
-                    actor=actor,
-                    provider=manifest.get("provider"),
-                    correlation_id=session_id,
-                    payload={
-                        "review_id": review_id,
-                        "target_ref": state.get("target_ref"),
-                        "dimension": state.get("dimension"),
-                        "outcome": outcome,
-                        "reason": reason,
-                        "origin": "session",
-                        "session_id": session_id,
-                        "step_id": state.get("step_id"),
-                        "schedule_epoch": state.get("schedule_epoch"),
-                        "attempt_id": attempt.get("attempt_id") if attempt else None,
-                    },
-                    pinned_versions=pinned,
-                )
-            ]
+        outcome_event = make_event(
+            id=new_ulid(clock, random_source),
+            type=EVENT_REVIEW_OUTCOME,
+            occurred_at=clock.now(),
+            actor=actor,
+            provider=manifest.get("provider"),
+            correlation_id=session_id,
+            payload={
+                "review_id": review_id,
+                "target_ref": state.get("target_ref"),
+                "dimension": state.get("dimension"),
+                "outcome": outcome,
+                "reason": reason,
+                "origin": "session",
+                "session_id": session_id,
+                "step_id": state.get("step_id"),
+                "schedule_epoch": state.get("schedule_epoch"),
+                "attempt_id": attempt.get("attempt_id") if attempt else None,
+            },
+            pinned_versions=pinned,
         )
-    return {"review_id": review_id, "outcome": outcome, "reason": reason, "already": False}
+        transition_event = build_state_transition(store, PolicyRegistry(store._conn, clock), outcome_event)
+        uow.append([outcome_event, *([transition_event] if transition_event is not None else [])])
+    return {
+        "review_id": review_id,
+        "outcome": outcome,
+        "reason": reason,
+        "already": False,
+        "session_revision": new_session_revision,
+    }
 
 
 def cancel_assignment(
@@ -253,6 +263,8 @@ def close_pending_assignments(
     the scheduler holds the interval and books a short retry -- no punishment.
     Runs inside the session-terminalization UoW, atomically with it."""
     closed: list[str] = []
+    pinned = dict(_session_manifest(store, session_id).get("pinned_versions") or {})
+    registry = PolicyRegistry(store._conn, clock)
     for state in pending_assignments(store, session_id):
         review_id = str(state["review_id"])
         found = uow.get_aggregate(REVIEW_AGGREGATE, review_id)
@@ -271,28 +283,27 @@ def close_pending_assignments(
             },
             expected_revision=revision,
         )
-        uow.append(
-            [
-                make_event(
-                    id=new_ulid(clock, random_source),
-                    type=EVENT_REVIEW_OUTCOME,
-                    occurred_at=clock.now(),
-                    actor=actor,
-                    correlation_id=session_id,
-                    payload={
-                        "review_id": review_id,
-                        "target_ref": current.get("target_ref"),
-                        "dimension": current.get("dimension"),
-                        "outcome": "INSUFFICIENT_EVIDENCE",
-                        "reason": reason,
-                        "origin": "session",
-                        "session_id": session_id,
-                        "step_id": current.get("step_id"),
-                        "schedule_epoch": current.get("schedule_epoch"),
-                        "attempt_id": None,
-                    },
-                )
-            ]
+        outcome_event = make_event(
+            id=new_ulid(clock, random_source),
+            type=EVENT_REVIEW_OUTCOME,
+            occurred_at=clock.now(),
+            actor=actor,
+            correlation_id=session_id,
+            payload={
+                "review_id": review_id,
+                "target_ref": current.get("target_ref"),
+                "dimension": current.get("dimension"),
+                "outcome": "INSUFFICIENT_EVIDENCE",
+                "reason": reason,
+                "origin": "session",
+                "session_id": session_id,
+                "step_id": current.get("step_id"),
+                "schedule_epoch": current.get("schedule_epoch"),
+                "attempt_id": None,
+            },
+            pinned_versions=pinned,
         )
+        transition_event = build_state_transition(store, registry, outcome_event)
+        uow.append([outcome_event, *([transition_event] if transition_event is not None else [])])
         closed.append(review_id)
     return closed

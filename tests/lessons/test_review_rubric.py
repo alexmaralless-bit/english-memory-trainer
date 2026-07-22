@@ -19,6 +19,7 @@ from english_trainer.evidence.reviews import REVIEW_AGGREGATE, close_review
 from english_trainer.kernel.envelopes import make_event
 from english_trainer.kernel.ids import new_ulid
 from english_trainer.kernel.policy import PolicyRegistry
+from english_trainer.kernel.session_fence import current_session_revision
 from english_trainer.kernel.store import EventStore
 from english_trainer.kernel.uow import UnitOfWork
 from english_trainer.lessons.sessions import EVENT_STEP_PRESENTED, start_session
@@ -124,14 +125,36 @@ def test_strong_open_review_confirms_and_moves_both_consumers(
     registry = _rubric_registry(full_registry)
     session_id, step_id = _open_review(store, registry, clock, random_source)
     recorded = record_attempt(
-        store, clock, random_source, session_id, step_id=step_id, raw_answer=ANSWER, observations=_STRONG
+        store,
+        clock,
+        random_source,
+        session_id,
+        expected_session_revision=current_session_revision(store, session_id),
+        step_id=step_id,
+        raw_answer=ANSWER,
+        observations=_STRONG,
     )
     assert recorded["status"] == "recorded"  # open answer waits for the rubric
-    result = finalize_attempt(store, registry, clock, random_source, session_id, recorded["attempt_id"])
+    result = finalize_attempt(
+        store,
+        registry,
+        clock,
+        random_source,
+        session_id,
+        recorded["attempt_id"],
+        expected_session_revision=current_session_revision(store, session_id),
+    )
     assert result["disposition"] == "scored" and result["contributing"] and result["score_ppm"] >= 500_000
 
     review_id = _assignment(store, clock, session_id, step_id)
-    closed = close_review(store, clock, random_source, session_id, review_id)
+    closed = close_review(
+        store,
+        clock,
+        random_source,
+        session_id,
+        review_id,
+        expected_session_revision=current_session_revision(store, session_id),
+    )
     assert closed["outcome"] == "CONFIRMED" and closed["reason"] is None
 
     # BOTH consumers moved: scoring state (NEW + CONFIRMED = LEARNING) and the
@@ -143,7 +166,14 @@ def test_strong_open_review_confirms_and_moves_both_consumers(
     assert schedule.schedule_epoch == 2 and schedule.interval_index == 1  # stepped forward
 
     # Idempotent re-close returns the same outcome, no second REVIEW_OUTCOME.
-    again = close_review(store, clock, random_source, session_id, review_id)
+    again = close_review(
+        store,
+        clock,
+        random_source,
+        session_id,
+        review_id,
+        expected_session_revision=current_session_revision(store, session_id),
+    )
     assert again["already"] is True and again["outcome"] == "CONFIRMED"
     assert len([e for e in store.read() if e.type == "review.outcome"]) == 1
 
@@ -152,13 +182,35 @@ def test_weak_open_review_regresses(store, full_registry, clock, random_source) 
     registry = _rubric_registry(full_registry)
     session_id, step_id = _open_review(store, registry, clock, random_source)
     recorded = record_attempt(
-        store, clock, random_source, session_id, step_id=step_id, raw_answer=ANSWER, observations=_WEAK
+        store,
+        clock,
+        random_source,
+        session_id,
+        expected_session_revision=current_session_revision(store, session_id),
+        step_id=step_id,
+        raw_answer=ANSWER,
+        observations=_WEAK,
     )
-    result = finalize_attempt(store, registry, clock, random_source, session_id, recorded["attempt_id"])
+    result = finalize_attempt(
+        store,
+        registry,
+        clock,
+        random_source,
+        session_id,
+        recorded["attempt_id"],
+        expected_session_revision=current_session_revision(store, session_id),
+    )
     assert result["disposition"] == "scored" and result["score_ppm"] < 500_000
 
     review_id = _assignment(store, clock, session_id, step_id)
-    closed = close_review(store, clock, random_source, session_id, review_id)
+    closed = close_review(
+        store,
+        clock,
+        random_source,
+        session_id,
+        review_id,
+        expected_session_revision=current_session_revision(store, session_id),
+    )
     assert closed["outcome"] == "REGRESSION"  # scored, contributing, but below the v1 threshold
 
 
@@ -167,5 +219,12 @@ def test_unanswered_open_review_is_insufficient_evidence(store, full_registry, c
     session_id, step_id = _open_review(store, registry, clock, random_source)
     # No attempt recorded for the step at all.
     review_id = _assignment(store, clock, session_id, step_id)
-    closed = close_review(store, clock, random_source, session_id, review_id)
+    closed = close_review(
+        store,
+        clock,
+        random_source,
+        session_id,
+        review_id,
+        expected_session_revision=current_session_revision(store, session_id),
+    )
     assert closed["outcome"] == "INSUFFICIENT_EVIDENCE" and closed["reason"] == "not_attempted"

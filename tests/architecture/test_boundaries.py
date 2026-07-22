@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import ast
 from pathlib import Path
+from typing import Any
 
 SRC = Path(__file__).resolve().parents[2] / "src" / "english_trainer"
 
@@ -46,9 +47,12 @@ LAYER_ALLOWLIST: dict[str, set[str]] = {
     "lessons": {"kernel", "control", "evidence", "scheduler", "scoring", "adapters", "lessons"},
     # evidence consumes published events, never other modules' code (0.4):
     # the event log is its boundary with lessons/control.
-    "evidence": {"kernel", "evidence"},
+    # State-transition facts are emitted atomically with evidence outcomes;
+    # scoring owns their deterministic construction, so evidence may call that
+    # narrow producer while all score reads still cross the event boundary.
+    "evidence": {"kernel", "evidence", "scoring"},
     # scoring folds published events under its pinned policy; same boundary.
-    "scoring": {"kernel", "scoring"},
+    "scoring": {"kernel", "scoring", "audit"},
     # scheduler consumes scoring's fold (Retrievability/Stability) by canon.
     "scheduler": {"kernel", "scoring", "scheduler"},
     # assessments owns placement diagnostics: it may address curriculum targets
@@ -68,6 +72,8 @@ LAYER_ALLOWLIST: dict[str, set[str]] = {
     # `adapters` -- a real circular import at process-start time. The gate
     # here only checks package-level names, so both directions are declared.
     "adapters": {"kernel", "storage", "cli", "adapters"},
+    # Audit is a pure query layer over the authoritative kernel event table.
+    "audit": {"kernel", "audit"},
     "cli": {
         "kernel",
         "storage",
@@ -80,6 +86,7 @@ LAYER_ALLOWLIST: dict[str, set[str]] = {
         "memory",
         "adapters",
         "assessments",
+        "audit",
         "cli",
     },
 }
@@ -182,11 +189,20 @@ def test_command_registry_covers_the_published_surface() -> None:
     from english_trainer.cli.registry import command_registry
 
     published = {command.name or command.callback.__name__ for command in app.registered_commands}  # type: ignore[union-attr]
+
+    def collect(prefix: str, typer_app: Any) -> None:
+        commands = typer_app.registered_commands
+        groups = typer_app.registered_groups
+        for command in commands:
+            assert command.callback is not None
+            published.add(f"{prefix}.{command.name or command.callback.__name__}")
+        for group in groups:
+            assert group.name is not None and group.typer_instance is not None
+            collect(f"{prefix}.{group.name}", group.typer_instance)
+
     for group in app.registered_groups:
         assert group.name is not None and group.typer_instance is not None
-        for command in group.typer_instance.registered_commands:
-            assert command.callback is not None
-            published.add(f"{group.name}.{command.name or command.callback.__name__}")
+        collect(group.name, group.typer_instance)
 
     registered = {descriptor.name for descriptor in command_registry()}
     assert published == registered, (

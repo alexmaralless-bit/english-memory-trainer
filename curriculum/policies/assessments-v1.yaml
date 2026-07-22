@@ -1,0 +1,10 @@
+# assessments@1 -- placement lifecycle and exposure policy.
+policy_id: "assessments@1"
+schema_version: 1
+status: "accepted"
+resume_window_hours: 48
+form_cooldown_days: 30
+reseen_exposure_weight: "0"
+fresh_exposure_weight: "1"
+core_skills: ["grammar", "vocabulary", "reading", "writing"]
+cefr_levels: ["A1", "A2", "B1", "B2", "C1", "C2"]

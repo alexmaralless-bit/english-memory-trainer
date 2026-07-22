@@ -1,8 +1,7 @@
 """Deterministic tutor-swap integration scenario (roadmap 2.7).
 
-The passing test proves every continuation property exposed by the current
-public APIs. Strict xfails at the bottom record the three contract surfaces
-that 2.5 does not yet expose; they are findings, not workarounds.
+The passing test proves every continuation property exposed by the public
+APIs, including complete briefings and optimistic session revision fencing.
 """
 
 from __future__ import annotations
@@ -23,6 +22,7 @@ from english_trainer.evidence.reviews import close_review, pending_assignments
 from english_trainer.kernel.clock import FixedClock, SeededRandomSource
 from english_trainer.kernel.encoding import canonical_json
 from english_trainer.kernel.policy import PolicyRegistry
+from english_trainer.kernel.session_fence import current_session_revision
 from english_trainer.kernel.store import EventStore, connect, migrate
 from english_trainer.lessons.delivery import next_step, peek_step
 from english_trainer.lessons.rendering import record_rendered_exercise
@@ -153,6 +153,7 @@ def _render_and_answer(
         clock,
         random_source,
         session_id,
+        expected_session_revision=current_session_revision(store, session_id),
         step_id=step_id,
         exercise=dict(EXERCISE),
     )
@@ -161,6 +162,7 @@ def _render_and_answer(
         clock,
         random_source,
         session_id,
+        expected_session_revision=current_session_revision(store, session_id),
         step_id=step_id,
         raw_answer=answer,
         exercise_instance_id=str(rendered["exercise_instance_id"]),
@@ -185,7 +187,15 @@ def _seed_due_review(
         agent_skills_dir=REPO / "agent-skills",
     )
     session_id = str(manifest["session_id"])
-    claimed = next_step(store, registry, clock, random_source, session_id, expected_plan_version=1)
+    claimed = next_step(
+        store,
+        registry,
+        clock,
+        random_source,
+        session_id,
+        expected_session_revision=current_session_revision(store, session_id),
+        expected_plan_version=1,
+    )
     attempt = _render_and_answer(
         store,
         registry,
@@ -197,7 +207,13 @@ def _seed_due_review(
         provider="seed-tutor",
     )
     assert attempt["assessment"]["correct"] is True
-    finish_session(store, clock, random_source, session_id)
+    finish_session(
+        store,
+        clock,
+        random_source,
+        session_id,
+        expected_session_revision=current_session_revision(store, session_id),
+    )
 
 
 def _claim_review_step(
@@ -216,6 +232,7 @@ def _claim_review_step(
             clock,
             random_source,
             session_id,
+            expected_session_revision=current_session_revision(store, session_id),
             expected_plan_version=version,
         )
         version = int(claimed["plan_version"])
@@ -306,7 +323,13 @@ def _run_scenario(root: Path, *, note: str | None) -> dict[str, Any]:
 
         finish_refusal: dict[str, str]
         with pytest.raises(SessionPrecondition) as blocked:
-            finish_session(store, clock, random_source, session_id)
+            finish_session(
+                store,
+                clock,
+                random_source,
+                session_id,
+                expected_session_revision=current_session_revision(store, session_id),
+            )
         finish_refusal = {"code": blocked.value.code, "message": str(blocked.value)}
         state_after_refusal = get_session(store, session_id)
         assert state_after_refusal is not None and state_after_refusal[0]["status"] == "IN_PROGRESS"
@@ -321,6 +344,7 @@ def _run_scenario(root: Path, *, note: str | None) -> dict[str, Any]:
             clock,
             random_source,
             session_id,
+            expected_session_revision=current_session_revision(store, session_id),
             expected_plan_version=int(shared_view["plan_version"]),
         )
         with pytest.raises(PlanVersionConflict) as stale:
@@ -330,6 +354,7 @@ def _run_scenario(root: Path, *, note: str | None) -> dict[str, Any]:
                 clock,
                 random_source,
                 session_id,
+                expected_session_revision=current_session_revision(store, session_id),
                 expected_plan_version=int(shared_view["plan_version"]),
             )
         stale_result = {
@@ -341,9 +366,22 @@ def _run_scenario(root: Path, *, note: str | None) -> dict[str, Any]:
 
         score_before_close = _score_state(store, registry)
         assert score_before_close["knowledge_state"] != "MASTERED"
-        closed = close_review(store, clock, random_source, session_id, review_id)
+        closed = close_review(
+            store,
+            clock,
+            random_source,
+            session_id,
+            review_id,
+            expected_session_revision=current_session_revision(store, session_id),
+        )
         assert closed["outcome"] == "REGRESSION"
-        finished = finish_session(store, clock, random_source, session_id)
+        finished = finish_session(
+            store,
+            clock,
+            random_source,
+            session_id,
+            expected_session_revision=current_session_revision(store, session_id),
+        )
         final_state = get_session(store, session_id)
         assert final_state is not None and final_state[0]["status"] == "FINISHED"
 
@@ -440,13 +478,6 @@ def test_resume_returns_contract_complete_briefing(observed_scenario: dict[str, 
     assert set(briefing) >= REQUIRED_BRIEFING_FIELDS
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "OPEN-11 finding: public session mutations expose plan_version CAS but no "
-        "expected_session_revision token"
-    ),
-)
 def test_public_mutations_expose_optimistic_session_revision() -> None:
     for mutation in (record_attempt, finish_session):
         assert "expected_session_revision" in inspect.signature(mutation).parameters

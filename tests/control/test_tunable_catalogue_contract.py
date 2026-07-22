@@ -4,19 +4,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
 import yaml
 
 REPO = Path(__file__).resolve().parents[2]
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "2.8d finding: control 4.9 defines allowed_range/unit metadata only for the review_max example; "
-        "ranges and metadata for every other control and neighboring tunable require owner decisions"
-    ),
-)
 def test_versioned_tunable_catalogue_exists_with_bidirectional_control_coverage() -> None:
     catalogue_path = REPO / "curriculum" / "policies" / "tunables-v1.yaml"
     catalogue = yaml.safe_load(catalogue_path.read_text("utf-8"))

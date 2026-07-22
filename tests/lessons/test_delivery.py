@@ -7,6 +7,7 @@ import pytest
 
 from english_trainer.control.errors import PlanVersionConflict
 from english_trainer.kernel.policy import PolicyRegistry
+from english_trainer.kernel.session_fence import current_session_revision
 from english_trainer.kernel.store import EventStore
 from english_trainer.lessons.delivery import next_step, peek_step, production_eligible, replan_session
 from english_trainer.lessons.sessions import (
@@ -47,7 +48,15 @@ def test_peek_is_read_only(store, registry, clock, random_source) -> None:
 
 def test_next_claims_atomically_and_flips_the_session(store, registry, clock, random_source) -> None:
     session_id = _start(store, registry, clock, random_source)
-    result = next_step(store, registry, clock, random_source, session_id, expected_plan_version=1)
+    result = next_step(
+        store,
+        registry,
+        clock,
+        random_source,
+        session_id,
+        expected_session_revision=current_session_revision(store, session_id),
+        expected_plan_version=1,
+    )
     assert result["plan_version"] == 2
     step = result["step"]
     assert step["target_ref"] == "grammar.be.identity" and step["presented_at"] is not None
@@ -72,9 +81,25 @@ def test_next_claims_atomically_and_flips_the_session(store, registry, clock, ra
 
 def test_stale_version_is_a_conflict_with_the_current_version(store, registry, clock, random_source) -> None:
     session_id = _start(store, registry, clock, random_source)
-    next_step(store, registry, clock, random_source, session_id, expected_plan_version=1)
+    next_step(
+        store,
+        registry,
+        clock,
+        random_source,
+        session_id,
+        expected_session_revision=current_session_revision(store, session_id),
+        expected_plan_version=1,
+    )
     with pytest.raises(PlanVersionConflict) as caught:
-        next_step(store, registry, clock, random_source, session_id, expected_plan_version=1)
+        next_step(
+            store,
+            registry,
+            clock,
+            random_source,
+            session_id,
+            expected_session_revision=current_session_revision(store, session_id),
+            expected_plan_version=1,
+        )
     assert caught.value.current_plan_version == 2
     _, plan, _ = get_plan(store, session_id)
     assert plan["plan_version"] == 2  # the losing claim wrote nothing
@@ -83,18 +108,50 @@ def test_stale_version_is_a_conflict_with_the_current_version(store, registry, c
 def test_exhausted_plan_points_to_replan(store, registry, clock, random_source) -> None:
     session_id = _start(store, registry, clock, random_source)
     for version in range(1, 6):
-        next_step(store, registry, clock, random_source, session_id, expected_plan_version=version)
+        next_step(
+            store,
+            registry,
+            clock,
+            random_source,
+            session_id,
+            expected_session_revision=current_session_revision(store, session_id),
+            expected_plan_version=version,
+        )
     with pytest.raises(SessionPrecondition, match="exhausted"):
-        next_step(store, registry, clock, random_source, session_id, expected_plan_version=6)
+        next_step(
+            store,
+            registry,
+            clock,
+            random_source,
+            session_id,
+            expected_session_revision=current_session_revision(store, session_id),
+            expected_plan_version=6,
+        )
 
 
 def test_replan_recomposes_only_the_remainder(store, registry, clock, random_source) -> None:
     session_id = _start(store, registry, clock, random_source)
     _, before, _ = get_plan(store, session_id)
     surviving = {s["candidate_id"]: s["step_id"] for s in before["steps"][1:]}
-    first = next_step(store, registry, clock, random_source, session_id, expected_plan_version=1)
+    first = next_step(
+        store,
+        registry,
+        clock,
+        random_source,
+        session_id,
+        expected_session_revision=current_session_revision(store, session_id),
+        expected_plan_version=1,
+    )
 
-    result = replan_session(store, registry, clock, random_source, session_id, expected_plan_version=2)
+    result = replan_session(
+        store,
+        registry,
+        clock,
+        random_source,
+        session_id,
+        expected_session_revision=current_session_revision(store, session_id),
+        expected_plan_version=2,
+    )
     assert result["composition_revision"] == 2 and result["plan_version"] == 3
 
     _, plan, _ = get_plan(store, session_id)
@@ -112,8 +169,22 @@ def test_replan_recomposes_only_the_remainder(store, registry, clock, random_sou
 
 def test_first_exposure_spans_sessions(store, registry, clock, random_source) -> None:
     first = _start(store, registry, clock, random_source)
-    next_step(store, registry, clock, random_source, first, expected_plan_version=1)
-    abandon_session(store, clock, random_source, first)
+    next_step(
+        store,
+        registry,
+        clock,
+        random_source,
+        first,
+        expected_session_revision=current_session_revision(store, first),
+        expected_plan_version=1,
+    )
+    abandon_session(
+        store,
+        clock,
+        random_source,
+        first,
+        expected_session_revision=current_session_revision(store, first),
+    )
 
     second = _start(store, registry, clock, random_source)
     view = peek_step(store, second)

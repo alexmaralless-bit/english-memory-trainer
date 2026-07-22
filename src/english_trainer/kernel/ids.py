@@ -13,6 +13,7 @@ system clock or ``random``), which is what keeps ID streams reproducible under a
 
 from __future__ import annotations
 
+import hashlib
 from typing import NewType
 
 from english_trainer.kernel.clock import Clock, RandomSource
@@ -41,6 +42,20 @@ def new_ulid(clock: Clock, random: RandomSource) -> str:
         raise ValueError("timestamp out of 48-bit ULID range")
     rand = int.from_bytes(random.token_bytes(10), "big")
     return _encode(millis, _TIME_LEN) + _encode(rand, _RAND_LEN)
+
+
+def derived_ulid(source_ulid: str, namespace: str) -> str:
+    """Derive a stable ULID-like id while preserving the source timestamp.
+
+    Used for one-to-one derived facts such as ``scoring.state_transition``:
+    retries and historical backfill mint the same identity without consuming
+    ambient randomness.
+    """
+    if not is_ulid(source_ulid):
+        raise ValueError(f"source id {source_ulid!r} is not ULID-like")
+    digest = hashlib.sha256(f"{namespace}\0{source_ulid}".encode()).digest()
+    entropy = int.from_bytes(digest[:10], "big")
+    return source_ulid[:_TIME_LEN] + _encode(entropy, _RAND_LEN)
 
 
 def is_ulid(value: str) -> bool:

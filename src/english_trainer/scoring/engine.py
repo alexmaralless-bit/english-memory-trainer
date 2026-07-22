@@ -156,14 +156,22 @@ def fold_scores(store: EventStore, policy: dict[str, Any]) -> dict[str, TargetSt
             if event.type == EVIDENCE_ADDED_EVENT:
                 payload = event.payload
                 primary = payload.get("primary_target")
-                if not primary or not primary.get("target_ref"):
+                allocations = [
+                    dict(item)
+                    for item in payload.get("credit_allocations") or []
+                    if isinstance(item, dict) and item.get("used") and item.get("target_ref")
+                ]
+                if not allocations and primary and primary.get("target_ref"):
+                    allocations = [
+                        {
+                            "target_ref": primary["target_ref"],
+                            "dimension": primary.get("dimension"),
+                            "contribution": "1.0",
+                            "used": True,
+                        }
+                    ]
+                if not allocations:
                     continue  # target-less evidence (free conversation) scores nothing yet
-                ref = str(primary["target_ref"])
-                dimension = str(primary.get("dimension") or "recognition")
-                state = target_state(ref)
-                state.evidence_count += 1
-                if state.stability_days is None:
-                    state.stability_days = initial_stability
 
                 origin = str(payload.get("origin") or "session")
                 basis = str(payload.get("assessment_basis") or "objective_check")
@@ -171,9 +179,7 @@ def fold_scores(store: EventStore, policy: dict[str, Any]) -> dict[str, TargetSt
                     # Objective checks are binary: an incorrect answer gives no
                     # delta (monotonicity, canon 2.1 -- decreases arrive only via
                     # a confirmed REGRESSION outcome), a correct one full quality.
-                    if not bool(payload.get("correct")):
-                        continue
-                    quality = _ONE
+                    quality = _ONE if bool(payload.get("correct")) else _ZERO
                 else:
                     # Graduated rubric quality (P.5 PD-2 B): the engine-computed
                     # score_ppm scales the positive delta. Collapsing it back to a
@@ -182,33 +188,48 @@ def fold_scores(store: EventStore, policy: dict[str, Any]) -> dict[str, TargetSt
                     quality = context.divide(
                         context.create_decimal(int(payload.get("score_ppm") or 0)), Decimal(1_000_000)
                     )
-                    if quality <= 0:
-                        continue
 
-                weight = weights.get(dimension, weights["recognition"])
                 hints = int(payload.get("hints") or 0)
                 independence = _clamp(_ONE - hint_penalty * Decimal(hints), hint_floor, _ONE)
-                delta = context.multiply(
-                    context.multiply(context.multiply(base_delta, weight), independence), quality
-                )
-
                 session_id = str(payload.get("session_id") or "")
-                granted = state.session_gain.get(session_id, _ZERO)
-                room = session_cap - granted
-                if room <= 0:
-                    state.audit.append(f"session-cap: {event.id}")
-                    continue
-                delta = min(delta, room)
-                if basis != "objective_check":
-                    rubric_room = rubric_cap - state.rubric_gain
-                    if rubric_room <= 0:
-                        state.audit.append(f"rubric-cap: {event.id}")
+                for allocation in allocations:
+                    ref = str(allocation["target_ref"])
+                    dimension = str(allocation.get("dimension") or "recognition")
+                    contribution = dec(allocation.get("contribution") or "0")
+                    if contribution <= 0:
                         continue
-                    delta = min(delta, rubric_room)
-                    state.rubric_gain += delta
-                state.session_gain[session_id] = granted + delta
-                current = state.mastery.get(dimension, _ZERO)
-                state.mastery[dimension] = _clamp(current + delta, _ZERO, _HUNDRED)
+                    state = target_state(ref)
+                    state.evidence_count += 1
+                    if state.stability_days is None:
+                        state.stability_days = initial_stability
+                    if quality <= 0:
+                        continue
+                    weight = weights.get(dimension, weights["recognition"])
+                    delta = context.multiply(
+                        context.multiply(context.multiply(base_delta, weight), independence),
+                        quality,
+                    )
+                    # Preserve the legacy canonical Decimal representation for
+                    # the primary 1.0 allocation; multiplying by decimal 1.0
+                    # changes only the exponent (4.800 -> 4.8000), not value.
+                    if contribution != _ONE:
+                        delta = context.multiply(delta, contribution)
+                    granted = state.session_gain.get(session_id, _ZERO)
+                    room = session_cap - granted
+                    if room <= 0:
+                        state.audit.append(f"session-cap: {event.id}")
+                        continue
+                    delta = min(delta, room)
+                    if basis != "objective_check":
+                        rubric_room = rubric_cap - state.rubric_gain
+                        if rubric_room <= 0:
+                            state.audit.append(f"rubric-cap: {event.id}")
+                            continue
+                        delta = min(delta, rubric_room)
+                        state.rubric_gain += delta
+                    state.session_gain[session_id] = granted + delta
+                    current = state.mastery.get(dimension, _ZERO)
+                    state.mastery[dimension] = _clamp(current + delta, _ZERO, _HUNDRED)
                 _ = origin  # placement evidence gains mastery normally; only the state is capped
 
             elif event.type == REVIEW_OUTCOME_EVENT:

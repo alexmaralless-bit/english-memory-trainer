@@ -25,6 +25,7 @@ from english_trainer.kernel.encoding import payload_hash
 from english_trainer.kernel.envelopes import make_event
 from english_trainer.kernel.ids import new_ulid
 from english_trainer.kernel.policy import PolicyRegistry
+from english_trainer.kernel.session_fence import bump_session, load_session_for_update
 from english_trainer.kernel.store import EventStore
 from english_trainer.kernel.uow import UnitOfWork
 
@@ -113,6 +114,7 @@ def record_observed(
     random_source: RandomSource,
     session_id: str,
     *,
+    expected_session_revision: int,
     kind: str,
     attempt_id: str,
     observation: dict[str, Any],
@@ -121,6 +123,7 @@ def record_observed(
     actor: str = "agent",
 ) -> dict[str, Any]:
     """Record one concrete error observation against an assessed attempt."""
+    session_state, session_revision = load_session_for_update(store, session_id, expected_session_revision)
     if kind != "error":
         raise EvidencePrecondition(
             "observed kind must be 'error' in this policy slice; vocabulary/chunk capture "
@@ -219,6 +222,7 @@ def record_observed(
         pinned_versions=pinned,
     )
     with UnitOfWork(store, clock) as uow:
+        new_session_revision = bump_session(uow, session_id, session_state, session_revision, clock.now())
         if note is not None and note.strip():
             entry = {
                 "author_provider": provider or manifest_provider,
@@ -238,4 +242,9 @@ def record_observed(
                     expected_revision=revision,
                 )
         uow.append([event])
-    return {"observed_error_id": observed_error_id, "event_id": event.id, "already": False}
+    return {
+        "observed_error_id": observed_error_id,
+        "event_id": event.id,
+        "already": False,
+        "session_revision": new_session_revision,
+    }
