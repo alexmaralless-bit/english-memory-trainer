@@ -975,3 +975,14 @@ links:
   - {lexical_item: chunk.the-author-qualifies-the-claim-by, topics: [toefl-reading.implicit-qualification, toefl-writing.source-integration]}
   - {lexical_item: chunk.the-counterargument-overlooks, topics: [toefl-writing.counterargument-nuance, written-production.complex-argument-architecture]}
   - {lexical_item: chunk.the-evidence-is-insufficient-to, topics: [reading.methodology-limitations, written-production.evidence-qualified-argument, written-production.complex-argument-architecture]}
+
+  # ===== current slang (P.4c / OPEN-31) =====
+  # Only the HIGH-band slang units are proposed here (coverage rule: CORE/HIGH
+  # get a link; the volatile USEFUL-band slang is deliberately left unlinked).
+  # Home is the register/tone-recognition end of everyday-online-informal.
+  - {lexical_item: slang.flex, topics: [everyday-online-informal.tone-recognition, everyday-online-informal.community-reply]}
+  - {lexical_item: slang.ghost, topics: [everyday-online-informal.tone-recognition, everyday-online-informal.community-reply]}
+  - {lexical_item: slang.lowkey, topics: [everyday-online-informal.tone-recognition, everyday-online-informal.community-reply]}
+  - {lexical_item: slang.vibe, topics: [everyday-online-informal.tone-recognition, everyday-online-informal.community-reply]}
+  - {lexical_item: slang.fomo, topics: [everyday-online-informal.tone-recognition, everyday-online-informal.community-reply]}
+  - {lexical_item: slang.irl, topics: [everyday-online-informal.tone-recognition, everyday-online-informal.community-reply]}
