@@ -9,12 +9,14 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+import yaml
 
 from english_trainer.cli.app import run
 from english_trainer.cli.envelope import SCHEMA_VERSION, ExitCode
 from english_trainer.kernel.clock import FixedClock, SeededRandomSource
 from english_trainer.kernel.envelopes import make_event
 from english_trainer.kernel.ids import new_ulid
+from english_trainer.kernel.policy import PolicyRegistry
 from english_trainer.kernel.store import EventStore, connect, migrate
 from english_trainer.kernel.uow import UnitOfWork
 
@@ -536,6 +538,53 @@ def test_signal_command_records_and_refuses(tmp_path: Path, capsys) -> None:
     assert code == ExitCode.PRECONDITION_FAILED and env["error"]["error_code"] == "PROBE_PRECONDITION"
 
 
+def test_availability_set_and_show_through_cli(tmp_path: Path, capsys) -> None:
+    root = str(tmp_path)
+    run(["init", "--format", "json", "--root", root, "--idempotency-key", "init"])
+    capsys.readouterr()
+    conn = connect(tmp_path / "trainer.db")
+    clock = FixedClock(datetime(2026, 7, 22, 12, tzinfo=UTC))
+    registry = PolicyRegistry(conn, clock)
+    loaded = yaml.safe_load(
+        (Path(__file__).resolve().parents[2] / "curriculum" / "policies" / "control-v1.yaml").read_text(
+            "utf-8"
+        )
+    )
+    assert isinstance(loaded, dict)
+    registry.register("control", "control@1", loaded)
+    registry.activate("control", "control@1")
+    conn.close()
+
+    code = run(
+        [
+            "availability",
+            "set",
+            "--sessions-per-week-milli",
+            "2000",
+            "--typical-minutes",
+            "30",
+            "--root",
+            root,
+            "--format",
+            "json",
+            "--idempotency-key",
+            "availability-1",
+        ]
+    )
+    set_result = _json_stdout(capsys)
+    assert code == ExitCode.OK
+    assert set_result["data"]["updated"] is True
+
+    code = run(["availability", "show", "--root", root, "--format", "json"])
+    shown = _json_stdout(capsys)
+    assert code == ExitCode.OK
+    assert shown["data"]["declared"] == {
+        "sessions_per_week_milli": 2000,
+        "typical_minutes": 30,
+    }
+    assert shown["data"]["observed"]["sessions_per_week_milli"] == "no-data"
+
+
 def test_registry_matches_published_surface() -> None:
     from english_trainer.cli.registry import command_registry
 
@@ -563,6 +612,8 @@ def test_registry_matches_published_surface() -> None:
         "exercise.retire",
         "exercise.bank",
         "signal",
+        "availability.show",
+        "availability.set",
         "scoring.replay",
         "status",
         "review.due",
@@ -608,6 +659,9 @@ def test_registry_matches_published_surface() -> None:
     assert not registry["adapters.compare"].mutating
     assert registry["session.resume"].mutating and registry["session.resume"].requires_idempotency_key
     assert registry["signal"].mutating and registry["signal"].requires_idempotency_key
+    assert not registry["availability.show"].mutating
+    assert registry["availability.set"].mutating
+    assert registry["availability.set"].requires_idempotency_key
 
 
 def test_root_option_drives_default_paths(tmp_path: Path, capsys) -> None:

@@ -211,6 +211,7 @@ def compose_plan(
     signals: list[dict[str, Any]] | None = None,
     probe: dict[str, Any] | None = None,
     starvation_candidates: list[Candidate] | None = None,
+    availability_long_break: bool = False,
     new_id: NewId,
 ) -> dict[str, Any]:
     """Compose the plan slice of the ``session_plan`` aggregate state.
@@ -390,6 +391,33 @@ def compose_plan(
                 break
             admit(candidate)  # into the review bucket, above review_cap by design
             reserved_admitted += 1
+
+    # Step 6/Availability: after residual floors and the starvation reserve,
+    # a long break may spend a small, bounded slice on critical review. It
+    # never crosses review_max, never overshoots its own capacity, and runs
+    # before ordinary review and growth top-up (control 4.7a).
+    if availability_long_break:
+        residual_review_capacity = max(0, review_cap - planned["review"])
+        unplanned_remaining = max(0, capacity - planned_total())
+        boost_capacity = min(
+            total_seconds * int(policy["availability"]["reentry_critical_boost_bp"]) // 10000,
+            residual_review_capacity,
+            unplanned_remaining,
+        )
+        boosted = False
+        if boost_capacity > 0:
+            boost_used = 0
+            for candidate in [c for c in list(pool["review"]) if c.get("urgency_class") == "critical"]:
+                cost = int(candidate["expected_seconds"])
+                if boost_used + cost > boost_capacity:
+                    continue
+                if cost + planned_total() > capacity or not quota_allows(candidate):
+                    continue
+                admit(candidate)
+                boost_used += cost
+                boosted = True
+        if not boosted:
+            waivers.append("NO_CRITICAL_AVAILABILITY_CANDIDATE")
 
     # Step 6a: first-fit the pending probe into the remainder (4.7). The probe
     # is a choice-bucket step (source_rank 0). On admission its signal id is

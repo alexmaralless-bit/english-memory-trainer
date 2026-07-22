@@ -143,6 +143,34 @@ def validate_control_policy(payload: dict[str, Any]) -> list[str]:
                         f"cheapest admissible step costs {min(step_costs)}s"
                     )
                     break
+
+    availability = payload.get("availability")
+    if not isinstance(availability, dict):
+        errors.append("control.availability: missing or not a mapping")
+    else:
+        availability_fields = (
+            "divergence_tolerance_ppm",
+            "divergence_window_weeks",
+            "min_observed_sessions",
+            "reentry_critical_boost_bp",
+        )
+        for field in availability_fields:
+            value = availability.get(field)
+            if type(value) is not int or value < 0:
+                errors.append(f"control.availability.{field}: must be a non-negative integer")
+        if (
+            type(availability.get("divergence_window_weeks")) is int
+            and availability["divergence_window_weeks"] <= 0
+        ):
+            errors.append("control.availability.divergence_window_weeks: must be positive")
+        if (
+            type(availability.get("min_observed_sessions")) is int
+            and availability["min_observed_sessions"] <= 0
+        ):
+            errors.append("control.availability.min_observed_sessions: must be positive")
+        boost = availability.get("reentry_critical_boost_bp")
+        if type(boost) is int and boost > 10000:
+            errors.append("control.availability.reentry_critical_boost_bp: must be <= 10000")
     return errors
 
 

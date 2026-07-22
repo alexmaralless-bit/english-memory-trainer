@@ -99,6 +99,12 @@ _COMMANDS: tuple[CommandDescriptor, ...] = (
     # composition, never a plan edit. Mutating -- it records a signal event (and
     # for too_easy a PROBE_REQUESTED) -- so it requires the key in json mode.
     CommandDescriptor(name="signal", owner_module="control", mutating=True, requires_idempotency_key=True),
+    CommandDescriptor(
+        name="availability.show", owner_module="control", mutating=False, requires_idempotency_key=False
+    ),
+    CommandDescriptor(
+        name="availability.set", owner_module="control", mutating=True, requires_idempotency_key=True
+    ),
     # Scoring (0.4 part 2): scores are a pure fold over the event log -- both
     # commands are read-only by construction.
     CommandDescriptor(

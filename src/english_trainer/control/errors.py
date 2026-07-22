@@ -56,6 +56,13 @@ class SignalInvalid(KernelError):
     code = "SIGNAL_INVALID"
 
 
+class AvailabilityInvalid(KernelError):
+    """The declared availability profile is not the integer-only schema from
+    control 4.7a, or one of its timestamps is not an aware ISO instant."""
+
+    code = "AVAILABILITY_INVALID"
+
+
 class ProbePrecondition(KernelError):
     """A ``too_easy`` signal cannot mint a probe because its precondition does
     not hold (control 4.7): the target has never been delivered, so there is no

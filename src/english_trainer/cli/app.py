@@ -59,7 +59,9 @@ from english_trainer.cli.envelope import (
     success_envelope,
 )
 from english_trainer.cli.registry import command_registry
+from english_trainer.control.availability import availability_get, availability_set
 from english_trainer.control.errors import (
+    AvailabilityInvalid,
     BudgetTooSmall,
     ControlPolicyInvalid,
     NoCandidates,
@@ -154,6 +156,8 @@ placement_app = typer.Typer(
     add_completion=False, help="Placement diagnostics: start, answer, resume, submit."
 )
 app.add_typer(placement_app, name="placement")
+availability_app = typer.Typer(add_completion=False, help="Declared and observed learning rhythm.")
+app.add_typer(availability_app, name="availability")
 
 _FormatOpt = Annotated[str, typer.Option("--format", help="Output format: text (human) or json (contract).")]
 _RootOpt = Annotated[Path, typer.Option("--root", help="Trainer home directory (storage layout root).")]
@@ -2225,6 +2229,161 @@ def signal_command(
             next_action="curriculum activate",
         )
         _emit(failure_envelope("signal", corr, error), [f"error: {exc}"], fmt, ExitCode.PRECONDITION_FAILED)
+
+
+@availability_app.command("show")
+def availability_show(
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Show declared rhythm, observed rhythm, divergence and any proposal."""
+    corr = _correlation(correlation_id)
+    layout = resolve_layout(root)
+    if not layout.db.exists():
+        error = ErrorPayload(
+            error_code="DATABASE_NOT_FOUND",
+            message=f"{layout.db} does not exist.",
+            allowed_actions=["init"],
+            next_action="init",
+        )
+        _emit(
+            failure_envelope("availability.show", corr, error),
+            ["error: not initialized"],
+            fmt,
+            ExitCode.NOT_FOUND,
+        )
+    try:
+        with open_storage(layout) as storage:
+            registry = PolicyRegistry(storage._conn, SystemClock())
+            _, policy = registry.resolve_active(CONTROL_KIND)
+            result = availability_get(storage.store, require_valid(policy), SystemClock())
+        human = [
+            f"availability revision {result['revision']}",
+            f"  declared: {result['declared']}",
+            f"  observed: {result['observed']}",
+            f"  divergence: {result['divergence_ppm']}",
+        ]
+        _emit(success_envelope("availability.show", corr, result), human, fmt, ExitCode.OK)
+    except KernelError as exc:
+        error = ErrorPayload(
+            error_code=exc.code,
+            message=str(exc),
+            allowed_actions=["curriculum activate", "doctor"],
+            next_action="curriculum activate",
+        )
+        _emit(
+            failure_envelope("availability.show", corr, error),
+            [f"error: {exc}"],
+            fmt,
+            ExitCode.PRECONDITION_FAILED,
+        )
+
+
+@availability_app.command("set")
+def availability_set_command(
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    sessions_per_week_milli: Annotated[
+        int | None, typer.Option("--sessions-per-week-milli", help="1000 means one session per week.")
+    ] = None,
+    typical_minutes: Annotated[
+        int | None, typer.Option("--typical-minutes", help="Declared typical session length.")
+    ] = None,
+    next_available_at: Annotated[
+        str | None, typer.Option("--next-available-at", help="Aware ISO-8601 instant.")
+    ] = None,
+    blackout_until: Annotated[
+        str | None, typer.Option("--blackout-until", help="Aware ISO-8601 instant.")
+    ] = None,
+    idempotency_key: Annotated[
+        str | None, typer.Option("--idempotency-key", help="Required with --format json (cli 4.3).")
+    ] = None,
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Replace the declared availability profile; no implicit reconciliation."""
+    corr = _correlation(correlation_id)
+    _require_key("availability.set", corr, fmt, idempotency_key)
+    layout = resolve_layout(root)
+    if not layout.db.exists():
+        error = ErrorPayload(
+            error_code="DATABASE_NOT_FOUND",
+            message=f"{layout.db} does not exist.",
+            allowed_actions=["init"],
+            next_action="init",
+        )
+        _emit(
+            failure_envelope("availability.set", corr, error),
+            ["error: not initialized"],
+            fmt,
+            ExitCode.NOT_FOUND,
+        )
+    declared = {
+        key: value
+        for key, value in {
+            "sessions_per_week_milli": sessions_per_week_milli,
+            "typical_minutes": typical_minutes,
+            "next_available_at": next_available_at,
+            "blackout_until": blackout_until,
+        }.items()
+        if value is not None
+    }
+    try:
+        with open_storage(layout) as storage:
+            registry = PolicyRegistry(storage._conn, SystemClock())
+            version, policy = registry.resolve_active(CONTROL_KIND)
+            require_valid(policy)
+            result = availability_set(
+                storage.store,
+                SystemClock(),
+                SystemRandom(),
+                declared,
+                idempotency_key=idempotency_key,
+                control_policy_version=version,
+            )
+        human = [
+            f"availability revision {result['revision']} ({'updated' if result['updated'] else 'unchanged'})"
+        ]
+        _emit(success_envelope("availability.set", corr, result), human, fmt, ExitCode.OK)
+    except IdempotencyConflict as exc:
+        error = ErrorPayload(
+            error_code="IDEMPOTENCY_CONFLICT",
+            message=str(exc),
+            allowed_actions=["availability set --idempotency-key <fresh-key>"],
+            next_action="availability set --idempotency-key <fresh-key>",
+        )
+        _emit(
+            failure_envelope("availability.set", corr, error),
+            [f"error: {exc}"],
+            fmt,
+            ExitCode.CONFLICT,
+        )
+    except AvailabilityInvalid as exc:
+        error = ErrorPayload(
+            error_code=exc.code,
+            message=str(exc),
+            allowed_actions=["availability set --help"],
+            next_action="availability set --help",
+        )
+        _emit(
+            failure_envelope("availability.set", corr, error),
+            [f"error: {exc}"],
+            fmt,
+            ExitCode.INVALID_INPUT,
+        )
+    except KernelError as exc:
+        error = ErrorPayload(
+            error_code=exc.code,
+            message=str(exc),
+            allowed_actions=["curriculum activate", "doctor"],
+            next_action="curriculum activate",
+        )
+        _emit(
+            failure_envelope("availability.set", corr, error),
+            [f"error: {exc}"],
+            fmt,
+            ExitCode.PRECONDITION_FAILED,
+        )
 
 
 @app.command("status")

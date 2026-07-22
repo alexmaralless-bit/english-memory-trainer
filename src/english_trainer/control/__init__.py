@@ -9,6 +9,15 @@ CLI commands to lessons and their behavior to control, and this split mirrors
 that assignment without an import cycle.
 """
 
+from english_trainer.control.availability import (
+    availability_get,
+    availability_set,
+    divergence_ppm,
+    is_long_break,
+    observed_availability,
+    resolve_total_seconds,
+    validate_declared,
+)
 from english_trainer.control.classify import CLASS_ORDER, classify_review_candidates
 from english_trainer.control.compose import compose_plan, step_targets
 from english_trainer.control.deferral import (
@@ -17,6 +26,7 @@ from english_trainer.control.deferral import (
     reduce_deferrals,
 )
 from english_trainer.control.errors import (
+    AvailabilityInvalid,
     BudgetTooSmall,
     ControlPolicyInvalid,
     NoCandidates,
@@ -53,6 +63,7 @@ __all__ = [
     "CLASS_ORDER",
     "CONTROL_KIND",
     "PRODUCTION_STEP_TYPES",
+    "AvailabilityInvalid",
     "BudgetTooSmall",
     "ControlPolicyInvalid",
     "DeferralState",
@@ -63,22 +74,29 @@ __all__ = [
     "SignalInvalid",
     "active_signals",
     "apply_signals",
+    "availability_get",
+    "availability_set",
     "build_probe_candidate",
     "build_signal",
     "classify_review_candidates",
     "compose_plan",
     "current_session_seq",
     "derive_probe",
+    "divergence_ppm",
     "is_excluded",
+    "is_long_break",
     "is_saturated",
     "mode_shares",
+    "observed_availability",
     "qualified_candidates",
     "record_signal",
     "recurring_error_keys",
     "reduce_deferrals",
     "reduce_saturation",
     "require_valid",
+    "resolve_total_seconds",
     "step_cost",
     "step_targets",
     "validate_control_policy",
+    "validate_declared",
 ]
