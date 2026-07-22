@@ -74,6 +74,11 @@ LAYER_ALLOWLIST: dict[str, set[str]] = {
     "adapters": {"kernel", "storage", "cli", "adapters"},
     # Audit is a pure query layer over the authoritative kernel event table.
     "audit": {"kernel", "audit"},
+    # learner owns the personal lexicon (layer 3): an event-sourced fold over
+    # the kernel event log. It never imports a business module -- the active
+    # curriculum program is passed in by the caller (the CLI edge) as a plain
+    # dict, so linked_item resolution needs no curriculum import.
+    "learner": {"kernel", "learner"},
     "cli": {
         "kernel",
         "storage",
