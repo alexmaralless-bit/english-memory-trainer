@@ -31,8 +31,17 @@ from typing import Any
 from english_trainer.adapters.errors import SkillUnavailable
 from english_trainer.adapters.events import SKILL_REQUIRED
 from english_trainer.adapters.skills import resolve as resolve_skill
+from english_trainer.control.availability import availability_get, resolve_total_seconds
 from english_trainer.control.compose import compose_plan
+from english_trainer.control.deferral import qualified_candidates, reduce_deferrals
 from english_trainer.control.policy import CONTROL_KIND, require_valid
+from english_trainer.control.saturation import recurring_error_keys, reduce_saturation
+from english_trainer.control.signals import (
+    EVENT_PROBE_REQUESTED,
+    EVENT_SIGNAL_CONSUMED,
+    active_signals,
+    build_probe_candidate,
+)
 from english_trainer.control.trace import save_decision_traces
 from english_trainer.kernel.clock import Clock, RandomSource
 from english_trainer.kernel.envelopes import DomainEvent, make_event
@@ -132,6 +141,10 @@ def review_candidates_for(
     program: dict[str, Any],
     control_policy: dict[str, Any],
     clock: Clock,
+    *,
+    saturation: dict[tuple[str, str], Any] | None = None,
+    recurring_errors: frozenset[tuple[str, str]] | None = None,
+    deferrals: dict[tuple[str, str], Any] | None = None,
 ) -> list[dict[str, Any]]:
     """Classified due/overdue review candidates for composition (control 4.4
     step 1: due backlog from the scheduler, classified per 4.5). Empty when
@@ -149,7 +162,15 @@ def review_candidates_for(
         program,
         clock.now(),
     )
-    return classify_review_candidates(backlog, program, control_policy)
+    return classify_review_candidates(
+        backlog,
+        program,
+        control_policy,
+        saturation=saturation,
+        recurring_errors=recurring_errors,
+        deferrals=deferrals,
+        now=clock.now(),
+    )
 
 
 def save_new_review_assignments(uow: Any, plan_state: dict[str, Any], session_id: str, now_iso: str) -> None:
@@ -229,6 +250,76 @@ def reusable_bank_items(store: EventStore, active_program: dict[str, Any]) -> li
     return reusable
 
 
+def live_composition_inputs(
+    store: EventStore,
+    registry: PolicyRegistry,
+    pinned: dict[str, str],
+    program: dict[str, Any],
+    policy: dict[str, Any],
+    clock: Clock,
+    *,
+    starting_new_session: bool,
+) -> dict[str, Any]:
+    """Fold every live control input from the authoritative event stream.
+
+    All helpers are pure/read-only. The caller later saves the resulting plan,
+    traces, assignments and any one-shot signal consumption in one lessons UoW.
+    """
+    events = list(store.read())
+    session_seq = sum(1 for event in events if event.type == EVENT_STARTED)
+    if starting_new_session:
+        session_seq += 1
+    signals = active_signals(store, session_seq, clock.now())
+    saturation = reduce_saturation(events, policy)
+    recurring = recurring_error_keys(events, policy)
+    deferrals = reduce_deferrals(events, policy)
+    review_candidates = review_candidates_for(
+        store,
+        registry,
+        pinned,
+        program,
+        policy,
+        clock,
+        saturation=saturation,
+        recurring_errors=recurring,
+        deferrals=deferrals,
+    )
+
+    requests: dict[str, tuple[int, dict[str, Any]]] = {}
+    for event in events:
+        if event.type != EVENT_PROBE_REQUESTED:
+            continue
+        signal_id = str(event.payload.get("signal_id") or "")
+        requests[signal_id] = (int(event.sequence or 0), dict(event.payload))
+    probe: dict[str, Any] | None = None
+    for signal in signals:
+        if signal.get("kind") != "too_easy":
+            continue
+        request = requests.get(str(signal["signal_id"]))
+        if request is None:
+            continue
+        payload = request[1]
+        probe = build_probe_candidate(
+            policy,
+            probe_id=str(payload["probe_id"]),
+            signal_id=str(payload["signal_id"]),
+            target_ref=str(payload["target_ref"]),
+            dimension=(str(payload["dimension"]) if payload.get("dimension") is not None else None),
+            requested_difficulty=str(payload["requested_difficulty"]),
+            avoid_context=(
+                str(payload["avoid_context"]) if payload.get("avoid_context") is not None else None
+            ),
+        )
+        break
+
+    return {
+        "signals": signals,
+        "review_candidates": review_candidates,
+        "starvation_candidates": qualified_candidates(review_candidates, deferrals),
+        "probe": probe,
+    }
+
+
 def plan_summary(plan_state: dict[str, Any]) -> list[dict[str, Any]]:
     """The compact step list carried by ``SESSION_COMPOSED`` (the directive
     itself is hashed at presentation time, not duplicated into every event)."""
@@ -241,6 +332,7 @@ def plan_summary(plan_state: dict[str, Any]) -> list[dict[str, Any]]:
             "expected_seconds": step["expected_seconds"],
             "order_index": step["order_index"],
             "target_ref": step.get("target_ref"),
+            "dimension": step.get("dimension"),
             "presented": step["presented_at"] is not None,
         }
         for step in plan_state["steps"]
@@ -314,9 +406,8 @@ def start_session(
     two idempotent commands, so the caller abandons explicitly first
     (foundation 3.4, C-1).
 
-    The budget precedence is ``--duration-minutes`` -> policy default
-    (control 4.7a); the declared/observed AvailabilityProfile slots in between
-    once the availability increment lands.
+    The budget precedence is ``--duration-minutes`` -> declared profile ->
+    observed rhythm -> policy default (control 4.7a).
 
     ``agent_skills_dir``/``required_skills`` wire the manifest's
     ``required_skills`` (adapters 4.2, lessons 4b [P0-Q1]); see
@@ -339,9 +430,13 @@ def start_session(
 
     program = registry.resolve_pinned("curriculum", pinned["curriculum"])
     policy = require_valid(registry.resolve_pinned(CONTROL_KIND, pinned[CONTROL_KIND]))
-    total_seconds = (
-        duration_minutes if duration_minutes is not None else int(policy["budget"]["default_total_minutes"])
-    ) * 60
+    availability = availability_get(store, policy, clock)
+    total_seconds, budget_source = resolve_total_seconds(
+        policy,
+        duration_minutes=duration_minutes,
+        declared=dict(availability["declared"]),
+        observed=dict(availability["observed"]),
+    )
 
     if "scheduler" in pinned:
         # The overdue sweep runs before composition so AT_RISK facts exist
@@ -376,6 +471,15 @@ def start_session(
         "plan": {"composition_revision": 1, "plan_version": 1},
     }
 
+    live = live_composition_inputs(
+        store,
+        registry,
+        pinned,
+        program,
+        policy,
+        clock,
+        starting_new_session=True,
+    )
     composed = compose_plan(
         program=program,
         policy=policy,
@@ -383,7 +487,11 @@ def start_session(
         mode=mode,
         total_seconds=total_seconds,
         presented_targets=presented_targets(store),
-        review_candidates=review_candidates_for(store, registry, pinned, program, policy, clock),
+        review_candidates=live["review_candidates"],
+        signals=live["signals"],
+        probe=live["probe"],
+        starvation_candidates=live["starvation_candidates"],
+        availability_long_break=bool(availability["long_break"]),
         bank_items=reusable_bank_items(store, program),
         pinned_versions=pinned,
         active_safety_version=pinned["curriculum"],
@@ -398,6 +506,11 @@ def start_session(
         # The safety overlay stays *active*, never pinned (OPEN-14): record
         # which version did the excluding, which at start equals the pin.
         "active_safety_version": pinned["curriculum"],
+        "availability": {
+            "budget_source": budget_source,
+            "long_break": availability["long_break"],
+            "trace": availability["trace"],
+        },
         **composed,
     }
 
@@ -449,6 +562,8 @@ def start_session(
                         "plan_version": 1,
                         "budget": {"total_seconds": total_seconds, **plan_state["budget"]},
                         "steps": plan_summary(plan_state),
+                        "eligible_review": plan_state["eligible_review"],
+                        "excluded_review": plan_state["excluded_review"],
                         "waivers": plan_state["waivers"],
                         "active_safety_version": plan_state["active_safety_version"],
                     },
@@ -466,6 +581,25 @@ def start_session(
                         pinned_versions=pinned,
                     )
                     for item in resolved_required_skills
+                ),
+                *(
+                    make_event(
+                        id=new_ulid(clock, random_source),
+                        type=EVENT_SIGNAL_CONSUMED,
+                        occurred_at=clock.now(),
+                        actor=actor,
+                        provider=provider,
+                        correlation_id=session_id,
+                        payload={
+                            "signal_id": signal_id,
+                            "session_id": session_id,
+                            "composition_revision": 1,
+                            "reason": "probe_admitted",
+                            "consumed_at": clock.now().isoformat(),
+                        },
+                        pinned_versions=pinned,
+                    )
+                    for signal_id in plan_state["consumed"]
                 ),
                 # `--provider` is mandatory at start too, and `attach_agent`
                 # runs in the same UoW as the operation (lessons 5 [R-3]): start

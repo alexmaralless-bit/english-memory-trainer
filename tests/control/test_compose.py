@@ -97,6 +97,13 @@ def test_two_executions_produce_byte_identical_plans() -> None:
     assert canonical_json(compose()) == canonical_json(compose())
 
 
+def test_omitted_live_inputs_preserve_the_historical_result_shape() -> None:
+    plan = compose()
+    assert "eligible_review" not in plan
+    assert "excluded_review" not in plan
+    assert "starvation_admitted" not in plan
+
+
 def test_matching_accepted_bank_item_replaces_generation_directive() -> None:
     bank_item = {
         "exercise_instance_id": "bank-001",

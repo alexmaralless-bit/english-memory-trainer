@@ -305,6 +305,23 @@ def compose_plan(
     active = list(signals or [])
     signal_waivers: list[str] = []
     review_list = list(review_candidates or [])
+    eligible_review = sorted(
+        {
+            (str(candidate.get("target_ref")), str(candidate.get("dimension")))
+            for candidate in review_list
+            if candidate.get("target_ref") is not None and candidate.get("dimension") is not None
+        }
+    )
+    excluded_review = sorted(
+        {
+            (str(candidate.get("target_ref")), str(candidate.get("dimension")))
+            for candidate in review_list
+            if candidate.get("target_ref") is not None
+            and candidate.get("dimension") is not None
+            and bool(active)
+            and is_excluded(candidate, active)
+        }
+    )
     growth_list = growth_candidates(program, presented_targets, policy)
     if active:
         review_list, signal_waivers = apply_signals(review_list, active)
@@ -321,6 +338,7 @@ def compose_plan(
     planned = {"review": 0, "growth": 0, "integration": 0, "choice": 0}
     waivers: list[str] = list(signal_waivers)
     consumed: list[str] = []
+    starvation_admitted: list[str] = []
     admission_occupancy: dict[str, tuple[dict[str, int], dict[str, int]]] = {}
     diversity = policy["diversity"]
     max_consecutive = int(diversity["max_consecutive_same_mode"])
@@ -403,6 +421,7 @@ def compose_plan(
                 waivers.append("STARVATION_STEP_DOES_NOT_FIT")
                 break
             admit(candidate)  # into the review bucket, above review_cap by design
+            starvation_admitted.append(str(candidate["candidate_id"]))
             reserved_admitted += 1
 
     # Step 6/Availability: after residual floors and the starvation reserve,
@@ -595,7 +614,7 @@ def compose_plan(
             step["avoid_context"] = candidate.get("avoid_context")
         steps.append(step)
 
-    return {
+    result: dict[str, Any] = {
         "steps": steps,
         "consumed": consumed,
         "budget": {"planned": planned},
@@ -610,6 +629,19 @@ def compose_plan(
             "floors": {b: (total_seconds * bp) // 10000 for b, bp in floors.items()},
         },
     }
+    # New live-fold facts are present only when their optional inputs were
+    # supplied. Calls using the historical/default surface retain the exact
+    # canonical result shape (control 4.4 determinism compatibility).
+    if review_candidates is not None:
+        result["eligible_review"] = [
+            {"target_ref": target_ref, "dimension": dimension} for target_ref, dimension in eligible_review
+        ]
+        result["excluded_review"] = [
+            {"target_ref": target_ref, "dimension": dimension} for target_ref, dimension in excluded_review
+        ]
+    if starvation_candidates is not None:
+        result["starvation_admitted"] = starvation_admitted
+    return result
 
 
 def step_targets(step: dict[str, Any]) -> list[dict[str, Any]]:

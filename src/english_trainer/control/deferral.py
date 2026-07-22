@@ -27,13 +27,11 @@ target_id asc, dimension_id asc)`` then lets older episodes go first -- new ones
 never overtake open ones -- which is what makes the waiting bound
 ``ceil(|Q| / reserved_steps_per_session)`` hold (control 4.5 [R-6, RR2-8]).
 
-Two composition-time facts have no home in today's event log: which review
-candidates were *eligible* in a session, and which a learner signal *excluded*.
-That live wiring is DEFERRED (lessons/scheduler feed it at composition time), so
-:func:`reduce_deferrals` takes them as an optional ``eligibility`` argument and,
-absent it, reads optional ``eligible_review`` / ``excluded_review`` lists off
-``SESSION_COMPOSED`` -- defaulting to empty, i.e. no deferrals accrue. The pure
-lifecycle is complete and testable; only its input is not yet plumbed.
+The lessons composition boundary records which review candidates were
+*eligible* and which a learner signal *excluded* in ``SESSION_COMPOSED``. The
+fold can also take an explicit ``eligibility`` mapping for projections and
+tests; absent both sources it defaults to empty, so missing historical facts do
+not manufacture deferrals.
 """
 
 from __future__ import annotations
@@ -185,7 +183,7 @@ def qualified_candidates(
 
     Each returned candidate carries ``qualified_at_session_seq`` and
     ``deferral_count`` so the reserve order is self-contained. This is the shape
-    the deferred lessons wiring will hand to ``compose_plan``.
+    the lessons wiring hands to ``compose_plan``.
     """
     out: list[dict[str, Any]] = []
     for candidate in review_candidates:

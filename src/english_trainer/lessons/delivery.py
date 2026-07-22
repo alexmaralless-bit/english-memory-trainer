@@ -34,9 +34,11 @@ from __future__ import annotations
 
 from typing import Any
 
+from english_trainer.control.availability import availability_get
 from english_trainer.control.compose import compose_plan, step_targets
 from english_trainer.control.errors import PlanVersionConflict
 from english_trainer.control.policy import CONTROL_KIND, PRODUCTION_STEP_TYPES, require_valid
+from english_trainer.control.signals import EVENT_SIGNAL_CONSUMED
 from english_trainer.control.trace import save_decision_traces
 from english_trainer.evidence.reviews import cancel_assignment
 from english_trainer.kernel.aggregates import read_aggregate
@@ -59,10 +61,10 @@ from english_trainer.lessons.sessions import (
     SessionPrecondition,
     get_plan,
     get_session,
+    live_composition_inputs,
     plan_summary,
     presented_targets,
     reusable_bank_items,
-    review_candidates_for,
     save_new_review_assignments,
 )
 
@@ -412,6 +414,16 @@ def replan_session(
     program = registry.resolve_pinned("curriculum", pinned["curriculum"])
     policy = require_valid(registry.resolve_pinned(CONTROL_KIND, pinned[CONTROL_KIND]))
     active_safety_version, active_program = registry.resolve_active("curriculum")
+    availability = availability_get(store, policy, clock)
+    live = live_composition_inputs(
+        store,
+        registry,
+        pinned,
+        program,
+        policy,
+        clock,
+        starting_new_session=False,
+    )
 
     kept = [step for step in plan_state["steps"] if step["presented_at"] is not None]
     unpresented = [step for step in plan_state["steps"] if step["presented_at"] is None]
@@ -431,8 +443,12 @@ def replan_session(
         presented_by_bucket={k: int(v) for k, v in plan_state["ledger"]["presented"].items()},
         presented_steps=kept,
         keep_step_ids=keep_step_ids,
-        review_candidates=review_candidates_for(store, registry, pinned, program, policy, clock),
+        review_candidates=live["review_candidates"],
         keep_review_ids=keep_review_ids,
+        signals=live["signals"],
+        probe=live["probe"],
+        starvation_candidates=live["starvation_candidates"],
+        availability_long_break=bool(availability["long_break"]),
         bank_items=reusable_bank_items(store, active_program),
         pinned_versions=pinned,
         active_safety_version=active_safety_version,
@@ -447,6 +463,11 @@ def replan_session(
         "composition_revision": new_revision,
         "plan_version": new_version,
         "active_safety_version": active_safety_version,
+        "availability": {
+            "budget_source": (plan_state.get("availability") or {}).get("budget_source"),
+            "long_break": availability["long_break"],
+            "trace": availability["trace"],
+        },
         **composed,
     }
     with UnitOfWork(store, clock) as uow:
@@ -487,11 +508,32 @@ def replan_session(
                         "plan_version": new_version,
                         "budget": {"total_seconds": plan_state["total_seconds"], **new_state["budget"]},
                         "steps": plan_summary(new_state),
+                        "eligible_review": new_state["eligible_review"],
+                        "excluded_review": new_state["excluded_review"],
                         "waivers": new_state["waivers"],
                         "active_safety_version": active_safety_version,
                     },
                     pinned_versions=pinned,
-                )
+                ),
+                *(
+                    make_event(
+                        id=new_ulid(clock, random_source),
+                        type=EVENT_SIGNAL_CONSUMED,
+                        occurred_at=clock.now(),
+                        actor=actor,
+                        provider=manifest.get("provider"),
+                        correlation_id=session_id,
+                        payload={
+                            "signal_id": signal_id,
+                            "session_id": session_id,
+                            "composition_revision": new_revision,
+                            "reason": "probe_admitted",
+                            "consumed_at": clock.now().isoformat(),
+                        },
+                        pinned_versions=pinned,
+                    )
+                    for signal_id in new_state["consumed"]
+                ),
             ]
         )
     return {
