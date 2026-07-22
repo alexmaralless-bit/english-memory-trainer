@@ -64,8 +64,11 @@ from english_trainer.control.errors import (
     ControlPolicyInvalid,
     NoCandidates,
     PlanVersionConflict,
+    ProbePrecondition,
+    SignalInvalid,
 )
 from english_trainer.control.policy import CONTROL_KIND, require_valid
+from english_trainer.control.signals import record_signal
 from english_trainer.curriculum.loader import load_policies, load_program
 from english_trainer.curriculum.service import (
     activate_version,
@@ -2113,6 +2116,115 @@ def adapters_compare_cmd(
         next_action="adapters compare",
     )
     _emit(failure_envelope("adapters.compare", corr, error), human, fmt, ExitCode.PRECONDITION_FAILED)
+
+
+@app.command("signal")
+def signal_command(
+    kind: Annotated[
+        str,
+        typer.Argument(
+            help="too_easy | too_repetitive | need_more_practice | not_relevant_now | "
+            "snooze | prefer_different_context."
+        ),
+    ],
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    target: Annotated[str | None, typer.Option("--target", help="Target ref the signal is about.")] = None,
+    domain: Annotated[
+        str | None, typer.Option("--domain", help="Domain scope (not_relevant_now, instead of --target).")
+    ] = None,
+    until: Annotated[
+        str | None, typer.Option("--until", help="Snooze until this UTC ISO-8601 timestamp.")
+    ] = None,
+    expires_at: Annotated[
+        str | None, typer.Option("--expires-at", help="Expiry UTC ISO-8601 timestamp (not_relevant_now).")
+    ] = None,
+    avoid_context: Annotated[
+        str | None, typer.Option("--avoid-context", help="Context to avoid (prefer_different_context).")
+    ] = None,
+    idempotency_key: Annotated[
+        str | None, typer.Option("--idempotency-key", help="Required with --format json (cli 4.3).")
+    ] = None,
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Record a learner control signal (control 4.7). It never edits the live
+    plan: the reply names next_action=session.replan; too_easy also mints a
+    probe (PROBE_REQUESTED). The engine derives origin, not the agent."""
+    corr = _correlation(correlation_id)
+    _require_key("signal", corr, fmt, idempotency_key)
+    layout = resolve_layout(root)
+    if not layout.db.exists():
+        error = ErrorPayload(
+            error_code="DATABASE_NOT_FOUND",
+            message=f"{layout.db} does not exist.",
+            allowed_actions=["init"],
+            next_action="init",
+        )
+        _emit(failure_envelope("signal", corr, error), ["error: not initialized"], fmt, ExitCode.NOT_FOUND)
+    payload = {
+        key: value
+        for key, value in {
+            "target_ref": target,
+            "domain": domain,
+            "until": until,
+            "expires_at": expires_at,
+            "avoid_context": avoid_context,
+        }.items()
+        if value is not None
+    }
+    try:
+        with open_storage(layout) as storage:
+            registry = PolicyRegistry(storage._conn, SystemClock())
+            _, policy = registry.resolve_active(CONTROL_KIND)
+            result = record_signal(
+                storage.store,
+                SystemClock(),
+                SystemRandom(),
+                kind=kind,
+                payload=payload,
+                policy=require_valid(policy),
+                idempotency_key=idempotency_key,
+            )
+        human = [f"signal {result['signal_id']} recorded ({kind})"]
+        if result.get("probe_id"):
+            human.append(f"  probe requested: {result['probe_id']}")
+        if result.get("next_action"):
+            human.append(
+                f"  next action: {result['next_action']} (plan v{result.get('current_plan_version')})"
+            )
+        _emit(success_envelope("signal", corr, result), human, fmt, ExitCode.OK)
+    except IdempotencyConflict as exc:
+        error = ErrorPayload(
+            error_code="IDEMPOTENCY_CONFLICT",
+            message=str(exc),
+            allowed_actions=["signal <kind> --idempotency-key <fresh-key>"],
+            next_action="signal <kind> --idempotency-key <fresh-key>",
+        )
+        _emit(failure_envelope("signal", corr, error), [f"error: {exc}"], fmt, ExitCode.CONFLICT)
+    except SignalInvalid as exc:
+        error = ErrorPayload(
+            error_code=exc.code,
+            message=str(exc),
+            allowed_actions=["signal too_easy --target <id>", "signal snooze --target <id> --until <ts>"],
+            next_action="fix the signal arguments and retry",
+        )
+        _emit(failure_envelope("signal", corr, error), [f"error: {exc}"], fmt, ExitCode.INVALID_INPUT)
+    except ProbePrecondition as exc:
+        error = ErrorPayload(
+            error_code=exc.code,
+            message=str(exc),
+            allowed_actions=["session status", "session next"],
+            next_action="session next",
+        )
+        _emit(failure_envelope("signal", corr, error), [f"error: {exc}"], fmt, ExitCode.PRECONDITION_FAILED)
+    except KernelError as exc:
+        error = ErrorPayload(
+            error_code=exc.code,
+            message=str(exc),
+            allowed_actions=["curriculum activate", "doctor"],
+            next_action="curriculum activate",
+        )
+        _emit(failure_envelope("signal", corr, error), [f"error: {exc}"], fmt, ExitCode.PRECONDITION_FAILED)
 
 
 @app.command("status")

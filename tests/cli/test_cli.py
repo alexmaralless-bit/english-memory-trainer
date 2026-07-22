@@ -455,6 +455,87 @@ def test_session_lifecycle_through_the_cli(tmp_path: Path, capsys) -> None:
     assert env["data"]["active"] is None
 
 
+def test_signal_command_records_and_refuses(tmp_path: Path, capsys) -> None:
+    root = str(tmp_path)
+    curriculum_dir = str(Path(__file__).resolve().parents[2] / "curriculum")
+    run(["init", "--format", "json", "--root", root, "--idempotency-key", "k1"])
+    run(
+        [
+            "curriculum",
+            "activate",
+            "--version",
+            "v1",
+            "--curriculum",
+            curriculum_dir,
+            "--root",
+            root,
+            "--format",
+            "json",
+            "--idempotency-key",
+            "a1",
+        ]
+    )
+    capsys.readouterr()
+
+    base = ["signal", "too_repetitive", "--target", "grammar.be.identity", "--format", "json", "--root", root]
+
+    # Mutating: the key is mandatory in json mode, and the refusal leaves no trace.
+    code = run(base)
+    env = _json_stdout(capsys)
+    assert code == ExitCode.USAGE and env["error"]["error_code"] == "MISSING_IDEMPOTENCY_KEY"
+
+    # A valid signal records; no active session, so no next_action.
+    code = run([*base, "--idempotency-key", "sg1"])
+    env = _json_stdout(capsys)
+    _envelope_shape_ok(env)
+    assert code == ExitCode.OK
+    assert env["data"]["recorded"] is True and env["data"]["kind"] == "too_repetitive"
+    assert env["data"]["cached"] is False and "next_action" not in env["data"]
+
+    # Same key replays the cached result -- no second signal event.
+    code = run([*base, "--idempotency-key", "sg1"])
+    env = _json_stdout(capsys)
+    assert code == ExitCode.OK and env["data"]["cached"] is True
+
+    # An unknown kind is INVALID_INPUT.
+    code = run(
+        [
+            "signal",
+            "make_it_easier",
+            "--target",
+            "grammar.be.identity",
+            "--format",
+            "json",
+            "--root",
+            root,
+            "--idempotency-key",
+            "sg2",
+        ]
+    )
+    env = _json_stdout(capsys)
+    _envelope_shape_ok(env)
+    assert code == ExitCode.INVALID_INPUT and env["error"]["error_code"] == "SIGNAL_INVALID"
+
+    # too_easy on a never-delivered target refuses: no STEP_PRESENTED to derive from.
+    code = run(
+        [
+            "signal",
+            "too_easy",
+            "--target",
+            "grammar.never-seen",
+            "--format",
+            "json",
+            "--root",
+            root,
+            "--idempotency-key",
+            "sg3",
+        ]
+    )
+    env = _json_stdout(capsys)
+    _envelope_shape_ok(env)
+    assert code == ExitCode.PRECONDITION_FAILED and env["error"]["error_code"] == "PROBE_PRECONDITION"
+
+
 def test_registry_matches_published_surface() -> None:
     from english_trainer.cli.registry import command_registry
 
@@ -481,6 +562,7 @@ def test_registry_matches_published_surface() -> None:
         "exercise.reject",
         "exercise.retire",
         "exercise.bank",
+        "signal",
         "scoring.replay",
         "status",
         "review.due",
@@ -525,6 +607,7 @@ def test_registry_matches_published_surface() -> None:
     assert not registry["skills.validate"].mutating
     assert not registry["adapters.compare"].mutating
     assert registry["session.resume"].mutating and registry["session.resume"].requires_idempotency_key
+    assert registry["signal"].mutating and registry["signal"].requires_idempotency_key
 
 
 def test_root_option_drives_default_paths(tmp_path: Path, capsys) -> None:

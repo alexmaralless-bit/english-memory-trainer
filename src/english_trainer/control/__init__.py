@@ -16,6 +16,8 @@ from english_trainer.control.errors import (
     ControlPolicyInvalid,
     NoCandidates,
     PlanVersionConflict,
+    ProbePrecondition,
+    SignalInvalid,
 )
 from english_trainer.control.policy import (
     CONTROL_KIND,
@@ -24,6 +26,16 @@ from english_trainer.control.policy import (
     require_valid,
     step_cost,
     validate_control_policy,
+)
+from english_trainer.control.signals import (
+    active_signals,
+    apply_signals,
+    build_probe_candidate,
+    build_signal,
+    current_session_seq,
+    derive_probe,
+    is_excluded,
+    record_signal,
 )
 
 __all__ = [
@@ -34,9 +46,19 @@ __all__ = [
     "ControlPolicyInvalid",
     "NoCandidates",
     "PlanVersionConflict",
+    "ProbePrecondition",
+    "SignalInvalid",
+    "active_signals",
+    "apply_signals",
+    "build_probe_candidate",
+    "build_signal",
     "classify_review_candidates",
     "compose_plan",
+    "current_session_seq",
+    "derive_probe",
+    "is_excluded",
     "mode_shares",
+    "record_signal",
     "require_valid",
     "step_cost",
     "step_targets",

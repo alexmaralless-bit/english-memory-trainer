@@ -95,6 +95,10 @@ _COMMANDS: tuple[CommandDescriptor, ...] = (
     CommandDescriptor(
         name="exercise.bank", owner_module="lessons", mutating=False, requires_idempotency_key=False
     ),
+    # Learner control signals (control 4.7, roadmap 2.8a): a nudge to the next
+    # composition, never a plan edit. Mutating -- it records a signal event (and
+    # for too_easy a PROBE_REQUESTED) -- so it requires the key in json mode.
+    CommandDescriptor(name="signal", owner_module="control", mutating=True, requires_idempotency_key=True),
     # Scoring (0.4 part 2): scores are a pure fold over the event log -- both
     # commands are read-only by construction.
     CommandDescriptor(

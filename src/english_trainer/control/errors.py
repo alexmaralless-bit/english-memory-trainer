@@ -46,3 +46,26 @@ class PlanVersionConflict(KernelError):
     def __init__(self, message: str, *, current_plan_version: int) -> None:
         super().__init__(message)
         self.current_plan_version = current_plan_version
+
+
+class SignalInvalid(KernelError):
+    """A learner control signal is malformed (control 4.7): an unknown ``kind``
+    or a missing required payload field for its kind. Rejected before anything
+    is written -- an invalid signal never reaches the event log."""
+
+    code = "SIGNAL_INVALID"
+
+
+class ProbePrecondition(KernelError):
+    """A ``too_easy`` signal cannot mint a probe because its precondition does
+    not hold (control 4.7): the target has never been delivered, so there is no
+    ``STEP_PRESENTED`` to derive the probe difficulty and ``avoid_context``
+    from -- ``PRECONDITION_FAILED {reason: no_presented_step}``. Carries the
+    machine-stable ``reason`` for the envelope.
+    """
+
+    code = "PROBE_PRECONDITION"
+
+    def __init__(self, message: str, *, reason: str) -> None:
+        super().__init__(message)
+        self.reason = reason

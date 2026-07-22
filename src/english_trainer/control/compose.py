@@ -46,6 +46,7 @@ from english_trainer.control.policy import (
     mode_shares,
     step_cost,
 )
+from english_trainer.control.signals import apply_signals, is_excluded
 
 Candidate = dict[str, Any]
 NewId = Callable[[], str]
@@ -188,6 +189,8 @@ def compose_plan(
     keep_step_ids: dict[str, str] | None = None,
     review_candidates: list[Candidate] | None = None,
     keep_review_ids: dict[str, str] | None = None,
+    signals: list[dict[str, Any]] | None = None,
+    probe: dict[str, Any] | None = None,
     new_id: NewId,
 ) -> dict[str, Any]:
     """Compose the plan slice of the ``session_plan`` aggregate state.
@@ -198,6 +201,16 @@ def compose_plan(
     capacity is ``total_seconds - presented_seconds``; already-presented steps
     are passed through verbatim and surviving candidates keep their step ids
     via ``keep_step_ids`` (``step_id`` is stable across revisions, 4.2).
+
+    ``signals`` are the active learner control signals (control 4.7): applied
+    after classification (step 3a) they exclude or reshuffle review candidates
+    and exclude growth candidates, all deterministically. ``probe`` is a
+    pre-built ``kind=probe`` candidate for a ``too_easy`` target; it is first-fit
+    into the remainder (step 6a). When it is admitted its signal id appears in
+    the returned ``consumed`` list so the caller can retire the signal
+    (``SIGNAL_CONSUMED``) in the same UnitOfWork that saves this plan; when it
+    does not fit, ``PROBE_BUDGET_UNAVAILABLE`` is waived and the signal is NOT
+    consumed. Both default empty -- the pipeline is byte-identical without them.
     """
     minimum = int(policy["budget"]["min_total_minutes"]) * 60
     if total_seconds < minimum:
@@ -243,16 +256,28 @@ def compose_plan(
             ),
         )
 
+    # Step 3a: apply active learner signals after base classification (4.7).
+    # Precedence reshapes the review candidates and can exclude growth targets;
+    # both are deterministic, so the plan stays byte-identical.
+    active = list(signals or [])
+    signal_waivers: list[str] = []
+    review_list = list(review_candidates or [])
+    growth_list = growth_candidates(program, presented_targets, policy)
+    if active:
+        review_list, signal_waivers = apply_signals(review_list, active)
+        growth_list = [candidate for candidate in growth_list if not is_excluded(candidate, active)]
+
     pool: dict[str, list[Candidate]] = {
-        "review": _review_sort(list(review_candidates or [])),
-        "growth": _canonical_sort(growth_candidates(program, presented_targets, policy)),
+        "review": _review_sort(review_list),
+        "growth": _canonical_sort(growth_list),
         "integration": [],  # needs a learned target from scoring
         "choice": _canonical_sort(choice_candidates(policy)),
     }
 
     admitted: list[Candidate] = []
     planned = {"review": 0, "growth": 0, "integration": 0, "choice": 0}
-    waivers: list[str] = []
+    waivers: list[str] = list(signal_waivers)
+    consumed: list[str] = []
     diversity = policy["diversity"]
     max_consecutive = int(diversity["max_consecutive_same_mode"])
     max_per_topic = int(diversity["max_steps_per_topic"])
@@ -304,6 +329,26 @@ def compose_plan(
             waivers.append(
                 f"{bucket.upper()}_CANDIDATES_EXHAUSTED" if admitted_any else f"NO_{bucket.upper()}_STEP_FITS"
             )
+
+    # Step 6a: first-fit the pending probe into the remainder (4.7). The probe
+    # is a choice-bucket step (source_rank 0). On admission its signal id is
+    # returned in ``consumed`` so the caller retires the too_easy signal
+    # (SIGNAL_CONSUMED) in the same UoW that saves this plan; if it does not fit,
+    # the per-target probe budget is spent, or an exclusion applies, the trace
+    # gets PROBE_BUDGET_UNAVAILABLE and the signal survives (NOT consumed).
+    if probe is not None:
+        already = any(
+            step.get("kind") == "probe" and step.get("target_ref") == probe["target_ref"]
+            for step in presented_steps
+        )
+        blocked = already or (bool(active) and is_excluded(probe, active))
+        fits = probe["expected_seconds"] + planned_total() <= capacity and quota_allows(probe)
+        if blocked or not fits:
+            waivers.append("PROBE_BUDGET_UNAVAILABLE")
+        else:
+            planned[probe["bucket"]] += int(probe["expected_seconds"])
+            admitted.append(probe)
+            consumed.append(str(probe["signal_id"]))
 
     # Step 7: review by urgency class, critical -> important -> normal ->
     # maintenance, until review_max or the budget stops it. First-fit; the
@@ -357,6 +402,9 @@ def compose_plan(
             "lexicon_refs": candidate["lexicon_refs"],
             "topic_hint": candidate.get("topic_hint"),
         }
+        if candidate["kind"] == "probe":
+            # The probe tells the tutor which context to steer clear of (4.7).
+            directive["avoid_context"] = candidate.get("avoid_context")
         step = {
             "step_id": keep_step_ids.get(candidate["candidate_id"]) or new_id(),
             "decision_id": new_id(),
@@ -390,10 +438,20 @@ def compose_plan(
         elif candidate["kind"] == "choice":
             step["target_ref"] = candidate.get("target_ref")
             step["topic_hint"] = candidate.get("topic_hint")
+        elif candidate["kind"] == "probe":
+            # A probe carries its engine id, dimension, requested difficulty and
+            # the context to avoid; step_targets exposes (target, dimension) so
+            # its STEP_PRESENTED derives origin=control_probe downstream (4.7).
+            step["target_ref"] = candidate["target_ref"]
+            step["dimension"] = candidate.get("dimension")
+            step["probe_id"] = candidate["probe_id"]
+            step["requested_difficulty"] = candidate["requested_difficulty"]
+            step["avoid_context"] = candidate.get("avoid_context")
         steps.append(step)
 
     return {
         "steps": steps,
+        "consumed": consumed,
         "budget": {"planned": planned},
         "ledger": {
             "presented": {b: presented_by_bucket.get(b, 0) for b in planned},
@@ -411,7 +469,7 @@ def compose_plan(
 def step_targets(step: dict[str, Any]) -> list[dict[str, Any]]:
     """The ``targets[]`` of a step for ``STEP_PRESENTED`` (control 4.6): every
     (target_ref, dimension) pair; empty only for target-less choice."""
-    if step["kind"] in ("growth", "review"):
+    if step["kind"] in ("growth", "review", "probe"):
         return [{"target_ref": step["target_ref"], "dimension": step["dimension"]}]
     if step["kind"] == "choice" and step.get("target_ref"):
         return [{"target_ref": step["target_ref"], "dimension": None}]
