@@ -6,6 +6,7 @@ topics:
     track: word-formation
     module: b1.2-word-formation
     can_do: "Recognize that out- means to surpass in an action (outrun, outnumber, outperform), not a literal 'outside', and infer an unfamiliar out- word."
+    dimensions: [recognition, transfer]
     advisory_prerequisites:
       strong: [word-formation.degree-over-under]
       soft: [reading.everyday-phrasal-verbs]
@@ -25,6 +26,7 @@ topics:
     track: word-formation
     module: b1.2-word-formation
     can_do: "Recognize that -able means able to be X-ed (readable) and -ness names a quality (usefulness), and tell the word class."
+    dimensions: [recognition, transfer]
     advisory_prerequisites:
       strong: [word-formation.agent-and-noun-suffix]
     lexicon: [word.requirement, word.improvement, word.developer]

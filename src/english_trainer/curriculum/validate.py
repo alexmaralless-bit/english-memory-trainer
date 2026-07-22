@@ -21,7 +21,10 @@ from dataclasses import dataclass, field
 from typing import Any
 
 CEFR_ORDER = {"A1": 0, "A2": 1, "B1": 2, "B2": 3, "C1": 4, "C2": 5}
-AUTHORED_LEVELS: tuple[str, ...] = ("A1", "A2")
+# The whole program is authored now (P.2e bodies accepted): body completeness
+# is enforced at every level, so a future skeleton without its mastery_criteria
+# is a hard error, not a silent warning.
+AUTHORED_LEVELS: tuple[str, ...] = ("A1", "A2", "B1", "B2", "C1", "C2")
 
 MULTIWORD_TYPES = {"chunk", "idiom", "phrasal-verb", "informal_chunk"}
 TRANSPARENCY_VALUES = {"transparent", "semi_opaque", "opaque"}
