@@ -9,6 +9,17 @@ topics:
     advisory_prerequisites:
       strong: [word-formation.degree-over-under]
       soft: [reading.everyday-phrasal-verbs]
+    lexicon: [word.overload, word.overwrite, word.underestimate]
+    contexts: [performance-comparison, technical-reading]
+    typical_errors:
+      - "Reading out- as Russian «наружу» in outperform instead of the meaning 'do better than'."
+      - "Treating every word beginning with out as the same productive prefix, including unrelated words such as outcome."
+      - "Inventing an out- verb without checking that the derived word exists."
+    examples:
+      - "The revised parser outperformed the old one on large files."
+      - "In the final sample, mobile requests outnumbered desktop requests."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: word-formation.quality-suffix
     cefr: B1
     track: word-formation
@@ -16,6 +27,17 @@ topics:
     can_do: "Recognize that -able means able to be X-ed (readable) and -ness names a quality (usefulness), and tell the word class."
     advisory_prerequisites:
       strong: [word-formation.agent-and-noun-suffix]
+    lexicon: [word.requirement, word.improvement, word.developer]
+    contexts: [product-review, technical-reading]
+    typical_errors:
+      - "Reading -able as a general adjective ending without recovering the meaning 'can be acted on'."
+      - "Using a -ness noun as if it were an adjective because Russian often expresses the idea with a different form."
+      - "Attaching -able or -ness to a base mechanically when English uses another established word."
+    examples:
+      - "The short labels make the dashboard more readable."
+      - "The usefulness of the alert depends on its timing."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
 
   - id: grammar.present-perfect.duration
     cefr: B1
@@ -27,7 +49,17 @@ topics:
       soft: [grammar.time-dates]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: big-five
-    lexicon: []
+    lexicon: [chunk.we-have-not-had-any-issues-since, word.since, word.yet]
+    contexts: [project-tenure, service-status]
+    typical_errors:
+      - "Using Present Simple with since (I work here since 2022), following the Russian present-tense pattern."
+      - "Using since with a duration and for with a starting point."
+      - "Using a continuous form with a stative verb such as know when the simple perfect is required."
+    examples:
+      - "I have worked on the platform for three years."
+      - "The service has been stable since Monday."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
 
   - id: reading.connected-technical-explanation
     cefr: B1
@@ -38,7 +70,17 @@ topics:
       strong: [reading.main-idea-details, reading.documentation-scan]
       soft: [reading.ticket-basics]
     dimensions: [recognition, transfer]
-    lexicon: []
+    lexicon: [chunk.the-key-point-is, chunk.according-to, word.detail]
+    contexts: [technical-documentation, system-walkthrough]
+    typical_errors:
+      - "Translating every sentence before identifying the explanation's main process."
+      - "Treating an example as a separate main idea instead of support for the preceding step."
+      - "Assuming a connector has the same logical force as a similar Russian connector without checking the clause relation."
+    examples:
+      - "The queue stores each request before a worker processes it. This prevents a short traffic spike from losing data."
+      - "The cache is cleared after deployment. As a result, the first request may take slightly longer."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
 
   - id: written-interaction.project-risk-update
     cefr: B1
@@ -49,7 +91,17 @@ topics:
       strong: [written-production.project-update, written-interaction.suggestion-feedback]
       soft: [written-interaction.follow-up-recommendation]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [chunk.project-update, chunk.the-main-risk-is, chunk.i-suggest]
+    contexts: [project-update, risk-escalation]
+    typical_errors:
+      - "Naming a risk without stating its likely impact or the decision needed."
+      - "Using the false friend actual for current in a status update."
+      - "Writing a categorical Russian-style warning where English needs calibrated probability such as may or is likely to."
+    examples:
+      - "The main risk is the delayed data export, which may move testing into Friday. I suggest reducing the first test scope."
+      - "Access approval is still pending. If it arrives after noon, we will need a one-day extension."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
 
   - id: written-production.system-overview
     cefr: B1
@@ -60,7 +112,17 @@ topics:
       strong: [written-production.paraphrase-summary, written-production.option-comparison]
       soft: [us-tech.describe-system-data]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [chunk.each-record-has, chunk.its-stored-in, chunk.in-short]
+    contexts: [team-onboarding, architecture-overview]
+    typical_errors:
+      - "Listing components without explaining how data or control moves between them."
+      - "Omitting articles before singular components, as Russian has no article system."
+      - "Using the false friend scheme when diagram, design, or architecture is intended."
+    examples:
+      - "The intake service validates each file and sends valid records to the queue. A worker then stores them in the reporting database."
+      - "The dashboard reads aggregated data from the warehouse, so it never queries customer systems directly."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
 
   - id: us-tech.incident-root-cause
     cefr: B1
@@ -71,7 +133,17 @@ topics:
       strong: [us-tech.incident-report-basics, written-production.troubleshooting-explanation]
       soft: [written-production.fact-inference]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [chunk.the-root-cause-was, chunk.as-far-as-i-understand, chunk.no-data-was-lost]
+    contexts: [incident-review, root-cause-analysis]
+    typical_errors:
+      - "Calling the first visible symptom the root cause."
+      - "Using reason of instead of cause of or reason for under Russian interference."
+      - "Stating an unverified cause as certain instead of separating evidence, inference, and confidence."
+    examples:
+      - "The outage began when the worker pool reached its limit. The probable root cause was a retry loop that kept old jobs active."
+      - "No data was lost; however, delayed acknowledgements caused clients to resend several requests."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
 
   - id: us-tech.requirement-rationale
     cefr: B1
@@ -82,7 +154,17 @@ topics:
       strong: [written-interaction.requirement-question, grammar.modals.requirements]
       soft: [written-production.option-comparison]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [chunk.the-main-requirement-is, word.requirement, chunk.we-should-consider]
+    contexts: [requirements-review, safety-design]
+    typical_errors:
+      - "Restating what the requirement says without explaining why it exists."
+      - "Using demand as a neutral equivalent of requirement in a specification."
+      - "Writing needed for that instead of linking the requirement to a user, operational, or safety consequence."
+    examples:
+      - "The audit log must be immutable because investigators need to reconstruct every approval."
+      - "Offline export is required for field teams that work without reliable network access."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
 
   - id: grammar.past-perfect.sequence
     cefr: B1
@@ -94,7 +176,17 @@ topics:
       soft: [grammar.when-while.sequence]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: tail
-    lexicon: []
+    lexicon: [chunk.it-stopped-working-after, chunk.it-turned-out-that, word.incident]
+    contexts: [incident-timeline, personal-narrative]
+    typical_errors:
+      - "Using Past Perfect for both past events instead of marking only the earlier event when the order needs clarification."
+      - "Forming the tense with had plus a Past Simple form (had went, had saw)."
+      - "Following Russian narrative order without marking that one event had already happened."
+    examples:
+      - "The alert arrived after the backup had failed."
+      - "By the time I reached the station, the last train had left."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
 
   - id: grammar.second-conditional.hypothetical
     cefr: B1
@@ -106,7 +198,17 @@ topics:
       soft: [grammar.past-simple.events]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: tail
-    lexicon: []
+    lexicon: [chunk.we-should-consider, word.if, word.option]
+    contexts: [design-hypothesis, personal-choice]
+    typical_errors:
+      - "Putting would in the if-clause (If we would add a cache...)."
+      - "Using a present form in both clauses and losing the hypothetical distance."
+      - "Choosing the second conditional for a realistic near-future plan that needs the first conditional."
+    examples:
+      - "If we had another week, we would test the migration twice."
+      - "I would move closer to work if rent were lower."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
 
   - id: grammar.passive.expanded-process
     cefr: B1
@@ -118,7 +220,17 @@ topics:
       soft: [grammar.sequencing.delivery]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: tail
-    lexicon: []
+    lexicon: [word.process, word.delivery, chunk.we-have-completed]
+    contexts: [process-description, deployment-report]
+    typical_errors:
+      - "Dropping the form of be and leaving only the participle (The file processed yesterday)."
+      - "Keeping the active Russian-style subject when the process or result should be in focus."
+      - "Changing the participle instead of the form of be when moving the passive to another time frame."
+    examples:
+      - "The files are validated before they are uploaded."
+      - "The old records had been archived before the migration began."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
 
   - id: grammar.reported-speech.work-updates
     cefr: B1
@@ -130,7 +242,17 @@ topics:
       soft: [written-production.paraphrase-summary]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: tail
-    lexicon: []
+    lexicon: [chunk.the-key-point-is, chunk.do-you-mean, word.question]
+    contexts: [meeting-summary, handover-update]
+    typical_errors:
+      - "Keeping direct-question word order after asked (She asked when would it start)."
+      - "Failing to update pronouns or time references when the reporting viewpoint changes."
+      - "Using said me under the influence of Russian сказать мне instead of told me or said to me."
+    examples:
+      - "Maya said that the client needed a revised estimate."
+      - "The reviewer asked whether we had tested the fallback."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
 
   - id: written-production.cause-effect-explanation
     cefr: B1
@@ -141,7 +263,17 @@ topics:
       strong: [grammar.connectors.cause-contrast, written-production.fact-inference]
       soft: [written-production.troubleshooting-explanation]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [chunk.the-root-cause-was, word.cause, chunk.as-far-as-i-understand]
+    contexts: [incident-analysis, policy-explanation]
+    typical_errors:
+      - "Using because of before a full clause or because before a noun phrase."
+      - "Confusing affect and effect when naming the consequence."
+      - "Presenting a contributing condition as the sole cause without evidence."
+    examples:
+      - "The import slowed because one worker handled every file. Limited memory made the delay worse, and the queue eventually timed out."
+      - "Heavy rain reduced visibility, so the ferry departed later than planned."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
 
   - id: everyday-life.explaining-complicated-problem
     cefr: B1
@@ -152,7 +284,17 @@ topics:
       strong: [everyday-life.resolving-a-service-problem, everyday-life.agreeing-on-the-next-step]
       soft: [everyday-life.explaining-an-everyday-incident]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [word.problem, word.repair, chunk.it-turned-out-that]
+    contexts: [repair-request, health-appointment]
+    typical_errors:
+      - "Listing events in Russian discourse order without a clear problem, attempted solution, and current need."
+      - "Using the false friend recipe when prescription is intended."
+      - "Omitting articles in phrases such as a problem with the heater or the medicine I received."
+    examples:
+      - "The heater stops every evening. I have reset it twice, but the error returns, so I need a technician to inspect it."
+      - "The pharmacy gave me a different dose from the prescription. I have not taken it and need the clinic to confirm the change."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
 
   - id: grammar.relative-clauses.specification
     cefr: B1
@@ -164,7 +306,17 @@ topics:
       soft: [grammar.pronouns.possessives]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: core
-    lexicon: []
+    lexicon: [word.team, word.company, chunk.i-work-in-the-team]
+    contexts: [requirement-definition, team-description]
+    typical_errors:
+      - "Repeating the noun with a pronoun inside the relative clause (the service which it stores data)."
+      - "Using who for a system or which for a person under literal translation pressure."
+      - "Omitting the article before the noun being defined."
+    examples:
+      - "We need a service that stores the audit records."
+      - "The engineer who reviewed the design found the missing constraint."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
 
   - id: grammar.modals.deduction-obligation
     cefr: B1
@@ -176,7 +328,17 @@ topics:
       soft: [written-production.fact-inference]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: core
-    lexicon: []
+    lexicon: [chunk.we-should-consider, word.requirement, chunk.as-far-as-i-understand]
+    contexts: [requirements-review, evidence-based-diagnosis]
+    typical_errors:
+      - "Using must not for absence of obligation instead of do not have to."
+      - "Using must for every Russian должен even when should or have to better matches the force."
+      - "Reading must be only as obligation and missing its evidence-based deduction meaning."
+    examples:
+      - "The token must be expired; the same request works with a new one."
+      - "You do not have to attend, but you should read the decision note."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
 
   - id: written-interaction.negotiating-scope
     cefr: B1
@@ -187,7 +349,17 @@ topics:
       strong: [written-interaction.respectful-disagreement, written-interaction.requirement-question]
       soft: [us-tech.scope-change-update]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [chunk.the-main-requirement-is, chunk.thats-out-of-scope, chunk.we-may-need-more-time]
+    contexts: [scope-negotiation, delivery-planning]
+    typical_errors:
+      - "Using the false friend actual when current scope is intended."
+      - "Writing I am agree instead of I agree."
+      - "Rejecting a request directly without offering a constraint-based alternative."
+    examples:
+      - "We can include the export filter this week, but custom reports are outside the current scope. Could we schedule those for the next release?"
+      - "To keep Friday's deadline, I suggest supporting two file types now and adding the third after testing."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
 
   - id: written-interaction.constructive-challenge
     cefr: B1
@@ -198,7 +370,17 @@ topics:
       strong: [written-interaction.suggestion-feedback, written-interaction.respectful-disagreement]
       soft: [everyday-online-informal.tone-recognition]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [chunk.i-see-your-point, chunk.i-suggest, word.feedback]
+    contexts: [design-review, planning-discussion]
+    typical_errors:
+      - "Opening with You are wrong, mirroring direct Russian disagreement without relationship repair."
+      - "Using doubt in something instead of doubt something or have doubts about it."
+      - "Challenging a person rather than naming the assumption, evidence, or consequence."
+    examples:
+      - "I see the benefit of the shared cache, but what evidence shows that both services need the same expiry time?"
+      - "Could we revisit the assumption that every client has stable connectivity?"
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
 
   - id: written-production.reasoned-recommendation
     cefr: B1
@@ -209,7 +391,17 @@ topics:
       strong: [written-production.option-comparison, written-interaction.follow-up-recommendation]
       soft: [grammar.connectors.cause-contrast]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [chunk.the-main-advantage-is, chunk.the-downside-is, chunk.we-should-consider]
+    contexts: [option-review, personal-recommendation]
+    typical_errors:
+      - "Using recommend someone to do instead of recommend doing or recommend that someone do."
+      - "Giving several advantages without a selection criterion."
+      - "Using more better or the most optimal under Russian comparative interference."
+    examples:
+      - "I recommend the hosted option because it reduces maintenance. Its main limitation is less control over update timing."
+      - "The morning train costs more, but it is the safer choice because the later connection leaves only ten minutes."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
 
   - id: us-tech.tradeoff-summary
     cefr: B1
@@ -220,7 +412,17 @@ topics:
       strong: [written-production.option-comparison, us-tech.scope-change-update]
       soft: [written-production.fact-inference]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [chunk.the-main-advantage-is, chunk.the-downside-is, chunk.thats-out-of-scope]
+    contexts: [architecture-review, tool-selection]
+    typical_errors:
+      - "Saying depends from instead of depends on."
+      - "Treating cost only as money and omitting operational or complexity costs."
+      - "Listing pros and cons without stating the condition that changes the preferred option."
+    examples:
+      - "Batch processing is cheaper at high volume, but users wait longer for results. It is preferable when immediate feedback is not required."
+      - "The local model protects sensitive data, while the hosted model is easier to update."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
 
   - id: reading.multi-step-service-information
     cefr: B1
@@ -231,7 +433,17 @@ topics:
       strong: [reading.short-news-item, reading.documentation-scan]
       soft: [everyday-life.understanding-a-bill]
     dimensions: [recognition, transfer]
-    lexicon: []
+    lexicon: [chunk.it-says-that, chunk.according-to, word.status]
+    contexts: [public-service-guidance, insurance-conditions]
+    typical_errors:
+      - "Following the familiar first instruction and overlooking a later exception."
+      - "Reading may as a requirement or must as optional because Russian modal force is inferred from context."
+      - "Using actual as актуальный and misreading current eligibility information."
+    examples:
+      - "Applications close on 30 June. Late forms are accepted only when a hospital confirms an emergency."
+      - "You may change the booking online, but discounted tickets must be changed before departure."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
 
   - id: everyday-life.resolving-service-dispute
     cefr: B1
@@ -242,7 +454,17 @@ topics:
       strong: [everyday-life.resolving-a-service-problem, everyday-life.asking-about-a-charge]
       soft: [written-interaction.respectful-disagreement]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [word.payment, word.charge, chunk.i-see-your-point]
+    contexts: [billing-dispute, rental-service]
+    typical_errors:
+      - "Using pretend when предъявить a claim or present evidence is intended."
+      - "Treating evidence as a count noun (an evidence, evidences)."
+      - "Demanding I want that you return instead of stating the requested resolution politely."
+    examples:
+      - "The receipt shows that I paid on Tuesday, but the account was charged again on Friday. I would like the duplicate charge refunded."
+      - "I understand the replacement policy; however, the device was already damaged when it arrived."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
 
   - id: everyday-life.comparing-health-travel-options
     cefr: B1
@@ -253,7 +475,17 @@ topics:
       strong: [everyday-life.comparing-service-options, everyday-life.changing-a-travel-plan]
       soft: [written-production.option-comparison]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [chunk.the-main-advantage-is, chunk.the-downside-is, word.option]
+    contexts: [treatment-choice, travel-planning]
+    typical_errors:
+      - "Using advices as a plural count noun instead of advice."
+      - "Saying depends from instead of depends on."
+      - "Comparing options with more cheaper or without than."
+    examples:
+      - "The direct flight is more expensive, but it avoids an overnight connection."
+      - "The clinic near home has a longer wait, whereas the central clinic offers an appointment tomorrow."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
 
   - id: everyday-life.explaining-personal-decision
     cefr: B1
@@ -264,7 +496,17 @@ topics:
       strong: [everyday-life.expressing-an-opinion-with-reasons, everyday-life.comparing-leisure-options]
       soft: [written-production.reasoned-recommendation]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [word.option, word.book, word.film]
+    contexts: [housing-choice, leisure-plan]
+    typical_errors:
+      - "Using because after a noun phrase instead of because of."
+      - "Calling the current choice actual under Russian influence."
+      - "Giving reasons as disconnected clauses without showing which alternative they support."
+    examples:
+      - "I chose the smaller flat because it is close to work and leaves room in my budget for travel."
+      - "We postponed the trip because the weather forecast was poor and the flexible tickets cost little to change."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
 
   - id: written-interaction.formal-service-request
     cefr: B1
@@ -275,7 +517,17 @@ topics:
       strong: [written-interaction.polite-request, written-interaction.follow-up]
       soft: [everyday-life.requesting-a-repair]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [chunk.could-you-please, chunk.could-you-take-a-look-at, word.repair]
+    contexts: [formal-repair-request, account-support]
+    typical_errors:
+      - "Opening with I ask you to, a direct Russian calque, instead of a conventional polite request."
+      - "Writing explain me instead of explain it to me."
+      - "Using informations or omitting the article in a singular problem description."
+    examples:
+      - "Could you please inspect the leak reported for apartment 14? It began on Tuesday and is now affecting the hallway."
+      - "My account was locked after the password reset. Please restore access or let me know which document you need."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
 
   - id: everyday-online-informal.thread-summary
     cefr: B1
@@ -286,7 +538,17 @@ topics:
       strong: [everyday-online-informal.forum-thread-reply, reading.main-idea-details]
       soft: [written-production.paraphrase-summary]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [chunk.main-point, chunk.in-short, informal.thanks-for-the-context]
+    contexts: [community-thread, project-channel]
+    typical_errors:
+      - "Using actual to mean current when summarizing the latest position."
+      - "Reporting every reply equally instead of separating the main question, alternatives, and consensus."
+      - "Writing people advises under Russian interference instead of people advise or users suggest."
+    examples:
+      - "The thread asks whether to keep weekly releases. Most replies favor the schedule, but two teams want a longer test window."
+      - "In short, residents support the new route if the last evening bus remains."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
 
   - id: everyday-online-informal.tone-repair
     cefr: B1
@@ -297,7 +559,17 @@ topics:
       strong: [everyday-online-informal.casual-neutral-rephrasing, written-interaction.respectful-disagreement]
       soft: [everyday-online-informal.tone-recognition]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [chunk.sorry-for-the-delay, informal.i-see-what-you-mean, informal.not-sure-i-agree]
+    contexts: [team-chat, community-message]
+    typical_errors:
+      - "Adding please to a bare imperative and assuming it automatically sounds polite."
+      - "Using normal as a false friend for acceptable or reasonable."
+      - "Translating Russian brevity directly, producing a message that sounds accusatory in English."
+    examples:
+      - "Could you check the figures again? I may be reading the final column differently."
+      - "I see what you mean. I am not sure this solution covers the offline case, though."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
 
   - id: everyday-online-informal.community-reply
     cefr: B1
@@ -308,7 +580,17 @@ topics:
       strong: [everyday-online-informal.forum-thread-reply, written-interaction.suggestion-feedback]
       soft: [written-production.fact-inference]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [informal.thanks-for-the-context, informal.do-you-have-a-source, chunk.as-far-as-i-understand]
+    contexts: [support-forum, neighborhood-group]
+    typical_errors:
+      - "Using advice as a count noun (an advice)."
+      - "Confusing maybe and may be in a recommendation."
+      - "Presenting an uncertain memory as fact instead of marking the source or confidence."
+    examples:
+      - "Thanks for the context. As far as I understand, the setting is available only to workspace owners; could you check your role?"
+      - "The road may be closed after eight. The council page has not been updated, so it would be worth checking before you leave."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
 
   - id: reading.implied-online-stance
     cefr: B1
@@ -319,7 +601,17 @@ topics:
       strong: [everyday-online-informal.tone-recognition, written-production.fact-inference]
       soft: [reading.personal-message]
     dimensions: [recognition, transfer]
-    lexicon: []
+    lexicon: [chunk.as-far-as-i-understand, informal.thanks-for-the-context, slang.kinda]
+    contexts: [forum-debate, team-chat]
+    typical_errors:
+      - "Taking an ironic positive phrase literally because Russian irony uses different cues."
+      - "Treating every hedge such as probably or kind of as uncertainty rather than possible politeness or distance."
+      - "Reading actually as актуально and missing that it corrects a previous assumption."
+    examples:
+      - "The writer says the plan is 'ambitious' and then lists three missing resources, which implies doubt rather than praise."
+      - "By writing 'That might work for a small team,' the reviewer limits support to one context."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
 
   - id: toefl-reading.skimming-main-purpose
     cefr: B1
