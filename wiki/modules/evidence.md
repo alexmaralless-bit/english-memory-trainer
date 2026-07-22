@@ -54,6 +54,7 @@ Evidence event-sourced ([[../platform/foundation]] §2); Attempt operational (fi
 - **MUST — семантическая идентичность**: evidence имеет `source_span_hash` (canonical hash ответа/цитаты) и `item_exposure_id`. Один source-span засчитывается **не более раза** на пару (target, dimension); переотправка того же span с новыми ключами/session id нового evidence не создаёт.
 - **MUST — независимость**: rubric/informal-повышение состояния требует ≥2 независимых сессий; независимость определяется по **новому prompt/контексту/интервалу**, «другая сессия» сама по себе не считается.
 - **MUST — multi-credit allocation** [ревью 0.4-5]: один span, релевантный нескольким target/dimension, зачитывается по **детерминированному алгоритму**, результат фиксируется как `CreditAllocation[]` в evidence-событии: для каждой пары (target, dimension) — `contribution` (вес) и `used | rejected` с `reason`. Primary получает полный вес, дополнительные — сниженный `multi_credit_weight` (*tunable*) с cap на сумму; двойного полного зачёта нет.
+- **MUST — evidence@1 [PD-2026-07-22]**: primary получает `1.0`, дополнительные цели — `0.5`, общий cap — `2.0`. Primary идёт первым, secondary сортируются канонически; превышающие cap остаются в `CreditAllocation[]` как `used: false`, `contribution: "0"`, `reason: total_cap`, а не исчезают. Версия `evidence@1` закрепляется в Session Manifest; replay читает сохранённые allocations и не пересчитывает их по active policy.
 - **MUST — выбор primary target: единственное правило precedence** [rereview R-4]: primary определяется по первому сработавшему критерию —
   1. **явный ReviewAssignment** этого attempt (если attempt выполнялся по цели манифеста);
   2. **declared target объективного item'а** (упражнение/placement-item объявляет свой target);
@@ -103,10 +104,11 @@ Evidence event-sourced ([[../platform/foundation]] §2); Attempt operational (fi
 
 ## 7. Открытые вопросы
 
-- **OPEN-7** закрыт: identity/independence/**multi-credit allocation record**/observation-disposition определены как единственные ветки; численные веса — *tunable*. Механика hash/exposure — kernel (OPEN-20).
+- **OPEN-7** закрыт: identity/independence/**multi-credit allocation record**/observation-disposition определены как единственные ветки; численные веса — versioned `evidence@1`. Механика hash/exposure реализована в kernel (OPEN-20 закрыт).
 
 ## История изменений
 
+- **2026-07-22 (5)**: [PD-2026-07-22] численные multi-credit правила вынесены в `evidence@1`: primary 1.0, secondary 0.5, total cap 2.0, лишние allocations видимы как rejected-by-cap.
 - **2026-07-22 (2)**: П.5 применена [PD-2026-07-22] — observation contract (finding_code + UTF-8 span, запрет клиентских verdict-полей), refs/pin `rubric:<profile>`, machine/subjective граница по закрытым opcodes, полнота PD-7 C, rubric capture + атомарный settlement.
 - **2026-07-22**: фазовые теги `[mvp]`/`[post-mvp]` сняты [PD-2026-07-22]: спека описывает одну цель продукта, порядок и статус — только в roadmap (Принцип 4). untrusted-захват — в продукте (порядок в roadmap).
 - **2026-07-21**: удалена конкурирующая сигнатура `record_attempt`; attempt валидируется по факту `STEP_PRESENTED`, а не по текущей композиционной ревизии; закрытие формализовано как `ReviewOutcome | CANCELLED`.

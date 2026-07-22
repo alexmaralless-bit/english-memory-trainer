@@ -16,7 +16,7 @@
 - **Тема (Topic)** — единица curriculum со стабильным ID вида `grammar.present-perfect.result`.
 - **LearningTarget** — то, что можно осваивать и оценивать: `Topic | LexicalItem`. Mastery, Stability, Retrievability, состояния и review определены для любого LearningTarget.
 - **Can-do** — формулировка темы как наблюдаемого умения («Report a completed action that matters now»); обязательна у каждой темы.
-- **Skill dimension** — измерение владения. Machine-ID и подписи: `recognition` (узнавание), `controlled_production` (применение в упражнении), `spontaneous_production` (самостоятельное письменное употребление), `transfer` (перенос в новый контекст). Текстовые модальности MVP.
+- **Skill dimension** — измерение владения. Machine-ID и подписи: `recognition` (узнавание), `controlled_production` (применение в упражнении), `spontaneous_production` (самостоятельное письменное употребление), `transfer` (перенос в новый контекст). Все dimensions текстовые по постоянному scope [PD-2026-07-22].
 - **Track** — сквозной трек программы через уровни; их десять, включая Everyday Life, Online & Informal Register, Word Formation и TOEFL R&W (с B1, в продукте — [PD-2026-07-21]).
 - **Curriculum graph** — DAG тем с prerequisites. Карта и источник рекомендаций, не система замков; сила prerequisite — `strong` / `soft` (не «hard»).
 - **CurriculumVersion** — версионируемый снимок программы; evidence и сессии pin-ят версию, под которой созданы (см. [[OPEN]] OPEN-9).
@@ -119,15 +119,19 @@
 - **Season** — период агрегации XP (отображение), не отдельная механика со штрафами.
 - **Streak** — счётчик подряд идущих дней практики по локальной календарной дате ученика; прерывание обнуляет счётчик, накопленный XP не сгорает.
 - **Tutor Compliance Score** — 0–100, доля соблюдённых обязательств агента за недавние сессии: вызваны ли required skills нужных версий, соблюдён ли correction-протокол, не было ли forbidden actions (агент не выставлял оценки, соблюдены postconditions) ([[modules/scoring]] §5).
+- **Fully observed terminal session** — терминальная сессия, для которой outer CLI telemetry содержит полную invocation→terminal цепочку и доступна pinned `obligations` policy. Только такие сессии входят в окно Tutor Compliance; неполнота даёт `no-data`, не ноль.
 
 ## Система
 
 - **Сессия** — одно занятие. Жизненный цикл: `STARTED → IN_PROGRESS → FINISHED | ABANDONED` (переход `STARTED → ABANDONED` допустим). Внутренняя структура свободная; обязательна фиксация результатов при завершении. `ABANDONED` сохраняет и учитывает всё зафиксированное и атомарно закрывает pending цели.
+- **session_revision** — coarse optimistic token всей живой сессии [PD-2026-07-22]. Каждая публичная session-мутация обязана предъявить текущий токен и увеличить его в одной UoW со своим эффектом; stale token → `SESSION_REVISION_CONFLICT`. Для `next/replan` одновременно действует более узкий `plan_version`.
 - **Session Manifest** — неизменяемый стартовый снимок сессии: tutor briefing, рекомендации тем, ReviewAssignment'ы, required skills и pinned versions; содержит ссылку на созданный в той же UoW `SessionPlan`, чьё живое состояние и ledger затем меняются отдельными CAS-командами.
 - **Tutor briefing** — полная картина ученика одним JSON в манифесте/resume. Генерится из состояния движка, не из Markdown.
 - **Session notes** — опциональные короткие заметки агента (`--note`). **Untrusted non-evidence**: экранируются в briefing, не интерпретируются как state.
 - **Event log** — append-only журнал DomainEvents. Authoritative носитель — **таблица в SQLite** (коммитится с state+outbox одной транзакцией); **JSONL — derived rebuildable export** (аудит/git/сверка replay), не источник истины ([[platform/foundation]] §2.1).
 - **Command / DomainEvent envelope** — конверт мутации/факта. Всегда: `id, type, occurred_at (UTC), actor/provider, correlation_id, causation_id, pinned_versions, payload_hash`. Условные: `sequence` (только событие) и `idempotency_key` (только мутирующая команда) ([[platform/foundation]] §3.3).
+- **CLI telemetry** — append-only операционные факты `cli.command_invoked` и `cli.command_terminated` вокруг dispatch. Содержат correlation/causation, redacted shape/hash, outcome/exit/error и session hint, но не raw аргументы; не являются business effect или learner evidence.
+- **User-turn capture** — untrusted факт на adapter boundary: полный локальный raw text, SHA-256, provider message id и проверенный UTF-8 byte span. Нужен для аудита trust contour и сам по себе не создаёт evidence.
 - **sequence** — монотонный canonical total order событий в event-таблице (tie-breaker для равных `occurred_at`); replay применяет события строго по нему. Есть только у `DomainEvent` (не у `Command`) и присваивается event-store'ом на append — до append не определён.
 - **pinned_versions** — зафиксированные в конверте версии policy (curriculum/scoring/scheduler/generation/rubric), под которыми создан факт; replay резолвит по ним, не по active. Safety (`production_eligible`) — исключение, резолвится по active.
 - **Unit of Work** — атомарный commit authoritative state + events + outbox одной транзакцией.

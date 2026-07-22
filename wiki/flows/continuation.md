@@ -11,7 +11,7 @@
 
 1. **Session notes — опциональные и untrusted.** При любой фиксации агент МОЖЕТ добавить короткую заметку (о чём говорили, на чём остановились). Resume возвращает заметки хронологически. **Заметки — untrusted non-evidence** [ревью C-8]: они не имеют пути в scoring, экранируются в briefing и никогда не интерпретируются как состояние. Даже если заметка утверждает «ученик уверенно освоил X», источник истины — вычисленный state, а не текст агента.
 2. **Tutor briefing в манифесте.** Движок отдаёт полную картину ученика одним JSON внутри Session Manifest (и в ответе resume). Чтение Obsidian агенту не требуется — vault остаётся проекцией для человека; briefing генерится из state. В briefing вычисленный state и свободный текст заметок физически разделены (trust boundary).
-3. **Без блокировок, с учётом.** Lease/блокировки сессий в MVP не вводятся: ученик один, реальная одновременность агентов маловероятна ([PD-2026-07-19]). `start`/`resume` регистрируют провайдера событием `AGENT_ATTACHED`. Transport-idempotency не решает семантический конфликт двух агентов [ревью G-8]: MUST — **уникальный терминальный outcome на review-assignment** и **optimistic session revision** (конкурентная запись с устаревшей ревизией отклоняется); полный correction protocol — [[../OPEN]] OPEN-11. Lease — MAY: необязательное усиление поверх этой защиты.
+3. **Без блокировок, с учётом.** Lease/блокировки сессий не вводятся: ученик один, реальная одновременность агентов маловероятна ([PD-2026-07-19]). `start`/`resume` регистрируют провайдера событием `AGENT_ATTACHED`. [PD-2026-07-22] Семантический конфликт двух агентов закрывает coarse `session_revision`: каждая публичная мутация требует текущий токен и увеличивает его в одной UoW со своим эффектом; stale writer получает `SESSION_REVISION_CONFLICT` без частичной записи. `next/replan` одновременно требуют `plan_version`. Lease — MAY: необязательное усиление поверх этой защиты.
 
 ## Состав tutor briefing
 
@@ -68,7 +68,7 @@ sequenceDiagram
 - **MUST**: каждое подключение агента к сессии фиксируется событием `AGENT_ATTACHED` с провайдером — вход для Tutor Compliance и аудита смены агентов.
 - **MAY**: session note при любой фиксации (`--note "..."`); движок хранит их как untrusted-данные и отдаёт при resume в отдельном блоке.
 - **MUST**: незакрытые review-цели брошенной сессии остаются обязательными к исходу перед finish (правило [[session]] сохраняется при смене агента).
-- **MUST**: при resume двумя агентами — optimistic session revision; конкурентная запись с устаревшей ревизией отклоняется стабильной ошибкой ([[../OPEN]] OPEN-11).
+- **MUST [PD-2026-07-22]**: при resume двумя агентами — coarse optimistic `session_revision`; конкурентная запись с устаревшей ревизией отклоняется `SESSION_REVISION_CONFLICT`. `resume` возвращает новый токен; все последующие mutating responses также возвращают его.
 
 ## Выведенные контракты (фиксируются в спеках модулей)
 
@@ -79,16 +79,17 @@ sequenceDiagram
 | `evidence` (0.4) | приём опциональной `--note` (untrusted) при фиксациях; выдача notes хронологически, отдельно от state |
 | `lessons` (0.5) | **владелец** события `AGENT_ATTACHED {provider, session, skills}`; `resume --provider` фиксирует подключение атомарно с возобновлением (R-3). `audit` событие только читает |
 | `cli` (0.7) | briefing в ответах `session start`/`resume` с trust boundary (state vs notes); стабильная схема briefing JSON |
-| `kernel` (0.2) | envelopes, idempotency scope, **CAS/optimistic revision** (механизм), correction protocol (OPEN-11) — без бизнес-логики |
+| `kernel` (0.2) | envelopes, global idempotency cache, CAS и общий coarse `session_revision` fence — без бизнес-логики |
 | `lessons` (0.5) | **уникальность терминального outcome на ReviewAssignment** — бизнес-правило (rereview J-R1), поверх kernel CAS |
 | `adapters`/skills (0.7) | cold-start протокол: один вызов CLI → полная картина; запрет восстановления из сторонних источников; notes не трактуются как state |
 
 ## Открытые вопросы
 
-Механизм — [[../OPEN]] OPEN-11 (idempotency scope, optimistic concurrency; kernel даёт CAS, uniqueness-правило — 0.5). Lease на сессию — MAY (см. инвариант 3).
+OPEN-11 закрыт [PD-2026-07-22]: coarse session fence + дополнительный `plan_version`, global idempotency и cached-retry precedence. Lease на сессию — MAY (см. инвариант 3), не часть roadmap.
 
 ## История изменений
 
+- **2026-07-22 (4)**: OPEN-11 закрыт [PD-2026-07-22]: coarse session fence реализован на всех публичных мутациях, cold `resume` возвращает и увеличивает токен, stale writer не оставляет эффекта.
 - **2026-07-22**: фазовые теги `[mvp]`/`[post-mvp]` сняты [PD-2026-07-22]: спека описывает одну цель продукта, порядок и статус — только в roadmap (Принцип 4). lease — MAY.
 - **2026-07-19 (3)**: rereview — boundary J-R1: kernel даёт CAS/optimistic revision (механизм), уникальность терминального outcome на ReviewAssignment — бизнес-правило 0.5 (README: platform без бизнес-логики).
 - **2026-07-19 (2)**: red-team триаж — session notes untrusted non-evidence с trust boundary в briefing (C-8); optimistic session revision и уникальный терминальный outcome против двух агентов (G-8).

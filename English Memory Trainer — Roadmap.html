@@ -1,0 +1,619 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Current implementation roadmap for English Memory Trainer.">
+  <title>English Memory Trainer — Roadmap</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --canvas: #f3f6f4;
+      --surface: rgba(255, 255, 255, 0.9);
+      --surface-strong: #ffffff;
+      --text: #15201d;
+      --muted: #61706a;
+      --line: #d7e0dc;
+      --teal: #087f70;
+      --teal-soft: #d8f1eb;
+      --blue: #2563a9;
+      --blue-soft: #e4eefb;
+      --amber: #9a5a00;
+      --amber-soft: #fff0cf;
+      --red: #a13636;
+      --red-soft: #fbe4e4;
+      --violet: #6750a4;
+      --violet-soft: #eee9fb;
+      --shadow: 0 18px 50px rgba(29, 55, 47, 0.09);
+      --radius: 20px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --canvas: #101614;
+        --surface: rgba(24, 33, 30, 0.92);
+        --surface-strong: #18211e;
+        --text: #edf4f1;
+        --muted: #a6b5af;
+        --line: #34423d;
+        --teal: #5bd6c1;
+        --teal-soft: #173b35;
+        --blue: #83b8f5;
+        --blue-soft: #1d334b;
+        --amber: #f2bd69;
+        --amber-soft: #49351b;
+        --red: #f19b9b;
+        --red-soft: #482626;
+        --violet: #c2aff7;
+        --violet-soft: #332a4d;
+        --shadow: 0 18px 50px rgba(0, 0, 0, 0.25);
+      }
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      background:
+        radial-gradient(circle at 8% -10%, rgba(8, 127, 112, 0.16), transparent 34rem),
+        radial-gradient(circle at 100% 18%, rgba(37, 99, 169, 0.10), transparent 30rem),
+        var(--canvas);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+
+    a { color: inherit; }
+
+    a:focus-visible {
+      outline: 3px solid var(--teal);
+      outline-offset: 4px;
+      border-radius: 5px;
+    }
+
+    code {
+      padding: 0.12rem 0.38rem;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--canvas);
+      font: 0.88em ui-monospace, SFMono-Regular, Consolas, monospace;
+    }
+
+    .shell {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 64px;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: clamp(30px, 6vw, 68px);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      background: linear-gradient(145deg, var(--surface-strong), var(--surface));
+      box-shadow: var(--shadow);
+    }
+
+    .hero::after {
+      position: absolute;
+      right: -72px;
+      bottom: -96px;
+      width: 290px;
+      height: 290px;
+      border: 54px solid var(--teal-soft);
+      border-radius: 50%;
+      content: "";
+      opacity: 0.8;
+    }
+
+    .eyebrow {
+      position: relative;
+      z-index: 1;
+      margin: 0 0 12px;
+      color: var(--teal);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      position: relative;
+      z-index: 1;
+      max-width: 850px;
+      margin: 0;
+      font-size: clamp(2.35rem, 7vw, 5.25rem);
+      line-height: 0.98;
+      letter-spacing: -0.055em;
+    }
+
+    .hero-copy {
+      position: relative;
+      z-index: 1;
+      max-width: 700px;
+      margin: 24px 0 0;
+      color: var(--muted);
+      font-size: clamp(1rem, 2vw, 1.2rem);
+    }
+
+    .hero-meta {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 26px;
+    }
+
+    .hero-meta span,
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 0.76rem;
+      font-weight: 760;
+      letter-spacing: 0.02em;
+    }
+
+    .hero-meta span {
+      border: 1px solid var(--line);
+      background: var(--surface);
+    }
+
+    nav {
+      position: sticky;
+      z-index: 5;
+      top: 10px;
+      display: flex;
+      gap: 6px;
+      margin: 16px 0 0;
+      padding: 8px;
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: var(--surface);
+      box-shadow: 0 10px 24px rgba(29, 55, 47, 0.07);
+      backdrop-filter: blur(14px);
+    }
+
+    nav a {
+      flex: 0 0 auto;
+      padding: 7px 11px;
+      border-radius: 9px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    nav a:hover {
+      background: var(--teal-soft);
+      color: var(--teal);
+    }
+
+    section { scroll-margin-top: 82px; }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin: 16px 0 0;
+    }
+
+    .metric {
+      min-height: 142px;
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: 0 12px 30px rgba(29, 55, 47, 0.05);
+    }
+
+    .metric strong {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--teal);
+      font-size: clamp(1.8rem, 4vw, 2.65rem);
+      line-height: 1;
+      letter-spacing: -0.04em;
+    }
+
+    .metric span {
+      color: var(--muted);
+      font-size: 0.87rem;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 24px;
+      margin: 54px 0 17px;
+    }
+
+    .section-head h2 {
+      margin: 0;
+      font-size: clamp(1.6rem, 4vw, 2.45rem);
+      line-height: 1.05;
+      letter-spacing: -0.035em;
+    }
+
+    .section-head p {
+      max-width: 620px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+      text-align: right;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: 0 14px 34px rgba(29, 55, 47, 0.05);
+    }
+
+    .roadmap-list { overflow: hidden; }
+
+    .roadmap-row {
+      display: grid;
+      grid-template-columns: 76px minmax(180px, 0.8fr) minmax(300px, 1.7fr) 122px;
+      gap: 18px;
+      align-items: start;
+      padding: 22px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .roadmap-row:last-child { border-bottom: 0; }
+
+    .number {
+      color: var(--muted);
+      font: 750 0.88rem ui-monospace, SFMono-Regular, Consolas, monospace;
+    }
+
+    .roadmap-row h3 {
+      margin: -2px 0 0;
+      font-size: 1rem;
+      line-height: 1.35;
+    }
+
+    .roadmap-row p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .status { justify-self: end; }
+
+    .done { color: var(--teal); background: var(--teal-soft); }
+    .open { color: var(--violet); background: var(--violet-soft); }
+    .progress { color: var(--blue); background: var(--blue-soft); }
+    .blocked { color: var(--red); background: var(--red-soft); }
+    .planned { color: var(--amber); background: var(--amber-soft); }
+
+    .focus-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .focus-card { padding: 24px; }
+
+    .focus-card .kicker {
+      margin: 0 0 12px;
+      color: var(--amber);
+      font-size: 0.74rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .focus-card h3 { margin: 0 0 8px; font-size: 1.12rem; }
+    .focus-card p { margin: 0; color: var(--muted); font-size: 0.9rem; }
+
+    .focus-card ul,
+    .policy-card ul {
+      margin: 14px 0 0;
+      padding-left: 20px;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .focus-card li + li,
+    .policy-card li + li { margin-top: 7px; }
+
+    .phase-summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .summary-card { padding: 24px; }
+    .summary-card h3 { margin: 0; font-size: 1.08rem; }
+    .summary-card .big { display: block; margin: 18px 0 6px; color: var(--teal); font-size: 2rem; font-weight: 820; }
+    .summary-card p { margin: 0; color: var(--muted); font-size: 0.88rem; }
+
+    .policy-card { padding: 26px; }
+    .policy-card h3 { margin: 0 0 8px; font-size: 1.15rem; }
+    .policy-card p { margin: 0; color: var(--muted); }
+
+    .timeline { padding: 6px 24px; }
+
+    .milestone {
+      display: grid;
+      grid-template-columns: 92px 1fr;
+      gap: 20px;
+      padding: 19px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .milestone:last-child { border-bottom: 0; }
+    .milestone code { justify-self: start; }
+    .milestone h3 { margin: 0 0 4px; font-size: 0.96rem; }
+    .milestone p { margin: 0; color: var(--muted); font-size: 0.86rem; }
+
+    .horizon {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 22px;
+    }
+
+    .horizon span {
+      padding: 8px 11px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      background: var(--canvas);
+      font-size: 0.84rem;
+    }
+
+    footer {
+      margin-top: 42px;
+      padding: 25px 4px 0;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    footer strong { color: var(--text); }
+
+    @media (max-width: 900px) {
+      .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .phase-summary { grid-template-columns: 1fr; }
+      .roadmap-row { grid-template-columns: 58px 1fr 112px; }
+      .roadmap-row p { grid-column: 2 / -1; }
+    }
+
+    @media (max-width: 650px) {
+      .shell { width: min(100% - 20px, 1180px); padding-top: 10px; }
+      .hero { padding: 30px 22px 42px; border-radius: 20px; }
+      .hero::after { width: 180px; height: 180px; right: -75px; bottom: -75px; border-width: 34px; }
+      nav { top: 4px; }
+      .metrics, .focus-grid { grid-template-columns: 1fr; }
+      .metric { min-height: 0; }
+      .section-head { display: block; }
+      .section-head p { margin-top: 9px; text-align: left; }
+      .roadmap-row { grid-template-columns: 46px 1fr; gap: 11px; padding: 19px 16px; }
+      .roadmap-row p { grid-column: 2; }
+      .status { grid-column: 2; justify-self: start; }
+      .milestone { grid-template-columns: 1fr; gap: 9px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <p class="eyebrow">Living roadmap · updated 22 July 2026</p>
+      <h1>English Memory Trainer</h1>
+      <p class="hero-copy">A deterministic Reading and Writing learning engine with replaceable tutors. The A1–C2 curriculum and the Phase 2 vertical slice are complete; real use now supplies calibration evidence.</p>
+      <div class="hero-meta" aria-label="Current state">
+        <span>Phase 0 complete</span>
+        <span>Phase 2 complete</span>
+        <span>Permanent text-only scope</span>
+        <span>Personal tool</span>
+      </div>
+    </header>
+
+    <nav aria-label="Roadmap sections">
+      <a href="#snapshot">Snapshot</a>
+      <a href="#phase-2">Phase 2</a>
+      <a href="#decisions">Decisions</a>
+      <a href="#program">Program</a>
+      <a href="#foundation">Foundation</a>
+      <a href="#milestones">Milestones</a>
+    </nav>
+
+    <section id="snapshot" aria-labelledby="snapshot-title">
+      <div class="section-head">
+        <h2 id="snapshot-title">Current snapshot</h2>
+        <p>Counts are taken from the canonical roadmap and the latest completion gates.</p>
+      </div>
+      <div class="metrics">
+        <article class="metric"><strong>275</strong><span>fully authored topics across 53 modules and 10 tracks</span></article>
+        <article class="metric"><strong>1,142</strong><span>lexicon units, including academic and real slang layers</span></article>
+        <article class="metric"><strong>12</strong><span>live engine modules, including read-only audit</span></article>
+        <article class="metric"><strong>55</strong><span>registered CLI commands with structured envelopes</span></article>
+        <article class="metric"><strong>463</strong><span>passing tests; the whole collected suite is green</span></article>
+        <article class="metric"><strong>0</strong><span>xfails: all four completion findings are executable behaviour now</span></article>
+        <article class="metric"><strong>12/12</strong><span>accepted Phase 0 design contracts</span></article>
+        <article class="metric"><strong>7 / 56</strong><span>open questions / resolved decisions; all remaining questions are non-blocking</span></article>
+      </div>
+    </section>
+
+    <section id="phase-2" aria-labelledby="phase-2-title">
+      <div class="section-head">
+        <h2 id="phase-2-title">Phase 2 · vertical slice</h2>
+        <p>The learner flow is operational end-to-end, including measurable control, crash-safe concurrency and explicit trust boundaries.</p>
+      </div>
+      <div class="card roadmap-list">
+        <article class="roadmap-row">
+          <span class="number">2.1</span><h3>Curriculum loading</h3>
+          <p>Total graph validation, versioned activation and real A1–C2 content.</p><span class="pill done status">done</span>
+        </article>
+        <article class="roadmap-row">
+          <span class="number">2.2</span><h3>Session end-to-end</h3>
+          <p>Start, control plan, rendered exercises, attempts, evidence, finish gate and the growing exercise bank.</p><span class="pill done status">done</span>
+        </article>
+        <article class="roadmap-row">
+          <span class="number">2.3</span><h3>Scoring and review</h3>
+          <p>Deterministic Decimal scoring, scheduler, replay, rubric settlement and closed review obligations.</p><span class="pill done status">done</span>
+        </article>
+        <article class="roadmap-row">
+          <span class="number">2.4</span><h3>Memory projection</h3>
+          <p>Byte-deterministic Obsidian pages and dashboards; generated memory stays separate from learner notes.</p><span class="pill done status">done</span>
+        </article>
+        <article class="roadmap-row">
+          <span class="number">2.5</span><h3>Adapters and resume</h3>
+          <p>Ten canonical skills, provider sync/compare and one-call tutor briefing from engine-owned state.</p><span class="pill done status">done</span>
+        </article>
+        <article class="roadmap-row">
+          <span class="number">2.6</span><h3>Placement</h3>
+          <p>Replayable text placement lifecycle, exposure control, self-assessment and ACTIVE ceiling.</p><span class="pill done status">done</span>
+        </article>
+        <article class="roadmap-row">
+          <span class="number">2.7</span><h3>Tutor swap demo</h3>
+          <p>Provider A → provider B without chat memory is proven; the coarse session fence rejects a stale tutor without partial effects.</p><span class="pill done status">done</span>
+        </article>
+        <article class="roadmap-row">
+          <span class="number">2.8</span><h3>Learning control</h3>
+          <p>Signals, probes, availability, traces and metrics are live. A complete 60-parameter catalogue drives propose/confirm calibration; causal state transitions are total and backfillable.</p><span class="pill done status">done</span>
+        </article>
+        <article class="roadmap-row">
+          <span class="number">2.9</span><h3>Trust contour</h3>
+          <p>Provider ingress captures raw local turns safely; outer CLI telemetry observes successes and refusals; versioned obligations produce Tutor Compliance or honest no-data.</p><span class="pill done status">done</span>
+        </article>
+      </div>
+    </section>
+
+    <section id="decisions" aria-labelledby="decisions-title">
+      <div class="section-head">
+        <h2 id="decisions-title">Completion decisions implemented</h2>
+        <p>The four previously blocking choices are now explicit in policy, code, tests and canon.</p>
+      </div>
+      <div class="focus-grid">
+        <article class="card focus-card">
+          <p class="kicker">Control · 2.8</p>
+          <h3>Complete tunable catalogue</h3>
+          <p>Sixty owner-policy leaves are validated in both directions; unknown ranges stay frozen instead of pretending to be calibrated.</p>
+        </article>
+        <article class="card focus-card">
+          <p class="kicker">Concurrency · OPEN-11 closed</p>
+          <h3>Coarse session fence</h3>
+          <p>Every public session mutation requires one optimistic revision; next/replan additionally retain plan-version CAS.</p>
+        </article>
+        <article class="card focus-card">
+          <p class="kicker">Trust · 2.9</p>
+          <h3>Ingress and obligations</h3>
+          <p>Full local raw turns, redacted command telemetry and versioned effect matching form an auditable trust contour.</p>
+        </article>
+        <article class="card focus-card">
+          <p class="kicker">Scoring · metrics</p>
+          <h3>Canonical state transition</h3>
+          <p>Every scoring-pinned source gets one causal transition fact, including no-op; legacy gaps are rebuilt in sequence.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="program" aria-labelledby="program-title">
+      <div class="section-head">
+        <h2 id="program-title">Learning program</h2>
+        <p>Designed before generation: exercises are created during sessions, while topics, mastery expectations and policy boundaries are known in advance.</p>
+      </div>
+      <div class="phase-summary">
+        <article class="card summary-card">
+          <h3>A1–C2 curriculum</h3>
+          <span class="big">275 topics</span>
+          <p>Every topic has mastery criteria, Russian-interference errors, original examples and contexts. Grammar tail becomes productive from B1 onward.</p>
+        </article>
+        <article class="card summary-card">
+          <h3>TOEFL reading &amp; writing</h3>
+          <span class="big">26 topics</span>
+          <p>B1–C1 progression for academic reading, note-taking, synthesis, thesis building, argument and timed writing. Listening and speaking are permanently outside this product.</p>
+        </article>
+        <article class="card summary-card">
+          <h3>Lexical system</h3>
+          <span class="big">1,142 units</span>
+          <p>Words, chunks, idioms, phrasal verbs, academic vocabulary and slang with transparency, register, currency and production-safety metadata.</p>
+        </article>
+      </div>
+
+      <div class="card policy-card" style="margin-top: 14px;">
+        <h3>Ten accepted live policies</h3>
+        <p><code>generation@1</code>, <code>control@1</code>, <code>scoring@1</code>, <code>scheduler@1</code>, <code>rubric@1</code>, <code>assessments@1</code>, <code>lessons@1</code>, <code>evidence@1</code>, <code>obligations@1</code> and <code>tunables@1</code>.</p>
+        <ul>
+          <li>Session and placement manifests pin active versions for deterministic replay.</li>
+          <li>Only original exercise text is allowed; no borrowed passages or excerpts.</li>
+          <li>Production eligibility is checked against active usage and currency policy at delivery time.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="foundation" aria-labelledby="foundation-title">
+      <div class="section-head">
+        <h2 id="foundation-title">Foundation and kernel</h2>
+        <p>All twelve design contracts are accepted. Kernel review closed after five independent red-team passes; operational quality is now guarded by tests and replay.</p>
+      </div>
+      <div class="card roadmap-list">
+        <article class="roadmap-row">
+          <span class="number">0.x</span><h3>Design contracts</h3>
+          <p>Learning model, foundation, curriculum, evidence/scoring/review, lesson lifecycle, memory, CLI/adapters, flows, lexical system, learner/audit/gates and control.</p><span class="pill done status">12 accepted</span>
+        </article>
+        <article class="roadmap-row">
+          <span class="number">1.1</span><h3>Tooling</h3>
+          <p>Python 3.12, src layout, pytest, Ruff and strict mypy.</p><span class="pill done status">done</span>
+        </article>
+        <article class="roadmap-row">
+          <span class="number">1.2</span><h3>Kernel</h3>
+          <p>Deterministic event store, atomic event+outbox, policy registry, corrections, CLI, multi-aggregate CAS and projection rebuild. Alias/deprecation mappings remain non-blocking.</p><span class="pill open status">done · open</span>
+        </article>
+        <article class="roadmap-row">
+          <span class="number">1.3</span><h3>Storage</h3>
+          <p>Canonical layout, safe SQLite snapshots and repository boundary.</p><span class="pill done status">done</span>
+        </article>
+      </div>
+    </section>
+
+    <section id="milestones" aria-labelledby="milestones-title">
+      <div class="section-head">
+        <h2 id="milestones-title">Recent milestones</h2>
+        <p>Latest implementation and evidence commits, newest first.</p>
+      </div>
+      <div class="card timeline">
+        <article class="milestone"><code>2d7373c</code><div><h3>Complete Phase 2 safety and trust contracts</h3><p>Closed all four accepted findings with deterministic runtime behaviour and removed every strict xfail.</p></div></article>
+        <article class="milestone"><code>7e5d66a</code><div><h3>Finalize the pre-decision completion journal</h3><p>Recorded the boundary that the owner's four decisions subsequently resolved.</p></div></article>
+        <article class="milestone"><code>4b514c9</code><div><h3>Document trust-contour findings</h3><p>Captured the missing semantics that were later resolved without inventing runtime behaviour.</p></div></article>
+        <article class="milestone"><code>9eb673b</code><div><h3>Complete lessons wiring and OPEN-11 decision record</h3><p>Joined session lifecycle to live control inputs while preserving atomic planning.</p></div></article>
+        <article class="milestone"><code>7e5a172</code><div><h3>Wire live control into planning</h3><p>Signals, probes, saturation, recurring errors, starvation and availability now influence real plans.</p></div></article>
+        <article class="milestone"><code>40b44b3</code><div><h3>Add bank reuse and observed-error risk</h3><p>Accepted exercises are reused under active safety checks and recurring observations feed control.</p></div></article>
+        <article class="milestone"><code>c53f18d</code><div><h3>Add control metrics</h3><p>Seven deterministic metric folds and balanced hysteresis alerts became queryable.</p></div></article>
+        <article class="milestone"><code>2076a5e</code><div><h3>Add immutable DecisionTrace</h3><p><code>trainer why</code> can explain deterministic planning decisions.</p></div></article>
+      </div>
+    </section>
+
+    <section aria-labelledby="horizon-title">
+      <div class="section-head">
+        <h2 id="horizon-title">Product boundary and optional horizon</h2>
+        <p>Listening and speaking are a permanent boundary; the other items need real demand before implementation.</p>
+      </div>
+      <div class="card horizon">
+        <span>Listening and speaking — outside product</span>
+        <span>Full four-section TOEFL simulator — outside product</span>
+        <span>FSRS</span>
+        <span>Web UI</span>
+        <span>Machine gates for all wiki prose</span>
+      </div>
+    </section>
+
+    <footer>
+      <strong>Source of truth:</strong> <code>wiki/roadmap.md</code>. This standalone HTML snapshot was rebuilt on 2026-07-22. It contains no external scripts, fonts or network dependencies. Current verification baseline: 463 collected · 463 passed · 0 xfail · Ruff and strict mypy clean.
+    </footer>
+  </main>
+</body>
+</html>

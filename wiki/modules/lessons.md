@@ -27,6 +27,8 @@ stateDiagram-v2
 - **MUST**: конфликт `start` при активной сессии → `{error_code, allowed_actions: resume | abandon_and_start}`; выбор делает ученик. `abandon_and_start` — две независимые идемпотентные команды ([[../flows/session]], foundation §3.4).
 - **MUST — stale-сессия как replayable факт** [PD-2026-07-20]: сессия без активности дольше `stale_session_days` (*tunable*, дефолт 7) терминализуется как `ABANDONED`. Переход эмитится **append-only событием** `SESSION_STALE_ABANDONED {session_id, boundary_at, last_activity_at, pinned_lessons_policy}`, где `boundary_at` — детерминированный момент пересечения (из `last_activity_at` + порог), **не** wall-clock запуска sweep. Replay применяет событие, а не текущее время. Sweep идемпотентен по `session_id` (сессия терминальна ровно один раз).
 - **MUST**: терминальные состояния окончательны: `finish`/`resume`/`abandon` на терминальной сессии — стабильная ошибка; identical retry возвращает cached result (foundation §3.4).
+- **MUST — coarse session fence [PD-2026-07-22]**: каждая публичная мутация живой сессии (`next`, `replan`, render, attempt record/finalize, observed record, review close, finish, abandon и adapter ingress) принимает обязательный `expected_session_revision`, сверяет и увеличивает единый `session_revision` в той же UoW, что и собственный эффект. Промах даёт стабильный `SESSION_REVISION_CONFLICT` (`expected`, `current`) и не оставляет событий или aggregate-write. `next`/`replan` дополнительно сверяют узкий `plan_version`; один токен не заменяет другой. `start`, `resume`, `peek` и mutating-response возвращают актуальную ревизию. `resume` — cold-start исключение: читает текущую ревизию и атомарно увеличивает её вместе с `AGENT_ATTACHED`. Same-key/same-payload cached retry возвращается до stale-проверки.
+- **MUST — stale threshold versioned**: `stale_session_days` берётся из закреплённой `lessons@1`; принятый дефолт — `7`. Sweep закрывает pending attempts/review assignments, очищает active pointer и пишет терминализацию одной UoW; повтор — no-op.
 
 ## 3. Attempt lifecycle [PD-2026-07-20]
 
@@ -39,14 +41,14 @@ stateDiagram-v2
 
 - **MUST**: три состояния — `draft` (начат, не доведён), `recorded` (raw answer + observations сохранены), `assessed` (движок вычислил AttemptAssessment, [[evidence]]). Разделение `recorded`/`assessed` нужно для recovery: крэш между фиксацией и оценкой различим.
 - **MUST**: в scoring участвует только `assessed`; `draft` и `recorded` — нет.
-- **MUST — finalize/recover**: `finalize_attempt` идемпотентен; при resume сессия отдаёт незавершённые attempts с их состоянием, и `recover` доводит `draft`→`recorded`→`assessed` без дублей (kernel idempotency, OPEN-11).
+- **MUST — finalize/recover**: `finalize_attempt` идемпотентен; при resume сессия отдаёт незавершённые attempts с их состоянием, и `recover` доводит `draft`→`recorded`→`assessed` без дублей (global kernel idempotency; OPEN-11 закрыт [PD-2026-07-22]).
 
 ## 4. Терминализация (finish / abandon)
 
 - **MUST — FINISHED требует пустой pending-set**: все attempts `assessed`, каждый ReviewAssignment имеет терминальную диспозицию: ровно один ReviewOutcome **либо** `CANCELLED`. Иначе finish отклоняется бизнес-ошибкой (это **не** авто-закрытие).
 - **MUST — ABANDONED преобразует pending**: недостигнутые ReviewAssignment закрываются как `INSUFFICIENT_EVIDENCE(reason=abandoned)`, re-entry-блок получает свой outcome, `draft`/`recorded` attempts закрываются без вклада в scoring.
 - **MUST — closure trigger** [OPEN-10, rereview R-5, P0-2/R-4]: второй триггер закрытия ReviewAssignment (наряду с явным `close_review`) — **`abandon`**, а не терминализация вообще. `finish` целей не закрывает: он требует уже пустой pending-set. Правило закрытия — [[evidence]] §4.3, триггер — здесь.
-- **MUST — уникальность терминальной диспозиции** [OPEN-11 бизнес-часть]: на один ReviewAssignment допускается ровно одна терминальная ветка: ReviewOutcome либо `CANCELLED`. Для ветки outcome существует ровно один ReviewOutcome. Правило строится **поверх** kernel-CAS (multi-aggregate expected-revisions, foundation §3.5); два агента не могут записать конфликтующие диспозиции. Коррекция — только correction-событием, не вторым outcome.
+- **MUST — уникальность терминальной диспозиции** [OPEN-11 закрыт, PD-2026-07-22]: на один ReviewAssignment допускается ровно одна терминальная ветка: ReviewOutcome либо `CANCELLED`. Для ветки outcome существует ровно один ReviewOutcome. Все публичные пути закрытия требуют coarse `expected_session_revision`; проверка fence, outcome/cancellation, causal scoring transition и увеличение ревизии коммитятся одной UoW. Два агента не могут записать конфликтующие диспозиции. Коррекция — только correction-событием, не вторым outcome.
 - **MUST — атомарность**: одной SQLite-транзакцией коммитятся authoritative state + events + outbox; `summary` — engine-generated в той же UoW (агент может передать `--summary-draft`); **Obsidian-проекция post-commit через outbox** (foundation §3.7). Различие FINISHED/ABANDONED — только полнота summary и способ закрытия pending.
 - **MUST**: терминализация FINISHED и ABANDONED одинаково пересчитывает производные (scores, расписание, XP, проекция) — рассогласованных производных не остаётся.
 
@@ -69,12 +71,12 @@ stateDiagram-v2
 |---|---|---|
 | `start(duration?, provider, mode?)` | API | создаёт сессию + Session Manifest (pinned versions + `required_skills` + план композиции) |
 | `resume(session_id)` | API | полное состояние сессии + tutor briefing ([[../flows/continuation]]) |
-| `abandon(session_id)` | API | идемпотентная терминализация без summary |
-| `finish(session_id, summary_draft?)` | API | проверка postconditions → атомарная терминализация |
+| `abandon(session_id, expected_session_revision)` | API | идемпотентная терминализация без summary |
+| `finish(session_id, expected_session_revision, summary_draft?)` | API | проверка postconditions → атомарная терминализация |
 | `peek_next_step(session_id)` | API (read-only) | следующий шаг + текущий `plan_version`, без факта выдачи |
-| `claim_next_step(session_id, expected_plan_version, idempotency_key)` | API (mutating, CAS) | выдача шага по протоколу [[control]] §4.2; возвращает bank item или generation directive |
-| `record_rendered_exercise(session_id, step_id, exercise_instance, idempotency_key)` | API (mutating) | фиксирует иммутабельный rendered-exercise снапшот до предъявления ученику [П.3] |
-| `replan(session_id, expected_plan_version, idempotency_key)` | API (mutating, CAS) | новая композиционная ревизия остатка бюджета |
+| `claim_next_step(session_id, expected_session_revision, expected_plan_version, idempotency_key)` | API (mutating, CAS) | выдача шага по протоколу [[control]] §4.2; возвращает bank item или generation directive |
+| `record_rendered_exercise(session_id, expected_session_revision, step_id, exercise_instance, idempotency_key)` | API (mutating) | фиксирует иммутабельный rendered-exercise снапшот до предъявления ученику [П.3] |
+| `replan(session_id, expected_session_revision, expected_plan_version, idempotency_key)` | API (mutating, CAS) | новая композиционная ревизия остатка бюджета |
 | `SESSION_STARTED` / `FINISHED` / `ABANDONED` / `SESSION_STALE_ABANDONED` | publishes | lifecycle-факты |
 | `EXERCISE_RENDERED` | publishes | rendered-exercise снапшот, привязанный к `step_id`; источник для исторических попыток/replay [П.3, PD-1 A] |
 | `EXERCISE_ACCEPTED` / `EXERCISE_REJECTED` / `EXERCISE_RETIRED` | publishes | lifecycle банка упражнений; приём только после оценённой попытки или maintainer fast-path [П.3, PD-2 A] |
@@ -92,14 +94,14 @@ stateDiagram-v2
 | Команда | Что делает |
 |---|---|
 | `trainer session start [--duration N] --provider X [--mode balanced\|maintenance\|re_entry] --format json` | старт или конфликт с `allowed_actions`; фиксирует `AGENT_ATTACHED` для стартового провайдера |
-| `trainer session next --session ID --expected-plan-version V --idempotency-key K --format json` | **выдаёт** следующий шаг, фиксирует `STEP_PRESENTED`, возвращает новый `plan_version`; идемпотентна |
-| `trainer session peek --session ID --format json` | показывает следующий шаг и текущий `plan_version`, ничего не меняя |
-| `trainer session replan --session ID --expected-plan-version V --idempotency-key K --format json` | пересборка остатка: `composition_revision + 1`, `plan_version + 1`; выпавшие непредъявленные review-цели получают `CANCELLED` в той же UoW ([[control]] §4.2) |
+| `trainer session next --session ID --expected-session-revision R --expected-plan-version V --idempotency-key K --format json` | **выдаёт** следующий шаг, фиксирует `STEP_PRESENTED`, возвращает новые `session_revision` и `plan_version`; идемпотентна |
+| `trainer session peek --session ID --format json` | показывает следующий шаг и текущие `session_revision`/`plan_version`, ничего не меняя |
+| `trainer session replan --session ID --expected-session-revision R --expected-plan-version V --idempotency-key K --format json` | пересборка остатка: `composition_revision + 1`, `plan_version + 1`; выпавшие непредъявленные review-цели получают `CANCELLED` в той же UoW ([[control]] §4.2) |
 | `trainer session resume --session ID --provider X --format json` | состояние + briefing + notes; фиксирует `AGENT_ATTACHED` |
-| `trainer session abandon --session ID` | идемпотентная терминализация |
-| `trainer session finish --session ID [--summary-draft FILE]` | завершение с postconditions |
-| `trainer exercise rendered --session ID --step STEP_ID --input FILE --idempotency-key K --format json` | фиксация rendered-exercise снапшота до предъявления ученику; возвращает `exercise_instance_id` |
-| `trainer attempt record --session ID --step STEP_ID [--exercise-instance EXERCISE_ID] --input FILE [--note "..."]` | фиксация attempt по выданному шагу; structured-задачи ссылаются на сохранённый exercise-снапшот; `--note` — untrusted-заметка ([[evidence]] §3) |
+| `trainer session abandon --session ID --expected-session-revision R` | идемпотентная терминализация |
+| `trainer session finish --session ID --expected-session-revision R [--summary-draft FILE]` | завершение с postconditions |
+| `trainer exercise rendered --session ID --expected-session-revision R --step STEP_ID --input FILE --idempotency-key K --format json` | фиксация rendered-exercise снапшота до предъявления ученику; возвращает `exercise_instance_id` |
+| `trainer attempt record --session ID --expected-session-revision R --step STEP_ID [--exercise-instance EXERCISE_ID] --input FILE [--note "..."]` | фиксация attempt по выданному шагу; structured-задачи ссылаются на сохранённый exercise-снапшот; `--note` — untrusted-заметка ([[evidence]] §3) |
 
 Ошибки: `error_code` + причины + `allowed_actions` + `next_action`; отдельно бизнес-postconditions и lifecycle/concurrency/idempotency ([[../flows/session]]).
 
@@ -111,10 +113,11 @@ stateDiagram-v2
 
 ## 8. Открытые вопросы
 
-Закрывает **OPEN-10** (Attempt machine, closure trigger, терминализация) и бизнес-часть **OPEN-11** (uniqueness). Остаётся калибровка `stale_session_days`.
+Закрывает **OPEN-10** и **OPEN-11**: Attempt/session lifecycle, терминализация, uniqueness и coarse optimistic session fence реализованы. Числовой порог stale остаётся versioned tunable и калибруется по эксплуатации, но контракт не открыт.
 
 ## История изменений
 
+- **2026-07-22 (3)**: [PD-2026-07-22] принят coarse session fence: все публичные мутации требуют `expected_session_revision`, `next/replan` сохраняют второй `plan_version`; stale threshold вынесен в `lessons@1`.
 - **2026-07-22 (2)**: П.5 применена [PD-2026-07-22] — rubric resolution при рендере: explicit/exact-default ref против pinned rubric-версии манифеста, rubric_input_hash в EXERCISE_RENDERED, без active/alias fallback; unrendered conversation — default при assessment.
 - **2026-07-22**: фазовые теги `[mvp]`/`[post-mvp]` сняты [PD-2026-07-22]: спека описывает одну цель продукта, порядок и статус — только в roadmap (Принцип 4).
 - **2026-07-21**: синхронизированы терминальная диспозиция `ReviewOutcome | CANCELLED` и единый CAS-протокол `plan_version` для `peek → next/replan`.

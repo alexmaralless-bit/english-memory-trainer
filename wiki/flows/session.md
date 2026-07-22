@@ -99,7 +99,7 @@ sequenceDiagram
 - **MUST**: Session Manifest содержит `required_skills` с версиями и **pinned versions** curriculum/policy; агент не полагается на implicit invocation.
 - **MUST**: каждая review-цель к моменту finish имеет ReviewOutcome либо `CANCELLED`; replan-отмена не маскируется под `INSUFFICIENT_EVIDENCE` и не создаёт retry.
 - **MUST**: отказ от re-entry и невыполнение рекомендаций ничего не блокируют ([[../product/learning-model]] §7).
-- **MUST — причины отклонения finish** [rereview G-R2]: для **валидной команды к текущей ревизии активной сессии** finish отклоняется только из-за бизнес-postconditions (непустой pending-set). **Отдельно** — общие lifecycle/concurrency/idempotency ошибки: stale session revision, несуществующая/чужая сессия, уже терминальное состояние, key collision; identical retry возвращает cached result, не ошибку ([[../OPEN]] OPEN-11). Все — с `error_code`, причинами и `next_action`.
+- **MUST — причины отклонения finish** [rereview G-R2]: для **валидной команды к текущей ревизии активной сессии** finish отклоняется только из-за бизнес-postconditions (непустой pending-set). **Отдельно** — общие lifecycle/concurrency/idempotency ошибки: stale session revision, несуществующая/чужая сессия, уже терминальное состояние, key collision; identical retry возвращает cached result, не ошибку. Coarse fence закрыт [PD-2026-07-22] ([[../modules/lessons]] §2). Все — с `error_code`, причинами и `next_action`.
 - **MUST NOT**: агент меняет scores, состояния тем или расписание — только записывает наблюдения; вычисление и пересчёт делает движок на терминализации.
 
 ## Выведенные контракты (фиксируются в спеках модулей)
@@ -118,7 +118,7 @@ sequenceDiagram
 
 ## Открытые вопросы
 
-Механизмы — в контрактах ([[../OPEN]]): OPEN-7 (evidence identity + observation schema), OPEN-10 (Attempt/Session lifecycle, AttemptAssessment vs ReviewOutcome, терминализация, таблица переходов), OPEN-11 (idempotency/concurrency finish), OPEN-14 (safety-overlay live delivery), OPEN-18 (re-entry пороги).
+Механизмы этого flow закрыты в принятых контрактах: evidence identity/observations, Attempt/Session lifecycle, coarse idempotency/concurrency fence, active safety overlay и re-entry scheduler. Остаточных OPEN у flow нет.
 
 ## История изменений
 

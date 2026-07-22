@@ -1,5 +1,11 @@
 # Master prompt: создать English Memory Trainer MVP
 
+> **Scope override [PD-2026-07-22]:** действующий продукт постоянно ограничен Reading, Writing,
+> grammar, vocabulary и текстовым chat-production. Listening/Speaking изучаются вне тренажёра и
+> не планируются. Любые ниже расположенные требования, веса, substitutes или демо для этих
+> модальностей — исторический исходный prompt и не являются нормативными. Канон — `wiki/`, затем
+> `docs/design-direction.md`.
+
 Скопируй этот prompt целиком в Codex или Claude Code, запущенный в корне нового или существующего Git-репозитория.
 
 ---

@@ -43,10 +43,15 @@ stateDiagram-v2
 | `validate()` | API | проверяет структуру skills, разрешимость `cli_calls`, отсутствие drift |
 | `compare(fixtures)` | API | прогоняет фикстуры на адаптерах и сравнивает наблюдаемые эффекты |
 | `resolve(skill, version)` | API | отдаёт содержимое закреплённой версии skill для манифеста сессии |
+| `capture_user_turn(provider, provider_message_id, session_id, raw_content, span, expected_session_revision)` | API | фиксирует untrusted пользовательскую реплику на provider boundary |
+| `report_skill(session_id, skill, version, status, expected_session_revision)` | API | принимает недоверенный самоотчёт агента о ходе skill |
 | `SKILL_REQUIRED` | publishes | манифест сессии затребовал skill определённой версии |
+| `USER_TURN_CAPTURED` | publishes | полный локальный raw text, SHA-256 и проверенный UTF-8 byte span; `trust=untrusted` |
 | `SKILL_STARTED` / `SKILL_COMPLETED` / `SKILL_FAILED` | publishes | ход исполнения skill, как его сообщил агент |
 
 - **MUST — события skill'ов не доверенные** [P0-Q3]: `SKILL_STARTED`/`COMPLETED`/`FAILED` сообщает агент. Они **не являются evidence**, не влияют на Mastery и **сами по себе не закрывают obligation** Tutor Compliance: obligation засчитывается только при наличии наблюдаемых движком эффектов — вызовов [[cli]] и доменных событий ([[scoring]] §5). Ценность самоотчёта — в корреляции и аудите: `SKILL_COMPLETED` без доменных эффектов означает, что агент отчитался о работе, которой не было, и это само по себе диагностический сигнал.
+- **MUST — provider ingress [PD-2026-07-22]**: до learner-facing мутации bridge вызывает `capture_user_turn`. Локальное событие хранит полный raw text, `sha256`, проверяемые границы UTF-8 byte span и `(provider, provider_message_id)`. Идентификатор уникален глобально внутри provider: точный повтор идемпотентен, тот же id с другим содержимым даёт `PROVIDER_MESSAGE_CONFLICT`. Capture разделяет trust-контур, но никогда не создаёт evidence и не влияет на scoring.
+- **MUST — pinned skill snapshot**: `SKILL_REQUIRED` и Session Manifest несут не только имя/версию, но и `content_hash` и разрешённые `cli_calls`; obligations проверяются против этого снапшота, а не против текущего изменившегося файла.
 
 ## 4. Поведение
 
@@ -57,7 +62,7 @@ stateDiagram-v2
 - **MUST — идемпотентный sync**: повторный `sync` без изменений канона не меняет ни одного байта. Иначе drift-check станет шумом, и его перестанут читать.
 - **MUST — `validate` не чинит**: обнаружив drift, `trainer skills validate` сообщает о нём и завершается с ненулевым кодом, но не синхронизирует. Чинит только `sync` ([[cli]] §4.4).
 - **MUST — drift в обе стороны**: расхождение фиксируется и когда правили копию, и когда правили канон без последующего sync. Второе опаснее: копия, которую читает агент, тихо отстаёт от канона, который читает человек.
-- **MUST NOT — MVP без MCP**: интеграция только через файлы skills и вызовы [[cli]]. MCP-сервер не вводится (`CLAUDE.md`).
+- **MUST NOT — без MCP**: интеграция только через файлы skills и вызовы [[cli]]. MCP-сервер не вводится (`CLAUDE.md`).
 
 ### 4.2 Версии и закрепление
 
@@ -96,21 +101,24 @@ stateDiagram-v2
 | `trainer skills sync --format json` | раскладывает канон в `.agents/skills/` и `.claude/skills/`, пишет манифест | список изменённых файлов, хеши |
 | `trainer skills validate --format json` | структура skills, разрешимость `cli_calls`, drift | список нарушений. Коды по [[cli]] §4.2: `3 INVALID_INPUT` — сломанная структура skill или неразрешимый `cli_call`; `6 PRECONDITION_FAILED` + `next_action: skills.sync` — drift. Drift **не** `5 CONFLICT`: это не гонка состояний и повтором `validate` не лечится, требуется другое действие |
 | `trainer adapters compare --format json` | прогон фикстур по адаптерам | по фикстуре: пройдено/расхождения |
+| `trainer adapters capture-turn --session ID --provider P --provider-message-id M --expected-session-revision R --input FILE --format json` | сохраняет untrusted user turn | capture id/hash/span + новая session revision |
+| `trainer skills report --session ID --skill NAME --version V --status started\|completed\|failed --expected-session-revision R --format json` | недоверенный самоотчёт исполнения | event id + новая session revision |
 
 ## 6. Границы
 
 - **depends on**: [[cli]] (реестр команд), [[lessons]] (Session Manifest), storage (манифест синка)
-- **events published**: `SKILL_REQUIRED`, `SKILL_STARTED`, `SKILL_COMPLETED`, `SKILL_FAILED`
+- **events published**: `SKILL_REQUIRED`, `SKILL_STARTED`, `SKILL_COMPLETED`, `SKILL_FAILED`, `USER_TURN_CAPTURED`
 - **events consumed**: `SESSION_STARTED` (← [[lessons]]) — **пост-фактум аудит** уже обеспеченного инварианта. Сама разрешимость проверяется синхронно через `resolve()` до commit ([[lessons]] §4b, P0-Q1)
 
 Модуль не знает, чему учат: он не содержит методики. Методика — в содержимом skills и в policies ([[curriculum]], П.3).
 
 ## 7. Открытые вопросы
 
-- **OPEN-14**: safety-overlay и `production_eligible` → определяет, что skill вправе предъявить ученику.
+- **OPEN-14 закрыт**: safety-overlay и `production_eligible` определяют, что skill вправе предъявить ученику.
 - **OPEN-24**: протокол исполнения фикстур паритета — как прогоняется реальный агент в проверке (запись/воспроизведение сессии против живого вызова), и что делать с недетерминизмом LLM между двумя прогонами **одного** адаптера → блокирует автоматизацию `adapters compare` в CI.
 
 ## История изменений
 
+- **2026-07-22 (2)**: [PD-2026-07-22] добавлены provider ingress с полным локальным raw text/hash/UTF-8 span, provider-global dedup/conflict, untrusted skill-report channel и pinned `content_hash`/`cli_calls` required-skill.
 - **2026-07-22**: фазовые теги `[mvp]`/`[post-mvp]` сняты [PD-2026-07-22]: спека описывает одну цель продукта, порядок и статус — только в roadmap (Принцип 4).
 - **2026-07-20**: спека создана (0.7). Skill объявлен подсказкой, а не механизмом принуждения; события skill'ов не доверены и не являются evidence; версия skill иммутабельна и пинится манифестом сессии; паритет определён над наблюдаемыми эффектами, а не над текстом, с нормализацией и критерием «все обязательные, ни одного запрещённого»; `validate` не чинит drift. Заведён OPEN-24.

@@ -64,7 +64,7 @@ memory/
 ## 5. Обновление, rebuild и drift
 
 - **MUST**: проекция обновляется **post-commit через outbox** ([[../platform/foundation]] §3.7) — не внутри ACID-транзакции. Сбой записи файлов не откатывает authoritative commit.
-- **MUST**: доставка идемпотентна и упорядочена (per-consumer inbox/dedup, applied-offset); полный **rebuild** — isolate-and-swap до high-water mark, затем ordered catch-up (OPEN-21).
+- **MUST**: доставка идемпотентна и упорядочена (per-consumer offset, applied-offset); полный **rebuild** — isolate-and-swap до high-water mark, затем ordered catch-up (реализовано kernel 1.2; OPEN-21 закрыт).
 - **MUST — источник страницы объявлен, rebuild гибридный** [P0-7]: состояние в системе гибридное ([[../platform/foundation]] §2), поэтому «rebuild из event-store» верно не для всех страниц:
 
 | Страницы | Источник | Протокол восстановления |
@@ -101,7 +101,7 @@ memory/
 
 ## 9. Открытые вопросы
 
-Закрывает **OPEN-2** (структура + политика ручных заметок: две зоны) и **OPEN-3** (интеграция: обычные файлы). Механика доставки/rebuild — OPEN-21 (kernel/1.2).
+Закрывает **OPEN-2** и **OPEN-3**; механика доставки/rebuild реализована в kernel 1.2 и закрыла OPEN-21.
 
 ## История изменений
 

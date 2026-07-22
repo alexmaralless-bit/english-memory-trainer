@@ -49,7 +49,7 @@ Envelope **тотален**: успех и отказ имеют одну фор
 | `dispatch(argv)` | API | разбирает аргументы, вызывает команду владеющего модуля, сериализует envelope |
 | `command_registry()` | API | реестр `CommandDescriptor` — источник для `trainer skills validate` и adapters parity |
 
-Модуль **не публикует доменных событий**: их публикуют владеющие модули. CLI лишь пробрасывает `correlation_id` внутрь, чтобы события одного вызова были связуемы в аудите.
+Модуль **не публикует бизнес-доменных событий**: их публикуют владеющие модули. [PD-2026-07-22] Outer transport публикует только операционные audit-факты `cli.command_invoked` / `cli.command_terminated`; CLI также пробрасывает тот же `correlation_id` внутрь, чтобы вызов, его исход и доменные эффекты были связуемы.
 
 ## 4. Поведение
 
@@ -80,14 +80,15 @@ Envelope **тотален**: успех и отказ имеют одну фор
 ### 4.3 Идемпотентность
 
 - **MUST — ключ обязателен для мутирующих команд**: каждая мутирующая команда принимает `--idempotency-key` и **требует** его при `--format json`. Причина не в удобстве: процесс может упасть **после** commit и **до** печати ответа, и тогда агент не знает, состоялось ли действие. Без ключа единственный безопасный выбор — не повторять, то есть терять работу ученика.
-- **MUST — повтор возвращает исходный результат**: тот же ключ с тем же payload возвращает первоначальный envelope и код `0`, не выполняя действие повторно. Тот же ключ с **другим** payload — `CONFLICT`. Гранулярность scope и retention кэша — [[../OPEN]] OPEN-11.
+- **MUST — повтор возвращает исходный результат**: тот же ключ с тем же payload возвращает первоначальный envelope и код `0`, не выполняя действие повторно — cached result проверяется до теперь уже stale session fence. Тот же ключ с **другим** payload — `CONFLICT`. [PD-2026-07-22] Namespace глобален внутри локального store/единственного learner; cache хранится без срока вместе с authoritative state.
 - **MUST — `correlation_id`**: генерируется на вызов (или принимается извне), проставляется во все события вызова, возвращается в envelope. `trainer audit` умеет собрать по нему полную картину.
 
 ### 4.4 Граница авторитета
 
 - **MUST NOT — нет команды, записывающей оценку**: в поверхности отсутствует операция, принимающая Mastery, Stability, CEFR-уровень или knowledge state как **вход**. Агент подаёт evidence и свою rubric-оценку как наблюдение; число вычисляет [[scoring]] по pinned policy. Команда, позволяющая агенту записать балл, сделала бы детерминизм недостижимым и обессмыслила `trainer scoring replay`.
 - **MUST — запись только через команды**: прямые правки SQLite, JSONL и сгенерированных файлов `memory/` запрещены (`CLAUDE.md`). CLI — не удобная обёртка, а единственный вход.
-- **MUST — read-only команды не мутируют**: команды, помеченные `mutating: false`, не изменяют состояние даже косвенно (не «чинят» найденный drift, не досоздают недостающее). Диагностика, меняющая то, что диагностирует, не даёт доверять своему выводу.
+- **MUST — read-only команды не мутируют бизнес-состояние**: команды, помеченные `mutating: false`, не изменяют state/projections даже косвенно (не «чинят» найденный drift, не досоздают недостающее). Единственное исключение — outer audit telemetry, не являющаяся business effect. Диагностика, меняющая диагностируемое состояние, недопустима.
+- **MUST — полная CLI telemetry [PD-2026-07-22]**: перед dispatch записывается invocation, после любого успеха/отказа/внутренней ошибки — terminal fact с causation на invocation, exit code и стабильным error code. Аргументы представлены только redacted shape/hash; raw values и user content запрещены. Для session-команд оба факта несут `session_id`, даже если бизнес-команда отказана. Нарушенная БД не маскируется telemetry-ошибкой.
 
 ### 4.5 Безопасность и валидация
 
@@ -112,13 +113,14 @@ Envelope **тотален**: успех и отказ имеют одну фор
 | Команда | Владелец | Мутирует | Что делает |
 |---|---|---|---|
 | `trainer session start` | lessons | да | открывает сессию; композиция плана — в той же UoW; `--mode` задаёт режим занятия |
-| `trainer session next` | lessons | **да** | требует `--expected-plan-version` и `--idempotency-key`; выдаёт шаг, обновляет ledger, увеличивает `plan_version` и публикует `STEP_PRESENTED` ([[control]] §4.2) |
+| `trainer session next` | lessons | **да** | требует `--expected-session-revision`, `--expected-plan-version` и `--idempotency-key`; выдаёт шаг и увеличивает оба токена ([[control]] §4.2) |
 | `trainer session peek` | lessons | нет | показывает следующий шаг и текущий `plan_version`, ничего не помечая |
-| `trainer session replan` | lessons | да | требует `--expected-plan-version` и `--idempotency-key`; `composition_revision + 1`, `plan_version + 1`, новое `SESSION_COMPOSED` |
+| `trainer session replan` | lessons | да | требует `--expected-session-revision`, `--expected-plan-version` и `--idempotency-key`; `composition_revision + 1`, `plan_version + 1`, новое `SESSION_COMPOSED` |
 | `trainer session resume` | lessons | да | возобновляет `IN_PROGRESS` после потери чата; `--provider` обязателен и атомарно фиксирует `AGENT_ATTACHED` |
-| `trainer session finish` | lessons | да | **единственный** способ завершить сессию; требует persisted evidence |
-| `trainer session abandon` | lessons | да | явный отказ от сессии |
-| `trainer attempt record` | evidence | да | фиксирует попытку по **выданному шагу** (`--step`); target/dimension/mode и `origin` движок берёт из плана, клиент их не передаёт. `--note` — необязательная untrusted-заметка |
+| `trainer session finish` | lessons | да | требует `--expected-session-revision`; **единственный** способ завершить сессию; требует persisted evidence |
+| `trainer session abandon` | lessons | да | требует `--expected-session-revision`; явный отказ от сессии |
+| `trainer attempt record` | evidence | да | требует `--expected-session-revision`; фиксирует попытку по **выданному шагу** (`--step`); target/dimension/mode и `origin` движок берёт из плана. `--note` — необязательная untrusted-заметка |
+| `trainer attempt finalize` | evidence | да | требует session revision; движок применяет pinned rubric и атомарно фиксирует assessment/evidence |
 | `trainer review due` | scheduler | нет | что подлежит повторению |
 | `trainer review close` | evidence | да | вычисляет терминальный ReviewOutcome по накопленному evidence; идемпотентен, повтор возвращает прежний исход |
 | `trainer observed record` | evidence | да | фиксирует наблюдённый факт (ошибка, слово, chunk), замеченный в свободном ответе, — вход `record_observed` ([[evidence]] §3); принимает `--note` |
@@ -140,7 +142,9 @@ Envelope **тотален**: успех и отказ имеют одну фор
 | `trainer memory render` \| `check` \| `rebuild` | memory | `render`/`rebuild` — да | проекция Obsidian и drift-check |
 | `trainer database check` | storage | нет | целостность SQLite |
 | `trainer scoring replay` | scoring | нет | воспроизведение оценок по pinned policy |
+| `trainer scoring transitions backfill` | scoring | да | идемпотентно восстанавливает отсутствующие canonical transition facts |
 | `trainer audit session SESSION_ID` | audit | нет | полная картина по `correlation_id` |
+| `trainer audit correlation ID` \| `target ID` | audit | нет | причинная цепочка вызова / история LearningTarget |
 | `trainer snapshot create` | storage | да | git-снапшот после checkpoint |
 
 ### Skills и адаптеры
@@ -148,6 +152,8 @@ Envelope **тотален**: успех и отказ имеют одну фор
 | Команда | Владелец | Мутирует | Что делает |
 |---|---|---|---|
 | `trainer skills sync` \| `validate` | adapters | `sync` — да | синхронизация и drift-check канонических skills ([[adapters]]) |
+| `trainer skills report` | adapters | да | untrusted started/completed/failed self-report по pinned skill |
+| `trainer adapters capture-turn` | adapters | да | полный локальный untrusted user-turn + hash/span на provider boundary |
 | `trainer why` | control | нет | почему выбран этот шаг: decision trace ([[control]] §4.8) |
 | `trainer signal KIND` | control | да | записывает сигнал; при активной сессии `too_easy` возвращает `probe_id` и `next_action: session.replan`, но сам план не меняет |
 | `trainer availability show` \| `set` | control | `set` — да | объявленный и наблюдаемый ритм занятий |
@@ -161,18 +167,19 @@ Envelope **тотален**: успех и отказ имеют одну фор
 ## 6. Границы
 
 - **depends on**: все доменные модули (как диспетчер), [[../platform/foundation]] (envelopes, idempotency, correlation)
-- **events published**: нет собственных
+- **events published**: только `cli.command_invoked`, `cli.command_terminated` (audit telemetry; не бизнес-домен)
 - **events consumed**: нет
 
 Бизнес-правила в CLI не живут. Если команда «знает», когда сессию можно завершить, — правило утекло из [[lessons]].
 
 ## 7. Открытые вопросы
 
-- **OPEN-11**: гранулярность idempotency-scope и retention кэша ответов → блокирует точную семантику повторного вызова.
+- **OPEN-11 закрыт [PD-2026-07-22]**: global local-store scope, бессрочный cache, same-payload cached replay до stale session fence, coarse session revision.
 - **OPEN-23**: политика совместимости JSON-контракта — что считается несовместимым изменением, поддерживается ли предыдущая мажорная версия и как долго → блокирует смену тьютора на закреплённой версии skills.
 
 ## История изменений
 
+- **2026-07-22 (3)**: [PD-2026-07-22] добавлены fail-closed session revision на все мутации, outer invocation/terminal telemetry (включая read-only/отказы), новые audit/tunables/calibration/ingress/transition команды; OPEN-11 закрыт.
 - **2026-07-22**: фазовые теги `[mvp]`/`[post-mvp]` сняты [PD-2026-07-22]: спека описывает одну цель продукта, порядок и статус — только в roadmap (Принцип 4).
 - **2026-07-21**: `next`/`replan` синхронизированы с единым CAS-токеном `plan_version`; исправлена ссылка decision trace и явный replan после `too_easy`.
 - **2026-07-20**: спека создана (0.7). Тотальный envelope, закрытый набор exit codes с различением `CONFLICT`/`PRECONDITION_FAILED`, обязательный idempotency-key для мутирующих команд (мотив — падение между commit и печатью), запрет команды, принимающей оценку, запрет мутаций в read-only диагностике. Заведён OPEN-23.
