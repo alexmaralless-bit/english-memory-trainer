@@ -50,6 +50,7 @@ def test_real_program_loads_completely(program: dict[str, Any]) -> None:
         "wordfreq@3.1.1",
         "ngsl@1.2",
         "bsl@1.2",
+        "nawl@1.2",
     }
 
 

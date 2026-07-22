@@ -53,6 +53,23 @@ source_artifacts:
       - "1744 lemma families; membership only is used, no table is reproduced."
       - "No header row and no comment lines, unlike the NGSL file."
 
+  - id: nawl@1.2
+    role: academic-English core membership (selection and provenance for P.4e)
+    exact_version: "1.2 (April 2023), NAWL_12_lemmatized_for_teaching.csv"
+    url: https://www.newgeneralservicelist.com/s/NAWL_12_lemmatized_for_teaching.csv
+    retrieved_at: 2026-07-22T03:34:27Z
+    sha256: 1790b0fa22c5815ebf5a9a15c9363c03a6e906c77bf217f99033734f1459137b
+    license: CC BY-SA 4.0
+    attribution: "New Academic Word List by Browne, C., Culligan, B., and Phillips, J."
+    notices:
+      - "CC BY-SA 4.0 requires attribution, licence notice, indication of changes and ShareAlike on Adapted Material upon distribution."
+      - "Membership only is used; definitions, examples and the source table are not reproduced."
+      - "The teaching CSV is Windows-1252 encoded and has no header row."
+      - >-
+        The official page describes NAWL 1.2 as a 957-word list, while the pinned
+        teaching CSV contains 959 non-empty unique headwords. Reproduction and
+        membership checks use the verified artifact bytes, not the prose count.
+
 # Versioned score -> band thresholds. Bands are neutral corpus frequency, never
 # pedagogical priority (that is curriculum_priority_band).
 frequency_thresholds:

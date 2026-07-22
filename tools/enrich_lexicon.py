@@ -68,7 +68,13 @@ def load_lemma_families(data: bytes) -> set[str]:
     Membership must be tested across inflections: on headwords alone, `completed`
     and `meeting` would read as absent because the lists carry `complete` and `meet`.
     """
-    text = data.decode("utf-8-sig")
+    try:
+        text = data.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        # NAWL 1.2's teaching CSV is Windows-1252, unlike the UTF-8 NGSL and
+        # BSL artifacts. The digest is verified before decoding, so this is a
+        # pinned format difference rather than a permissive input fallback.
+        text = data.decode("cp1252")
     rows = csv.reader(io.StringIO(text))
     forms: set[str] = set()
     for row in rows:
@@ -134,6 +140,7 @@ def enrich_line(
     thresholds: list[dict],
     ngsl: set[str],
     bsl: set[str],
+    nawl: set[str],
     covered_types: set[str],
     stats: dict,
 ) -> str:
@@ -190,6 +197,8 @@ def enrich_line(
         refs.append("ngsl@1.2")
     if lemma in bsl:
         refs.append("bsl@1.2")
+    if lemma in nawl:
+        refs.append("nawl@1.2")
 
     stats.setdefault("enriched", []).append((fields.get("id", "?"), float(score), band, refs))
 
@@ -241,6 +250,7 @@ def main() -> int:
 
     ngsl = load_lemma_families(artifacts["ngsl@1.2"].fetch(args.cache))
     bsl = load_lemma_families(artifacts["bsl@1.2"].fetch(args.cache))
+    nawl = load_lemma_families(artifacts["nawl@1.2"].fetch(args.cache))
 
     stats: dict = {}
     drift: list[str] = []
@@ -254,6 +264,7 @@ def main() -> int:
                 thresholds=thresholds,
                 ngsl=ngsl,
                 bsl=bsl,
+                nawl=nawl,
                 covered_types=covered_types,
                 stats=stats,
             )
