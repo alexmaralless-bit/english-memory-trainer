@@ -95,6 +95,12 @@ _COMMANDS: tuple[CommandDescriptor, ...] = (
     CommandDescriptor(
         name="exercise.bank", owner_module="lessons", mutating=False, requires_idempotency_key=False
     ),
+    # Scoring (0.4 part 2): scores are a pure fold over the event log -- both
+    # commands are read-only by construction.
+    CommandDescriptor(
+        name="scoring.replay", owner_module="scoring", mutating=False, requires_idempotency_key=False
+    ),
+    CommandDescriptor(name="status", owner_module="scoring", mutating=False, requires_idempotency_key=False),
 )
 
 

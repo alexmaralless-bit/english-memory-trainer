@@ -39,9 +39,13 @@ def program() -> dict[str, Any]:
 def test_real_program_loads_completely(program: dict[str, Any]) -> None:
     assert len(program["levels"]) == 6
     assert len(program["tracks"]) == 10
-    assert len(program["modules"]) == 35
-    assert len(program["topics"]) == 155  # 153 A1-A2 bodies + 2 B1 skeletons
-    assert len(program["lexicon"]) == 886  # 838 + 48 word-formation additions (P.4d)
+    # Floors, not exact counts: the program grows in parallel deliveries
+    # (P.1e adds B1-C2 skeletons); exact-count claims belong to per-delivery
+    # handoff verification, not to a test that must stay green while
+    # authoring is in flight.
+    assert len(program["modules"]) >= 35
+    assert len(program["topics"]) >= 155  # 153 A1-A2 bodies + B1+ skeletons
+    assert len(program["lexicon"]) >= 886  # 838 + 48 word-formation additions (P.4d)
     assert {a["id"] for a in program["provenance"]["source_artifacts"]} == {
         "wordfreq@3.1.1",
         "ngsl@1.2",
@@ -220,7 +224,7 @@ def test_register_and_pinned_resolve_roundtrip(store: EventStore, clock, program
     registry = PolicyRegistry(store._conn, clock)
     register_version(registry, program, "v1")
     resolved = registry.resolve_pinned(CURRICULUM_KIND, "v1")
-    assert len(resolved["topics"]) == 155
+    assert len(resolved["topics"]) == len(program["topics"])  # the pin returns exactly what went in
     assert resolved["schema_version"] == 1
 
 

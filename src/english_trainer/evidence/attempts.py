@@ -57,6 +57,7 @@ EXERCISE_RENDERED_EVENT = "exercise.rendered"
 
 EVENT_ATTEMPT_RECORDED = "attempt.recorded"
 EVENT_ATTEMPT_STATE_CHANGED = "attempt.state_changed"
+EVENT_EVIDENCE_ADDED = "evidence.added"
 
 ATTEMPT_AGGREGATE = "attempt"
 NOTES_AGGREGATE = "session_notes"
@@ -266,20 +267,64 @@ def record_attempt(
                     {"notes": [*state.get("notes", []), entry]},
                     expected_revision=revision,
                 )
-        uow.append(
-            [
+        batch = [
+            make_event(
+                id=new_ulid(clock, random_source),
+                type=EVENT_ATTEMPT_RECORDED,
+                occurred_at=clock.now(),
+                actor=actor,
+                provider=provider or manifest.get("provider"),
+                correlation_id=session_id,
+                payload=payload,
+                pinned_versions=pinned,
+            )
+        ]
+        if assessment is not None:
+            # The assessed attempt IS admissible evidence: EVIDENCE_ADDED rides
+            # the same transaction (capture-into-event, 0.4 4.5) with the full
+            # CreditAllocation. v1 allocation: the single primary pair at full
+            # weight -- multi-credit spans arrive with integration steps.
+            batch.append(
                 make_event(
                     id=new_ulid(clock, random_source),
-                    type=EVENT_ATTEMPT_RECORDED,
+                    type=EVENT_EVIDENCE_ADDED,
                     occurred_at=clock.now(),
                     actor=actor,
                     provider=provider or manifest.get("provider"),
                     correlation_id=session_id,
-                    payload=payload,
+                    causation_id=batch[0].id,
+                    payload={
+                        "evidence_id": new_ulid(clock, random_source),
+                        "attempt_id": attempt_id,
+                        "session_id": session_id,
+                        "step_id": step_id,
+                        "exercise_instance_id": exercise_instance_id,
+                        "origin": origin,
+                        "mode": step_type,
+                        "primary_target": primary_target,
+                        "selection_basis": selection_basis,
+                        "credit_allocations": [
+                            {
+                                "target_ref": primary_target["target_ref"],
+                                "dimension": primary_target.get("dimension"),
+                                "contribution": "1.0",
+                                "used": True,
+                                "reason": "primary",
+                            }
+                        ]
+                        if primary_target
+                        else [],
+                        "span_hash": span_hash,
+                        "assessment_basis": assessment["basis"],
+                        "correct": assessment["correct"],
+                        "score_ppm": assessment["score_ppm"],
+                        "hints": hints,
+                        "recorded_at": recorded_at,
+                    },
                     pinned_versions=pinned,
                 )
-            ]
-        )
+            )
+        uow.append(batch)
     return {
         "attempt_id": attempt_id,
         "status": status,

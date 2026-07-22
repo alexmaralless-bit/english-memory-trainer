@@ -1,0 +1,112 @@
+# scoring@1 -- the executable scoring policy (wiki/modules/scoring.md).
+# Every value is a concrete authored default (tunable later, versioned -- never a
+# range). Decimal-bearing values are STRINGS parsed under the fixed Decimal
+# context below; binary floats are banned on the whole scoring path (canon 2.1,
+# review 0.4-8). Integers stay integers.
+policy_id: "scoring@1"
+schema_version: 1
+status: "accepted"
+canonical_encoding: "kernel.canonical_json_v1"
+numeric_value_rule: "integers_and_decimal_strings_only"
+
+decimal_context:
+  precision: 28
+  rounding: "ROUND_HALF_EVEN"
+
+mastery:
+  # delta = base_delta * mode_weight * independence(hints); only for correct,
+  # admissible evidence -- incorrect gives no delta (monotonicity within a
+  # session; decreases happen only on a confirmed REGRESSION outcome).
+  base_delta: "8"
+  mode_weights:
+    recognition: "0.6"
+    controlled_production: "0.85"
+    spontaneous_production: "1.0"
+    transfer: "1.15"
+  hint_penalty_per_hint: "0.15"
+  hint_penalty_floor: "0.4"
+  session_cap: 15
+  rubric_cap: 40
+  regression_penalty: "12"
+
+stability:
+  initial_stability_days: "2.0"
+  # multiplier = 1 + (growth_base - 1) * quality / (1 + stability/damping_days):
+  # stable targets grow slower (canon 2.2).
+  success_growth_base: "2.5"
+  growth_damping_days: "30"
+  regression_shrink_factor: "0.5"
+  outcome_quality:
+    PROGRESS: "0.6"
+    CONFIRMED: "1.0"
+    RECOVERED: "0.8"
+
+origin_rules:
+  placement_state_ceiling: "ACTIVE"
+  control_probe_no_negative: true
+
+# Versioned core-skill map (canon 4): (track, dimension) -> {skill, weight}.
+# All four machine dimensions listed explicitly; transfer feeds the same skill
+# as the track's production with a reduced weight. null = no contribution.
+core_skill_map:
+  grammar-engine:
+    recognition: {skill: "grammar", weight: "1.0"}
+    controlled_production: {skill: "grammar", weight: "1.0"}
+    spontaneous_production: {skill: "grammar", weight: "1.0"}
+    transfer: {skill: "grammar", weight: "0.5"}
+  vocabulary-chunks:
+    recognition: {skill: "vocabulary", weight: "1.0"}
+    controlled_production: {skill: "vocabulary", weight: "1.0"}
+    spontaneous_production: {skill: "vocabulary", weight: "1.0"}
+    transfer: {skill: "vocabulary", weight: "0.5"}
+  word-formation:
+    recognition: {skill: "vocabulary", weight: "1.0"}
+    controlled_production: {skill: "vocabulary", weight: "1.0"}
+    spontaneous_production: {skill: "vocabulary", weight: "1.0"}
+    transfer: {skill: "vocabulary", weight: "0.5"}
+  reading:
+    recognition: {skill: "reading", weight: "1.0"}
+    controlled_production: {skill: "reading", weight: "1.0"}
+    spontaneous_production: null
+    transfer: {skill: "reading", weight: "0.5"}
+  written-interaction:
+    recognition: {skill: "reading", weight: "0.5"}
+    controlled_production: {skill: "writing", weight: "1.0"}
+    spontaneous_production: {skill: "writing", weight: "1.0"}
+    transfer: {skill: "writing", weight: "0.5"}
+  written-production-mediation:
+    recognition: {skill: "reading", weight: "0.5"}
+    controlled_production: {skill: "writing", weight: "1.0"}
+    spontaneous_production: {skill: "writing", weight: "1.0"}
+    transfer: {skill: "writing", weight: "0.5"}
+  everyday-life:
+    recognition: {skill: "reading", weight: "0.5"}
+    controlled_production: {skill: "writing", weight: "1.0"}
+    spontaneous_production: {skill: "writing", weight: "1.0"}
+    transfer: {skill: "writing", weight: "0.5"}
+  us-tech-english:
+    recognition: {skill: "reading", weight: "0.5"}
+    controlled_production: {skill: "writing", weight: "0.5"}
+    spontaneous_production: {skill: "writing", weight: "0.5"}
+    transfer: {skill: "writing", weight: "0.5"}
+  everyday-online-informal:
+    recognition: {skill: "reading", weight: "0.5"}
+    controlled_production: {skill: "writing", weight: "0.5"}
+    spontaneous_production: {skill: "writing", weight: "0.5"}
+    transfer: {skill: "writing", weight: "0.5"}
+  toefl-reading-writing:
+    recognition: {skill: "reading", weight: "1.0"}
+    controlled_production: {skill: "writing", weight: "1.0"}
+    spontaneous_production: {skill: "writing", weight: "1.0"}
+    transfer: {skill: "writing", weight: "0.5"}
+
+working_level:
+  min_topics: 5
+  confidence_floor: "medium"
+
+xp:
+  base_amounts:
+    attempt_finalized: 10
+    review_closed: 20
+    reentry_block_completed: 30
+  daily_cap: 200

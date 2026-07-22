@@ -44,7 +44,9 @@ LAYER_ALLOWLIST: dict[str, set[str]] = {
     # evidence consumes published events, never other modules' code (0.4):
     # the event log is its boundary with lessons/control.
     "evidence": {"kernel", "evidence"},
-    "cli": {"kernel", "storage", "curriculum", "control", "lessons", "evidence", "cli"},
+    # scoring folds published events under its pinned policy; same boundary.
+    "scoring": {"kernel", "scoring"},
+    "cli": {"kernel", "storage", "curriculum", "control", "lessons", "evidence", "scoring", "cli"},
 }
 
 # Rule 2/3: module -> stdlib modules it may import from the restricted set.

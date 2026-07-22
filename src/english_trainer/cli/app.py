@@ -82,6 +82,9 @@ from english_trainer.lessons.sessions import (
     get_session,
     start_session,
 )
+from english_trainer.scoring.policy import SCORING_KIND, ScoringPolicyInvalid
+from english_trainer.scoring.policy import require_valid as require_valid_scoring
+from english_trainer.scoring.replay import replay_scores
 from english_trainer.storage.layout import StorageLayout, open_storage, resolve_layout
 from english_trainer.storage.snapshot import create_snapshot
 
@@ -98,6 +101,8 @@ exercise_app = typer.Typer(add_completion=False, help="Rendered-exercise snapsho
 app.add_typer(exercise_app, name="exercise")
 attempt_app = typer.Typer(add_completion=False, help="Learner attempts against delivered steps.")
 app.add_typer(attempt_app, name="attempt")
+scoring_app = typer.Typer(add_completion=False, help="Deterministic scores from the event log.")
+app.add_typer(scoring_app, name="scoring")
 
 _FormatOpt = Annotated[str, typer.Option("--format", help="Output format: text (human) or json (contract).")]
 _RootOpt = Annotated[Path, typer.Option("--root", help="Trainer home directory (storage layout root).")]
@@ -549,6 +554,8 @@ def curriculum_activate(
             for kind, policy_version, payload in policies:
                 if kind == CONTROL_KIND:
                     require_valid(payload)
+                elif kind == SCORING_KIND:
+                    require_valid_scoring(payload)
                 registry.register(kind, policy_version, payload)
                 registry.activate(kind, policy_version)
             event = activate_version(
@@ -575,12 +582,12 @@ def curriculum_activate(
             next_action="curriculum activate --idempotency-key <fresh-key>",
         )
         _emit(failure_envelope("curriculum.activate", corr, error), [f"error: {exc}"], fmt, ExitCode.CONFLICT)
-    except ControlPolicyInvalid as exc:
+    except (ControlPolicyInvalid, ScoringPolicyInvalid) as exc:
         error = ErrorPayload(
-            error_code="CONTROL_POLICY_INVALID",
+            error_code=exc.code,
             message=str(exc),
             allowed_actions=["curriculum validate"],
-            next_action="fix curriculum/policies/control-v1.yaml, then curriculum activate",
+            next_action="fix the policy file under curriculum/policies/, then curriculum activate",
         )
         _emit(
             failure_envelope("curriculum.activate", corr, error),
@@ -1404,6 +1411,113 @@ def exercise_bank(
         for item in items
     ]
     _emit(success_envelope("exercise.bank", corr, data), human, fmt, ExitCode.OK)
+
+
+@scoring_app.command("replay")
+def scoring_replay(
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Recompute all scores from the event log under the pinned policy and
+    verify the fold reproduces byte-identically. Read-only: scores ARE the fold."""
+    corr = _correlation(correlation_id)
+    layout = resolve_layout(root)
+    if not layout.db.exists():
+        error = ErrorPayload(
+            error_code="DATABASE_NOT_FOUND",
+            message=f"{layout.db} does not exist.",
+            allowed_actions=["init"],
+            next_action="init",
+        )
+        _emit(
+            failure_envelope("scoring.replay", corr, error),
+            ["error: not initialized"],
+            fmt,
+            ExitCode.NOT_FOUND,
+        )
+    try:
+        with open_storage(layout) as storage:
+            report = replay_scores(storage.store, PolicyRegistry(storage._conn, SystemClock()))
+    except KernelError as exc:
+        error = ErrorPayload(
+            error_code=exc.code,
+            message=str(exc),
+            allowed_actions=["curriculum activate", "doctor"],
+            next_action="curriculum activate",
+        )
+        _emit(
+            failure_envelope("scoring.replay", corr, error),
+            [f"error: {exc}"],
+            fmt,
+            ExitCode.PRECONDITION_FAILED,
+        )
+    if not report["consistent"]:
+        error = ErrorPayload(
+            error_code="REPLAY_DIVERGED",
+            message="two folds over the same events produced different snapshots -- determinism is broken.",
+            allowed_actions=["doctor", "database check"],
+            next_action="doctor",
+        )
+        _emit(
+            failure_envelope("scoring.replay", corr, error),
+            ["replay DIVERGED"],
+            fmt,
+            ExitCode.PRECONDITION_FAILED,
+        )
+    human = [
+        f"scoring replay: consistent under {report['policy_version']}",
+        f"  events: {report['events']}, targets: {report['targets']}",
+        f"  snapshot hash: {report['snapshot_hash']}",
+    ]
+    _emit(success_envelope("scoring.replay", corr, report), human, fmt, ExitCode.OK)
+
+
+@app.command("status")
+def status_command(
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Current evaluative state: per-target mastery, stability, knowledge states.
+
+    Working level and Learning Score report `no-data` until enough evidence
+    exists -- an honest gap, never a zero (scoring 5)."""
+    corr = _correlation(correlation_id)
+    layout = resolve_layout(root)
+    if not layout.db.exists():
+        error = ErrorPayload(
+            error_code="DATABASE_NOT_FOUND",
+            message=f"{layout.db} does not exist.",
+            allowed_actions=["init"],
+            next_action="init",
+        )
+        _emit(failure_envelope("status", corr, error), ["error: not initialized"], fmt, ExitCode.NOT_FOUND)
+    try:
+        with open_storage(layout) as storage:
+            report = replay_scores(storage.store, PolicyRegistry(storage._conn, SystemClock()))
+    except KernelError as exc:
+        error = ErrorPayload(
+            error_code=exc.code,
+            message=str(exc),
+            allowed_actions=["curriculum activate", "doctor"],
+            next_action="curriculum activate",
+        )
+        _emit(failure_envelope("status", corr, error), [f"error: {exc}"], fmt, ExitCode.PRECONDITION_FAILED)
+    scores = report["scores"]
+    data = {
+        "targets": scores,
+        "target_count": len(scores),
+        "policy_version": report["policy_version"],
+        "measured_working_level": None,  # arrives with the level increment (no-data, not A1)
+        "learning_score": None,
+    }
+    human = [f"status: {len(scores)} scored target(s) under {report['policy_version']}"]
+    for ref, state in list(scores.items())[:10]:
+        mastery = ", ".join(f"{d}={v}" for d, v in state["mastery"].items()) or "no mastery yet"
+        human.append(f"  {ref} [{state['knowledge_state']}] {mastery}")
+    human.append("  working level: no-data (needs coverage)")
+    _emit(success_envelope("status", corr, data), human, fmt, ExitCode.OK)
 
 
 def _wants_json(argv: list[str]) -> bool:

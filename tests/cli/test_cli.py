@@ -373,6 +373,21 @@ def test_session_lifecycle_through_the_cli(tmp_path: Path, capsys) -> None:
     env = _json_stdout(capsys)
     assert env["data"]["notes"][0]["text"] == "confident answer"
 
+    # The assessed attempt became evidence; the scoring fold sees it and
+    # replays byte-identically (2.3 increment 1).
+    code = run(["scoring", "replay", "--format", "json", "--root", root])
+    env = _json_stdout(capsys)
+    _envelope_shape_ok(env)
+    assert code == ExitCode.OK and env["data"]["consistent"] is True
+    assert env["data"]["targets"] == 1  # grammar.be.identity earned mastery
+    code = run(["status", "--format", "json", "--root", root])
+    env = _json_stdout(capsys)
+    assert code == ExitCode.OK
+    target = env["data"]["targets"]["grammar.be.identity"]
+    assert target["knowledge_state"] == "NEW"  # states move only on review outcomes
+    assert target["mastery"]["recognition"] == "4.800"  # 8 * 0.6 * 1.00, Decimal exact
+    assert env["data"]["measured_working_level"] is None  # no-data, never zero
+
     # -- increment 4: the pending-set gate and the bank
     # An open (rubric-less) attempt stays `recorded` and blocks finish [P0-2].
     open_file = tmp_path / "open_attempt.json"
@@ -466,7 +481,11 @@ def test_registry_matches_published_surface() -> None:
         "exercise.reject",
         "exercise.retire",
         "exercise.bank",
+        "scoring.replay",
+        "status",
     }
+    assert not registry["scoring.replay"].mutating  # scores ARE the fold
+    assert not registry["status"].mutating
     assert registry["exercise.accept"].mutating and registry["exercise.accept"].requires_idempotency_key
     assert not registry["exercise.bank"].mutating
     assert registry["exercise.rendered"].mutating and registry["exercise.rendered"].requires_idempotency_key
