@@ -1,5 +1,10 @@
-# TODO(review): the approved concept gives only a C1 sketch; no topic decomposition is created in P.1.
 id: c1.1-professional-register-and-decision-memos
 level: C1
 can_do: "Use professional register and nuanced argumentation in decision memos and executive summaries."
-tracks: [grammar-engine, reading, written-interaction, written-production-mediation, us-tech-english, everyday-online-informal, toefl-reading-writing]
+tracks: [grammar-engine, written-interaction, written-production-mediation, us-tech-english]
+topics:
+  - grammar.hedging-stance.control
+  - grammar.inversion.formal-emphasis
+  - written-production.decision-memo
+  - written-interaction.executive-recommendation
+  - us-tech.strategic-technical-brief

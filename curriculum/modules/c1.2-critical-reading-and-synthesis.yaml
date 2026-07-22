@@ -1,0 +1,10 @@
+id: c1.2-critical-reading-and-synthesis
+level: C1
+can_do: "Expose assumptions and methodological limits, reconcile source tensions, and write evidence-qualified synthesis."
+tracks: [reading, written-production-mediation]
+topics:
+  - reading.implicit-assumptions
+  - reading.methodology-limitations
+  - reading.cross-source-tension
+  - written-production.critical-synthesis
+  - written-production.evidence-qualified-argument

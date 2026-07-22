@@ -1,0 +1,10 @@
+id: c1.3-advanced-style-and-cohesion
+level: C1
+can_do: "Control reference, information density, advanced clauses, register shifts, and substantive style revision."
+tracks: [grammar-engine, word-formation, written-production-mediation]
+topics:
+  - grammar.reference-cohesion
+  - grammar.nominalization-information-flow
+  - grammar.participle-clauses.precision
+  - word-formation.register-shift
+  - written-production.style-revision

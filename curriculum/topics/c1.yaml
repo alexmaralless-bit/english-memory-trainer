@@ -53,3 +53,239 @@ topics:
       soft: [toefl-writing.academic-email]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     lexicon: []
+
+  - id: grammar.hedging-stance.control
+    cefr: C1
+    track: grammar-engine
+    module: c1.1-professional-register-and-decision-memos
+    can_do: "Calibrate a claim's strength with precise hedging, attribution, and stance instead of sounding either absolute or evasive."
+    advisory_prerequisites:
+      strong: [grammar.passive.reporting-structures, reading.author-stance-bias]
+      soft: [toefl-writing.academic-register]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: core
+    lexicon: []
+
+  - id: grammar.inversion.formal-emphasis
+    cefr: C1
+    track: grammar-engine
+    module: c1.1-professional-register-and-decision-memos
+    can_do: "Use formal inversion selectively to foreground a limiting condition, sequence, or exceptional result without obscuring the argument."
+    advisory_prerequisites:
+      strong: [grammar.inversion.emphasis, grammar.cleft-sentences.focus]
+      soft: [grammar.hedging-stance.control]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: tail
+    lexicon: []
+
+  - id: written-production.decision-memo
+    cefr: C1
+    track: written-production-mediation
+    module: c1.1-professional-register-and-decision-memos
+    can_do: "Write a decision memo that frames the decision, weighs evidence and uncertainty, recommends action, and records residual risk."
+    advisory_prerequisites:
+      strong: [written-production.executive-summary, written-production.technical-position-paper]
+      soft: [toefl-writing.counterargument-nuance]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: written-interaction.executive-recommendation
+    cefr: C1
+    track: written-interaction
+    module: c1.1-professional-register-and-decision-memos
+    can_do: "Present a concise recommendation to a senior audience with an explicit ask, decision logic, uncertainty, and consequence of delay."
+    advisory_prerequisites:
+      strong: [written-interaction.negotiate-priorities, written-interaction.diplomatic-escalation]
+      soft: [written-production.executive-summary]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: us-tech.strategic-technical-brief
+    cefr: C1
+    track: us-tech-english
+    module: c1.1-professional-register-and-decision-memos
+    can_do: "Translate a complex technical decision into a strategic brief that connects system constraints to business impact and governance."
+    advisory_prerequisites:
+      strong: [us-tech.architecture-tradeoff, us-tech.specification-rationale]
+      soft: [written-production.decision-memo]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: reading.implicit-assumptions
+    cefr: C1
+    track: reading
+    module: c1.2-critical-reading-and-synthesis
+    can_do: "Identify an unstated assumption that an argument requires and explain how the conclusion changes if it does not hold."
+    advisory_prerequisites:
+      strong: [reading.argument-structure, toefl-reading.inference]
+      soft: [reading.evidence-quality]
+    dimensions: [recognition, transfer]
+    lexicon: []
+
+  - id: reading.methodology-limitations
+    cefr: C1
+    track: reading
+    module: c1.2-critical-reading-and-synthesis
+    can_do: "Interpret how a text's method, sample, measurement, or scope limits the conclusions that can reasonably be drawn."
+    advisory_prerequisites:
+      strong: [reading.evidence-quality, toefl-reading.rhetorical-purpose]
+      soft: [toefl-reading.implicit-qualification]
+    dimensions: [recognition, transfer]
+    lexicon: []
+
+  - id: reading.cross-source-tension
+    cefr: C1
+    track: reading
+    module: c1.2-critical-reading-and-synthesis
+    can_do: "Explain a substantive tension between sources even when they use different terminology, evidence, or levels of analysis."
+    advisory_prerequisites:
+      strong: [reading.compare-source-claims, written-production.multi-source-synthesis]
+      soft: [toefl-writing.source-integration]
+    dimensions: [recognition, transfer]
+    lexicon: []
+
+  - id: written-production.critical-synthesis
+    cefr: C1
+    track: written-production-mediation
+    module: c1.2-critical-reading-and-synthesis
+    can_do: "Write a critical synthesis that organizes sources around a question, preserves disagreement, and evaluates the limits of the available evidence."
+    advisory_prerequisites:
+      strong: [reading.cross-source-tension, written-production.multi-source-synthesis]
+      soft: [reading.methodology-limitations]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: written-production.evidence-qualified-argument
+    cefr: C1
+    track: written-production-mediation
+    module: c1.2-critical-reading-and-synthesis
+    can_do: "Develop an argument whose scope and certainty remain proportionate to the quality and limitations of its evidence."
+    advisory_prerequisites:
+      strong: [reading.evidence-quality, toefl-writing.counterargument-nuance]
+      soft: [grammar.hedging-stance.control]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: grammar.reference-cohesion
+    cefr: C1
+    track: grammar-engine
+    module: c1.3-advanced-style-and-cohesion
+    can_do: "Maintain unambiguous reference across a dense paragraph by controlling pronouns, demonstratives, repetition, and lexical substitution."
+    advisory_prerequisites:
+      strong: [toefl-writing.cohesion, grammar.relative-clauses.specification]
+      soft: [written-production.multi-source-synthesis]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: core
+    lexicon: []
+
+  - id: grammar.nominalization-information-flow
+    cefr: C1
+    track: grammar-engine
+    module: c1.3-advanced-style-and-cohesion
+    can_do: "Choose between a clause and a nominalization to control information flow without creating unnecessary abstraction."
+    advisory_prerequisites:
+      strong: [word-formation.academic-nominalization, toefl-writing.academic-register]
+      soft: [grammar.reference-cohesion]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: core
+    lexicon: []
+
+  - id: grammar.participle-clauses.precision
+    cefr: C1
+    track: grammar-engine
+    module: c1.3-advanced-style-and-cohesion
+    can_do: "Use and revise participle clauses so their logical relation, time reference, and implied subject remain precise."
+    advisory_prerequisites:
+      strong: [grammar.participle-clauses.compression, grammar.relative-clauses.specification]
+      soft: [grammar.passive.reporting-structures]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: tail
+    lexicon: []
+
+  - id: word-formation.register-shift
+    cefr: C1
+    track: word-formation
+    module: c1.3-advanced-style-and-cohesion
+    can_do: "Use related verb, adjective, and noun forms to shift register and information density while preserving the original meaning."
+    advisory_prerequisites:
+      strong: [word-formation.academic-nominalization, toefl-writing.academic-register]
+      soft: [word-formation.quality-suffix]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: written-production.style-revision
+    cefr: C1
+    track: written-production-mediation
+    module: c1.3-advanced-style-and-cohesion
+    can_do: "Revise a correct but ineffective text for clarity, cohesion, emphasis, register, and sentence rhythm without changing its claims."
+    advisory_prerequisites:
+      strong: [toefl-writing.academic-register, toefl-writing.cohesion]
+      soft: [grammar.reference-cohesion]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: written-interaction.diplomatic-refusal
+    cefr: C1
+    track: written-interaction
+    module: c1.4-professional-and-public-discourse
+    can_do: "Refuse a significant request diplomatically while making the constraint, rationale, and viable alternative unmistakable."
+    advisory_prerequisites:
+      strong: [written-interaction.diplomatic-escalation, written-interaction.negotiate-priorities]
+      soft: [grammar.hedging-stance.control]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: written-interaction.multi-party-alignment
+    cefr: C1
+    track: written-interaction
+    module: c1.4-professional-and-public-discourse
+    can_do: "Write an alignment message that reconciles multiple positions and records decisions, dissent, owners, and unresolved dependencies."
+    advisory_prerequisites:
+      strong: [written-interaction.negotiate-priorities, written-interaction.resolve-ambiguity]
+      soft: [written-production.critical-synthesis]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: us-tech.risk-governance-brief
+    cefr: C1
+    track: us-tech-english
+    module: c1.4-professional-and-public-discourse
+    can_do: "Write a governance brief that distinguishes technical uncertainty, operational exposure, controls, ownership, and escalation criteria."
+    advisory_prerequisites:
+      strong: [us-tech.incident-postmortem, us-tech.strategic-technical-brief]
+      soft: [written-production.evidence-qualified-argument]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: everyday-life.bureaucratic-document-navigation
+    cefr: C1
+    track: everyday-life
+    module: c1.4-professional-and-public-discourse
+    can_do: "Interpret a dense administrative document, identify obligations and appeal routes, and explain the practical next action."
+    advisory_prerequisites:
+      strong: [reading.public-information-comparison, reading.evidence-quality]
+      soft: [everyday-life.complex-service-negotiation]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: everyday-online-informal.code-switching
+    cefr: C1
+    track: everyday-online-informal
+    module: c1.4-professional-and-public-discourse
+    can_do: "Shift the same message between informal community, neutral professional, and formal public registers without distorting stance."
+    advisory_prerequisites:
+      strong: [everyday-online-informal.tone-repair, toefl-writing.academic-register]
+      soft: [word-formation.register-shift]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: everyday-online-informal.subtle-humor
+    cefr: C1
+    track: everyday-online-informal
+    module: c1.4-professional-and-public-discourse
+    can_do: "Recognize subtle humor or allusion in an online exchange and explain how it changes the literal stance or social meaning."
+    advisory_prerequisites:
+      strong: [everyday-online-informal.implied-irony, toefl-reading.implicit-qualification]
+      soft: [reading.idioms-in-context]
+    dimensions: [recognition, transfer]
+    lexicon: []
