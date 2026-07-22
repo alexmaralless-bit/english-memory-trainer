@@ -73,7 +73,7 @@ topics:
       strong: [written-production.reasoned-recommendation, written-production.system-overview]
       soft: [us-tech.tradeoff-summary]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: [chunk.i-suggest, word.recommendation, word.impact]
+    lexicon: [chunk.i-suggest, word.recommendation, word.impact, word.ethical, word.sustainable, word.viable]
     contexts: [architecture-decision, tool-adoption-proposal]
     typical_errors:
       - "Opening with background for too long and leaving the actual position implicit."
@@ -115,7 +115,7 @@ topics:
       strong: [us-tech.tradeoff-summary, us-tech.requirement-rationale]
       soft: [written-production.technical-position-paper]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: [chunk.the-main-risk-is, word.option, word.impact]
+    lexicon: [chunk.the-main-risk-is, word.option, word.impact, word.allocate, word.likelihood, word.optimal, word.viable]
     contexts: [design-review, platform-migration]
     typical_errors:
       - "Calling one architecture the best without naming the constraint that makes it preferable."
@@ -309,7 +309,7 @@ topics:
       strong: [reading.compare-source-claims, reading.main-idea-details]
       soft: [written-production.reasoned-recommendation]
     dimensions: [recognition, transfer]
-    lexicon: [word.reason, word.result, word.because]
+    lexicon: [word.reason, word.result, word.because, word.proposition, word.stance, word.objection]
     contexts: [opinion-article, technical-proposal]
     typical_errors:
       - "Calling the topic the claim instead of identifying the position the author defends."
@@ -330,7 +330,7 @@ topics:
       strong: [reading.implied-online-stance, written-production.fact-inference]
       soft: [reading.compare-source-claims]
     dimensions: [recognition, transfer]
-    lexicon: [word.agree, word.disagree, informal.not-sure-i-agree]
+    lexicon: [word.agree, word.disagree, informal.not-sure-i-agree, word.implicit, word.stance, word.subtle]
     contexts: [product-review, public-commentary]
     typical_errors:
       - "Reading probably or appears to as certainty because the qualifier has no prominent Russian equivalent."
@@ -351,7 +351,7 @@ topics:
       strong: [reading.argument-structure, reading.author-stance-bias]
       soft: [written-production.fact-inference]
     dimensions: [recognition, transfer]
-    lexicon: [informal.do-you-have-a-source, word.reason, word.result]
+    lexicon: [informal.do-you-have-a-source, word.reason, word.result, word.credibility, word.methodology, word.replicate, word.transparency]
     contexts: [consumer-claim-review, technical-proposal]
     typical_errors:
       - "Accepting a statistic as strong evidence without checking what population it describes."
@@ -393,7 +393,7 @@ topics:
       strong: [us-tech.requirement-rationale, written-production.technical-position-paper]
       soft: [reading.evidence-quality]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: [chunk.the-main-requirement-is, word.requirement, chunk.expected-result]
+    lexicon: [chunk.the-main-requirement-is, word.requirement, chunk.expected-result, word.protocol, word.tolerance, word.terminology]
     contexts: [api-specification, security-control-design]
     typical_errors:
       - "Restating the requirement as its own justification instead of linking it to evidence or a constraint."
@@ -477,7 +477,7 @@ topics:
       strong: [written-production.technical-position-paper, written-production.reasoned-recommendation]
       soft: [written-interaction.decision-challenge]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: [informal.not-sure-i-agree, word.reason, word.because]
+    lexicon: [informal.not-sure-i-agree, word.reason, word.because, word.objection, word.problematic, word.undermine]
     contexts: [proposal-response, academic-discussion]
     typical_errors:
       - "Reducing the opposing view to an obviously weak claim instead of representing its strongest reasonable form."
@@ -498,7 +498,7 @@ topics:
       strong: [us-tech.incident-root-cause, written-production.cause-effect-explanation]
       soft: [grammar.modal-perfect.speculation]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: [chunk.the-root-cause-was, chunk.actual-result, word.action]
+    lexicon: [chunk.the-root-cause-was, chunk.actual-result, word.action, word.detection, word.reconstruct]
     contexts: [service-incident, data-quality-failure]
     typical_errors:
       - "Calling the first visible error the root cause without tracing contributing conditions."
@@ -666,7 +666,7 @@ topics:
       strong: [toefl-reading.academic-main-idea, reading.evidence-quality]
       soft: [toefl-reading.scanning-key-detail]
     dimensions: [recognition, transfer]
-    lexicon: [informal.do-you-have-a-source, word.reason, word.result]
+    lexicon: [informal.do-you-have-a-source, word.reason, word.result, word.effectiveness, word.prediction, word.reinforce, word.variability]
     contexts: [academic-passage, claim-evidence-analysis]
     typical_errors:
       - "Choosing a fact that is true in the passage but does not support the stated claim."
@@ -687,7 +687,7 @@ topics:
       strong: [written-production.fact-inference, reading.author-stance-bias]
       soft: [toefl-reading.supporting-evidence]
     dimensions: [recognition, transfer]
-    lexicon: [word.reason, word.result]
+    lexicon: [word.reason, word.result, word.implicit, word.presume, word.reconstruct]
     contexts: [academic-passage, inference-question]
     typical_errors:
       - "Selecting a plausible conclusion based on outside knowledge rather than one required by the text."
@@ -729,7 +729,7 @@ topics:
       strong: [toefl-reading.paragraph-organization, reading.argument-structure]
       soft: [toefl-reading.academic-main-idea]
     dimensions: [recognition, transfer]
-    lexicon: [word.because, word.although, word.result]
+    lexicon: [word.because, word.although, word.result, word.progression, word.intermediate]
     contexts: [multi-paragraph-passage, organization-map]
     typical_errors:
       - "Listing paragraph topics without describing the relationship among them."
@@ -750,7 +750,7 @@ topics:
       strong: [toefl-reading.vocabulary-context, word-formation.academic-nominalization]
       soft: [toefl-writing.sentence-building]
     dimensions: [recognition, controlled_production, transfer]
-    lexicon: [word.requirement, word.improvement, word.result]
+    lexicon: [word.requirement, word.improvement, word.result, word.terminology, word.equivalence]
     contexts: [academic-cloze, word-formation-task]
     typical_errors:
       - "Completing only from the Russian meaning without checking the required word class."
@@ -771,7 +771,7 @@ topics:
       strong: [toefl-reading.scanning-key-detail, written-production.multi-source-synthesis]
       soft: [toefl-reading.text-organization]
     dimensions: [recognition, controlled_production, transfer]
-    lexicon: [chunk.according-to, word.summary, word.result]
+    lexicon: [chunk.according-to, word.summary, word.result, word.methodology, word.retrieve]
     contexts: [source-notes, integrated-writing]
     typical_errors:
       - "Copying complete source sentences instead of selecting claim, evidence, and relation."
@@ -792,7 +792,7 @@ topics:
       strong: [toefl-writing.source-note-taking, written-production.multi-source-synthesis]
       soft: [reading.compare-source-claims]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: [chunk.according-to, word.summary, word.result]
+    lexicon: [chunk.according-to, word.summary, word.result, word.critique, word.reinforce]
     contexts: [integrated-writing, multi-source-response]
     typical_errors:
       - "Writing one source summary after another rather than organizing by shared issues."
@@ -813,7 +813,7 @@ topics:
       strong: [toefl-writing.discussion-claim-reason, written-production.technical-position-paper]
       soft: [reading.argument-structure]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: [word.reason, word.recommendation]
+    lexicon: [word.reason, word.recommendation, word.proposition, word.stance]
     contexts: [academic-essay, discussion-response]
     typical_errors:
       - "Writing a topic announcement such as I will discuss instead of a defensible position."
@@ -834,7 +834,7 @@ topics:
       strong: [toefl-writing.thesis-position, reading.evidence-quality]
       soft: [written-production.counterargument-response]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: [word.reason, word.because, word.result]
+    lexicon: [word.reason, word.because, word.result, word.elaborate, word.rational, word.meaningful]
     contexts: [academic-essay, discussion-board]
     typical_errors:
       - "Moving from claim to example without explaining how the example proves the point."
@@ -876,7 +876,7 @@ topics:
       strong: [reading.author-stance-bias, word-formation.academic-nominalization]
       soft: [everyday-online-informal.tone-repair]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: [chunk.according-to, word.result, word.reason]
+    lexicon: [chunk.according-to, word.result, word.reason, word.predominantly, word.terminology]
     contexts: [academic-essay, source-based-response]
     typical_errors:
       - "Using conversational fillers such as you know or a lot of in formal analysis."

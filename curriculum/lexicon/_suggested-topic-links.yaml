@@ -803,3 +803,66 @@ links:
   - {lexical_item: word.articulate, topics: [toefl-writing.discussion-claim-reason, toefl-writing.academic-email]}
   - {lexical_item: word.commentary, topics: [toefl-reading.skimming-main-purpose, toefl-reading.paragraph-organization]}
   - {lexical_item: word.discourse, topics: [toefl-reading.paragraph-organization, toefl-reading.vocabulary-context]}
+
+  # ===== P.4e academic B2 stable core =====
+  - {lexical_item: word.adaptation, topics: [toefl-reading.academic-main-idea, everyday-life.community-participation]}
+  - {lexical_item: word.adverse, topics: [reading.evidence-quality, everyday-life.evaluate-consumer-health-info]}
+  - {lexical_item: word.allocate, topics: [written-production.technical-position-paper, us-tech.architecture-tradeoff]}
+  - {lexical_item: word.allocation, topics: [written-production.technical-position-paper, us-tech.architecture-tradeoff]}
+  - {lexical_item: word.authority, topics: [reading.author-stance-bias, reading.public-information-comparison]}
+  - {lexical_item: word.autonomy, topics: [toefl-reading.academic-main-idea, toefl-writing.discussion-response]}
+  - {lexical_item: word.availability, topics: [toefl-writing.source-note-taking, reading.evidence-quality]}
+  - {lexical_item: word.behavioral, topics: [toefl-reading.supporting-evidence, reading.evidence-quality]}
+  - {lexical_item: word.credibility, topics: [reading.evidence-quality, reading.compare-source-claims]}
+  - {lexical_item: word.critique, topics: [reading.argument-structure, written-production.counterargument-response]}
+  - {lexical_item: word.detection, topics: [us-tech.incident-postmortem, reading.evidence-quality]}
+  - {lexical_item: word.effectiveness, topics: [reading.evidence-quality, toefl-reading.supporting-evidence]}
+  - {lexical_item: word.elaborate, topics: [toefl-writing.argument-development, written-production.technical-position-paper]}
+  - {lexical_item: word.equivalence, topics: [reading.compare-source-claims, toefl-reading.contextual-word-completion]}
+  - {lexical_item: word.estimation, topics: [toefl-reading.supporting-evidence, reading.evidence-quality]}
+  - {lexical_item: word.ethical, topics: [written-production.technical-position-paper, toefl-writing.discussion-response]}
+  - {lexical_item: word.expertise, topics: [reading.evidence-quality, written-production.technical-position-paper]}
+  - {lexical_item: word.implicit, topics: [toefl-reading.inference, reading.author-stance-bias]}
+  - {lexical_item: word.incidence, topics: [reading.evidence-quality, everyday-life.evaluate-consumer-health-info]}
+  - {lexical_item: word.inequality, topics: [toefl-reading.academic-main-idea, toefl-writing.discussion-response]}
+  - {lexical_item: word.influential, topics: [toefl-reading.contextual-word-completion, toefl-reading.academic-main-idea]}
+  - {lexical_item: word.intermediate, topics: [toefl-reading.text-organization, reading.connected-technical-explanation]}
+  - {lexical_item: word.likelihood, topics: [us-tech.incident-postmortem, us-tech.architecture-tradeoff]}
+  - {lexical_item: word.manipulate, topics: [reading.evidence-quality, toefl-reading.supporting-evidence]}
+  - {lexical_item: word.marginal, topics: [toefl-reading.supporting-evidence, reading.evidence-quality]}
+  - {lexical_item: word.meaningful, topics: [reading.evidence-quality, toefl-writing.argument-development]}
+  - {lexical_item: word.methodology, topics: [reading.evidence-quality, toefl-writing.source-note-taking]}
+  - {lexical_item: word.modification, topics: [us-tech.specification-rationale, us-tech.incident-postmortem]}
+  - {lexical_item: word.necessity, topics: [reading.argument-structure, written-production.technical-position-paper]}
+  - {lexical_item: word.objection, topics: [written-production.counterargument-response, written-interaction.decision-challenge]}
+  - {lexical_item: word.optimal, topics: [us-tech.architecture-tradeoff, written-production.technical-position-paper]}
+  - {lexical_item: word.paradigm, topics: [toefl-reading.academic-main-idea, reading.argument-structure]}
+  - {lexical_item: word.prediction, topics: [toefl-reading.inference, toefl-reading.supporting-evidence]}
+  - {lexical_item: word.predominantly, topics: [toefl-writing.academic-register, toefl-reading.supporting-evidence]}
+  - {lexical_item: word.presume, topics: [toefl-reading.inference, reading.author-stance-bias]}
+  - {lexical_item: word.problematic, topics: [written-production.counterargument-response, reading.evidence-quality]}
+  - {lexical_item: word.progression, topics: [toefl-reading.text-organization, toefl-reading.academic-main-idea]}
+  - {lexical_item: word.projection, topics: [toefl-reading.supporting-evidence, us-tech.architecture-tradeoff]}
+  - {lexical_item: word.proposition, topics: [reading.argument-structure, toefl-writing.thesis-position]}
+  - {lexical_item: word.protocol, topics: [reading.evidence-quality, us-tech.specification-rationale]}
+  - {lexical_item: word.rational, topics: [toefl-writing.argument-development, written-production.technical-position-paper]}
+  - {lexical_item: word.reconstruct, topics: [toefl-reading.inference, us-tech.incident-postmortem]}
+  - {lexical_item: word.regression, topics: [reading.evidence-quality, toefl-reading.supporting-evidence]}
+  - {lexical_item: word.reinforce, topics: [toefl-reading.supporting-evidence, toefl-writing.argument-development]}
+  - {lexical_item: word.replicate, topics: [reading.evidence-quality, toefl-reading.supporting-evidence]}
+  - {lexical_item: word.residual, topics: [reading.evidence-quality, toefl-reading.supporting-evidence]}
+  - {lexical_item: word.retrieve, topics: [toefl-writing.source-note-taking, reading.evidence-quality]}
+  - {lexical_item: word.stance, topics: [reading.author-stance-bias, toefl-reading.rhetorical-purpose]}
+  - {lexical_item: word.strategic, topics: [written-production.executive-summary, written-production.technical-position-paper]}
+  - {lexical_item: word.subjective, topics: [reading.evidence-quality, reading.author-stance-bias]}
+  - {lexical_item: word.subtle, topics: [toefl-reading.inference, toefl-reading.rhetorical-purpose]}
+  - {lexical_item: word.sustainable, topics: [written-production.technical-position-paper, toefl-writing.discussion-response]}
+  - {lexical_item: word.terminology, topics: [toefl-reading.contextual-word-completion, us-tech.specification-rationale]}
+  - {lexical_item: word.threshold, topics: [toefl-reading.supporting-evidence, reading.evidence-quality]}
+  - {lexical_item: word.tolerance, topics: [us-tech.specification-rationale, us-tech.architecture-tradeoff]}
+  - {lexical_item: word.trait, topics: [toefl-reading.supporting-evidence, reading.evidence-quality]}
+  - {lexical_item: word.transformation, topics: [toefl-reading.academic-main-idea, toefl-reading.text-organization]}
+  - {lexical_item: word.transparency, topics: [reading.evidence-quality, written-production.technical-position-paper]}
+  - {lexical_item: word.undermine, topics: [written-production.counterargument-response, reading.evidence-quality]}
+  - {lexical_item: word.variability, topics: [toefl-reading.supporting-evidence, reading.evidence-quality]}
+  - {lexical_item: word.viable, topics: [us-tech.architecture-tradeoff, written-production.technical-position-paper]}
