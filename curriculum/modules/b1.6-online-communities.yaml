@@ -1,0 +1,9 @@
+id: b1.6-online-communities
+level: B1
+can_do: "Follow online discussions, infer stance, repair tone, and contribute a useful community response."
+tracks: [everyday-online-informal, reading]
+topics:
+  - everyday-online-informal.thread-summary
+  - everyday-online-informal.tone-repair
+  - everyday-online-informal.community-reply
+  - reading.implied-online-stance

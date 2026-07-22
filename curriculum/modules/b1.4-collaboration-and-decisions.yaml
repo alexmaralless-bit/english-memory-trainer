@@ -1,0 +1,11 @@
+id: b1.4-collaboration-and-decisions
+level: B1
+can_do: "Negotiate scope, challenge assumptions constructively, and make reasoned technical recommendations."
+tracks: [grammar-engine, written-interaction, written-production-mediation, us-tech-english]
+topics:
+  - grammar.relative-clauses.specification
+  - grammar.modals.deduction-obligation
+  - written-interaction.negotiating-scope
+  - written-interaction.constructive-challenge
+  - written-production.reasoned-recommendation
+  - us-tech.tradeoff-summary

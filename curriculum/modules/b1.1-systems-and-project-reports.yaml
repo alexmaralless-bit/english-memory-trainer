@@ -1,5 +1,11 @@
-# TODO(review): the approved concept gives only a B1 sketch; this is a minimal module-level grouping.
 id: b1.1-systems-and-project-reports
 level: B1
 can_do: "Explain systems and decisions in tickets, summaries, incident reports, and connected project updates."
-tracks: [grammar-engine, reading, written-interaction, written-production-mediation, us-tech-english, everyday-online-informal, toefl-reading-writing]
+tracks: [grammar-engine, reading, written-interaction, written-production-mediation, us-tech-english]
+topics:
+  - grammar.present-perfect.duration
+  - reading.connected-technical-explanation
+  - written-interaction.project-risk-update
+  - written-production.system-overview
+  - us-tech.incident-root-cause
+  - us-tech.requirement-rationale

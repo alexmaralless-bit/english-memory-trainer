@@ -1,0 +1,10 @@
+id: b1.5-independent-life
+level: B1
+can_do: "Handle connected service information, disputes, practical choices, and formal everyday requests independently."
+tracks: [reading, everyday-life, written-interaction]
+topics:
+  - reading.multi-step-service-information
+  - everyday-life.resolving-service-dispute
+  - everyday-life.comparing-health-travel-options
+  - everyday-life.explaining-personal-decision
+  - written-interaction.formal-service-request

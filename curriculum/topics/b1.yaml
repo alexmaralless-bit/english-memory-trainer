@@ -16,3 +16,307 @@ topics:
     can_do: "Recognize that -able means able to be X-ed (readable) and -ness names a quality (usefulness), and tell the word class."
     advisory_prerequisites:
       strong: [word-formation.agent-and-noun-suffix]
+
+  - id: grammar.present-perfect.duration
+    cefr: B1
+    track: grammar-engine
+    module: b1.1-systems-and-project-reports
+    can_do: "Describe an activity or state that began in the past and continues now, with a clear duration or starting point."
+    advisory_prerequisites:
+      strong: [grammar.present-perfect.result, grammar.present-perfect-past-simple.choice]
+      soft: [grammar.time-dates]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: big-five
+    lexicon: []
+
+  - id: reading.connected-technical-explanation
+    cefr: B1
+    track: reading
+    module: b1.1-systems-and-project-reports
+    can_do: "Follow the main line of a connected technical explanation and locate the details that support each step."
+    advisory_prerequisites:
+      strong: [reading.main-idea-details, reading.documentation-scan]
+      soft: [reading.ticket-basics]
+    dimensions: [recognition, transfer]
+    lexicon: []
+
+  - id: written-interaction.project-risk-update
+    cefr: B1
+    track: written-interaction
+    module: b1.1-systems-and-project-reports
+    can_do: "Write a project update that states a risk, explains its likely impact, and requests or proposes a response."
+    advisory_prerequisites:
+      strong: [written-production.project-update, written-interaction.suggestion-feedback]
+      soft: [written-interaction.follow-up-recommendation]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: written-production.system-overview
+    cefr: B1
+    track: written-production-mediation
+    module: b1.1-systems-and-project-reports
+    can_do: "Write a connected overview of a system's purpose, main components, and basic data flow for a new teammate."
+    advisory_prerequisites:
+      strong: [written-production.paraphrase-summary, written-production.option-comparison]
+      soft: [us-tech.describe-system-data]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: us-tech.incident-root-cause
+    cefr: B1
+    track: us-tech-english
+    module: b1.1-systems-and-project-reports
+    can_do: "Explain the observed impact, contributing conditions, and probable root cause of a technical incident without overstating certainty."
+    advisory_prerequisites:
+      strong: [us-tech.incident-report-basics, written-production.troubleshooting-explanation]
+      soft: [written-production.fact-inference]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: us-tech.requirement-rationale
+    cefr: B1
+    track: us-tech-english
+    module: b1.1-systems-and-project-reports
+    can_do: "Explain why a technical requirement exists and connect it to a user, operational, or safety need."
+    advisory_prerequisites:
+      strong: [written-interaction.requirement-question, grammar.modals.requirements]
+      soft: [written-production.option-comparison]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: grammar.past-perfect.sequence
+    cefr: B1
+    track: grammar-engine
+    module: b1.3-complex-events-and-conditions
+    can_do: "Show which of two past events happened first by using the Past Perfect in an incident or narrative."
+    advisory_prerequisites:
+      strong: [grammar.past-simple.events, grammar.past-continuous.incident-context]
+      soft: [grammar.when-while.sequence]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: tail
+    lexicon: []
+
+  - id: grammar.second-conditional.hypothetical
+    cefr: B1
+    track: grammar-engine
+    module: b1.3-complex-events-and-conditions
+    can_do: "Discuss an unlikely or hypothetical present situation and its consequence with the second conditional."
+    advisory_prerequisites:
+      strong: [grammar.first-conditional.troubleshooting, grammar.modals.requirements]
+      soft: [grammar.past-simple.events]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: tail
+    lexicon: []
+
+  - id: grammar.passive.expanded-process
+    cefr: B1
+    track: grammar-engine
+    module: b1.3-complex-events-and-conditions
+    can_do: "Describe a multi-step process in different time frames while keeping the action or result in focus."
+    advisory_prerequisites:
+      strong: [grammar.passive.basic-process, grammar.present-perfect.result]
+      soft: [grammar.sequencing.delivery]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: tail
+    lexicon: []
+
+  - id: grammar.reported-speech.work-updates
+    cefr: B1
+    track: grammar-engine
+    module: b1.3-complex-events-and-conditions
+    can_do: "Report a colleague's statement, request, or question accurately in a connected work update."
+    advisory_prerequisites:
+      strong: [grammar.past-simple.events, grammar.basic-questions.clarification]
+      soft: [written-production.paraphrase-summary]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: tail
+    lexicon: []
+
+  - id: written-production.cause-effect-explanation
+    cefr: B1
+    track: written-production-mediation
+    module: b1.3-complex-events-and-conditions
+    can_do: "Write a connected explanation that distinguishes a cause, a contributing factor, and a resulting effect."
+    advisory_prerequisites:
+      strong: [grammar.connectors.cause-contrast, written-production.fact-inference]
+      soft: [written-production.troubleshooting-explanation]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: everyday-life.explaining-complicated-problem
+    cefr: B1
+    track: everyday-life
+    module: b1.3-complex-events-and-conditions
+    can_do: "Explain a non-routine everyday problem, what led to it, what has already been tried, and what help is needed."
+    advisory_prerequisites:
+      strong: [everyday-life.resolving-a-service-problem, everyday-life.agreeing-on-the-next-step]
+      soft: [everyday-life.explaining-an-everyday-incident]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: grammar.relative-clauses.specification
+    cefr: B1
+    track: grammar-engine
+    module: b1.4-collaboration-and-decisions
+    can_do: "Define or add relevant information about a person, system, or requirement with a relative clause."
+    advisory_prerequisites:
+      strong: [grammar.basic-word-order, grammar.articles.identity]
+      soft: [grammar.pronouns.possessives]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: core
+    lexicon: []
+
+  - id: grammar.modals.deduction-obligation
+    cefr: B1
+    track: grammar-engine
+    module: b1.4-collaboration-and-decisions
+    can_do: "Distinguish obligation, recommendation, possibility, and evidence-based deduction with modal verbs."
+    advisory_prerequisites:
+      strong: [grammar.modals.requirements, grammar.can-cant.ability-requests]
+      soft: [written-production.fact-inference]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: core
+    lexicon: []
+
+  - id: written-interaction.negotiating-scope
+    cefr: B1
+    track: written-interaction
+    module: b1.4-collaboration-and-decisions
+    can_do: "Negotiate a manageable scope in writing by stating constraints, priorities, and an acceptable compromise."
+    advisory_prerequisites:
+      strong: [written-interaction.respectful-disagreement, written-interaction.requirement-question]
+      soft: [us-tech.scope-change-update]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: written-interaction.constructive-challenge
+    cefr: B1
+    track: written-interaction
+    module: b1.4-collaboration-and-decisions
+    can_do: "Challenge an assumption or proposal constructively and invite clarification without making the exchange adversarial."
+    advisory_prerequisites:
+      strong: [written-interaction.suggestion-feedback, written-interaction.respectful-disagreement]
+      soft: [everyday-online-informal.tone-recognition]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: written-production.reasoned-recommendation
+    cefr: B1
+    track: written-production-mediation
+    module: b1.4-collaboration-and-decisions
+    can_do: "Write a recommendation that compares relevant options, gives reasons, and acknowledges one limitation."
+    advisory_prerequisites:
+      strong: [written-production.option-comparison, written-interaction.follow-up-recommendation]
+      soft: [grammar.connectors.cause-contrast]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: us-tech.tradeoff-summary
+    cefr: B1
+    track: us-tech-english
+    module: b1.4-collaboration-and-decisions
+    can_do: "Summarize a technical trade-off in terms of benefit, cost, risk, and the condition that changes the choice."
+    advisory_prerequisites:
+      strong: [written-production.option-comparison, us-tech.scope-change-update]
+      soft: [written-production.fact-inference]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: reading.multi-step-service-information
+    cefr: B1
+    track: reading
+    module: b1.5-independent-life
+    can_do: "Extract conditions, exceptions, deadlines, and required actions from connected service or public information."
+    advisory_prerequisites:
+      strong: [reading.short-news-item, reading.documentation-scan]
+      soft: [everyday-life.understanding-a-bill]
+    dimensions: [recognition, transfer]
+    lexicon: []
+
+  - id: everyday-life.resolving-service-dispute
+    cefr: B1
+    track: everyday-life
+    module: b1.5-independent-life
+    can_do: "Present evidence in a service dispute, state the desired resolution, and respond to a proposed compromise."
+    advisory_prerequisites:
+      strong: [everyday-life.resolving-a-service-problem, everyday-life.asking-about-a-charge]
+      soft: [written-interaction.respectful-disagreement]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: everyday-life.comparing-health-travel-options
+    cefr: B1
+    track: everyday-life
+    module: b1.5-independent-life
+    can_do: "Compare practical health or travel options using constraints, consequences, and personal priorities."
+    advisory_prerequisites:
+      strong: [everyday-life.comparing-service-options, everyday-life.changing-a-travel-plan]
+      soft: [written-production.option-comparison]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: everyday-life.explaining-personal-decision
+    cefr: B1
+    track: everyday-life
+    module: b1.5-independent-life
+    can_do: "Explain a personal decision with connected reasons, relevant alternatives, and a likely consequence."
+    advisory_prerequisites:
+      strong: [everyday-life.expressing-an-opinion-with-reasons, everyday-life.comparing-leisure-options]
+      soft: [written-production.reasoned-recommendation]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: written-interaction.formal-service-request
+    cefr: B1
+    track: written-interaction
+    module: b1.5-independent-life
+    can_do: "Write a formal service request that gives necessary background, identifies the problem, and asks for a specific action."
+    advisory_prerequisites:
+      strong: [written-interaction.polite-request, written-interaction.follow-up]
+      soft: [everyday-life.requesting-a-repair]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: everyday-online-informal.thread-summary
+    cefr: B1
+    track: everyday-online-informal
+    module: b1.6-online-communities
+    can_do: "Summarize the main question, competing suggestions, and current consensus in a short online thread."
+    advisory_prerequisites:
+      strong: [everyday-online-informal.forum-thread-reply, reading.main-idea-details]
+      soft: [written-production.paraphrase-summary]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: everyday-online-informal.tone-repair
+    cefr: B1
+    track: everyday-online-informal
+    module: b1.6-online-communities
+    can_do: "Rewrite an abrupt or ambiguous online message so that its intent is clear and its tone fits the relationship."
+    advisory_prerequisites:
+      strong: [everyday-online-informal.casual-neutral-rephrasing, written-interaction.respectful-disagreement]
+      soft: [everyday-online-informal.tone-recognition]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: everyday-online-informal.community-reply
+    cefr: B1
+    track: everyday-online-informal
+    module: b1.6-online-communities
+    can_do: "Write a useful community reply that answers the question, marks uncertainty, and avoids unnecessary confrontation."
+    advisory_prerequisites:
+      strong: [everyday-online-informal.forum-thread-reply, written-interaction.suggestion-feedback]
+      soft: [written-production.fact-inference]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: reading.implied-online-stance
+    cefr: B1
+    track: reading
+    module: b1.6-online-communities
+    can_do: "Infer a writer's likely stance from wording, qualification, and context in an online exchange."
+    advisory_prerequisites:
+      strong: [everyday-online-informal.tone-recognition, written-production.fact-inference]
+      soft: [reading.personal-message]
+    dimensions: [recognition, transfer]
+    lexicon: []
