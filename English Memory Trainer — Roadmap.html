@@ -412,7 +412,7 @@
     <header class="hero">
       <p class="eyebrow">Living roadmap · updated 22 July 2026</p>
       <h1>English Memory Trainer</h1>
-      <p class="hero-copy">A deterministic Reading and Writing learning engine with replaceable tutors. The A1–C2 curriculum and the Phase 2 vertical slice are complete; real use now supplies calibration evidence.</p>
+      <p class="hero-copy">A deterministic Reading and Writing learning engine with replaceable tutors. The A1–C2 curriculum and the Phase 2 vertical slice are complete, plus a personal lexicon that captures unknown words as enrollment — never as faked knowledge. Real use now supplies calibration evidence.</p>
       <div class="hero-meta" aria-label="Current state">
         <span>Phase 0 complete</span>
         <span>Phase 2 complete</span>
@@ -438,9 +438,9 @@
       <div class="metrics">
         <article class="metric"><strong>275</strong><span>fully authored topics across 53 modules and 10 tracks</span></article>
         <article class="metric"><strong>1,142</strong><span>lexicon units, including academic and real slang layers</span></article>
-        <article class="metric"><strong>12</strong><span>live engine modules, including read-only audit</span></article>
-        <article class="metric"><strong>55</strong><span>registered CLI commands with structured envelopes</span></article>
-        <article class="metric"><strong>463</strong><span>passing tests; the whole collected suite is green</span></article>
+        <article class="metric"><strong>13</strong><span>live engine modules, incl. read-only audit and the personal lexicon</span></article>
+        <article class="metric"><strong>58</strong><span>registered CLI commands with structured envelopes</span></article>
+        <article class="metric"><strong>504</strong><span>passing tests; the whole collected suite is green</span></article>
         <article class="metric"><strong>0</strong><span>xfails: all four completion findings are executable behaviour now</span></article>
         <article class="metric"><strong>12/12</strong><span>accepted Phase 0 design contracts</span></article>
         <article class="metric"><strong>11 / 56</strong><span>open questions / resolved decisions; four are trigger-based v2 candidates</span></article>
@@ -596,14 +596,14 @@
         <p>Latest implementation and evidence commits, newest first.</p>
       </div>
       <div class="card timeline">
+        <article class="milestone"><code>c94e6aa</code><div><h3>Personal lexicon in canon and roadmap</h3><p>The learner module records unknown words as enrollment, never evidence — scoring stays byte-identical across an encounter; only a graded answer moves knowledge. Two canon extensions accepted.</p></div></article>
+        <article class="milestone"><code>8a79518</code><div><h3>Learner-lexicon end-to-end demo</h3><p>Encounter → tutor briefing after a provider swap → a separate graded answer, proven deterministic across two databases.</p></div></article>
+        <article class="milestone"><code>316b3d8</code><div><h3>Operating runbook and deployed skills</h3><p>A one-page README, the ten skills synced into place, and the placement skill moved to the dedicated placement CLI.</p></div></article>
         <article class="milestone"><code>2d7373c</code><div><h3>Complete Phase 2 safety and trust contracts</h3><p>Closed all four accepted findings with deterministic runtime behaviour and removed every strict xfail.</p></div></article>
         <article class="milestone"><code>7e5d66a</code><div><h3>Finalize the pre-decision completion journal</h3><p>Recorded the boundary that the owner's four decisions subsequently resolved.</p></div></article>
         <article class="milestone"><code>4b514c9</code><div><h3>Document trust-contour findings</h3><p>Captured the missing semantics that were later resolved without inventing runtime behaviour.</p></div></article>
         <article class="milestone"><code>9eb673b</code><div><h3>Complete lessons wiring and OPEN-11 decision record</h3><p>Joined session lifecycle to live control inputs while preserving atomic planning.</p></div></article>
         <article class="milestone"><code>7e5a172</code><div><h3>Wire live control into planning</h3><p>Signals, probes, saturation, recurring errors, starvation and availability now influence real plans.</p></div></article>
-        <article class="milestone"><code>40b44b3</code><div><h3>Add bank reuse and observed-error risk</h3><p>Accepted exercises are reused under active safety checks and recurring observations feed control.</p></div></article>
-        <article class="milestone"><code>c53f18d</code><div><h3>Add control metrics</h3><p>Seven deterministic metric folds and balanced hysteresis alerts became queryable.</p></div></article>
-        <article class="milestone"><code>2076a5e</code><div><h3>Add immutable DecisionTrace</h3><p><code>trainer why</code> can explain deterministic planning decisions.</p></div></article>
       </div>
     </section>
 
@@ -622,7 +622,7 @@
     </section>
 
     <footer>
-      <strong>Source of truth:</strong> <code>wiki/roadmap.md</code>. This standalone HTML snapshot was rebuilt on 2026-07-22. It contains no external scripts, fonts or network dependencies. Current verification baseline: 463 collected · 463 passed · 0 xfail · Ruff and strict mypy clean.
+      <strong>Source of truth:</strong> <code>wiki/roadmap.md</code>. This standalone HTML snapshot was rebuilt on 2026-07-22. It contains no external scripts, fonts or network dependencies. Current verification baseline: 504 collected · 504 passed · 0 xfail · Ruff and strict mypy clean.
     </footer>
   </main>
 </body>
