@@ -928,3 +928,50 @@ links:
   - {lexical_item: word.vague, topics: [written-production.editorial-rewrite, reading.ambiguity-resolution]}
   - {lexical_item: word.vector, topics: [us-tech.uncertainty-and-model-risk, reading.dense-interdisciplinary-synthesis]}
   - {lexical_item: word.volition, topics: [reading.dense-interdisciplinary-synthesis, written-production.source-voice-balance]}
+
+  # ===== P.4e TOEFL reading/writing vocabulary and frames =====
+  - {lexical_item: word.attribution, topics: [toefl-writing.source-note-taking, toefl-writing.source-integration]}
+  - {lexical_item: word.bias, topics: [reading.author-stance-bias, reading.evidence-quality]}
+  - {lexical_item: word.citation, topics: [toefl-writing.source-note-taking, toefl-writing.source-integration]}
+  - {lexical_item: word.cite, topics: [toefl-writing.source-note-taking, toefl-writing.source-integration]}
+  - {lexical_item: word.coherence, topics: [toefl-writing.cohesion, written-production.style-revision]}
+  - {lexical_item: word.cohesion, topics: [toefl-writing.cohesion, grammar.reference-cohesion]}
+  - {lexical_item: word.concession, topics: [written-production.counterargument-response, toefl-writing.counterargument-nuance]}
+  - {lexical_item: word.contention, topics: [reading.argument-structure, toefl-reading.dense-passage-synthesis]}
+  - {lexical_item: word.corroborate, topics: [reading.cross-source-tension, toefl-writing.source-integration]}
+  - {lexical_item: word.counterargument, topics: [written-production.counterargument-response, toefl-writing.counterargument-nuance]}
+  - {lexical_item: word.entail, topics: [reading.implicit-assumptions, written-production.evidence-qualified-argument]}
+  - {lexical_item: word.evidence, topics: [reading.evidence-quality, toefl-reading.supporting-evidence]}
+  - {lexical_item: word.extrapolate, topics: [reading.methodology-limitations, written-production.evidence-qualified-argument]}
+  - {lexical_item: word.fallacy, topics: [reading.argument-structure, reading.implicit-assumptions]}
+  - {lexical_item: word.generalize, topics: [reading.methodology-limitations, toefl-reading.inference]}
+  - {lexical_item: word.infer, topics: [toefl-reading.inference, reading.implicit-assumptions]}
+  - {lexical_item: word.nuance, topics: [toefl-writing.counterargument-nuance, toefl-reading.implicit-qualification]}
+  - {lexical_item: word.premise, topics: [reading.argument-structure, reading.implicit-assumptions]}
+  - {lexical_item: word.qualifier, topics: [toefl-reading.implicit-qualification, grammar.hedging-stance.control]}
+  - {lexical_item: word.qualify, topics: [toefl-reading.implicit-qualification, written-production.evidence-qualified-argument]}
+  - {lexical_item: word.rebuttal, topics: [written-production.counterargument-response, toefl-writing.counterargument-nuance]}
+  - {lexical_item: word.refute, topics: [written-production.counterargument-response, reading.evidence-quality]}
+  - {lexical_item: word.source, topics: [toefl-writing.source-note-taking, toefl-writing.source-integration]}
+  - {lexical_item: word.summarize, topics: [toefl-writing.source-note-taking, toefl-writing.integrated-synthesis]}
+  - {lexical_item: word.warrant, topics: [reading.argument-structure, written-production.complex-argument-architecture]}
+  - {lexical_item: chunk.the-author-argues-that, topics: [toefl-writing.source-note-taking, toefl-writing.integrated-synthesis]}
+  - {lexical_item: chunk.the-evidence-suggests-that, topics: [toefl-writing.argument-development, written-production.evidence-qualified-argument, written-production.technical-position-paper, reading.evidence-quality, written-production.counterargument-response]}
+  - {lexical_item: chunk.this-claim-is-supported-by, topics: [toefl-reading.supporting-evidence, toefl-writing.argument-development, written-production.technical-position-paper, reading.evidence-quality]}
+  - {lexical_item: chunk.this-does-not-necessarily-mean, topics: [toefl-reading.inference, written-production.counterargument-response]}
+  - {lexical_item: chunk.a-likely-explanation-is, topics: [toefl-reading.inference, toefl-writing.argument-development]}
+  - {lexical_item: chunk.one-limitation-is-that, topics: [reading.evidence-quality, reading.methodology-limitations, toefl-reading.supporting-evidence]}
+  - {lexical_item: chunk.in-contrast-to, topics: [reading.compare-source-claims, toefl-writing.integrated-synthesis, written-production.counterargument-response]}
+  - {lexical_item: chunk.by-comparison, topics: [reading.compare-source-claims, toefl-writing.integrated-synthesis]}
+  - {lexical_item: chunk.the-source-does-not-address, topics: [reading.evidence-quality, toefl-writing.source-integration, toefl-reading.supporting-evidence]}
+  - {lexical_item: chunk.taken-together, topics: [toefl-writing.integrated-synthesis, written-production.critical-synthesis, written-production.complex-argument-architecture]}
+  - {lexical_item: chunk.this-raises-the-question, topics: [toefl-writing.discussion-response, toefl-writing.counterargument-nuance, written-production.counterargument-response]}
+  - {lexical_item: chunk.this-example-illustrates, topics: [toefl-writing.argument-development, toefl-writing.discussion-response, written-production.technical-position-paper, reading.evidence-quality, written-production.counterargument-response]}
+  - {lexical_item: chunk.a-more-cautious-conclusion-is, topics: [written-production.evidence-qualified-argument, toefl-writing.counterargument-nuance, written-production.complex-argument-architecture]}
+  - {lexical_item: chunk.the-finding-is-consistent-with, topics: [toefl-writing.source-integration, written-production.critical-synthesis]}
+  - {lexical_item: chunk.the-results-should-be-interpreted-with-caution, topics: [reading.methodology-limitations, written-production.evidence-qualified-argument]}
+  - {lexical_item: chunk.the-two-sources-differ-on, topics: [reading.cross-source-tension, toefl-writing.source-integration]}
+  - {lexical_item: chunk.the-main-assumption-is, topics: [reading.implicit-assumptions, written-production.complex-argument-architecture]}
+  - {lexical_item: chunk.the-author-qualifies-the-claim-by, topics: [toefl-reading.implicit-qualification, toefl-writing.source-integration]}
+  - {lexical_item: chunk.the-counterargument-overlooks, topics: [toefl-writing.counterargument-nuance, written-production.complex-argument-architecture]}
+  - {lexical_item: chunk.the-evidence-is-insufficient-to, topics: [reading.methodology-limitations, written-production.evidence-qualified-argument, written-production.complex-argument-architecture]}

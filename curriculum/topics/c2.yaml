@@ -157,7 +157,7 @@ topics:
       strong: [written-production.evidence-qualified-argument, toefl-writing.counterargument-nuance]
       soft: [reading.implicit-assumptions]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: [word.reason, word.result, word.although, word.paradox, word.peripheral]
+    lexicon: [word.reason, word.result, word.although, word.paradox, word.peripheral, word.warrant, chunk.the-main-assumption-is, chunk.the-counterargument-overlooks]
     contexts: [policy-essay, strategic-analysis]
     typical_errors:
       - "Accumulating claims without making the warrant between evidence and conclusion explicit."

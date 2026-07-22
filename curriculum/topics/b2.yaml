@@ -309,7 +309,7 @@ topics:
       strong: [reading.compare-source-claims, reading.main-idea-details]
       soft: [written-production.reasoned-recommendation]
     dimensions: [recognition, transfer]
-    lexicon: [word.reason, word.result, word.because, word.proposition, word.stance, word.objection]
+    lexicon: [word.reason, word.result, word.because, word.proposition, word.stance, word.objection, word.premise, word.counterargument]
     contexts: [opinion-article, technical-proposal]
     typical_errors:
       - "Calling the topic the claim instead of identifying the position the author defends."
@@ -351,7 +351,7 @@ topics:
       strong: [reading.argument-structure, reading.author-stance-bias]
       soft: [written-production.fact-inference]
     dimensions: [recognition, transfer]
-    lexicon: [informal.do-you-have-a-source, word.reason, word.result, word.credibility, word.methodology, word.replicate, word.transparency]
+    lexicon: [informal.do-you-have-a-source, word.reason, word.result, word.credibility, word.methodology, word.replicate, word.transparency, word.evidence, word.bias]
     contexts: [consumer-claim-review, technical-proposal]
     typical_errors:
       - "Accepting a statistic as strong evidence without checking what population it describes."
@@ -477,7 +477,7 @@ topics:
       strong: [written-production.technical-position-paper, written-production.reasoned-recommendation]
       soft: [written-interaction.decision-challenge]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: [informal.not-sure-i-agree, word.reason, word.because, word.objection, word.problematic, word.undermine]
+    lexicon: [informal.not-sure-i-agree, word.reason, word.because, word.objection, word.problematic, word.undermine, word.counterargument, word.concession, word.refute]
     contexts: [proposal-response, academic-discussion]
     typical_errors:
       - "Reducing the opposing view to an obviously weak claim instead of representing its strongest reasonable form."
@@ -666,7 +666,7 @@ topics:
       strong: [toefl-reading.academic-main-idea, reading.evidence-quality]
       soft: [toefl-reading.scanning-key-detail]
     dimensions: [recognition, transfer]
-    lexicon: [informal.do-you-have-a-source, word.reason, word.result, word.effectiveness, word.prediction, word.reinforce, word.variability]
+    lexicon: [informal.do-you-have-a-source, word.reason, word.result, word.effectiveness, word.prediction, word.reinforce, word.variability, word.evidence, chunk.this-claim-is-supported-by]
     contexts: [academic-passage, claim-evidence-analysis]
     typical_errors:
       - "Choosing a fact that is true in the passage but does not support the stated claim."
@@ -687,7 +687,7 @@ topics:
       strong: [written-production.fact-inference, reading.author-stance-bias]
       soft: [toefl-reading.supporting-evidence]
     dimensions: [recognition, transfer]
-    lexicon: [word.reason, word.result, word.implicit, word.presume, word.reconstruct]
+    lexicon: [word.reason, word.result, word.implicit, word.presume, word.reconstruct, word.infer, word.generalize, chunk.this-does-not-necessarily-mean]
     contexts: [academic-passage, inference-question]
     typical_errors:
       - "Selecting a plausible conclusion based on outside knowledge rather than one required by the text."
@@ -771,7 +771,7 @@ topics:
       strong: [toefl-reading.scanning-key-detail, written-production.multi-source-synthesis]
       soft: [toefl-reading.text-organization]
     dimensions: [recognition, controlled_production, transfer]
-    lexicon: [chunk.according-to, word.summary, word.result, word.methodology, word.retrieve]
+    lexicon: [chunk.according-to, word.summary, word.result, word.methodology, word.retrieve, word.attribution, word.citation, word.cite, word.source, word.summarize, chunk.the-author-argues-that]
     contexts: [source-notes, integrated-writing]
     typical_errors:
       - "Copying complete source sentences instead of selecting claim, evidence, and relation."
@@ -792,7 +792,7 @@ topics:
       strong: [toefl-writing.source-note-taking, written-production.multi-source-synthesis]
       soft: [reading.compare-source-claims]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: [chunk.according-to, word.summary, word.result, word.critique, word.reinforce]
+    lexicon: [chunk.according-to, word.summary, word.result, word.critique, word.reinforce, word.source, word.summarize, chunk.taken-together, chunk.in-contrast-to]
     contexts: [integrated-writing, multi-source-response]
     typical_errors:
       - "Writing one source summary after another rather than organizing by shared issues."
@@ -834,7 +834,7 @@ topics:
       strong: [toefl-writing.thesis-position, reading.evidence-quality]
       soft: [written-production.counterargument-response]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: [word.reason, word.because, word.result, word.elaborate, word.rational, word.meaningful]
+    lexicon: [word.reason, word.because, word.result, word.elaborate, word.rational, word.meaningful, word.evidence, chunk.the-evidence-suggests-that, chunk.this-example-illustrates]
     contexts: [academic-essay, discussion-board]
     typical_errors:
       - "Moving from claim to example without explaining how the example proves the point."
@@ -855,7 +855,7 @@ topics:
       strong: [toefl-reading.paragraph-organization, written-production.multi-source-synthesis]
       soft: [grammar.connectors.cause-contrast]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: [word.although, word.because, word.result]
+    lexicon: [word.although, word.because, word.result, word.coherence, word.cohesion]
     contexts: [academic-response, revision-task]
     typical_errors:
       - "Adding moreover or however mechanically where the logical relation does not match."

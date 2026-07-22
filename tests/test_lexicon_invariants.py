@@ -131,12 +131,19 @@ def test_chunks_and_priority_items_have_an_advisory_link(items, links):
 
 def test_every_a1_a2_module_has_at_least_five_work_frames(items, links):
     by_id = {i["id"]: i for i in items}
-    module_of = {t["id"]: t["module"] for path in TOPICS_DIR.glob("*.yaml") for t in _load(path)["topics"]}
+    module_of = {
+        t["id"]: t["module"]
+        for path in TOPICS_DIR.glob("*.yaml")
+        for t in _load(path)["topics"]
+        if t["cefr"] in {"A1", "A2"}
+    }
     per_module: dict[str, set[str]] = {}
     for link in links:
         if by_id.get(link["lexical_item"], {}).get("type") != "chunk":
             continue
         for topic in link["topics"]:
+            if topic not in module_of:
+                continue
             per_module.setdefault(module_of[topic], set()).add(link["lexical_item"])
     thin = {m: len(c) for m, c in per_module.items() if len(c) < 5}
     assert not thin

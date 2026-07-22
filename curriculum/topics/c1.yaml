@@ -29,7 +29,7 @@ topics:
       strong: [toefl-reading.inference, reading.author-stance-bias]
       soft: [toefl-reading.rhetorical-purpose]
     dimensions: [recognition, transfer]
-    lexicon: [word.although, word.reason, word.connotation, word.metaphor, word.rhetoric]
+    lexicon: [word.although, word.reason, word.connotation, word.metaphor, word.rhetoric, word.qualifier, word.qualify, chunk.the-author-qualifies-the-claim-by]
     contexts: [dense-academic-passage, stance-analysis]
     typical_errors:
       - "Treating the absence of an explicit but as proof that the author has no reservation."
@@ -50,7 +50,7 @@ topics:
       strong: [toefl-writing.integrated-synthesis, toefl-writing.source-note-taking]
       soft: [toefl-writing.academic-register]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: [chunk.according-to, word.summary, word.result]
+    lexicon: [chunk.according-to, word.summary, word.result, word.attribution, word.corroborate, word.source, chunk.the-finding-is-consistent-with]
     contexts: [integrated-writing, source-based-essay]
     typical_errors:
       - "Following a paraphrase with an unsupported claim so closely that source and writer voices merge."
@@ -71,7 +71,7 @@ topics:
       strong: [toefl-writing.discussion-response, written-production.counterargument-response]
       soft: [toefl-writing.thesis-position]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: [word.agree, word.disagree, word.reason]
+    lexicon: [word.agree, word.disagree, word.reason, word.nuance, word.rebuttal, chunk.the-counterargument-overlooks]
     contexts: [academic-essay, discussion-response]
     typical_errors:
       - "Using although I agree as a formula but conceding nothing specific."
@@ -220,7 +220,7 @@ topics:
       strong: [reading.argument-structure, toefl-reading.inference]
       soft: [reading.evidence-quality]
     dimensions: [recognition, transfer]
-    lexicon: [word.reason, word.result, word.connotation, word.ideology, word.rationality]
+    lexicon: [word.reason, word.result, word.connotation, word.ideology, word.rationality, word.premise, word.entail, chunk.the-main-assumption-is]
     contexts: [policy-argument, technical-proposal]
     typical_errors:
       - "Repeating an explicit premise instead of identifying what must be true but is unstated."
@@ -241,7 +241,7 @@ topics:
       strong: [reading.evidence-quality, toefl-reading.rhetorical-purpose]
       soft: [toefl-reading.implicit-qualification]
     dimensions: [recognition, transfer]
-    lexicon: [informal.do-you-have-a-source, word.result, word.detail, word.generalization, word.longitudinal, word.systematic, word.validity]
+    lexicon: [informal.do-you-have-a-source, word.result, word.detail, word.generalization, word.longitudinal, word.systematic, word.validity, word.extrapolate, word.generalize, chunk.one-limitation-is-that, chunk.the-evidence-is-insufficient-to]
     contexts: [research-report, product-study]
     typical_errors:
       - "Calling a study invalid because it has a limitation instead of delimiting the supported conclusion."
@@ -262,7 +262,7 @@ topics:
       strong: [reading.compare-source-claims, written-production.multi-source-synthesis]
       soft: [toefl-writing.source-integration]
     dimensions: [recognition, transfer]
-    lexicon: [chunk.according-to, word.summary, word.result, word.correspondence, word.differentiate]
+    lexicon: [chunk.according-to, word.summary, word.result, word.correspondence, word.differentiate, word.corroborate, chunk.the-two-sources-differ-on]
     contexts: [research-synthesis, policy-comparison]
     typical_errors:
       - "Looking only for direct contradiction and missing sources that disagree at different levels of analysis."
@@ -304,7 +304,7 @@ topics:
       strong: [reading.evidence-quality, toefl-writing.counterargument-nuance]
       soft: [grammar.hedging-stance.control]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: [word.reason, word.result, word.recommendation, word.formulation, word.validity]
+    lexicon: [word.reason, word.result, word.recommendation, word.formulation, word.validity, word.warrant, word.qualify, chunk.a-more-cautious-conclusion-is]
     contexts: [policy-recommendation, research-based-proposal]
     typical_errors:
       - "Making a universal claim from a single local example."
