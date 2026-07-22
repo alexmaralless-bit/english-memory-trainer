@@ -70,7 +70,7 @@ topics:
       strong: [reading.main-idea-details, reading.documentation-scan]
       soft: [reading.ticket-basics]
     dimensions: [recognition, transfer]
-    lexicon: [chunk.the-key-point-is, chunk.according-to, word.detail]
+    lexicon: [chunk.the-key-point-is, chunk.according-to, word.detail, word.correlation, word.integration, word.simulation, word.specification]
     contexts: [technical-documentation, system-walkthrough]
     typical_errors:
       - "Translating every sentence before identifying the explanation's main process."
@@ -91,7 +91,7 @@ topics:
       strong: [written-production.project-update, written-interaction.suggestion-feedback]
       soft: [written-interaction.follow-up-recommendation]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: [chunk.project-update, chunk.the-main-risk-is, chunk.i-suggest]
+    lexicon: [chunk.project-update, chunk.the-main-risk-is, chunk.i-suggest, word.coordinate]
     contexts: [project-update, risk-escalation]
     typical_errors:
       - "Naming a risk without stating its likely impact or the decision needed."
@@ -112,7 +112,7 @@ topics:
       strong: [written-production.paraphrase-summary, written-production.option-comparison]
       soft: [us-tech.describe-system-data]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: [chunk.each-record-has, chunk.its-stored-in, chunk.in-short]
+    lexicon: [chunk.each-record-has, chunk.its-stored-in, chunk.in-short, word.aggregate, word.domain, word.integration, word.specification]
     contexts: [team-onboarding, architecture-overview]
     typical_errors:
       - "Listing components without explaining how data or control moves between them."
@@ -622,7 +622,7 @@ topics:
       strong: [reading.main-idea-details, reading.connected-technical-explanation]
       soft: [reading.short-news-item]
     dimensions: [recognition, transfer]
-    lexicon: [chunk.the-key-point-is, word.summary]
+    lexicon: [chunk.the-key-point-is, word.summary, word.aspect, word.thesis, word.commentary]
     contexts: [academic-passage, campus-notice]
     typical_errors:
       - "Translating every sentence before deciding what the text is trying to do."
@@ -643,7 +643,7 @@ topics:
       strong: [reading.documentation-scan, reading.multi-step-service-information]
       soft: [reading.ticket-basics]
     dimensions: [recognition, transfer]
-    lexicon: [word.detail, word.requirement]
+    lexicon: [word.detail, word.requirement, word.indicator, word.parameter, word.statistics, word.preliminary]
     contexts: [academic-passage, campus-information]
     typical_errors:
       - "Selecting the first sentence that repeats a keyword instead of checking the requested relationship."
@@ -664,7 +664,7 @@ topics:
       strong: [written-production.paraphrase-summary, reading.connected-technical-explanation]
       soft: [written-production.paraphrase-expression]
     dimensions: [recognition, transfer]
-    lexicon: [word.summary, word.reason]
+    lexicon: [word.summary, word.reason, word.contradict, word.inference, word.synthesis, word.valid]
     contexts: [academic-passage, sentence-equivalence]
     typical_errors:
       - "Choosing an option because it repeats source words even though it changes the relationship."
@@ -685,7 +685,7 @@ topics:
       strong: [reading.idioms-in-context, word-formation.quality-suffix]
       soft: [word-formation.surpass-out]
     dimensions: [recognition, transfer]
-    lexicon: [word.detail, word.reason]
+    lexicon: [word.detail, word.reason, word.depict, word.domain, word.discourse]
     contexts: [academic-passage, campus-article]
     typical_errors:
       - "Choosing the first dictionary meaning or Russian cognate without testing it in the sentence."
@@ -706,7 +706,7 @@ topics:
       strong: [reading.main-idea-details, written-production.cause-effect-explanation]
       soft: [grammar.connectors.cause-contrast]
     dimensions: [recognition, transfer]
-    lexicon: [word.because, word.although, word.result]
+    lexicon: [word.because, word.although, word.result, word.coherent, word.logical, word.classification]
     contexts: [academic-paragraph, expository-analysis]
     typical_errors:
       - "Reading the paragraph as a list of facts instead of identifying the controlling idea."
@@ -727,7 +727,7 @@ topics:
       strong: [grammar.basic-word-order, grammar.relative-clauses.specification]
       soft: [grammar.connectors.cause-contrast]
     dimensions: [recognition, controlled_production, transfer]
-    lexicon: [word.because, word.although, word.result]
+    lexicon: [word.because, word.although, word.result, word.accuracy, word.clarify, word.explicit]
     contexts: [academic-sentence, context-completion]
     typical_errors:
       - "Keeping Russian information order when English requires a fixed subject before the finite verb."
@@ -748,7 +748,7 @@ topics:
       strong: [written-interaction.formal-service-request, written-interaction.project-risk-update]
       soft: [written-interaction.polite-request]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: [chunk.could-you-please, word.deadline, word.requirement]
+    lexicon: [chunk.could-you-please, word.deadline, word.requirement, word.assignment, word.clarify, word.syllabus, word.semester]
     contexts: [academic-email, campus-request]
     typical_errors:
       - "Beginning with I want or You must, a direct Russian transfer that sounds unnecessarily demanding."
@@ -769,7 +769,7 @@ topics:
       strong: [everyday-life.expressing-an-opinion-with-reasons, written-production.reasoned-recommendation]
       soft: [written-interaction.respectful-disagreement]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: [word.reason, word.agree, word.disagree]
+    lexicon: [word.reason, word.agree, word.disagree, word.assert, word.justification, word.plausible, word.thesis]
     contexts: [discussion-board, academic-response]
     typical_errors:
       - "Repeating the prompt as a thesis without taking a specific position."

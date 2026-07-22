@@ -741,3 +741,65 @@ links:
   - {lexical_item: word.outperform, topics: [word-formation.surpass-out]}
   - {lexical_item: word.readable, topics: [word-formation.quality-suffix]}
   - {lexical_item: word.reusable, topics: [word-formation.quality-suffix]}
+
+  # ===== P.4e academic B1 stable core =====
+  - {lexical_item: word.accuracy, topics: [toefl-reading.vocabulary-context, toefl-writing.sentence-building]}
+  - {lexical_item: word.aggregate, topics: [reading.connected-technical-explanation, written-production.system-overview]}
+  - {lexical_item: word.analogy, topics: [toefl-reading.paraphrase-match, toefl-writing.discussion-claim-reason]}
+  - {lexical_item: word.approximate, topics: [toefl-reading.scanning-key-detail, toefl-reading.vocabulary-context]}
+  - {lexical_item: word.aspect, topics: [toefl-reading.skimming-main-purpose, toefl-reading.paragraph-organization]}
+  - {lexical_item: word.assert, topics: [toefl-reading.paraphrase-match, toefl-writing.discussion-claim-reason]}
+  - {lexical_item: word.assignment, topics: [toefl-writing.academic-email, toefl-writing.sentence-building]}
+  - {lexical_item: word.campus, topics: [toefl-writing.academic-email, toefl-reading.scanning-key-detail]}
+  - {lexical_item: word.clarify, topics: [toefl-writing.academic-email, toefl-writing.sentence-building]}
+  - {lexical_item: word.classification, topics: [toefl-reading.paragraph-organization, reading.connected-technical-explanation]}
+  - {lexical_item: word.coherent, topics: [toefl-reading.paragraph-organization, toefl-writing.discussion-claim-reason]}
+  - {lexical_item: word.comparable, topics: [toefl-reading.paraphrase-match, toefl-writing.discussion-claim-reason]}
+  - {lexical_item: word.comprehension, topics: [toefl-reading.skimming-main-purpose, toefl-reading.vocabulary-context]}
+  - {lexical_item: word.contradict, topics: [toefl-reading.paraphrase-match, toefl-writing.discussion-claim-reason]}
+  - {lexical_item: word.contrary, topics: [toefl-reading.paragraph-organization, toefl-writing.discussion-claim-reason]}
+  - {lexical_item: word.coordinate, topics: [toefl-writing.academic-email, written-interaction.project-risk-update]}
+  - {lexical_item: word.correlation, topics: [reading.connected-technical-explanation, toefl-reading.paragraph-organization]}
+  - {lexical_item: word.curriculum, topics: [toefl-writing.academic-email, toefl-reading.skimming-main-purpose]}
+  - {lexical_item: word.depict, topics: [toefl-reading.vocabulary-context, toefl-reading.paraphrase-match]}
+  - {lexical_item: word.diverse, topics: [toefl-reading.vocabulary-context, toefl-writing.discussion-claim-reason]}
+  - {lexical_item: word.domain, topics: [reading.connected-technical-explanation, toefl-reading.vocabulary-context]}
+  - {lexical_item: word.dynamic, topics: [reading.connected-technical-explanation, toefl-reading.vocabulary-context]}
+  - {lexical_item: word.evident, topics: [toefl-reading.paraphrase-match, toefl-writing.discussion-claim-reason]}
+  - {lexical_item: word.explicit, topics: [toefl-reading.paragraph-organization, toefl-writing.sentence-building]}
+  - {lexical_item: word.faculty, topics: [toefl-writing.academic-email, toefl-reading.scanning-key-detail]}
+  - {lexical_item: word.facilitate, topics: [toefl-reading.vocabulary-context, toefl-writing.discussion-claim-reason]}
+  - {lexical_item: word.identification, topics: [toefl-reading.scanning-key-detail, toefl-reading.paraphrase-match]}
+  - {lexical_item: word.indicator, topics: [toefl-reading.scanning-key-detail, reading.connected-technical-explanation]}
+  - {lexical_item: word.inference, topics: [toefl-reading.paraphrase-match, toefl-reading.vocabulary-context]}
+  - {lexical_item: word.integration, topics: [reading.connected-technical-explanation, toefl-writing.discussion-claim-reason]}
+  - {lexical_item: word.interact, topics: [reading.connected-technical-explanation, toefl-reading.paragraph-organization]}
+  - {lexical_item: word.interval, topics: [toefl-reading.scanning-key-detail, toefl-reading.vocabulary-context]}
+  - {lexical_item: word.justification, topics: [toefl-writing.discussion-claim-reason, toefl-writing.academic-email]}
+  - {lexical_item: word.lecturer, topics: [toefl-writing.academic-email, toefl-reading.scanning-key-detail]}
+  - {lexical_item: word.logical, topics: [toefl-reading.paragraph-organization, toefl-writing.discussion-claim-reason]}
+  - {lexical_item: word.mentor, topics: [toefl-writing.academic-email, toefl-writing.discussion-claim-reason]}
+  - {lexical_item: word.minimal, topics: [toefl-reading.scanning-key-detail, toefl-reading.vocabulary-context]}
+  - {lexical_item: word.parameter, topics: [toefl-reading.scanning-key-detail, reading.connected-technical-explanation]}
+  - {lexical_item: word.partial, topics: [toefl-reading.scanning-key-detail, toefl-reading.vocabulary-context]}
+  - {lexical_item: word.plausible, topics: [toefl-reading.paraphrase-match, toefl-writing.discussion-claim-reason]}
+  - {lexical_item: word.preliminary, topics: [toefl-reading.scanning-key-detail, toefl-writing.academic-email]}
+  - {lexical_item: word.publish, topics: [toefl-writing.academic-email, toefl-writing.discussion-claim-reason]}
+  - {lexical_item: word.questionnaire, topics: [toefl-reading.scanning-key-detail, toefl-reading.paragraph-organization]}
+  - {lexical_item: word.reliability, topics: [reading.connected-technical-explanation, toefl-writing.discussion-claim-reason]}
+  - {lexical_item: word.scholarship, topics: [toefl-reading.scanning-key-detail, toefl-writing.academic-email]}
+  - {lexical_item: word.semester, topics: [toefl-reading.scanning-key-detail, toefl-writing.academic-email]}
+  - {lexical_item: word.seminar, topics: [toefl-writing.academic-email, toefl-writing.discussion-claim-reason]}
+  - {lexical_item: word.simulation, topics: [reading.connected-technical-explanation, toefl-reading.paragraph-organization]}
+  - {lexical_item: word.specification, topics: [reading.connected-technical-explanation, toefl-writing.sentence-building]}
+  - {lexical_item: word.statistics, topics: [toefl-reading.scanning-key-detail, toefl-reading.paragraph-organization]}
+  - {lexical_item: word.syllabus, topics: [toefl-reading.scanning-key-detail, toefl-writing.academic-email]}
+  - {lexical_item: word.synthesis, topics: [toefl-reading.paraphrase-match, toefl-reading.paragraph-organization]}
+  - {lexical_item: word.textbook, topics: [toefl-reading.scanning-key-detail, toefl-writing.academic-email]}
+  - {lexical_item: word.thesis, topics: [toefl-reading.skimming-main-purpose, toefl-writing.discussion-claim-reason]}
+  - {lexical_item: word.undergraduate, topics: [toefl-writing.academic-email, toefl-reading.scanning-key-detail]}
+  - {lexical_item: word.valid, topics: [toefl-reading.paraphrase-match, toefl-writing.discussion-claim-reason]}
+  - {lexical_item: word.workshop, topics: [toefl-writing.academic-email, toefl-writing.discussion-claim-reason]}
+  - {lexical_item: word.articulate, topics: [toefl-writing.discussion-claim-reason, toefl-writing.academic-email]}
+  - {lexical_item: word.commentary, topics: [toefl-reading.skimming-main-purpose, toefl-reading.paragraph-organization]}
+  - {lexical_item: word.discourse, topics: [toefl-reading.paragraph-organization, toefl-reading.vocabulary-context]}
