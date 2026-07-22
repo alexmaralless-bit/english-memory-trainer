@@ -103,6 +103,12 @@ core_skill_map:
 working_level:
   min_topics: 5
   confidence_floor: "medium"
+  # Per-skill confidence from the count of distinct ACTIVE+ topics feeding the
+  # skill: below `low` -> very_low, then low / medium / high at these counts.
+  confidence_thresholds:
+    low: 2
+    medium: 5
+    high: 10
 
 xp:
   base_amounts:

@@ -86,6 +86,13 @@ from english_trainer.lessons.sessions import (
 from english_trainer.scheduler.engine import due_backlog
 from english_trainer.scheduler.policy import SCHEDULER_KIND, SchedulerPolicyInvalid
 from english_trainer.scheduler.policy import require_valid as require_valid_scheduler
+from english_trainer.scoring.aggregates import (
+    learning_score,
+    measured_working_level,
+    working_levels,
+    xp_ledger,
+)
+from english_trainer.scoring.engine import fold_scores
 from english_trainer.scoring.policy import SCORING_KIND, ScoringPolicyInvalid
 from english_trainer.scoring.policy import require_valid as require_valid_scoring
 from english_trainer.scoring.replay import replay_scores
@@ -1634,18 +1641,37 @@ def status_command(
         )
         _emit(failure_envelope("status", corr, error), [f"error: {exc}"], fmt, ExitCode.PRECONDITION_FAILED)
     scores = report["scores"]
+    with open_storage(layout) as storage:
+        registry = PolicyRegistry(storage._conn, SystemClock())
+        _, scoring_policy = registry.resolve_active(SCORING_KIND)
+        _, program = registry.resolve_active("curriculum")
+        folded = fold_scores(storage.store, scoring_policy)
+        levels = working_levels(folded, program, scoring_policy)
+        measured = measured_working_level(levels)
+        score = learning_score(folded, program, scoring_policy, measured)
+        xp = xp_ledger(storage.store, scoring_policy)
     data = {
         "targets": scores,
         "target_count": len(scores),
         "policy_version": report["policy_version"],
-        "measured_working_level": None,  # arrives with the level increment (no-data, not A1)
-        "learning_score": None,
+        "skills": levels,
+        "measured_working_level": measured,  # None = no-data, never A1 by default
+        "learning_score": score,  # None = no-data, never 0
+        "xp": {
+            "total": xp["total"],
+            "practice_days": xp["practice_days"],
+            "streak": xp["streak"],
+        },
     }
     human = [f"status: {len(scores)} scored target(s) under {report['policy_version']}"]
     for ref, state in list(scores.items())[:10]:
         mastery = ", ".join(f"{d}={v}" for d, v in state["mastery"].items()) or "no mastery yet"
         human.append(f"  {ref} [{state['knowledge_state']}] {mastery}")
-    human.append("  working level: no-data (needs coverage)")
+    for skill, info in levels.items():
+        shown = info["level"] or "no-data"
+        human.append(f"  {skill}: {shown} (confidence {info['confidence']}, {info['active_topics']} active)")
+    human.append(f"  working level: {measured or 'no-data'} · learning score: {score or 'no-data'}")
+    human.append(f"  xp: {xp['total']} over {xp['practice_days']} day(s), streak {xp['streak']}")
     _emit(success_envelope("status", corr, data), human, fmt, ExitCode.OK)
 
 
