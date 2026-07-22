@@ -39,8 +39,11 @@ LAYER_ALLOWLIST: dict[str, set[str]] = {
     "control": {"kernel", "control"},
     # lessons owns the session triggers and delegates attempt closures to
     # evidence inside its own UoW (0.5/0.4 4.3) -- the dependency points
-    # lessons -> evidence, never back.
-    "lessons": {"kernel", "control", "evidence", "scheduler", "lessons"},
+    # lessons -> evidence, never back. adapters resolves required_skills
+    # synchronously at start (adapters 4.2, lessons 4b [P0-Q1]); scoring folds
+    # the tutor briefing at resume (lessons [P0-5]), the same read-only shape
+    # memory already uses for its own projection.
+    "lessons": {"kernel", "control", "evidence", "scheduler", "scoring", "adapters", "lessons"},
     # evidence consumes published events, never other modules' code (0.4):
     # the event log is its boundary with lessons/control.
     "evidence": {"kernel", "evidence"},
@@ -51,6 +54,16 @@ LAYER_ALLOWLIST: dict[str, set[str]] = {
     # memory is a read-only projection over the folds and aggregates; it
     # renders FOR the human and never feeds anything back.
     "memory": {"kernel", "scoring", "scheduler", "memory"},
+    # adapters owns the canonical Agent Skills; it resolves cli_calls against
+    # the command registry and stores its sync manifest under the storage
+    # layout (adapters 6). It imports only `cli.registry` (a standalone
+    # module with no engine imports of its own), done as a local import
+    # inside `validate()` -- `cli` also imports `adapters` (below), and a
+    # top-level `adapters -> cli.registry` import would otherwise resolve
+    # through `cli/__init__.py`, which imports `cli.app`, which imports
+    # `adapters` -- a real circular import at process-start time. The gate
+    # here only checks package-level names, so both directions are declared.
+    "adapters": {"kernel", "storage", "cli", "adapters"},
     "cli": {
         "kernel",
         "storage",
@@ -61,6 +74,7 @@ LAYER_ALLOWLIST: dict[str, set[str]] = {
         "scoring",
         "scheduler",
         "memory",
+        "adapters",
         "cli",
     },
 }

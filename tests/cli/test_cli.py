@@ -489,6 +489,10 @@ def test_registry_matches_published_surface() -> None:
         "memory.render",
         "memory.rebuild",
         "memory.check",
+        "skills.sync",
+        "skills.validate",
+        "adapters.compare",
+        "session.resume",
     }
     assert registry["memory.render"].mutating and registry["memory.render"].requires_idempotency_key
     assert not registry["memory.check"].mutating  # drift check repairs nothing
@@ -511,6 +515,10 @@ def test_registry_matches_published_surface() -> None:
     assert not registry["doctor"].mutating
     assert not registry["database.check"].mutating
     assert not registry["curriculum.validate"].mutating
+    assert registry["skills.sync"].mutating and registry["skills.sync"].requires_idempotency_key
+    assert not registry["skills.validate"].mutating
+    assert not registry["adapters.compare"].mutating
+    assert registry["session.resume"].mutating and registry["session.resume"].requires_idempotency_key
 
 
 def test_root_option_drives_default_paths(tmp_path: Path, capsys) -> None:

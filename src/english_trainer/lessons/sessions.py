@@ -24,8 +24,13 @@ not at all.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+from pathlib import Path
 from typing import Any
 
+from english_trainer.adapters.errors import SkillUnavailable
+from english_trainer.adapters.events import SKILL_REQUIRED
+from english_trainer.adapters.skills import resolve as resolve_skill
 from english_trainer.control.compose import compose_plan
 from english_trainer.control.policy import CONTROL_KIND, require_valid
 from english_trainer.kernel.clock import Clock, RandomSource
@@ -35,6 +40,12 @@ from english_trainer.kernel.ids import new_ulid
 from english_trainer.kernel.policy import KNOWN_KINDS, PolicyRegistry
 from english_trainer.kernel.store import EventStore
 from english_trainer.kernel.uow import UnitOfWork
+
+# The default required skill (adapters 2), wired in only when the caller
+# names an `agent_skills_dir` AND that skill actually resolves there -- a
+# caller that passes neither (every pre-existing caller and test) keeps
+# `required_skills: []` (see `_resolve_required_skills`).
+_DEFAULT_REQUIRED_SKILL: tuple[str, str] = ("run-english-session", "1")
 
 SESSION_AGGREGATE = "session"
 PLAN_AGGREGATE = "session_plan"
@@ -198,6 +209,48 @@ def plan_summary(plan_state: dict[str, Any]) -> list[dict[str, Any]]:
     ]
 
 
+def _resolve_required_skills(
+    agent_skills_dir: Path | str | None,
+    required_skills: Sequence[tuple[str, str]] | None,
+) -> list[dict[str, str]]:
+    """Resolve every required skill synchronously, before any session
+    aggregate is written (adapters 4.2; lessons 4b [P0-Q1]): an unresolvable
+    pin fails ``start`` outright, with no session created.
+
+    Defaults to the canonical ``run-english-session@1`` skill only when
+    ``agent_skills_dir`` is given AND that skill actually resolves there.
+    Callers that pass neither argument -- every pre-existing caller, and any
+    test that does not set up an ``agent-skills/`` directory -- keep
+    ``required_skills: []``: the engine never invents a dependency on a
+    directory the caller never named.
+    """
+    if required_skills is not None:
+        if agent_skills_dir is None:
+            raise SessionPrecondition(
+                "required_skills was given without agent_skills_dir: nothing to resolve them against"
+            )
+        pairs: Sequence[tuple[str, str]] = required_skills
+    elif agent_skills_dir is not None and Path(agent_skills_dir).is_dir():
+        try:
+            resolve_skill(*_DEFAULT_REQUIRED_SKILL, agent_skills_dir)
+        except SkillUnavailable:
+            return []
+        pairs = (_DEFAULT_REQUIRED_SKILL,)
+    else:
+        return []
+
+    resolved: list[dict[str, str]] = []
+    for name, version in pairs:
+        try:
+            skill = resolve_skill(name, version, agent_skills_dir)
+        except SkillUnavailable as exc:
+            raise SessionPrecondition(
+                f"required skill {name}@{version} is unavailable: {exc}; run `trainer skills sync` first"
+            ) from exc
+        resolved.append({"skill_name": skill.name, "version": skill.version})
+    return resolved
+
+
 def start_session(
     store: EventStore,
     registry: PolicyRegistry,
@@ -208,6 +261,8 @@ def start_session(
     mode: str = "balanced",
     duration_minutes: int | None = None,
     actor: str = "engine",
+    agent_skills_dir: Path | str | None = None,
+    required_skills: Sequence[tuple[str, str]] | None = None,
 ) -> dict[str, Any]:
     """Open a session, compose its plan and return the immutable manifest.
 
@@ -221,6 +276,10 @@ def start_session(
     The budget precedence is ``--duration-minutes`` -> policy default
     (control 4.7a); the declared/observed AvailabilityProfile slots in between
     once the availability increment lands.
+
+    ``agent_skills_dir``/``required_skills`` wire the manifest's
+    ``required_skills`` (adapters 4.2, lessons 4b [P0-Q1]); see
+    :func:`_resolve_required_skills` for the exact defaulting rule.
     """
     pinned = _pin_versions(registry)
     for kind, hint in (
@@ -259,6 +318,11 @@ def start_session(
             actor=actor,
         )
 
+    # Required skills resolve synchronously here, before any session aggregate
+    # exists (adapters 4.2; lessons 4b [P0-Q1]): an unresolvable pin raises and
+    # `start` creates nothing.
+    resolved_required_skills = _resolve_required_skills(agent_skills_dir, required_skills)
+
     session_id = new_ulid(clock, random_source)
     manifest: dict[str, Any] = {
         "session_id": session_id,
@@ -266,7 +330,7 @@ def start_session(
         "mode": mode,
         "started_at": clock.now().isoformat(),
         "pinned_versions": pinned,
-        "required_skills": [],
+        "required_skills": resolved_required_skills,
         "session_plan_id": new_ulid(clock, random_source),
         "plan": {"composition_revision": 1, "plan_version": 1},
     }
@@ -344,6 +408,19 @@ def start_session(
                         "active_safety_version": plan_state["active_safety_version"],
                     },
                     pinned_versions=pinned,
+                ),
+                *(
+                    make_event(
+                        id=new_ulid(clock, random_source),
+                        type=SKILL_REQUIRED,
+                        occurred_at=clock.now(),
+                        actor=actor,
+                        provider=provider,
+                        correlation_id=session_id,
+                        payload={"session_id": session_id, **item},
+                        pinned_versions=pinned,
+                    )
+                    for item in resolved_required_skills
                 ),
             ]
         )

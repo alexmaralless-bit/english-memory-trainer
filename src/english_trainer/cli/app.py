@@ -32,6 +32,11 @@ from typing import Annotated, Any, NoReturn
 
 import typer
 
+from english_trainer.adapters.compare import DEFAULT_FIXTURES
+from english_trainer.adapters.compare import compare as adapters_compare
+from english_trainer.adapters.errors import AdapterError
+from english_trainer.adapters.skills import sync as adapters_sync
+from english_trainer.adapters.skills import validate as adapters_validate
 from english_trainer.cli.envelope import (
     ErrorPayload,
     ExitCode,
@@ -40,6 +45,7 @@ from english_trainer.cli.envelope import (
     print_json_envelope,
     success_envelope,
 )
+from english_trainer.cli.registry import command_registry
 from english_trainer.control.errors import (
     BudgetTooSmall,
     ControlPolicyInvalid,
@@ -78,6 +84,7 @@ from english_trainer.lessons.bank import (
 )
 from english_trainer.lessons.delivery import next_step, peek_step, replan_session
 from english_trainer.lessons.rendering import record_rendered_exercise
+from english_trainer.lessons.resume import resume_session
 from english_trainer.lessons.sessions import (
     SessionPrecondition,
     abandon_session,
@@ -123,6 +130,10 @@ review_app = typer.Typer(add_completion=False, help="Review scheduling: what is 
 app.add_typer(review_app, name="review")
 memory_app = typer.Typer(add_completion=False, help="The Obsidian projection (generated zone).")
 app.add_typer(memory_app, name="memory")
+skills_app = typer.Typer(add_completion=False, help="Agent Skills: sync canon, validate structure/drift.")
+app.add_typer(skills_app, name="skills")
+adapters_app = typer.Typer(add_completion=False, help="Adapter parity: observable-effect comparison.")
+app.add_typer(adapters_app, name="adapters")
 
 _FormatOpt = Annotated[str, typer.Option("--format", help="Output format: text (human) or json (contract).")]
 _RootOpt = Annotated[Path, typer.Option("--root", help="Trainer home directory (storage layout root).")]
@@ -135,6 +146,9 @@ _ExportOpt = Annotated[
 ]
 _CorrOpt = Annotated[
     str | None, typer.Option("--correlation-id", help="Correlation id; generated when absent.")
+]
+_AgentSkillsOpt = Annotated[
+    Path, typer.Option("--agent-skills", help="Canonical Agent Skills directory (adapters).")
 ]
 
 
@@ -659,6 +673,7 @@ def session_start(
         int | None,
         typer.Option("--duration-minutes", help="Session budget; defaults to the control policy."),
     ] = None,
+    agent_skills: _AgentSkillsOpt = Path("agent-skills"),
     idempotency_key: Annotated[
         str | None, typer.Option("--idempotency-key", help="Required with --format json (cli 4.3).")
     ] = None,
@@ -674,6 +689,7 @@ def session_start(
             "provider": provider,
             "mode": mode,
             "duration_minutes": duration_minutes,
+            "agent_skills": str(agent_skills),
             "root": str(layout.root),
         }
     )
@@ -698,6 +714,7 @@ def session_start(
                 provider=provider,
                 mode=mode,
                 duration_minutes=duration_minutes,
+                agent_skills_dir=agent_skills,
             )
             if idempotency_key:
                 with UnitOfWork(storage.store, SystemClock()) as uow:
@@ -1081,6 +1098,86 @@ def session_replan(
         correlation_id,
         describe,
     )
+
+
+@session_app.command("resume")
+def session_resume(
+    provider: Annotated[str, typer.Option("--provider", help="Tutor provider attaching to the session.")],
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    session: _SessionOpt = None,
+    idempotency_key: Annotated[
+        str | None, typer.Option("--idempotency-key", help="Required with --format json (cli 4.3).")
+    ] = None,
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Resume a session: full state + tutor briefing + notes, attaching
+    ``provider`` (AGENT_ATTACHED, lessons 4b/5). There is no separate
+    ``session attach``: changing tutor mid-stream is a cold resume."""
+    corr = _correlation(correlation_id)
+    _require_key("session.resume", corr, fmt, idempotency_key)
+    layout = resolve_layout(root)
+    try:
+        with open_storage(layout) as storage:
+            session_id = _resolve_session("session.resume", corr, fmt, storage, session)
+            request_hash = payload_hash(
+                {
+                    "command": "session.resume",
+                    "session": session_id,
+                    "provider": provider,
+                    "root": str(layout.root),
+                }
+            )
+            if idempotency_key:
+                with UnitOfWork(storage.store, SystemClock()) as uow:
+                    prior = uow.check_idempotency(idempotency_key, request_hash)
+                if isinstance(prior, CachedResult):
+                    _emit(
+                        success_envelope("session.resume", corr, {**dict(prior.value), "cached": True}),
+                        ["session resume (cached result)"],
+                        fmt,
+                        ExitCode.OK,
+                    )
+            result = resume_session(
+                storage.store,
+                PolicyRegistry(storage._conn, SystemClock()),
+                SystemClock(),
+                SystemRandom(),
+                session_id,
+                provider=provider,
+            )
+            if idempotency_key:
+                with UnitOfWork(storage.store, SystemClock()) as uow:
+                    uow.record_result(idempotency_key, request_hash, result)
+        briefing = result["briefing"]
+        human = [
+            f"session {session_id} resumed by {provider} [{result['status']}]",
+            f"  working level: {briefing['measured_working_level'] or 'no-data'} · "
+            f"learning score: {briefing['learning_score'] or 'no-data'}",
+            f"  pending reviews: {briefing['pending_reviews']} · notes: {len(result['notes'])}",
+        ]
+        _emit(success_envelope("session.resume", corr, {**result, "cached": False}), human, fmt, ExitCode.OK)
+    except IdempotencyConflict as exc:
+        error = ErrorPayload(
+            error_code="IDEMPOTENCY_CONFLICT",
+            message=str(exc),
+            allowed_actions=["session resume --idempotency-key <fresh-key>"],
+            next_action="session resume --idempotency-key <fresh-key>",
+        )
+        _emit(failure_envelope("session.resume", corr, error), [f"error: {exc}"], fmt, ExitCode.CONFLICT)
+    except SessionPrecondition as exc:
+        error = ErrorPayload(
+            error_code=exc.code,
+            message=str(exc),
+            allowed_actions=["session status", "session start"],
+            next_action="session status",
+        )
+        _emit(
+            failure_envelope("session.resume", corr, error),
+            [f"error: {exc}"],
+            fmt,
+            ExitCode.PRECONDITION_FAILED,
+        )
 
 
 def _read_input_json(command: str, corr: str, fmt: str, path: Path) -> dict[str, Any]:
@@ -1851,6 +1948,154 @@ def memory_check_cmd(
         f"  {kind}: {name}" for kind in ("drifted", "missing", "extra") for name in report[kind]
     ]
     _emit(failure_envelope("memory.check", corr, error), human, fmt, ExitCode.PRECONDITION_FAILED)
+
+
+def _skill_targets(layout: StorageLayout) -> list[Path]:
+    """Where `.agents/skills/` (Codex) and `.claude/skills/` (Claude Code) land
+    -- under the storage root, so tests can point `--root` at a scratch
+    directory instead of the real project tree (CLAUDE.md)."""
+    return [layout.root / ".agents" / "skills", layout.root / ".claude" / "skills"]
+
+
+@skills_app.command("sync")
+def skills_sync(
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    agent_skills: _AgentSkillsOpt = Path("agent-skills"),
+    idempotency_key: Annotated[
+        str | None, typer.Option("--idempotency-key", help="Required with --format json (cli 4.3).")
+    ] = None,
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Lay the canonical Agent Skills out as deterministic copies into
+    ``.agents/skills/`` (Codex) and ``.claude/skills/`` (Claude Code).
+    Idempotent: unchanged canon rewrites zero bytes (adapters 4.1)."""
+    corr = _correlation(correlation_id)
+    _require_key("skills.sync", corr, fmt, idempotency_key)
+    layout = resolve_layout(root)
+    targets = _skill_targets(layout)
+    request_hash = payload_hash(
+        {"command": "skills.sync", "agent_skills": str(agent_skills), "root": str(layout.root)}
+    )
+    try:
+        with open_storage(layout) as storage:
+            if idempotency_key:
+                with UnitOfWork(storage.store, SystemClock()) as uow:
+                    prior = uow.check_idempotency(idempotency_key, request_hash)
+                if isinstance(prior, CachedResult):
+                    _emit(
+                        success_envelope("skills.sync", corr, {**dict(prior.value), "cached": True}),
+                        ["skills sync (cached result)"],
+                        fmt,
+                        ExitCode.OK,
+                    )
+            result = adapters_sync(agent_skills, targets, layout.skills_manifest, SystemClock())
+            if idempotency_key:
+                with UnitOfWork(storage.store, SystemClock()) as uow:
+                    uow.record_result(idempotency_key, request_hash, result)
+        human = [
+            f"skills sync: {result['skills']} skill(s), {len(result['written'])} file(s) written, "
+            f"{result['unchanged']} unchanged"
+        ]
+        _emit(success_envelope("skills.sync", corr, {**result, "cached": False}), human, fmt, ExitCode.OK)
+    except IdempotencyConflict as exc:
+        error = ErrorPayload(
+            error_code="IDEMPOTENCY_CONFLICT",
+            message=str(exc),
+            allowed_actions=["skills sync --idempotency-key <fresh-key>"],
+            next_action="skills sync --idempotency-key <fresh-key>",
+        )
+        _emit(failure_envelope("skills.sync", corr, error), [f"error: {exc}"], fmt, ExitCode.CONFLICT)
+    except AdapterError as exc:
+        error = ErrorPayload(
+            error_code=exc.code,
+            message=str(exc),
+            allowed_actions=["skills sync --agent-skills <dir>"],
+            next_action="skills sync --agent-skills <dir>",
+        )
+        _emit(
+            failure_envelope("skills.sync", corr, error), [f"error: {exc}"], fmt, ExitCode.PRECONDITION_FAILED
+        )
+
+
+@skills_app.command("validate")
+def skills_validate(
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    agent_skills: _AgentSkillsOpt = Path("agent-skills"),
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Structure, `cli_calls` resolvability and drift (both directions). Never
+    fixes anything -- only `skills sync` does (adapters 4.1, cli 4.4)."""
+    corr = _correlation(correlation_id)
+    layout = resolve_layout(root)
+    targets = _skill_targets(layout)
+    violations = adapters_validate(
+        agent_skills, targets, [descriptor.name for descriptor in command_registry()]
+    )
+    if not violations:
+        _emit(
+            success_envelope("skills.validate", corr, {"violations": []}),
+            ["skills validate: ok"],
+            fmt,
+            ExitCode.OK,
+        )
+    structural = [v for v in violations if v["kind"] in ("structure", "unresolvable_call")]
+    if structural:
+        error = ErrorPayload(
+            error_code=str(structural[0]["code"]),
+            message=f"{len(structural)} structural violation(s); first: {structural[0]['message']}",
+            allowed_actions=["skills validate"],
+            next_action="fix the skill file(s), then skills validate",
+        )
+        human = ["skills validate: INVALID"] + [f"  - {v['message']}" for v in structural]
+        _emit(failure_envelope("skills.validate", corr, error), human, fmt, ExitCode.INVALID_INPUT)
+    drift = [v for v in violations if v["kind"] == "drift"]
+    error = ErrorPayload(
+        error_code=str(drift[0]["code"]),
+        message=f"{len(drift)} drifted target(s); first: {drift[0]['message']}",
+        allowed_actions=["skills sync"],
+        next_action="skills sync --idempotency-key <key>",
+    )
+    human = ["skills validate: DRIFT"] + [f"  - {v['message']}" for v in drift]
+    _emit(failure_envelope("skills.validate", corr, error), human, fmt, ExitCode.PRECONDITION_FAILED)
+
+
+@adapters_app.command("compare")
+def adapters_compare_cmd(
+    fmt: _FormatOpt = "text",
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Parity over recorded observable effects (adapters 4.4): per fixture,
+    per adapter, whether every required effect fired and no forbidden one did.
+    Diagnostic; mutates nothing. OPEN-24: fixtures carry pre-recorded effect
+    sets rather than driving a live agent."""
+    corr = _correlation(correlation_id)
+    results = adapters_compare(DEFAULT_FIXTURES)
+    failed = [r for r in results if not r.passed]
+    data = {
+        "fixtures": len(DEFAULT_FIXTURES),
+        "results": [r.as_dict() for r in results],
+        "all_passed": not failed,
+    }
+    human = [f"adapters compare: {len(results) - len(failed)}/{len(results)} passed"] + [
+        f"  {r.fixture_id}/{r.adapter}: "
+        + (
+            "ok"
+            if r.passed
+            else f"FAIL missing={list(r.missing_required)} forbidden={list(r.present_forbidden)}"
+        )
+        for r in results
+    ]
+    if not failed:
+        _emit(success_envelope("adapters.compare", corr, data), human, fmt, ExitCode.OK)
+    error = ErrorPayload(
+        error_code="ADAPTER_PARITY_MISMATCH",
+        message=f"{len(failed)}/{len(results)} fixture/adapter result(s) failed parity",
+        allowed_actions=["adapters compare"],
+        next_action="adapters compare",
+    )
+    _emit(failure_envelope("adapters.compare", corr, error), human, fmt, ExitCode.PRECONDITION_FAILED)
 
 
 @app.command("status")

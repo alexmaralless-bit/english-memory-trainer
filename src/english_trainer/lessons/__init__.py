@@ -29,6 +29,11 @@ from english_trainer.lessons.rendering import (
     find_rendered_exercise,
     record_rendered_exercise,
 )
+from english_trainer.lessons.resume import (
+    EVENT_AGENT_ATTACHED,
+    attach_agent,
+    resume_session,
+)
 from english_trainer.lessons.sessions import (
     ABANDONED,
     EVENT_ABANDONED,
@@ -53,6 +58,7 @@ from english_trainer.lessons.sessions import (
 __all__ = [
     "ABANDONED",
     "EVENT_ABANDONED",
+    "EVENT_AGENT_ATTACHED",
     "EVENT_COMPOSED",
     "EVENT_EXERCISE_RENDERED",
     "EVENT_FINISHED",
@@ -67,6 +73,7 @@ __all__ = [
     "abandon_session",
     "accept_exercise",
     "active_session_id",
+    "attach_agent",
     "bank_items",
     "find_presented_step",
     "find_rendered_exercise",
@@ -80,6 +87,7 @@ __all__ = [
     "record_rendered_exercise",
     "reject_exercise",
     "replan_session",
+    "resume_session",
     "retire_exercise",
     "start_session",
 ]

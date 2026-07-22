@@ -9,6 +9,7 @@ from it, and no other module invents file locations:
       trainer.events.jsonl   derived JSONL export (rebuildable, never truth)
       snapshots/             point-in-time copies (trainer snapshot create)
       memory/                generated Obsidian vault (arrives with 0.6 / 2.4)
+      skill_sync_manifest.json  agent-skills sync record (roadmap 2.5)
 
 ``open_storage`` wires the pieces the kernel already provides -- connect,
 migrate, event store, exporter -- into one handle with a context-manager
@@ -29,6 +30,7 @@ DB_FILENAME = "trainer.db"
 EXPORT_FILENAME = "trainer.events.jsonl"
 SNAPSHOTS_DIRNAME = "snapshots"
 MEMORY_DIRNAME = "memory"
+SKILLS_MANIFEST_FILENAME = "skill_sync_manifest.json"
 
 
 @dataclass(frozen=True)
@@ -52,6 +54,10 @@ class StorageLayout:
     @property
     def memory_dir(self) -> Path:
         return self.root / MEMORY_DIRNAME
+
+    @property
+    def skills_manifest(self) -> Path:
+        return self.root / SKILLS_MANIFEST_FILENAME
 
 
 def resolve_layout(root: Path | str) -> StorageLayout:

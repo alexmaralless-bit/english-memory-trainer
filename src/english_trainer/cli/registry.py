@@ -126,6 +126,24 @@ _COMMANDS: tuple[CommandDescriptor, ...] = (
     CommandDescriptor(
         name="memory.check", owner_module="memory", mutating=False, requires_idempotency_key=False
     ),
+    # Agent Skills (adapters, roadmap 2.5): sync lays canon out as deterministic
+    # copies; validate is read-only (structure, cli_call resolvability, drift).
+    CommandDescriptor(
+        name="skills.sync", owner_module="adapters", mutating=True, requires_idempotency_key=True
+    ),
+    CommandDescriptor(
+        name="skills.validate", owner_module="adapters", mutating=False, requires_idempotency_key=False
+    ),
+    # Adapter parity (adapters 4.4): diagnostic over recorded effect sets,
+    # never a live agent run (OPEN-24) -- mutates nothing.
+    CommandDescriptor(
+        name="adapters.compare", owner_module="adapters", mutating=False, requires_idempotency_key=False
+    ),
+    # Session resume (lessons 4b/5): full state + tutor briefing + notes,
+    # attaching the resuming agent (AGENT_ATTACHED) in the same UoW.
+    CommandDescriptor(
+        name="session.resume", owner_module="lessons", mutating=True, requires_idempotency_key=True
+    ),
 )
 
 

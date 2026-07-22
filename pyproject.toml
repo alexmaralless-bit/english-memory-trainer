@@ -57,6 +57,7 @@ packages = [
     "english_trainer.scoring",
     "english_trainer.scheduler",
     "english_trainer.memory",
+    "english_trainer.adapters",
 ]
 
 [tool.ruff]
