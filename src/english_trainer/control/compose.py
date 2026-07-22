@@ -60,12 +60,18 @@ def growth_candidates(
     program: dict[str, Any],
     presented_targets: frozenset[str],
     policy: dict[str, Any],
+    relevant_targets: frozenset[str] = frozenset(),
 ) -> list[Candidate]:
     """Growth candidates in canonical order (control 4.4 step 4).
 
     Topic rank is the authored program order -- the curriculum's own priority
-    sequence; ``learner_relevance`` is constant until the learner module
-    exists, so the canonical sort degenerates to (rank, target_id, ...).
+    sequence (``curriculum_priority_rank``). ``learner_relevance`` is the
+    secondary key: a target the personal lexicon marks relevant (``goals`` join
+    later) sorts ahead of an equal-rank neighbour and, for a learner-requested
+    curriculum LexicalItem, enters the lexicon-first micro lane below. It never
+    lifts a lexical item above a topic (rank is primary), and it never touches
+    scoring. With ``relevant_targets`` empty the result is byte-identical to
+    before (the default composition path).
     """
     cost = step_cost(policy, "new_material_intro")
     out: list[Candidate] = []
@@ -87,40 +93,18 @@ def growth_candidates(
                 "context_id": f"{contexts[0]}|new_material_intro",
                 "lexicon_first": False,
                 "lexicon_refs": [str(ref) for ref in (topic.get("lexicon") or [])],
+                "learner_relevance": 1 if topic_id in relevant_targets else 0,
                 "sort_rank": rank,
             }
         )
-    micro = _micro_lane_candidate(program, presented_targets, policy)
-    if micro is not None:
-        out.append(micro)
+    out.extend(_micro_lane_candidates(program, presented_targets, policy, relevant_targets))
     return out
 
 
-def _micro_lane_candidate(
-    program: dict[str, Any],
-    presented_targets: frozenset[str],
-    policy: dict[str, Any],
-) -> Candidate | None:
-    """The lexicon-first micro lane (generation@1, PD-5 D): at most one safe,
-    unlinked CORE/HIGH unit per balanced session, ranked after every topic."""
-    linked: set[str] = set()
-    for topic in program.get("topics", []):
-        linked.update(str(ref) for ref in (topic.get("lexicon") or []))
-    band_rank = {"CORE": 0, "HIGH": 1}
-    eligible: list[tuple[int, str, dict[str, Any]]] = []
-    for unit in program.get("lexicon", []):
-        unit_id = str(unit.get("id"))
-        band = str(unit.get("curriculum_priority_band", ""))
-        if unit_id in linked or unit_id in presented_targets or band not in band_rank:
-            continue
-        if str(unit.get("usage_policy", "safe_to_use")) != "safe_to_use":
-            continue  # avoid/caution/recognition_only units never enter production lanes
-        if str(unit.get("currency", "current")) != "current":
-            continue  # dated/expired units are not introduced as new material
-        eligible.append((band_rank[band], unit_id, unit))
-    if not eligible:
-        return None
-    _, unit_id, unit = min(eligible)
+def _lexicon_growth_candidate(
+    unit: dict[str, Any], policy: dict[str, Any], *, learner_relevance: int
+) -> Candidate:
+    unit_id = str(unit.get("id"))
     domains = unit.get("domains") or ["general"]
     return {
         "candidate_id": f"growth:lexicon:{unit_id}",
@@ -133,11 +117,70 @@ def _micro_lane_candidate(
         "context_id": f"{domains[0]}|new_material_intro",
         "lexicon_first": True,
         "lexicon_refs": [unit_id],
+        "learner_relevance": learner_relevance,
         # After every topic candidate: the micro lane supplements growth, it
-        # never displaces the curriculum's own recommendations (advisory cap
-        # of one is enforced by emitting a single candidate).
+        # never displaces the curriculum's own recommendations.
         "sort_rank": 10_000_000,
     }
+
+
+def _is_safe_current(unit: dict[str, Any]) -> bool:
+    return (
+        str(unit.get("usage_policy", "safe_to_use")) == "safe_to_use"
+        and str(unit.get("currency", "current")) == "current"
+    )
+
+
+def _micro_lane_candidates(
+    program: dict[str, Any],
+    presented_targets: frozenset[str],
+    policy: dict[str, Any],
+    relevant_targets: frozenset[str],
+) -> list[Candidate]:
+    """The lexicon-first micro lane (generation@1, PD-5 D; control 4.4 step 1).
+
+    Two arms, both safe + current only:
+
+    - **learner-requested** (``relevant_targets``): a curriculum LexicalItem the
+      personal lexicon linked to -- an explicit vocabulary request, so it is
+      admitted even when it is attached to a topic (which the default cap
+      excludes). ``learner_relevance = 1``.
+    - the historical **fallback**: at most one safe, unlinked CORE/HIGH unit per
+      session (``learner_relevance = 0``), skipped when it is already emitted as
+      a learner request.
+
+    With ``relevant_targets`` empty the first arm is empty and the result is
+    exactly the single fallback candidate (or none) -- byte-identical to before.
+    """
+    by_id = {str(unit.get("id")): unit for unit in program.get("lexicon", [])}
+    out: list[Candidate] = []
+    emitted: set[str] = set()
+    # Learner-requested arm, in canonical id order for determinism.
+    for unit_id in sorted(relevant_targets):
+        unit = by_id.get(unit_id)
+        if unit is None or unit_id in presented_targets or not _is_safe_current(unit):
+            continue
+        out.append(_lexicon_growth_candidate(unit, policy, learner_relevance=1))
+        emitted.add(unit_id)
+
+    # Fallback arm: unchanged selection of one unlinked CORE/HIGH unit.
+    linked: set[str] = set()
+    for topic in program.get("topics", []):
+        linked.update(str(ref) for ref in (topic.get("lexicon") or []))
+    band_rank = {"CORE": 0, "HIGH": 1}
+    eligible: list[tuple[int, str, dict[str, Any]]] = []
+    for unit in program.get("lexicon", []):
+        unit_id = str(unit.get("id"))
+        band = str(unit.get("curriculum_priority_band", ""))
+        if unit_id in linked or unit_id in presented_targets or unit_id in emitted or band not in band_rank:
+            continue
+        if not _is_safe_current(unit):
+            continue  # avoid/caution/recognition_only or dated units never enter production lanes
+        eligible.append((band_rank[band], unit_id, unit))
+    if eligible:
+        _, _, unit = min(eligible)
+        out.append(_lexicon_growth_candidate(unit, policy, learner_relevance=0))
+    return out
 
 
 def choice_candidates(policy: dict[str, Any]) -> list[Candidate]:
@@ -162,10 +205,16 @@ def choice_candidates(policy: dict[str, Any]) -> list[Candidate]:
 
 
 def _canonical_sort(candidates: list[Candidate]) -> list[Candidate]:
+    # (curriculum_priority_rank asc, learner_relevance desc, target_id asc,
+    # dimension asc, step_type_rank asc, candidate_id asc) -- control 4.4 step 4.
+    # ``learner_relevance`` defaults to 0 (choice candidates, and every candidate
+    # when no personal-lexicon relevance exists), so the order is unchanged for
+    # the default path.
     return sorted(
         candidates,
         key=lambda c: (
             c["sort_rank"],
+            -int(c.get("learner_relevance", 0)),
             str(c.get("target_ref") or ""),
             str(c.get("dimension") or ""),
             STEP_TYPE_RANK[c["step_type"]],
@@ -212,6 +261,7 @@ def compose_plan(
     signals: list[dict[str, Any]] | None = None,
     probe: dict[str, Any] | None = None,
     starvation_candidates: list[Candidate] | None = None,
+    relevant_targets: frozenset[str] = frozenset(),
     availability_long_break: bool = False,
     bank_items: list[dict[str, Any]] | None = None,
     pinned_versions: dict[str, str] | None = None,
@@ -254,6 +304,12 @@ def compose_plan(
     reserve, so a younger episode never overtakes an older one (the FIFO the
     waiting bound needs). Default ``None`` -- the pipeline is byte-identical
     without it.
+
+    ``relevant_targets`` are the curriculum targets the personal lexicon marks
+    relevant (learner 4; control 4.5): they raise ``learner_relevance`` in the
+    growth sort and let a learner-requested LexicalItem enter the lexicon-first
+    micro lane. Default empty -- the pipeline is byte-identical without it, and
+    it never touches scoring (an encounter is enrollment, not evidence).
     """
     minimum = int(policy["budget"]["min_total_minutes"]) * 60
     if total_seconds < minimum:
@@ -322,7 +378,7 @@ def compose_plan(
             and is_excluded(candidate, active)
         }
     )
-    growth_list = growth_candidates(program, presented_targets, policy)
+    growth_list = growth_candidates(program, presented_targets, policy, relevant_targets)
     if active:
         review_list, signal_waivers = apply_signals(review_list, active)
         growth_list = [candidate for candidate in growth_list if not is_excluded(candidate, active)]

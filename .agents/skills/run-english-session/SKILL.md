@@ -11,6 +11,8 @@ forbidden_actions:
   - "не редактировать файлы состояния (SQLite, JSONL export, memory/) напрямую"
   - "не изобретать target_ref/dimension/origin попытки — их определяет движок из STEP_PRESENTED"
   - "не сообщать ученику про уровень/прогресс без реального вызова `trainer status`"
+  - "не сообщать движку, что слово освоено: `lexicon encounter` — это enrollment, а не evidence; знание переводит только отдельная оценённая попытка"
+  - "не создавать curriculum-единицу напрямую: при неизвестном слове оставлять `--linked-item` пустым (personal-запись, не программа)"
 cli_calls:
   - session.start
   - session.peek
@@ -23,6 +25,8 @@ cli_calls:
   - session.finish
   - session.abandon
   - session.status
+  - adapters.capture-turn
+  - lexicon.encounter
 outputs:
   - "краткое резюме сессии для ученика (что прошли, что осталось)"
 postconditions:
@@ -38,6 +42,14 @@ postconditions:
    задании `exercise rendered` ДО показа промпта → получить ответ →
    `attempt record` (по потребности `attempt finalize`) → `session next`
    с актуальным `--expected-plan-version`.
+2a. Если ученик просит перевод или говорит «не знаю это слово»: сначала
+   зафиксировать реплику ученика через `adapters capture-turn`, затем вызвать
+   `trainer lexicon encounter --surface "<слово>" --note-ru "<перевод>"
+   --session <ID> --provider <id> --expected-session-revision <R>`. Если слово
+   есть в активном curriculum — передать `--linked-item <ID>`; если нет —
+   оставить пустым. После этого объяснить слово и ПРОДОЛЖИТЬ урок. Добавление
+   и объяснение НЕ считаются знанием: проверку планирует штатный
+   control/session-flow, отдельной оценённой попыткой.
 3. Если план исчерпан или контекст изменился — `session replan`.
 4. Due review из `session peek`/плана закрывать через `review close`
    (движок сам вычисляет исход, skill только сообщает о завершении шага).

@@ -324,3 +324,71 @@ def test_stale_session_revision_is_rejected_without_effect(tmp_path: Path, capsy
     assert code == ExitCode.CONFLICT
     assert env["error"]["error_code"] == "SESSION_REVISION_CONFLICT"
     assert _event_count(tmp_path) == before  # stale write left no event
+
+
+# -- status lexicon_progress -------------------------------------------------
+
+
+def _seed_full(root: Path) -> None:
+    import yaml
+
+    repo = Path(__file__).resolve().parents[2]
+    conn = connect(root / "trainer.db")
+    registry = PolicyRegistry(conn, CLOCK)
+    registry.register("curriculum", "v-test", PROGRAM)
+    registry.activate("curriculum", "v-test")
+    for name, kind, version in (
+        ("scoring-v1.yaml", "scoring", "scoring@1"),
+        ("scheduler-v1.yaml", "scheduler", "scheduler@1"),
+    ):
+        payload = yaml.safe_load((repo / "curriculum" / "policies" / name).read_text("utf-8"))
+        registry.register(kind, version, payload)
+        registry.activate(kind, version)
+    conn.close()
+
+
+def test_status_reports_lexicon_progress(tmp_path: Path, capsys) -> None:
+    root = str(tmp_path)
+    _init(root, capsys)
+    _seed_full(tmp_path)
+    run(
+        [
+            "lexicon",
+            "add",
+            "--surface",
+            "feasible",
+            "--linked-item",
+            "word.feasible",
+            "--root",
+            root,
+            "--format",
+            "json",
+            "--idempotency-key",
+            "k1",
+        ]
+    )
+    capsys.readouterr()
+    run(
+        [
+            "lexicon",
+            "add",
+            "--surface",
+            "blorptastic",
+            "--root",
+            root,
+            "--format",
+            "json",
+            "--idempotency-key",
+            "k2",
+        ]
+    )
+    capsys.readouterr()
+    code = run(["status", "--root", root, "--format", "json"])
+    env = _json_stdout(capsys)
+    _envelope_ok(env)
+    assert code == ExitCode.OK
+    progress = env["data"]["lexicon_progress"]
+    # Two curriculum lexical items, both NEW (no evidence yet); ACTIVE and
+    # MASTERED are separate keys -- no ambiguous single "learned_words".
+    assert progress["curriculum"] == {"new": 2, "learning": 0, "active": 0, "mastered": 0, "at_risk": 0}
+    assert progress["personal"] == {"total": 2, "linked": 1, "unlinked": 1}

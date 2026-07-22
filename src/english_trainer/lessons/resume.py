@@ -78,6 +78,10 @@ _ACTIVITY_EVENTS = (EVENT_ATTEMPT_RECORDED, EVIDENCE_ADDED_EVENT, REVIEW_OUTCOME
 # How many recent lexical items each briefing bucket carries.
 _RECENT_LIMIT = 10
 
+# Consumed from the learner module via the event log (events are the module
+# boundary; lessons must not import learner -- tests/architecture allowlist).
+LEARNER_LEXICON_ENTRY_ADDED = "learner.lexicon_entry_added"
+
 
 def attach_agent(
     store: EventStore,
@@ -183,6 +187,40 @@ def _recent_lexicon(
         else:
             vocabulary.append(entry)
     return vocabulary[:_RECENT_LIMIT], chunks[:_RECENT_LIMIT]
+
+
+def _recent_encounters(store: EventStore, limit: int = _RECENT_LIMIT) -> list[dict[str, Any]]:
+    """Recently added personal-lexicon entries for the tutor briefing (learner
+    §4; continuation flow: the next provider after ``session resume`` sees the
+    recently added words).
+
+    A pure fold over the event log (lessons must not import learner),
+    de-duplicated by logical identity and most-recent-first. It is computed from
+    STATE, kept OUT of the untrusted-notes block, and never declares an entry
+    learned -- a translation request travels across a chat swap but stays a note,
+    not evidence.
+    """
+    seen: set[str] = set()
+    entries: list[dict[str, Any]] = []
+    for event in store.read():
+        if event.type != LEARNER_LEXICON_ENTRY_ADDED:
+            continue
+        key = str(event.payload.get("identity_key"))
+        if key in seen:
+            continue
+        seen.add(key)
+        payload = event.payload
+        entries.append(
+            {
+                "entry_id": payload.get("entry_id"),
+                "surface": payload.get("surface"),
+                "note_ru": payload.get("note_ru"),
+                "linked_item_id": payload.get("linked_item_id"),
+                "added_at": payload.get("added_at"),
+            }
+        )
+    entries.sort(key=lambda entry: (str(entry["added_at"]), str(entry["entry_id"])), reverse=True)
+    return entries[:limit]
 
 
 def _last_activity_at(store: EventStore) -> datetime | None:
@@ -383,6 +421,11 @@ def build_briefing(
         "top_errors": [],
         "recent_vocabulary": recent_vocabulary,
         "recent_chunks": recent_chunks,
+        # The learner's personal lexicon (learner §4): its own briefing block,
+        # computed from state, never mixed with untrusted notes and never
+        # declared learned. `start` and `resume` both return it via this one
+        # builder, so the next provider sees the recently added words.
+        "personal_lexicon": {"recent_encounters": _recent_encounters(store)},
         "re_entry": _re_entry(store, clock.now(), at_risk_targets, backlog),
         "recommendations": _recommendations(store, session_id, backlog),
         "last_session_summary": _last_session_summary(store),

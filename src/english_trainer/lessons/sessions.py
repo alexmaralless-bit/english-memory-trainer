@@ -64,6 +64,11 @@ PLAN_AGGREGATE = "session_plan"
 POINTER_AGGREGATE = "session_pointer"
 POINTER_ID = "active"
 
+# Consumed from the learner module via the event log (events are the module
+# boundary; lessons must not import learner -- tests/architecture allowlist).
+# Literal on purpose, mirroring how evidence/scoring consume published events.
+LEARNER_LEXICON_ENTRY_ADDED = "learner.lexicon_entry_added"
+
 EVENT_STARTED = "session.started"
 EVENT_FINISHED = "session.finished"
 EVENT_ABANDONED = "session.abandoned"
@@ -402,11 +407,30 @@ def live_composition_inputs(
         )
         break
 
+    # Personal-lexicon relevance (learner 4 -> control 4.5): the linked_item_id
+    # of every linked entry raises learner_relevance and may pull a
+    # learner-requested LexicalItem into the lexicon-first micro lane. Folded
+    # here (lessons must not import learner); unlinked entries contribute
+    # nothing, and an encounter never touches scoring.
+    seen_lexicon: set[str] = set()
+    relevant_targets: set[str] = set()
+    for event in events:
+        if event.type != LEARNER_LEXICON_ENTRY_ADDED:
+            continue
+        key = str(event.payload.get("identity_key"))
+        if key in seen_lexicon:
+            continue
+        seen_lexicon.add(key)
+        linked_item_id = event.payload.get("linked_item_id")
+        if linked_item_id:
+            relevant_targets.add(str(linked_item_id))
+
     return {
         "signals": signals,
         "review_candidates": review_candidates,
         "starvation_candidates": qualified_candidates(review_candidates, deferrals),
         "probe": probe,
+        "relevant_targets": frozenset(relevant_targets),
     }
 
 
@@ -589,6 +613,7 @@ def start_session(
         signals=live["signals"],
         probe=live["probe"],
         starvation_candidates=live["starvation_candidates"],
+        relevant_targets=live["relevant_targets"],
         availability_long_break=bool(availability["long_break"]),
         bank_items=reusable_bank_items(store, program),
         pinned_versions=pinned,

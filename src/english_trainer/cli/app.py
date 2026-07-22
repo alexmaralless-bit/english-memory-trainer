@@ -3260,6 +3260,23 @@ def status_command(
         score = learning_score(folded, program, scoring_policy, measured)
         xp = xp_ledger(storage.store, scoring_policy)
         compliance = tutor_compliance(storage.store, registry)
+        # Honest, separate lexicon progress (learner 5, handoff H): curriculum
+        # LexicalItems counted by knowledge state, and the personal lexicon by
+        # linked/unlinked. ACTIVE and MASTERED stay separate -- no single
+        # ambiguous "learned_words".
+        state_key = {
+            "NEW": "new",
+            "LEARNING": "learning",
+            "ACTIVE": "active",
+            "MASTERED": "mastered",
+            "AT_RISK": "at_risk",
+        }
+        curriculum_lexicon = {"new": 0, "learning": 0, "active": 0, "mastered": 0, "at_risk": 0}
+        for unit in program.get("lexicon", []):
+            found = folded.get(str(unit.get("id")))
+            knowledge = found.knowledge_state if found is not None else "NEW"
+            curriculum_lexicon[state_key.get(knowledge, "new")] += 1
+        personal_lexicon = personal_lexicon_summary(storage.store)
     data = {
         "targets": scores,
         "target_count": len(scores),
@@ -3268,6 +3285,7 @@ def status_command(
         "measured_working_level": measured,  # None = no-data, never A1 by default
         "learning_score": score,  # None = no-data, never 0
         "tutor_compliance": compliance,
+        "lexicon_progress": {"curriculum": curriculum_lexicon, "personal": personal_lexicon},
         "xp": {
             "total": xp["total"],
             "practice_days": xp["practice_days"],
@@ -3286,6 +3304,7 @@ def status_command(
         "  tutor compliance: "
         + (str(compliance["score"]) if compliance["status"] == "measured" else "no-data")
     )
+    human.append(f"  lexicon: curriculum {curriculum_lexicon} · personal {personal_lexicon}")
     human.append(f"  xp: {xp['total']} over {xp['practice_days']} day(s), streak {xp['streak']}")
     _emit(success_envelope("status", corr, data), human, fmt, ExitCode.OK)
 

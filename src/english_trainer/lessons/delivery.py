@@ -464,6 +464,7 @@ def replan_session(
         signals=live["signals"],
         probe=live["probe"],
         starvation_candidates=live["starvation_candidates"],
+        relevant_targets=live["relevant_targets"],
         availability_long_break=bool(availability["long_break"]),
         bank_items=reusable_bank_items(store, active_program),
         pinned_versions=pinned,
