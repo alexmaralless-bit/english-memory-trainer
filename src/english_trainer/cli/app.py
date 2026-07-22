@@ -55,6 +55,7 @@ from english_trainer.curriculum.service import (
     register_version,
 )
 from english_trainer.curriculum.validate import validate_program
+from english_trainer.evidence.assessment import finalize_attempt
 from english_trainer.evidence.attempts import EvidencePrecondition, list_notes, record_attempt
 from english_trainer.evidence.reviews import close_review
 from english_trainer.evidence.rubric import RUBRIC_KIND, RubricPolicyInvalid
@@ -1542,6 +1543,90 @@ def review_due(
         for c in backlog[:15]
     ]
     _emit(success_envelope("review.due", corr, data), human, fmt, ExitCode.OK)
+
+
+@attempt_app.command("finalize")
+def attempt_finalize(
+    attempt: Annotated[str, typer.Option("--attempt", help="attempt_id from `attempt record`.")],
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    session: _SessionOpt = None,
+    input_file: Annotated[
+        Path | None,
+        typer.Option("--input", help="Optional JSON with corrected {observations: [...]}."),
+    ] = None,
+    idempotency_key: Annotated[
+        str | None, typer.Option("--idempotency-key", help="Required with --format json (cli 4.3).")
+    ] = None,
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Assess and atomically settle a recorded open attempt through the pinned
+    rubric: machine checks, observation validation, four-level criteria,
+    integer score_ppm. Incomplete required coverage settles non-contributing
+    insufficient_evidence -- never a false learner zero (PD-7 C)."""
+    corr = _correlation(correlation_id)
+    _require_key("attempt.finalize", corr, fmt, idempotency_key)
+    extra: list[dict[str, Any]] = []
+    if input_file is not None:
+        extra = list(_read_input_json("attempt.finalize", corr, fmt, input_file).get("observations", []))
+    layout = resolve_layout(root)
+    try:
+        with open_storage(layout) as storage:
+            session_id = _resolve_session("attempt.finalize", corr, fmt, storage, session)
+            request_hash = payload_hash(
+                {"command": "attempt.finalize", "session": session_id, "attempt": attempt, "extra": extra}
+            )
+            if idempotency_key:
+                with UnitOfWork(storage.store, SystemClock()) as uow:
+                    prior = uow.check_idempotency(idempotency_key, request_hash)
+                if isinstance(prior, CachedResult):
+                    _emit(
+                        success_envelope("attempt.finalize", corr, {**dict(prior.value), "cached": True}),
+                        ["attempt finalize (cached result)"],
+                        fmt,
+                        ExitCode.OK,
+                    )
+            result = finalize_attempt(
+                storage.store,
+                PolicyRegistry(storage._conn, SystemClock()),
+                SystemClock(),
+                SystemRandom(),
+                session_id,
+                attempt,
+                extra_observations=extra,
+            )
+            if idempotency_key:
+                with UnitOfWork(storage.store, SystemClock()) as uow:
+                    uow.record_result(idempotency_key, request_hash, result)
+        human = [
+            f"attempt {attempt}: {result['disposition']}"
+            + (f", score {result['score_ppm']} ppm" if result.get("score_ppm") is not None else "")
+            + ("" if result["contributing"] else " (non-contributing)")
+        ]
+        _emit(
+            success_envelope("attempt.finalize", corr, {**result, "cached": False}), human, fmt, ExitCode.OK
+        )
+    except IdempotencyConflict as exc:
+        error = ErrorPayload(
+            error_code="IDEMPOTENCY_CONFLICT",
+            message=str(exc),
+            allowed_actions=["attempt finalize --idempotency-key <fresh-key>"],
+            next_action="attempt finalize --idempotency-key <fresh-key>",
+        )
+        _emit(failure_envelope("attempt.finalize", corr, error), [f"error: {exc}"], fmt, ExitCode.CONFLICT)
+    except (EvidencePrecondition, SessionPrecondition) as exc:
+        error = ErrorPayload(
+            error_code=exc.code,
+            message=str(exc),
+            allowed_actions=["attempt record", "session status", "curriculum activate"],
+            next_action="session status",
+        )
+        _emit(
+            failure_envelope("attempt.finalize", corr, error),
+            [f"error: {exc}"],
+            fmt,
+            ExitCode.PRECONDITION_FAILED,
+        )
 
 
 @review_app.command("close")

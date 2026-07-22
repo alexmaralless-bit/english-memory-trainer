@@ -119,6 +119,31 @@ def record_rendered_exercise(
         raise SessionPrecondition("invalid exercise: " + "; ".join(problems))
 
     lexicon_refs = [str(ref) for ref in (exercise.get("lexicon_refs") or [])]
+    pinned = dict((state.get("manifest") or {}).get("pinned_versions") or {})
+    rubric_ref = exercise.get("rubric_ref")
+    machine_checks = list(exercise.get("machine_checks") or [])
+    if rubric_ref is not None or machine_checks:
+        # Rubric resolution happens at render, against the SESSION-PINNED
+        # version, never active (P.5 PD-5 A): a dangling ref must fail before
+        # the learner sees the prompt, not at assessment.
+        if "rubric" not in pinned:
+            raise SessionPrecondition("the session pins no rubric policy; cannot render a rubric exercise")
+        rubric_payload = registry.resolve_pinned("rubric", pinned["rubric"])
+        profiles = rubric_payload.get("rubric_profiles") or {}
+        if rubric_ref is not None:
+            profile = profiles.get(str(rubric_ref).removeprefix("rubric:"))
+            if profile is None:
+                raise SessionPrecondition(f"rubric ref {rubric_ref!r} does not resolve (no fallback)")
+            if step["step_type"] not in (profile.get("allowed_step_types") or []):
+                raise SessionPrecondition(
+                    f"rubric ref {rubric_ref!r} is incompatible with step type {step['step_type']}"
+                )
+        operations = rubric_payload.get("machine_operations") or {}
+        for check in machine_checks:
+            if str(check.get("operation")) not in operations:
+                raise SessionPrecondition(
+                    f"machine check operation {check.get('operation')!r} is outside the closed set"
+                )
     active_safety_version, active_program = registry.resolve_active("curriculum")
     eligible, reason = production_eligible(
         {"step_type": step["step_type"], "generation_directive": {"lexicon_refs": lexicon_refs}},
@@ -135,10 +160,12 @@ def record_rendered_exercise(
         "rubric_ref": exercise.get("rubric_ref"),
         "distractor_error_refs": [str(ref) for ref in (exercise.get("distractor_error_refs") or [])],
         "lexicon_refs": lexicon_refs,
+        # The rubric inputs are part of content identity: a changed check set
+        # is a different exercise (P.5, immutable rubric-input snapshot).
+        "machine_checks": machine_checks,
     }
     content_hash = payload_hash(content)
     exercise_instance_id = new_ulid(clock, random_source)
-    pinned = dict(manifest.get("pinned_versions") or {})
 
     payload: dict[str, Any] = {
         "session_id": session_id,
@@ -156,9 +183,10 @@ def record_rendered_exercise(
         "answer_key": exercise.get("answer_key"),
         "rubric_ref": exercise.get("rubric_ref"),
         "distractor_error_refs": content["distractor_error_refs"],
+        "machine_checks": machine_checks,
         "generation_policy_version": pinned.get("generation"),
         "pinned_curriculum_version": pinned.get("curriculum"),
-        "pinned_rubric_version": pinned.get("rubric"),  # rubric kind not registered yet
+        "pinned_rubric_version": pinned.get("rubric"),
         "active_safety_version": active_safety_version,
         "provider": provider or manifest.get("provider"),
         "rendered_at": clock.now().isoformat(),

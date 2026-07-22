@@ -57,6 +57,7 @@ def test_rendered_snapshot_is_complete_and_hashed(store, registry, clock, random
             "rubric_ref": None,
             "distractor_error_refs": ["be.omission"],
             "lexicon_refs": [],
+            "machine_checks": [],  # rubric inputs are part of content identity (P.5)
         }
     )
 

@@ -110,6 +110,11 @@ _COMMANDS: tuple[CommandDescriptor, ...] = (
     CommandDescriptor(
         name="review.close", owner_module="evidence", mutating=True, requires_idempotency_key=True
     ),
+    # Finalizing an open attempt runs the pinned rubric pipeline and settles
+    # atomically (P.5): the engine grades, the agent only reports facts.
+    CommandDescriptor(
+        name="attempt.finalize", owner_module="evidence", mutating=True, requires_idempotency_key=True
+    ),
 )
 
 

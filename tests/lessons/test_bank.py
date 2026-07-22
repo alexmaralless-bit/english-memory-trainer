@@ -116,9 +116,8 @@ def test_near_duplicate_of_an_accepted_item_is_refused(store, registry, clock, r
         step_id,
         {
             **EXERCISE,
-            "prompt": "Write one sentence introducing yourself with be.",
-            "answer_key": None,
-            "rubric_ref": "rubric:intro@1",
+            "prompt": "Fill in the missing form of be: my manager ___ in the office today.",
+            "answer_key": ["is"],
         },
     )
     accepted = accept_exercise(store, registry, clock, random_source, other, maintainer_reason="reviewed")
