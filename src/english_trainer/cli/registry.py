@@ -115,6 +115,17 @@ _COMMANDS: tuple[CommandDescriptor, ...] = (
     CommandDescriptor(
         name="attempt.finalize", owner_module="evidence", mutating=True, requires_idempotency_key=True
     ),
+    # The Obsidian projection (0.6): render/rebuild mutate generated files
+    # (never learner state); check is read-only and repairs nothing.
+    CommandDescriptor(
+        name="memory.render", owner_module="memory", mutating=True, requires_idempotency_key=True
+    ),
+    CommandDescriptor(
+        name="memory.rebuild", owner_module="memory", mutating=True, requires_idempotency_key=True
+    ),
+    CommandDescriptor(
+        name="memory.check", owner_module="memory", mutating=False, requires_idempotency_key=False
+    ),
 )
 
 

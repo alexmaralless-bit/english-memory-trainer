@@ -486,7 +486,12 @@ def test_registry_matches_published_surface() -> None:
         "review.due",
         "review.close",
         "attempt.finalize",
+        "memory.render",
+        "memory.rebuild",
+        "memory.check",
     }
+    assert registry["memory.render"].mutating and registry["memory.render"].requires_idempotency_key
+    assert not registry["memory.check"].mutating  # drift check repairs nothing
     assert registry["attempt.finalize"].mutating and registry["attempt.finalize"].requires_idempotency_key
     assert registry["review.close"].mutating and registry["review.close"].requires_idempotency_key
     assert not registry["review.due"].mutating  # the backlog recommends, never blocks

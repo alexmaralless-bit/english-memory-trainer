@@ -57,8 +57,10 @@ def test_real_program_loads_completely(program: dict[str, Any]) -> None:
 def test_real_program_validates_clean(program: dict[str, Any]) -> None:
     report = validate_program(program)
     assert report.errors == []
-    # The B1 skeletons are honestly unauthored -- warnings, never errors.
-    assert any("not yet authored" in warning for warning in report.warnings)
+    # P.2e authored every B1-C2 body, so no topic is left "not yet authored".
+    # An unauthored-body warning reappearing means a skeleton slipped in
+    # without its mastery_criteria.
+    assert not any("not yet authored" in warning for warning in report.warnings)
 
 
 def test_snapshot_is_canonical_and_deterministic(program: dict[str, Any]) -> None:

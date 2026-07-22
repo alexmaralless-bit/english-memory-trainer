@@ -86,6 +86,8 @@ from english_trainer.lessons.sessions import (
     get_session,
     start_session,
 )
+from english_trainer.memory.engine import check as memory_check
+from english_trainer.memory.engine import emit_projection_updated, rebuild, render
 from english_trainer.scheduler.engine import due_backlog
 from english_trainer.scheduler.policy import SCHEDULER_KIND, SchedulerPolicyInvalid
 from english_trainer.scheduler.policy import require_valid as require_valid_scheduler
@@ -119,6 +121,8 @@ scoring_app = typer.Typer(add_completion=False, help="Deterministic scores from 
 app.add_typer(scoring_app, name="scoring")
 review_app = typer.Typer(add_completion=False, help="Review scheduling: what is due, and when.")
 app.add_typer(review_app, name="review")
+memory_app = typer.Typer(add_completion=False, help="The Obsidian projection (generated zone).")
+app.add_typer(memory_app, name="memory")
 
 _FormatOpt = Annotated[str, typer.Option("--format", help="Output format: text (human) or json (contract).")]
 _RootOpt = Annotated[Path, typer.Option("--root", help="Trainer home directory (storage layout root).")]
@@ -1696,6 +1700,157 @@ def review_close(
             fmt,
             ExitCode.PRECONDITION_FAILED,
         )
+
+
+def _memory_mutation(
+    command: str,
+    runner: Any,
+    fmt: str,
+    root: Path,
+    idempotency_key: str | None,
+    correlation_id: str | None,
+) -> None:
+    corr = _correlation(correlation_id)
+    _require_key(command, corr, fmt, idempotency_key)
+    layout = resolve_layout(root)
+    if not layout.db.exists():
+        error = ErrorPayload(
+            error_code="DATABASE_NOT_FOUND",
+            message=f"{layout.db} does not exist.",
+            allowed_actions=["init"],
+            next_action="init",
+        )
+        _emit(failure_envelope(command, corr, error), ["error: not initialized"], fmt, ExitCode.NOT_FOUND)
+    spoken = command.replace(".", " ")
+    try:
+        with open_storage(layout) as storage:
+            registry = PolicyRegistry(storage._conn, SystemClock())
+            request_hash = payload_hash({"command": command, "root": str(layout.root)})
+            if idempotency_key:
+                with UnitOfWork(storage.store, SystemClock()) as uow:
+                    prior = uow.check_idempotency(idempotency_key, request_hash)
+                if isinstance(prior, CachedResult):
+                    _emit(
+                        success_envelope(command, corr, {**dict(prior.value), "cached": True}),
+                        [f"{spoken} (cached result)"],
+                        fmt,
+                        ExitCode.OK,
+                    )
+            report = runner(storage.store, registry, layout.memory_dir)
+            emit_projection_updated(storage.store, SystemClock(), SystemRandom(), report)
+            if idempotency_key:
+                with UnitOfWork(storage.store, SystemClock()) as uow:
+                    uow.record_result(idempotency_key, request_hash, report)
+        human = [
+            f"{spoken}: {report['pages']} pages, {len(report.get('written', []))} written, "
+            f"{report.get('unchanged', 0)} unchanged"
+            + (f", {len(report['removed'])} removed" if "removed" in report else "")
+        ]
+        _emit(success_envelope(command, corr, {**report, "cached": False}), human, fmt, ExitCode.OK)
+    except IdempotencyConflict as exc:
+        error = ErrorPayload(
+            error_code="IDEMPOTENCY_CONFLICT",
+            message=str(exc),
+            allowed_actions=[f"{spoken} --idempotency-key <fresh-key>"],
+            next_action=f"{spoken} --idempotency-key <fresh-key>",
+        )
+        _emit(failure_envelope(command, corr, error), [f"error: {exc}"], fmt, ExitCode.CONFLICT)
+    except KernelError as exc:
+        error = ErrorPayload(
+            error_code=exc.code,
+            message=str(exc),
+            allowed_actions=["curriculum activate", "doctor"],
+            next_action="curriculum activate",
+        )
+        _emit(failure_envelope(command, corr, error), [f"error: {exc}"], fmt, ExitCode.PRECONDITION_FAILED)
+
+
+@memory_app.command("render")
+def memory_render(
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    idempotency_key: Annotated[
+        str | None, typer.Option("--idempotency-key", help="Required with --format json (cli 4.3).")
+    ] = None,
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Regenerate the Obsidian projection (memory/ zone only). Deterministic:
+    unchanged state reproduces identical bytes."""
+    _memory_mutation("memory.render", render, fmt, root, idempotency_key, correlation_id)
+
+
+@memory_app.command("rebuild")
+def memory_rebuild(
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    idempotency_key: Annotated[
+        str | None, typer.Option("--idempotency-key", help="Required with --format json (cli 4.3).")
+    ] = None,
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Full rebuild: regenerate every page and remove orphans -- memory/ ends
+    exactly at the render set. notes/ is never touched."""
+    _memory_mutation("memory.rebuild", rebuild, fmt, root, idempotency_key, correlation_id)
+
+
+@memory_app.command("check")
+def memory_check_cmd(
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Drift check of the generated zone. Read-only: repairs nothing; a
+    mismatch is an error (exit 6), pending lag is not."""
+    corr = _correlation(correlation_id)
+    layout = resolve_layout(root)
+    if not layout.db.exists():
+        error = ErrorPayload(
+            error_code="DATABASE_NOT_FOUND",
+            message=f"{layout.db} does not exist.",
+            allowed_actions=["init"],
+            next_action="init",
+        )
+        _emit(
+            failure_envelope("memory.check", corr, error), ["error: not initialized"], fmt, ExitCode.NOT_FOUND
+        )
+    try:
+        with open_storage(layout) as storage:
+            report = memory_check(
+                storage.store, PolicyRegistry(storage._conn, SystemClock()), layout.memory_dir
+            )
+    except KernelError as exc:
+        error = ErrorPayload(
+            error_code=exc.code,
+            message=str(exc),
+            allowed_actions=["curriculum activate", "doctor"],
+            next_action="curriculum activate",
+        )
+        _emit(
+            failure_envelope("memory.check", corr, error),
+            [f"error: {exc}"],
+            fmt,
+            ExitCode.PRECONDITION_FAILED,
+        )
+    if report["ok"]:
+        _emit(
+            success_envelope("memory.check", corr, report),
+            [f"memory check: ok ({report['pages']} pages)"],
+            fmt,
+            ExitCode.OK,
+        )
+    error = ErrorPayload(
+        error_code="MEMORY_DRIFT",
+        message=(
+            f"drift in the generated zone: {len(report['drifted'])} edited, "
+            f"{len(report['missing'])} missing, {len(report['extra'])} extra"
+        ),
+        allowed_actions=["memory rebuild"],
+        next_action="memory rebuild",
+    )
+    human = ["memory check: DRIFT"] + [
+        f"  {kind}: {name}" for kind in ("drifted", "missing", "extra") for name in report[kind]
+    ]
+    _emit(failure_envelope("memory.check", corr, error), human, fmt, ExitCode.PRECONDITION_FAILED)
 
 
 @app.command("status")

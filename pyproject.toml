@@ -56,6 +56,7 @@ packages = [
     "english_trainer.evidence",
     "english_trainer.scoring",
     "english_trainer.scheduler",
+    "english_trainer.memory",
 ]
 
 [tool.ruff]
