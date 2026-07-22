@@ -986,3 +986,204 @@ links:
   - {lexical_item: slang.vibe, topics: [everyday-online-informal.tone-recognition, everyday-online-informal.community-reply]}
   - {lexical_item: slang.fomo, topics: [everyday-online-informal.tone-recognition, everyday-online-informal.community-reply]}
   - {lexical_item: slang.irl, topics: [everyday-online-informal.tone-recognition, everyday-online-informal.community-reply]}
+
+  # ===== maintain pass: obvious lower-band links (2026-07-22) =====
+  # These are advisory homes for practice, not prerequisites or mastery gates.
+  # Volatile in-group slang stays unlinked unless a topic naturally owns it.
+  - {lexical_item: abbreviation.imho, topics: [everyday-online-informal.common-abbreviations]}
+  - {lexical_item: reaction.good-to-see-you, topics: [reading.casual-reactions, everyday-life.starting-everyday-small-talk]}
+  - {lexical_item: reaction.hold-on-a-second, topics: [reading.casual-reactions, everyday-online-informal.basic-chat-response]}
+  - {lexical_item: reaction.how-have-you-been, topics: [reading.casual-reactions, everyday-life.starting-everyday-small-talk]}
+  - {lexical_item: reaction.what-do-you-mean, topics: [reading.casual-reactions, grammar.basic-questions.clarification]}
+  - {lexical_item: slang.not-gonna-lie, topics: [reading.stable-slang, everyday-online-informal.casual-neutral-rephrasing]}
+  - {lexical_item: phrasal-verb.bump-into, topics: [reading.everyday-phrasal-verbs, written-production.paraphrase-expression]}
+  - {lexical_item: word.balcony, topics: [everyday-life.describing-home]}
+  - {lexical_item: word.destination, topics: [everyday-life.changing-a-travel-plan]}
+  - {lexical_item: word.dose, topics: [everyday-life.understanding-pharmacy-instructions]}
+  - {lexical_item: word.hiking, topics: [everyday-life.talking-about-likes-and-free-time, everyday-life.comparing-leisure-options]}
+  - {lexical_item: word.outage, topics: [everyday-life.describing-a-household-problem, everyday-life.resolving-a-service-problem]}
+  - {lexical_item: word.teenager, topics: [everyday-life.talking-about-close-relationships]}
+  - {lexical_item: word.transaction, topics: [everyday-life.confirming-a-payment]}
+
+  - {lexical_item: informal.lets-keep-this-constructive, topics: [everyday-online-informal.forum-thread-reply, written-interaction.constructive-challenge]}
+  - {lexical_item: informal.that-sounds-dismissive, topics: [everyday-online-informal.tone-recognition, everyday-online-informal.tone-repair]}
+  - {lexical_item: reaction.maybe-next-time, topics: [reading.casual-reactions, everyday-life.accepting-or-declining-an-invitation]}
+  - {lexical_item: reaction.nice-to-meet-you, topics: [reading.casual-reactions, everyday-life.starting-everyday-small-talk]}
+  - {lexical_item: reaction.see-you-around, topics: [reading.casual-reactions, everyday-life.starting-everyday-small-talk]}
+  - {lexical_item: slang.dunno, topics: [reading.stable-slang, everyday-online-informal.casual-neutral-rephrasing]}
+  - {lexical_item: slang.gimme, topics: [reading.stable-slang, everyday-online-informal.casual-neutral-rephrasing]}
+  - {lexical_item: slang.gotta-go, topics: [reading.stable-slang, everyday-online-informal.casual-neutral-rephrasing]}
+  - {lexical_item: slang.lemme, topics: [reading.stable-slang, everyday-online-informal.casual-neutral-rephrasing]}
+  - {lexical_item: phrasal-verb.sort-out, topics: [reading.everyday-phrasal-verbs, everyday-life.resolving-a-service-problem]}
+  - {lexical_item: phrasal-verb.step-in, topics: [reading.everyday-phrasal-verbs, everyday-life.requesting-a-repair]}
+  - {lexical_item: phrasal-verb.wear-out, topics: [reading.everyday-phrasal-verbs, everyday-life.describing-a-household-problem]}
+  - {lexical_item: word.adult, topics: [everyday-life.talking-about-close-relationships]}
+  - {lexical_item: word.basket, topics: [everyday-life.buying-basic-items]}
+  - {lexical_item: word.beach, topics: [everyday-life.comparing-leisure-options]}
+  - {lexical_item: word.cashier, topics: [everyday-life.buying-basic-items]}
+  - {lexical_item: word.conversation, topics: [everyday-life.starting-everyday-small-talk]}
+  - {lexical_item: word.couple, topics: [everyday-life.talking-about-close-relationships]}
+  - {lexical_item: word.gaming, topics: [everyday-life.talking-about-likes-and-free-time]}
+  - {lexical_item: word.joke, topics: [everyday-life.starting-everyday-small-talk]}
+  - {lexical_item: word.key, topics: [everyday-life.locating-household-items]}
+  - {lexical_item: word.menu, topics: [everyday-life.reading-a-simple-menu]}
+  - {lexical_item: word.mess, topics: [everyday-life.describing-a-household-problem]}
+  - {lexical_item: word.milestone, topics: [written-production.project-update, written-production.delivery-plan]}
+  - {lexical_item: word.mold, topics: [everyday-life.describing-a-household-problem]}
+  - {lexical_item: word.observed, topics: [written-production.bug-report]}
+  - {lexical_item: word.paraphrase, topics: [written-production.paraphrase-summary]}
+  - {lexical_item: word.recovery, topics: [everyday-life.talking-about-wellbeing-habits]}
+  - {lexical_item: word.rent, topics: [everyday-life.describing-home]}
+  - {lexical_item: word.swimming, topics: [everyday-life.comparing-leisure-options]}
+  - {lexical_item: word.timeline, topics: [written-production.incident-timeline]}
+  - {lexical_item: word.tourist, topics: [everyday-life.changing-a-travel-plan]}
+  - {lexical_item: word.transfer, topics: [everyday-life.confirming-a-payment]}
+  - {lexical_item: word.waiter, topics: [everyday-life.ordering-food]}
+  - {lexical_item: word.wellbeing, topics: [everyday-life.talking-about-wellbeing-habits]}
+  - {lexical_item: word.withdrawal, topics: [everyday-life.asking-about-a-charge]}
+
+  - {lexical_item: abbreviation.afaik, topics: [everyday-online-informal.common-abbreviations]}
+  - {lexical_item: abbreviation.tbh, topics: [everyday-online-informal.common-abbreviations, everyday-online-informal.casual-neutral-rephrasing]}
+  - {lexical_item: abbreviation.tl-dr, topics: [everyday-online-informal.common-abbreviations, everyday-online-informal.thread-summary]}
+  - {lexical_item: informal.all-good, topics: [everyday-online-informal.basic-chat-response, everyday-online-informal.casual-neutral-rephrasing]}
+  - {lexical_item: informal.fair-enough, topics: [reading.casual-reactions, everyday-online-informal.casual-neutral-rephrasing]}
+  - {lexical_item: informal.give-me-a-sec, topics: [everyday-online-informal.casual-neutral-request, everyday-online-informal.casual-neutral-rephrasing]}
+  - {lexical_item: informal.sure-thing, topics: [everyday-online-informal.basic-chat-response, everyday-online-informal.casual-neutral-rephrasing]}
+  - {lexical_item: reaction.are-you-sure, topics: [reading.casual-reactions, grammar.basic-questions.clarification]}
+  - {lexical_item: reaction.it-depends, topics: [reading.casual-reactions, everyday-life.expressing-an-opinion-with-reasons]}
+  - {lexical_item: reaction.lets-see, topics: [reading.casual-reactions, everyday-online-informal.basic-chat-response]}
+  - {lexical_item: reaction.lucky-you, topics: [reading.casual-reactions]}
+  - {lexical_item: reaction.me-neither, topics: [reading.casual-reactions]}
+  - {lexical_item: reaction.me-too, topics: [reading.casual-reactions]}
+  - {lexical_item: reaction.really, topics: [reading.casual-reactions]}
+  - {lexical_item: reaction.seriously, topics: [reading.casual-reactions, everyday-online-informal.tone-recognition]}
+  - {lexical_item: reaction.thats-too-bad, topics: [reading.casual-reactions]}
+  - {lexical_item: reaction.works-for-me, topics: [reading.casual-reactions, everyday-life.making-simple-plans-with-friends]}
+  - {lexical_item: slang.gonna, topics: [reading.stable-slang, everyday-online-informal.casual-neutral-rephrasing]}
+  - {lexical_item: slang.gotta, topics: [reading.stable-slang, everyday-online-informal.casual-neutral-rephrasing]}
+  - {lexical_item: slang.kinda, topics: [reading.stable-slang, everyday-online-informal.casual-neutral-rephrasing]}
+  - {lexical_item: slang.sorta, topics: [reading.stable-slang, everyday-online-informal.casual-neutral-rephrasing]}
+  - {lexical_item: slang.wanna, topics: [reading.stable-slang, everyday-online-informal.casual-neutral-rephrasing]}
+  - {lexical_item: lexeme.buy, topics: [everyday-life.buying-basic-items]}
+  - {lexical_item: lexeme.feel, topics: [everyday-life.describing-symptoms, everyday-life.talking-about-wellbeing-habits]}
+  - {lexical_item: lexeme.meet, topics: [everyday-life.starting-everyday-small-talk]}
+  - {lexical_item: phrasal-verb.carry-out, topics: [reading.everyday-phrasal-verbs, us-tech.work-process-routine]}
+  - {lexical_item: phrasal-verb.check-in, topics: [reading.everyday-phrasal-verbs, written-interaction.current-status]}
+  - {lexical_item: phrasal-verb.check-out, topics: [reading.everyday-phrasal-verbs, everyday-life.checking-in-at-accommodation]}
+  - {lexical_item: phrasal-verb.cool-down, topics: [reading.everyday-phrasal-verbs, everyday-life.talking-about-wellbeing-habits]}
+  - {lexical_item: phrasal-verb.dress-up, topics: [reading.everyday-phrasal-verbs, everyday-life.talking-about-likes-and-free-time]}
+  - {lexical_item: phrasal-verb.drop-off, topics: [reading.everyday-phrasal-verbs, everyday-life.changing-a-travel-plan]}
+  - {lexical_item: phrasal-verb.eat-out, topics: [reading.everyday-phrasal-verbs, everyday-life.ordering-food]}
+  - {lexical_item: phrasal-verb.fall-apart, topics: [reading.everyday-phrasal-verbs, everyday-life.describing-a-household-problem]}
+  - {lexical_item: phrasal-verb.go-away, topics: [reading.everyday-phrasal-verbs, everyday-life.talking-about-the-weekend]}
+  - {lexical_item: phrasal-verb.hold-on, topics: [reading.everyday-phrasal-verbs, everyday-online-informal.basic-chat-response]}
+  - {lexical_item: phrasal-verb.move-in, topics: [reading.everyday-phrasal-verbs, everyday-life.describing-home]}
+  - {lexical_item: phrasal-verb.move-out, topics: [reading.everyday-phrasal-verbs, everyday-life.describing-home]}
+  - {lexical_item: phrasal-verb.pay-back, topics: [reading.everyday-phrasal-verbs, everyday-life.confirming-a-payment]}
+  - {lexical_item: phrasal-verb.point-out, topics: [reading.everyday-phrasal-verbs, written-interaction.suggestion-feedback]}
+  - {lexical_item: phrasal-verb.save-up, topics: [reading.everyday-phrasal-verbs, everyday-life.comparing-service-options]}
+  - {lexical_item: phrasal-verb.stay-over, topics: [reading.everyday-phrasal-verbs, everyday-life.booking-accommodation]}
+  - {lexical_item: phrasal-verb.tidy-up, topics: [reading.everyday-phrasal-verbs, everyday-life.sharing-household-chores]}
+  - {lexical_item: phrasal-verb.turn-off, topics: [reading.everyday-phrasal-verbs, reading.household-instructions]}
+  - {lexical_item: phrasal-verb.turn-on, topics: [reading.everyday-phrasal-verbs, reading.household-instructions]}
+  - {lexical_item: phrasal-verb.warm-up, topics: [reading.everyday-phrasal-verbs, everyday-life.talking-about-wellbeing-habits]}
+  - {lexical_item: phrasal-verb.wash-up, topics: [reading.everyday-phrasal-verbs, everyday-life.sharing-household-chores]}
+  - {lexical_item: slang.cheesy, topics: [reading.stable-slang, everyday-life.expressing-an-opinion-with-reasons]}
+  - {lexical_item: slang.comfy, topics: [reading.stable-slang, everyday-life.describing-home]}
+  - {lexical_item: slang.cop, topics: [reading.stable-slang, reading.short-news-item]}
+  - {lexical_item: slang.lame, topics: [reading.stable-slang, everyday-life.expressing-an-opinion-with-reasons]}
+  - {lexical_item: slang.nuts, topics: [reading.stable-slang, everyday-online-informal.tone-recognition]}
+
+  - {lexical_item: word.accident, topics: [everyday-life.explaining-an-everyday-incident]}
+  - {lexical_item: word.action, topics: [written-production.project-update, written-interaction.next-steps]}
+  - {lexical_item: word.agreement, topics: [written-interaction.follow-up, everyday-life.agreeing-on-the-next-step]}
+  - {lexical_item: word.allergy, topics: [everyday-life.describing-symptoms, everyday-life.asking-for-medical-help]}
+  - {lexical_item: word.although, topics: [grammar.connectors.cause-contrast]}
+  - {lexical_item: word.apple, topics: [everyday-life.talking-about-food-preferences]}
+  - {lexical_item: word.bag, topics: [everyday-life.buying-basic-items]}
+  - {lexical_item: word.bandage, topics: [everyday-life.asking-for-medical-help, everyday-life.giving-basic-health-advice]}
+  - {lexical_item: word.bill, topics: [everyday-life.paying-at-a-cafe, everyday-life.understanding-a-bill]}
+  - {lexical_item: word.breakfast, topics: [everyday-life.talking-about-food-preferences]}
+  - {lexical_item: word.cancellation, topics: [everyday-life.changing-a-travel-plan]}
+  - {lexical_item: word.cat, topics: [everyday-life.talking-about-likes-and-free-time]}
+  - {lexical_item: word.change, topics: [everyday-life.asking-about-price-and-quantity]}
+  - {lexical_item: word.check-in, topics: [everyday-life.checking-in-at-accommodation]}
+  - {lexical_item: word.checkout, topics: [everyday-life.checking-in-at-accommodation]}
+  - {lexical_item: word.classmate, topics: [everyday-life.introducing-family-and-friends]}
+  - {lexical_item: word.configuration, topics: [written-production.system-overview]}
+  - {lexical_item: word.correctness, topics: [us-tech.requirement-rationale]}
+  - {lexical_item: word.cost, topics: [everyday-life.comparing-service-options]}
+  - {lexical_item: word.crack, topics: [everyday-life.describing-a-household-problem]}
+  - {lexical_item: word.deposit, topics: [everyday-life.booking-accommodation, everyday-life.asking-about-a-charge]}
+  - {lexical_item: word.designer, topics: [written-interaction.self-introduction, us-tech.role-responsibilities]}
+  - {lexical_item: word.dinner, topics: [everyday-life.talking-about-food-preferences, everyday-life.ordering-food]}
+  - {lexical_item: word.dog, topics: [everyday-life.talking-about-likes-and-free-time]}
+  - {lexical_item: word.editable, topics: [us-tech.requirement-rationale]}
+  - {lexical_item: word.emergency, topics: [everyday-life.asking-for-medical-help, everyday-life.requesting-a-repair]}
+  - {lexical_item: word.exercise, topics: [everyday-life.talking-about-wellbeing-habits]}
+  - {lexical_item: word.exhibition, topics: [everyday-life.comparing-leisure-options]}
+  - {lexical_item: word.fault, topics: [everyday-life.describing-a-household-problem]}
+  - {lexical_item: word.folder, topics: [us-tech.describe-system-data, reading.documentation-scan]}
+  - {lexical_item: word.fridge, topics: [everyday-life.locating-household-items]}
+  - {lexical_item: word.grandfather, topics: [everyday-life.introducing-family-and-friends]}
+  - {lexical_item: word.grandmother, topics: [everyday-life.introducing-family-and-friends]}
+  - {lexical_item: word.guest, topics: [everyday-life.introducing-family-and-friends, everyday-life.describing-home]}
+  - {lexical_item: word.impact, topics: [written-production.bug-report, us-tech.incident-report-basics]}
+  - {lexical_item: word.installation, topics: [us-tech.process-troubleshooting]}
+  - {lexical_item: word.invoice, topics: [everyday-life.understanding-a-bill]}
+  - {lexical_item: word.key-card, topics: [everyday-life.checking-in-at-accommodation]}
+  - {lexical_item: word.later, topics: [grammar.future-time-expressions, written-interaction.next-steps]}
+  - {lexical_item: word.laundry, topics: [everyday-life.sharing-household-chores]}
+  - {lexical_item: word.lunch, topics: [everyday-life.talking-about-food-preferences, everyday-life.ordering-food]}
+  - {lexical_item: word.misread, topics: [word-formation.opposite-mis-dis, written-production.paraphrase-summary]}
+  - {lexical_item: word.mistype, topics: [word-formation.opposite-mis-dis, written-production.bug-report]}
+  - {lexical_item: word.museum, topics: [everyday-life.comparing-leisure-options]}
+  - {lexical_item: word.news, topics: [everyday-life.starting-everyday-small-talk, reading.short-news-item]}
+  - {lexical_item: word.outgrow, topics: [word-formation.surpass-out]}
+  - {lexical_item: word.outnumber, topics: [word-formation.surpass-out]}
+  - {lexical_item: word.outrun, topics: [word-formation.surpass-out]}
+  - {lexical_item: word.oven, topics: [everyday-life.locating-household-items]}
+  - {lexical_item: word.overheat, topics: [word-formation.degree-over-under, us-tech.process-troubleshooting]}
+  - {lexical_item: word.overload, topics: [word-formation.degree-over-under, us-tech.process-troubleshooting]}
+  - {lexical_item: word.oversleep, topics: [word-formation.degree-over-under, everyday-life.talking-about-home-routines]}
+  - {lexical_item: word.painting, topics: [everyday-life.comparing-leisure-options]}
+  - {lexical_item: word.pet, topics: [everyday-life.talking-about-likes-and-free-time]}
+  - {lexical_item: word.photography, topics: [everyday-life.talking-about-likes-and-free-time]}
+  - {lexical_item: word.potato, topics: [everyday-life.talking-about-food-preferences]}
+  - {lexical_item: word.price, topics: [everyday-life.asking-about-price-and-quantity]}
+  - {lexical_item: word.provider, topics: [everyday-life.resolving-a-service-problem]}
+  - {lexical_item: word.readiness, topics: [word-formation.quality-suffix, written-interaction.project-risk-update]}
+  - {lexical_item: word.reading, topics: [everyday-life.talking-about-likes-and-free-time]}
+  - {lexical_item: word.receipt, topics: [everyday-life.asking-about-a-charge, everyday-life.buying-basic-items]}
+  - {lexical_item: word.recommendation, topics: [written-production.reasoned-recommendation]}
+  - {lexical_item: word.reconnect, topics: [word-formation.repeat-re, us-tech.process-troubleshooting]}
+  - {lexical_item: word.reinstall, topics: [word-formation.repeat-re, us-tech.process-troubleshooting]}
+  - {lexical_item: word.relative, topics: [everyday-life.talking-about-close-relationships]}
+  - {lexical_item: word.reload, topics: [word-formation.repeat-re, us-tech.process-troubleshooting]}
+  - {lexical_item: word.rename, topics: [word-formation.repeat-re, us-tech.describe-system-data]}
+  - {lexical_item: word.reopen, topics: [word-formation.repeat-re, us-tech.process-troubleshooting]}
+  - {lexical_item: word.repeat, topics: [written-interaction.request-clarification]}
+  - {lexical_item: word.replacement, topics: [everyday-life.resolving-a-service-problem]}
+  - {lexical_item: word.reschedule, topics: [word-formation.repeat-re, everyday-life.changing-a-travel-plan]}
+  - {lexical_item: word.resend, topics: [word-formation.repeat-re, written-interaction.follow-up]}
+  - {lexical_item: word.return, topics: [everyday-life.buying-basic-items]}
+  - {lexical_item: word.screen, topics: [reading.interface-data-description]}
+  - {lexical_item: word.shower, topics: [everyday-life.talking-about-home-routines]}
+  - {lexical_item: word.size, topics: [everyday-life.buying-basic-items]}
+  - {lexical_item: word.stain, topics: [everyday-life.describing-a-household-problem]}
+  - {lexical_item: word.story, topics: [everyday-life.starting-everyday-small-talk]}
+  - {lexical_item: word.suddenly, topics: [grammar.past-time-sequencing, everyday-life.explaining-an-everyday-incident]}
+  - {lexical_item: word.suitable, topics: [written-production.option-comparison]}
+  - {lexical_item: word.support, topics: [everyday-life.resolving-a-service-problem]}
+  - {lexical_item: word.symptom, topics: [everyday-life.describing-symptoms]}
+  - {lexical_item: word.tester, topics: [written-interaction.self-introduction, us-tech.role-responsibilities]}
+  - {lexical_item: word.towel, topics: [everyday-life.locating-household-items]}
+  - {lexical_item: word.treatment, topics: [everyday-life.asking-for-medical-help]}
+  - {lexical_item: word.underestimate, topics: [word-formation.degree-over-under, written-interaction.project-risk-update]}
+  - {lexical_item: word.uninstall, topics: [word-formation.negation-un, us-tech.process-troubleshooting]}
+  - {lexical_item: word.unlock, topics: [word-formation.negation-un, us-tech.process-troubleshooting]}
+  - {lexical_item: word.unpack, topics: [word-formation.negation-un, everyday-life.checking-in-at-accommodation]}
+  - {lexical_item: word.unread, topics: [word-formation.negation-un, reading.documentation-scan]}
+  - {lexical_item: word.usefulness, topics: [word-formation.quality-suffix]}
+  - {lexical_item: word.vacation, topics: [everyday-life.talking-about-likes-and-free-time]}
+  - {lexical_item: word.wifi, topics: [everyday-life.asking-about-facilities, everyday-life.reporting-an-accommodation-problem]}
