@@ -335,3 +335,146 @@ topics:
       soft: [reading.evidence-quality]
     dimensions: [recognition, transfer]
     lexicon: []
+
+  - id: toefl-reading.academic-main-idea
+    cefr: B2
+    track: toefl-reading-writing
+    module: b2.6-toefl-academic-reading
+    can_do: "State the central idea of an academic passage and distinguish it from its topic and most memorable detail."
+    advisory_prerequisites:
+      strong: [toefl-reading.skimming-main-purpose, reading.argument-structure]
+      soft: [reading.compare-source-claims]
+    dimensions: [recognition, transfer]
+    lexicon: []
+
+  - id: toefl-reading.supporting-evidence
+    cefr: B2
+    track: toefl-reading-writing
+    module: b2.6-toefl-academic-reading
+    can_do: "Locate the evidence that supports a stated academic claim and reject a detail that is true but irrelevant to that claim."
+    advisory_prerequisites:
+      strong: [toefl-reading.academic-main-idea, reading.evidence-quality]
+      soft: [toefl-reading.scanning-key-detail]
+    dimensions: [recognition, transfer]
+    lexicon: []
+
+  - id: toefl-reading.inference
+    cefr: B2
+    track: toefl-reading-writing
+    module: b2.6-toefl-academic-reading
+    can_do: "Draw an inference that is required by an academic passage while excluding conclusions that are merely plausible."
+    advisory_prerequisites:
+      strong: [written-production.fact-inference, reading.author-stance-bias]
+      soft: [toefl-reading.supporting-evidence]
+    dimensions: [recognition, transfer]
+    lexicon: []
+
+  - id: toefl-reading.rhetorical-purpose
+    cefr: B2
+    track: toefl-reading-writing
+    module: b2.6-toefl-academic-reading
+    can_do: "Explain why an author includes a definition, example, contrast, concession, or qualification at a particular point."
+    advisory_prerequisites:
+      strong: [reading.argument-structure, reading.author-stance-bias]
+      soft: [toefl-reading.paragraph-organization]
+    dimensions: [recognition, transfer]
+    lexicon: []
+
+  - id: toefl-reading.text-organization
+    cefr: B2
+    track: toefl-reading-writing
+    module: b2.6-toefl-academic-reading
+    can_do: "Trace how an academic passage organizes stages, categories, causes, comparisons, or competing explanations across paragraphs."
+    advisory_prerequisites:
+      strong: [toefl-reading.paragraph-organization, reading.argument-structure]
+      soft: [toefl-reading.academic-main-idea]
+    dimensions: [recognition, transfer]
+    lexicon: []
+
+  - id: toefl-reading.contextual-word-completion
+    cefr: B2
+    track: toefl-reading-writing
+    module: b2.6-toefl-academic-reading
+    can_do: "Complete partially missing words in a short text by combining syntax, word formation, collocation, and global meaning."
+    advisory_prerequisites:
+      strong: [toefl-reading.vocabulary-context, word-formation.academic-nominalization]
+      soft: [toefl-writing.sentence-building]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: []
+
+  - id: toefl-writing.source-note-taking
+    cefr: B2
+    track: toefl-reading-writing
+    module: b2.7-toefl-synthesis-and-discussion
+    can_do: "Turn a short source text into selective notes that preserve claims, evidence, relationships, and attribution without copying sentences."
+    advisory_prerequisites:
+      strong: [toefl-reading.scanning-key-detail, written-production.multi-source-synthesis]
+      soft: [toefl-reading.text-organization]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: []
+
+  - id: toefl-writing.integrated-synthesis
+    cefr: B2
+    track: toefl-reading-writing
+    module: b2.7-toefl-synthesis-and-discussion
+    can_do: "Use notes from multiple short texts to write an attributed synthesis organized by ideas rather than by source order."
+    advisory_prerequisites:
+      strong: [toefl-writing.source-note-taking, written-production.multi-source-synthesis]
+      soft: [reading.compare-source-claims]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: toefl-writing.thesis-position
+    cefr: B2
+    track: toefl-reading-writing
+    module: b2.7-toefl-synthesis-and-discussion
+    can_do: "Formulate a specific, defensible thesis that directly answers an academic prompt and controls the response that follows."
+    advisory_prerequisites:
+      strong: [toefl-writing.discussion-claim-reason, written-production.technical-position-paper]
+      soft: [reading.argument-structure]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: toefl-writing.argument-development
+    cefr: B2
+    track: toefl-reading-writing
+    module: b2.7-toefl-synthesis-and-discussion
+    can_do: "Develop an academic argument with relevant reasoning, a concrete example, and an explicit link back to the thesis."
+    advisory_prerequisites:
+      strong: [toefl-writing.thesis-position, reading.evidence-quality]
+      soft: [written-production.counterargument-response]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: toefl-writing.cohesion
+    cefr: B2
+    track: toefl-reading-writing
+    module: b2.7-toefl-synthesis-and-discussion
+    can_do: "Create cohesion across an academic response with logical progression, accurate reference, and transitions that express real relationships."
+    advisory_prerequisites:
+      strong: [toefl-reading.paragraph-organization, written-production.multi-source-synthesis]
+      soft: [grammar.connectors.cause-contrast]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: toefl-writing.academic-register
+    cefr: B2
+    track: toefl-reading-writing
+    module: b2.7-toefl-synthesis-and-discussion
+    can_do: "Maintain a clear academic register by controlling stance, precision, attribution, and unnecessary informality."
+    advisory_prerequisites:
+      strong: [reading.author-stance-bias, word-formation.academic-nominalization]
+      soft: [everyday-online-informal.tone-repair]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: toefl-writing.discussion-response
+    cefr: B2
+    track: toefl-reading-writing
+    module: b2.7-toefl-synthesis-and-discussion
+    can_do: "Respond to another participant's academic viewpoint by extending, qualifying, or challenging it with an original supported contribution."
+    advisory_prerequisites:
+      strong: [toefl-writing.discussion-claim-reason, written-production.counterargument-response]
+      soft: [written-interaction.decision-challenge]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []

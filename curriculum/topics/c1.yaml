@@ -1,0 +1,55 @@
+topics:
+  - id: toefl-reading.dense-passage-synthesis
+    cefr: C1
+    track: toefl-reading-writing
+    module: c1.5-toefl-advanced-performance
+    can_do: "Synthesize the controlling argument, qualifications, and key evidence of a dense academic passage without flattening its internal distinctions."
+    advisory_prerequisites:
+      strong: [toefl-reading.academic-main-idea, written-production.multi-source-synthesis]
+      soft: [toefl-reading.text-organization]
+    dimensions: [recognition, transfer]
+    lexicon: []
+
+  - id: toefl-reading.implicit-qualification
+    cefr: C1
+    track: toefl-reading-writing
+    module: c1.5-toefl-advanced-performance
+    can_do: "Recognize an author's implicit limitation, reservation, or degree of commitment when it is distributed across a passage."
+    advisory_prerequisites:
+      strong: [toefl-reading.inference, reading.author-stance-bias]
+      soft: [toefl-reading.rhetorical-purpose]
+    dimensions: [recognition, transfer]
+    lexicon: []
+
+  - id: toefl-writing.source-integration
+    cefr: C1
+    track: toefl-reading-writing
+    module: c1.5-toefl-advanced-performance
+    can_do: "Integrate source material into an academic response with accurate attribution, proportionate paraphrase, and a clear distinction from the writer's own analysis."
+    advisory_prerequisites:
+      strong: [toefl-writing.integrated-synthesis, toefl-writing.source-note-taking]
+      soft: [toefl-writing.academic-register]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: toefl-writing.counterargument-nuance
+    cefr: C1
+    track: toefl-reading-writing
+    module: c1.5-toefl-advanced-performance
+    can_do: "Address a strong counterargument by conceding its valid scope, identifying its limit, and refining the thesis accordingly."
+    advisory_prerequisites:
+      strong: [toefl-writing.discussion-response, written-production.counterargument-response]
+      soft: [toefl-writing.thesis-position]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: toefl-writing.timed-response-control
+    cefr: C1
+    track: toefl-reading-writing
+    module: c1.5-toefl-advanced-performance
+    can_do: "Plan, draft, and revise a complete academic response within a fixed time while preserving task fulfillment, structure, and language control."
+    advisory_prerequisites:
+      strong: [toefl-writing.argument-development, toefl-writing.discussion-response]
+      soft: [toefl-writing.academic-email]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []

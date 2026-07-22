@@ -1,0 +1,11 @@
+id: b2.6-toefl-academic-reading
+level: B2
+can_do: "Read focused academic passages for central ideas, evidence, inference, rhetorical purpose, organization, and contextual word completion."
+tracks: [toefl-reading-writing]
+topics:
+  - toefl-reading.academic-main-idea
+  - toefl-reading.supporting-evidence
+  - toefl-reading.inference
+  - toefl-reading.rhetorical-purpose
+  - toefl-reading.text-organization
+  - toefl-reading.contextual-word-completion

@@ -320,3 +320,91 @@ topics:
       soft: [reading.personal-message]
     dimensions: [recognition, transfer]
     lexicon: []
+
+  - id: toefl-reading.skimming-main-purpose
+    cefr: B1
+    track: toefl-reading-writing
+    module: b1.7-toefl-reading-writing-foundations
+    can_do: "Skim a concise academic or campus text to identify its main purpose before examining supporting details."
+    advisory_prerequisites:
+      strong: [reading.main-idea-details, reading.connected-technical-explanation]
+      soft: [reading.short-news-item]
+    dimensions: [recognition, transfer]
+    lexicon: []
+
+  - id: toefl-reading.scanning-key-detail
+    cefr: B1
+    track: toefl-reading-writing
+    module: b1.7-toefl-reading-writing-foundations
+    can_do: "Scan a focused academic or campus text for the specific fact, condition, or relationship required by a question."
+    advisory_prerequisites:
+      strong: [reading.documentation-scan, reading.multi-step-service-information]
+      soft: [reading.ticket-basics]
+    dimensions: [recognition, transfer]
+    lexicon: []
+
+  - id: toefl-reading.paraphrase-match
+    cefr: B1
+    track: toefl-reading-writing
+    module: b1.7-toefl-reading-writing-foundations
+    can_do: "Match a sentence or short passage to an accurate paraphrase without being misled by repeated words."
+    advisory_prerequisites:
+      strong: [written-production.paraphrase-summary, reading.connected-technical-explanation]
+      soft: [written-production.paraphrase-expression]
+    dimensions: [recognition, transfer]
+    lexicon: []
+
+  - id: toefl-reading.vocabulary-context
+    cefr: B1
+    track: toefl-reading-writing
+    module: b1.7-toefl-reading-writing-foundations
+    can_do: "Infer the intended meaning of an unfamiliar or polysemous word from its local academic context."
+    advisory_prerequisites:
+      strong: [reading.idioms-in-context, word-formation.quality-suffix]
+      soft: [word-formation.surpass-out]
+    dimensions: [recognition, transfer]
+    lexicon: []
+
+  - id: toefl-reading.paragraph-organization
+    cefr: B1
+    track: toefl-reading-writing
+    module: b1.7-toefl-reading-writing-foundations
+    can_do: "Identify how a paragraph moves from its controlling idea through explanation, example, contrast, or result."
+    advisory_prerequisites:
+      strong: [reading.main-idea-details, written-production.cause-effect-explanation]
+      soft: [grammar.connectors.cause-contrast]
+    dimensions: [recognition, transfer]
+    lexicon: []
+
+  - id: toefl-writing.sentence-building
+    cefr: B1
+    track: toefl-reading-writing
+    module: b1.7-toefl-reading-writing-foundations
+    can_do: "Arrange supplied words and phrases into a complete grammatical sentence whose meaning fits the surrounding context."
+    advisory_prerequisites:
+      strong: [grammar.basic-word-order, grammar.relative-clauses.specification]
+      soft: [grammar.connectors.cause-contrast]
+    dimensions: [recognition, controlled_production, transfer]
+    lexicon: []
+
+  - id: toefl-writing.academic-email
+    cefr: B1
+    track: toefl-reading-writing
+    module: b1.7-toefl-reading-writing-foundations
+    can_do: "Write a focused email for an academic or campus situation that fulfills the request, gives relevant context, and proposes a clear next step."
+    advisory_prerequisites:
+      strong: [written-interaction.formal-service-request, written-interaction.project-risk-update]
+      soft: [written-interaction.polite-request]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []
+
+  - id: toefl-writing.discussion-claim-reason
+    cefr: B1
+    track: toefl-reading-writing
+    module: b1.7-toefl-reading-writing-foundations
+    can_do: "Contribute a relevant position to an academic discussion and support it with a clear reason and a concrete example."
+    advisory_prerequisites:
+      strong: [everyday-life.expressing-an-opinion-with-reasons, written-production.reasoned-recommendation]
+      soft: [written-interaction.respectful-disagreement]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    lexicon: []

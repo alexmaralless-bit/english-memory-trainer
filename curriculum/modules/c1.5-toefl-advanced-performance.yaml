@@ -1,0 +1,10 @@
+id: c1.5-toefl-advanced-performance
+level: C1
+can_do: "Interpret dense qualified academic texts and produce nuanced, source-aware responses reliably under time constraints."
+tracks: [toefl-reading-writing]
+topics:
+  - toefl-reading.dense-passage-synthesis
+  - toefl-reading.implicit-qualification
+  - toefl-writing.source-integration
+  - toefl-writing.counterargument-nuance
+  - toefl-writing.timed-response-control
