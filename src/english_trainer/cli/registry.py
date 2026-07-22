@@ -105,6 +105,11 @@ _COMMANDS: tuple[CommandDescriptor, ...] = (
     CommandDescriptor(
         name="review.due", owner_module="scheduler", mutating=False, requires_idempotency_key=False
     ),
+    # Closing computes the single terminal ReviewOutcome (evidence 4.3): the
+    # engine grades, the agent only marks done.
+    CommandDescriptor(
+        name="review.close", owner_module="evidence", mutating=True, requires_idempotency_key=True
+    ),
 )
 
 

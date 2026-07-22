@@ -186,6 +186,8 @@ def compose_plan(
     presented_by_bucket: dict[str, int] | None = None,
     presented_steps: list[dict[str, Any]] | None = None,
     keep_step_ids: dict[str, str] | None = None,
+    review_candidates: list[Candidate] | None = None,
+    keep_review_ids: dict[str, str] | None = None,
     new_id: NewId,
 ) -> dict[str, Any]:
     """Compose the plan slice of the ``session_plan`` aggregate state.
@@ -206,6 +208,7 @@ def compose_plan(
     presented_by_bucket = presented_by_bucket or {}
     presented_steps = presented_steps or []
     keep_step_ids = keep_step_ids or {}
+    keep_review_ids = keep_review_ids or {}
     presented_seconds = sum(presented_by_bucket.values())
     capacity = total_seconds - presented_seconds  # DeliveryLedger.remaining_seconds
 
@@ -219,9 +222,29 @@ def compose_plan(
         bucket: max(0, (total_seconds * bp) // 10000 - presented_by_bucket.get(bucket, 0))
         for bucket, bp in floors.items()
     }
+    # review_max is a CAP on the effective total, not a floor (4.2 [RR2-6]).
+    review_cap = max(
+        0, (total_seconds * shares["review_max"]) // 10000 - presented_by_bucket.get("review", 0)
+    )
+
+    def _review_sort(candidates: list[Candidate]) -> list[Candidate]:
+        # Canonical order within a class (4.4 step 4): risk first, then stake,
+        # then deferral age, then cost, then the stable tie-breakers.
+        return sorted(
+            candidates,
+            key=lambda c: (
+                int(c.get("retrievability_ppm", 0)),
+                int(c.get("stake_rank", 2)),
+                -int(c.get("deferral_count", 0)),
+                int(c["expected_seconds"]),
+                str(c.get("target_ref") or ""),
+                str(c.get("dimension") or ""),
+                c["candidate_id"],
+            ),
+        )
 
     pool: dict[str, list[Candidate]] = {
-        "review": [],  # scheduler-owned; empty is the honest current state
+        "review": _review_sort(list(review_candidates or [])),
         "growth": _canonical_sort(growth_candidates(program, presented_targets, policy)),
         "integration": [],  # needs a learned target from scoring
         "choice": _canonical_sort(choice_candidates(policy)),
@@ -282,10 +305,26 @@ def compose_plan(
                 f"{bucket.upper()}_CANDIDATES_EXHAUSTED" if admitted_any else f"NO_{bucket.upper()}_STEP_FITS"
             )
 
-    # Step 7: review by class up to review_max. No scheduler yet => nothing to
-    # classify; the empty backlog is recorded, not silently skipped.
+    # Step 7: review by urgency class, critical -> important -> normal ->
+    # maintenance, until review_max or the budget stops it. First-fit; the
+    # empty backlog is recorded, not silently skipped.
     if not pool["review"]:
         waivers.append("NO_REVIEW_CANDIDATE")
+    else:
+        admitted_review = False
+        for klass in ("critical", "important", "normal", "maintenance"):
+            for candidate in [c for c in list(pool["review"]) if c.get("urgency_class") == klass]:
+                cost = candidate["expected_seconds"]
+                if planned["review"] + cost > review_cap:
+                    continue  # the cap bounds effective review share [RR2-6]
+                if cost + planned_total() > capacity:
+                    continue
+                if not quota_allows(candidate):
+                    continue
+                admit(candidate)
+                admitted_review = True
+        if not admitted_review:
+            waivers.append("NO_REVIEW_STEP_FITS")
 
     # Step 8: top-up passes in the fixed order, one pass each, first-fit.
     for bucket in FLOOR_ORDER:
@@ -337,6 +376,17 @@ def compose_plan(
             step["target_ref"] = candidate["target_ref"]
             step["dimension"] = candidate["dimension"]
             step["is_first_exposure"] = True
+        elif candidate["kind"] == "review":
+            # A review step MUST carry its assignment id (4.3a) -- without it
+            # the delivered task cannot be closed through `trainer review
+            # close` and finish cannot check the pending set. Stable across
+            # revisions for surviving candidates, like step_id.
+            step["target_ref"] = candidate["target_ref"]
+            step["dimension"] = candidate["dimension"]
+            step["review_assignment_id"] = keep_review_ids.get(candidate["candidate_id"]) or new_id()
+            step["urgency_class"] = candidate["urgency_class"]
+            step["criteria_ref"] = candidate.get("criteria_ref")
+            step["schedule_epoch"] = candidate.get("schedule_epoch")
         elif candidate["kind"] == "choice":
             step["target_ref"] = candidate.get("target_ref")
             step["topic_hint"] = candidate.get("topic_hint")
@@ -361,7 +411,7 @@ def compose_plan(
 def step_targets(step: dict[str, Any]) -> list[dict[str, Any]]:
     """The ``targets[]`` of a step for ``STEP_PRESENTED`` (control 4.6): every
     (target_ref, dimension) pair; empty only for target-less choice."""
-    if step["kind"] == "growth":
+    if step["kind"] in ("growth", "review"):
         return [{"target_ref": step["target_ref"], "dimension": step["dimension"]}]
     if step["kind"] == "choice" and step.get("target_ref"):
         return [{"target_ref": step["target_ref"], "dimension": None}]

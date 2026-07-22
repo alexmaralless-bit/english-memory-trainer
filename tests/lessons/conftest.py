@@ -91,6 +91,32 @@ def store(tmp_path: Path) -> Iterator[EventStore]:
 
 
 @pytest.fixture
+def program_payload() -> dict[str, Any]:
+    return PROGRAM
+
+
+@pytest.fixture
+def full_registry(store: EventStore, clock: FixedClock) -> PolicyRegistry:
+    """Everything the review loop needs: curriculum + generation + control +
+    scheduler + scoring (the review bucket lives only with the last two)."""
+    reg = PolicyRegistry(store._conn, clock)
+    reg.register("curriculum", "v-test", PROGRAM)
+    reg.activate("curriculum", "v-test")
+    reg.register("generation", "generation@1", {"policy_id": "generation@1"})
+    reg.activate("generation", "generation@1")
+    reg.register("control", "control@1", control_payload())
+    reg.activate("control", "control@1")
+    for name, kind, version in (
+        ("scheduler-v1.yaml", "scheduler", "scheduler@1"),
+        ("scoring-v1.yaml", "scoring", "scoring@1"),
+    ):
+        payload = yaml.safe_load((REPO / "curriculum" / "policies" / name).read_text("utf-8"))
+        reg.register(kind, version, payload)
+        reg.activate(kind, version)
+    return reg
+
+
+@pytest.fixture
 def registry(store: EventStore, clock: FixedClock) -> PolicyRegistry:
     reg = PolicyRegistry(store._conn, clock)
     reg.register("curriculum", "v-test", PROGRAM)

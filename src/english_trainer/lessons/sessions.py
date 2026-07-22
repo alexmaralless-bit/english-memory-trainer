@@ -108,6 +108,63 @@ def get_plan(store: EventStore, session_id: str) -> tuple[str, dict[str, Any], i
     return plan_id, state, revision
 
 
+def review_candidates_for(
+    store: EventStore,
+    registry: PolicyRegistry,
+    pinned: dict[str, str],
+    program: dict[str, Any],
+    control_policy: dict[str, Any],
+    clock: Clock,
+) -> list[dict[str, Any]]:
+    """Classified due/overdue review candidates for composition (control 4.4
+    step 1: due backlog from the scheduler, classified per 4.5). Empty when
+    the scheduler or scoring policy is not registered yet -- the review bucket
+    then stays honestly empty."""
+    if "scheduler" not in pinned or "scoring" not in pinned:
+        return []
+    from english_trainer.control.classify import classify_review_candidates
+    from english_trainer.scheduler.engine import due_backlog
+
+    backlog = due_backlog(
+        store,
+        registry.resolve_pinned("scheduler", pinned["scheduler"]),
+        registry.resolve_pinned("scoring", pinned["scoring"]),
+        program,
+        clock.now(),
+    )
+    return classify_review_candidates(backlog, program, control_policy)
+
+
+def save_new_review_assignments(uow: Any, plan_state: dict[str, Any], session_id: str, now_iso: str) -> None:
+    """Create the pending ReviewAssignment aggregate for every review step of
+    the plan that does not have one yet (start and replan UoWs)."""
+    from english_trainer.evidence.reviews import REVIEW_AGGREGATE
+
+    for step in plan_state["steps"]:
+        if step.get("kind") != "review":
+            continue
+        review_id = str(step["review_assignment_id"])
+        if uow.get_aggregate(REVIEW_AGGREGATE, review_id) is not None:
+            continue
+        uow.save_aggregate(
+            REVIEW_AGGREGATE,
+            review_id,
+            {
+                "review_id": review_id,
+                "session_id": session_id,
+                "step_id": step["step_id"],
+                "target_ref": step["target_ref"],
+                "dimension": step["dimension"],
+                "urgency_class": step.get("urgency_class"),
+                "criteria_ref": step.get("criteria_ref"),
+                "schedule_epoch": step.get("schedule_epoch"),
+                "status": "pending",
+                "created_at": now_iso,
+            },
+            expected_revision=0,
+        )
+
+
 def presented_targets(store: EventStore) -> frozenset[str]:
     """Every target that has EVER had a ``STEP_PRESENTED`` (control 4.3):
     ``is_first_exposure`` is defined by the fact of delivery, not by knowledge
@@ -221,6 +278,7 @@ def start_session(
         mode=mode,
         total_seconds=total_seconds,
         presented_targets=presented_targets(store),
+        review_candidates=review_candidates_for(store, registry, pinned, program, policy, clock),
         new_id=lambda: new_ulid(clock, random_source),
     )
     plan_state: dict[str, Any] = {
@@ -243,6 +301,7 @@ def start_session(
             expected_revision=0,
         )
         uow.save_aggregate(PLAN_AGGREGATE, manifest["session_plan_id"], plan_state, expected_revision=0)
+        save_new_review_assignments(uow, plan_state, session_id, clock.now().isoformat())
         pointer = uow.get_aggregate(POINTER_AGGREGATE, POINTER_ID)
         if pointer is None:
             uow.save_aggregate(POINTER_AGGREGATE, POINTER_ID, {"session_id": session_id}, expected_revision=0)
@@ -323,6 +382,7 @@ def _close_session(
     close_pending_reason: str | None = None,
 ) -> DomainEvent:
     from english_trainer.evidence.attempts import close_pending_attempts, pending_attempts
+    from english_trainer.evidence.reviews import close_pending_assignments, pending_assignments
 
     found = get_session(store, session_id)
     if found is None:
@@ -338,20 +398,35 @@ def _close_session(
         # terminalization see one consistent state (lessons 0.5).
         if require_empty_pending:
             pending = pending_attempts(store, session_id)
-            if pending:
-                names = ", ".join(str(a.get("attempt_id")) for a in pending[:3])
+            open_reviews = pending_assignments(store, session_id)
+            if pending or open_reviews:
+                parts = []
+                if pending:
+                    names = ", ".join(str(a.get("attempt_id")) for a in pending[:3])
+                    parts.append(f"{len(pending)} unassessed attempt(s) ({names})")
+                if open_reviews:
+                    names = ", ".join(str(a.get("review_id")) for a in open_reviews[:3])
+                    parts.append(
+                        f"{len(open_reviews)} open review assignment(s) ({names}) -- "
+                        "`trainer review close` each one"
+                    )
                 raise SessionPrecondition(
-                    f"session {session_id} has {len(pending)} attempt(s) without a terminal "
-                    f"disposition ({names}{'…' if len(pending) > 3 else ''}): finish REQUIRES an "
-                    "empty pending set and never auto-closes [P0-2]. Objective attempts assess on "
-                    "record; rubric assessment for open answers arrives with scoring (2.3). "
-                    "Use `trainer session abandon` to close without contribution."
+                    f"session {session_id} has a non-empty pending set: {'; '.join(parts)}. "
+                    "Finish REQUIRES an empty pending set and never auto-closes [P0-2]; "
+                    "use `trainer session abandon` to close without contribution."
                 )
         closed_attempts: list[str] = []
+        closed_assignments: list[str] = []
         if close_pending_reason is not None:
             # ABANDONED converts the pending set (0.5): recorded attempts close
-            # without scoring contribution, atomically with the terminalization.
+            # without scoring contribution, pending review assignments become
+            # INSUFFICIENT_EVIDENCE(reason=abandoned) -- the scheduler holds
+            # the interval and books a retry, never a punishment. Atomic with
+            # the terminalization.
             closed_attempts = close_pending_attempts(
+                store, uow, clock, random_source, session_id, reason=close_pending_reason, actor=actor
+            )
+            closed_assignments = close_pending_assignments(
                 store, uow, clock, random_source, session_id, reason=close_pending_reason, actor=actor
             )
         uow.save_aggregate(
@@ -368,6 +443,7 @@ def _close_session(
         payload: dict[str, Any] = {"session_id": session_id, "from_status": status}
         if close_pending_reason is not None:
             payload["closed_attempts"] = closed_attempts
+            payload["closed_assignments"] = closed_assignments
         (event,) = uow.append(
             [
                 make_event(

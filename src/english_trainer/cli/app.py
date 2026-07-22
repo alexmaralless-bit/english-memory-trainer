@@ -56,6 +56,7 @@ from english_trainer.curriculum.service import (
 )
 from english_trainer.curriculum.validate import validate_program
 from english_trainer.evidence.attempts import EvidencePrecondition, list_notes, record_attempt
+from english_trainer.evidence.reviews import close_review
 from english_trainer.kernel.check import database_check
 from english_trainer.kernel.clock import SystemClock, SystemRandom
 from english_trainer.kernel.encoding import payload_hash
@@ -1530,6 +1531,75 @@ def review_due(
         for c in backlog[:15]
     ]
     _emit(success_envelope("review.due", corr, data), human, fmt, ExitCode.OK)
+
+
+@review_app.command("close")
+def review_close(
+    review: Annotated[str, typer.Option("--review", help="review_assignment_id from the delivered step.")],
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    session: _SessionOpt = None,
+    idempotency_key: Annotated[
+        str | None, typer.Option("--idempotency-key", help="Required with --format json (cli 4.3).")
+    ] = None,
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Close a review assignment: the ENGINE computes the single terminal
+    ReviewOutcome from the assignment's assessed attempts -- the agent marks
+    done, never grades. Idempotent re-close returns the prior outcome."""
+    corr = _correlation(correlation_id)
+    _require_key("review.close", corr, fmt, idempotency_key)
+    layout = resolve_layout(root)
+    try:
+        with open_storage(layout) as storage:
+            session_id = _resolve_session("review.close", corr, fmt, storage, session)
+            request_hash = payload_hash(
+                {"command": "review.close", "session": session_id, "review": review, "root": str(layout.root)}
+            )
+            if idempotency_key:
+                with UnitOfWork(storage.store, SystemClock()) as uow:
+                    prior = uow.check_idempotency(idempotency_key, request_hash)
+                if isinstance(prior, CachedResult):
+                    _emit(
+                        success_envelope("review.close", corr, {**dict(prior.value), "cached": True}),
+                        ["review close (cached result)"],
+                        fmt,
+                        ExitCode.OK,
+                    )
+            result = close_review(storage.store, SystemClock(), SystemRandom(), session_id, review)
+            if idempotency_key:
+                with UnitOfWork(storage.store, SystemClock()) as uow:
+                    uow.record_result(idempotency_key, request_hash, result)
+        _emit(
+            success_envelope("review.close", corr, {**result, "cached": False}),
+            [
+                f"review {review}: {result['outcome']}"
+                + (f" ({result['reason']})" if result.get("reason") else "")
+            ],
+            fmt,
+            ExitCode.OK,
+        )
+    except IdempotencyConflict as exc:
+        error = ErrorPayload(
+            error_code="IDEMPOTENCY_CONFLICT",
+            message=str(exc),
+            allowed_actions=["review close --idempotency-key <fresh-key>"],
+            next_action="review close --idempotency-key <fresh-key>",
+        )
+        _emit(failure_envelope("review.close", corr, error), [f"error: {exc}"], fmt, ExitCode.CONFLICT)
+    except (EvidencePrecondition, SessionPrecondition) as exc:
+        error = ErrorPayload(
+            error_code=exc.code,
+            message=str(exc),
+            allowed_actions=["session status", "attempt record", "review due"],
+            next_action="session status",
+        )
+        _emit(
+            failure_envelope("review.close", corr, error),
+            [f"error: {exc}"],
+            fmt,
+            ExitCode.PRECONDITION_FAILED,
+        )
 
 
 @app.command("status")

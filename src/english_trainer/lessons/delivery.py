@@ -25,9 +25,9 @@ retrofitting it.
 ``replan`` builds ``composition_revision + 1`` from the *remainder* [RR2-6]:
 residual floors are ``max(0, floor(total * bp / 10000) - presented[bucket])``,
 presented steps pass through verbatim, surviving candidates keep their step
-ids, and a new ``SESSION_COMPOSED`` rides the same UoW. Review assignments do
-not exist yet, so there is nothing to cancel -- ``evidence.cancel_review``
-attaches with the evidence increment.
+AND review-assignment ids, and a new ``SESSION_COMPOSED`` rides the same UoW.
+An unpresented review step dropped from the new revision is CANCELLED in that
+transaction -- terminal for the finish gate, never a learning outcome [RR2-4].
 """
 
 from __future__ import annotations
@@ -37,6 +37,7 @@ from typing import Any
 from english_trainer.control.compose import compose_plan, step_targets
 from english_trainer.control.errors import PlanVersionConflict
 from english_trainer.control.policy import CONTROL_KIND, PRODUCTION_STEP_TYPES, require_valid
+from english_trainer.evidence.reviews import cancel_assignment
 from english_trainer.kernel.clock import Clock, RandomSource
 from english_trainer.kernel.encoding import payload_hash
 from english_trainer.kernel.envelopes import make_event
@@ -57,6 +58,8 @@ from english_trainer.lessons.sessions import (
     get_session,
     plan_summary,
     presented_targets,
+    review_candidates_for,
+    save_new_review_assignments,
 )
 
 
@@ -276,10 +279,12 @@ def replan_session(
     active_safety_version, _ = registry.resolve_active("curriculum")
 
     kept = [step for step in plan_state["steps"] if step["presented_at"] is not None]
-    keep_step_ids = {
-        str(step["candidate_id"]): str(step["step_id"])
-        for step in plan_state["steps"]
-        if step["presented_at"] is None
+    unpresented = [step for step in plan_state["steps"] if step["presented_at"] is None]
+    keep_step_ids = {str(step["candidate_id"]): str(step["step_id"]) for step in unpresented}
+    keep_review_ids = {
+        str(step["candidate_id"]): str(step["review_assignment_id"])
+        for step in unpresented
+        if step.get("kind") == "review"
     }
     composed = compose_plan(
         program=program,
@@ -291,6 +296,8 @@ def replan_session(
         presented_by_bucket={k: int(v) for k, v in plan_state["ledger"]["presented"].items()},
         presented_steps=kept,
         keep_step_ids=keep_step_ids,
+        review_candidates=review_candidates_for(store, registry, pinned, program, policy, clock),
+        keep_review_ids=keep_review_ids,
         new_id=lambda: new_ulid(clock, random_source),
     )
     new_revision = int(plan_state["composition_revision"]) + 1
@@ -306,6 +313,25 @@ def replan_session(
     }
     with UnitOfWork(store, clock) as uow:
         uow.save_aggregate(PLAN_AGGREGATE, plan_id, new_state, expected_revision=plan_revision)
+        # Replan leaves no orphans and creates no debt (4.2 [RR2-4]): an
+        # unpresented review step dropped from the new revision is CANCELLED
+        # in the same UoW -- terminal, but never a learning outcome. Steps
+        # newly admitted get their pending assignments here too.
+        surviving_review_ids = {
+            str(step["review_assignment_id"]) for step in new_state["steps"] if step.get("kind") == "review"
+        }
+        for step in unpresented:
+            if step.get("kind") == "review" and str(step["review_assignment_id"]) not in surviving_review_ids:
+                cancel_assignment(
+                    store,
+                    uow,
+                    clock,
+                    random_source,
+                    str(step["review_assignment_id"]),
+                    reason="replanned",
+                    actor=actor,
+                )
+        save_new_review_assignments(uow, new_state, session_id, clock.now().isoformat())
         uow.append(
             [
                 make_event(

@@ -9,6 +9,7 @@ CLI commands to lessons and their behavior to control, and this split mirrors
 that assignment without an import cycle.
 """
 
+from english_trainer.control.classify import CLASS_ORDER, classify_review_candidates
 from english_trainer.control.compose import compose_plan, step_targets
 from english_trainer.control.errors import (
     BudgetTooSmall,
@@ -26,12 +27,14 @@ from english_trainer.control.policy import (
 )
 
 __all__ = [
+    "CLASS_ORDER",
     "CONTROL_KIND",
     "PRODUCTION_STEP_TYPES",
     "BudgetTooSmall",
     "ControlPolicyInvalid",
     "NoCandidates",
     "PlanVersionConflict",
+    "classify_review_candidates",
     "compose_plan",
     "mode_shares",
     "require_valid",
