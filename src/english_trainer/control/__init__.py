@@ -34,6 +34,7 @@ from english_trainer.control.errors import (
     ProbePrecondition,
     SignalInvalid,
 )
+from english_trainer.control.metrics import metrics
 from english_trainer.control.policy import (
     CONTROL_KIND,
     PRODUCTION_STEP_TYPES,
@@ -95,6 +96,7 @@ __all__ = [
     "is_excluded",
     "is_long_break",
     "is_saturated",
+    "metrics",
     "mode_shares",
     "observed_availability",
     "qualified_candidates",

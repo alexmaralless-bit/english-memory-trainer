@@ -69,6 +69,7 @@ from english_trainer.control.errors import (
     ProbePrecondition,
     SignalInvalid,
 )
+from english_trainer.control.metrics import metrics as policy_metrics
 from english_trainer.control.policy import CONTROL_KIND, require_valid
 from english_trainer.control.signals import record_signal
 from english_trainer.control.trace import DecisionTraceUnavailable, explain
@@ -2418,6 +2419,72 @@ def availability_set_command(
         )
         _emit(
             failure_envelope("availability.set", corr, error),
+            [f"error: {exc}"],
+            fmt,
+            ExitCode.PRECONDITION_FAILED,
+        )
+
+
+@app.command("metrics")
+def metrics_command(
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Policy quality metrics and report-only hysteresis alerts."""
+    corr = _correlation(correlation_id)
+    layout = resolve_layout(root)
+    if not layout.db.exists():
+        error = ErrorPayload(
+            error_code="DATABASE_NOT_FOUND",
+            message=f"{layout.db} does not exist.",
+            allowed_actions=["init"],
+            next_action="init",
+        )
+        _emit(
+            failure_envelope("metrics", corr, error),
+            ["error: not initialized"],
+            fmt,
+            ExitCode.NOT_FOUND,
+        )
+    try:
+        with open_storage(layout) as storage:
+            registry = PolicyRegistry(storage._conn, SystemClock())
+            _, control_policy = registry.resolve_active(CONTROL_KIND)
+            control_policy = require_valid(control_policy)
+            backlog: list[dict[str, Any]] = []
+            try:
+                _, scheduler_policy = registry.resolve_active(SCHEDULER_KIND)
+                _, scoring_policy = registry.resolve_active(SCORING_KIND)
+                _, program = registry.resolve_active("curriculum")
+                backlog = due_backlog(
+                    storage.store,
+                    require_valid_scheduler(scheduler_policy),
+                    require_valid_scoring(scoring_policy),
+                    program,
+                    SystemClock().now(),
+                )
+            except KernelError:
+                # Neighbor state is optional for this read: backlog metrics say
+                # no-data while event-only/session metrics remain available.
+                backlog = []
+            result = policy_metrics(storage.store, control_policy, SystemClock().now(), backlog=backlog)
+        active_alerts = [alert["id"] for alert in result["alerts"] if alert["active"]]
+        human = [
+            f"policy metrics as of {result['as_of']}",
+            *[f"  {item['id']}: {item['value']}" for item in result["metrics"]],
+            f"  active alerts: {', '.join(active_alerts) if active_alerts else 'none'}",
+        ]
+        _emit(success_envelope("metrics", corr, result), human, fmt, ExitCode.OK)
+    except KernelError as exc:
+        error = ErrorPayload(
+            error_code=exc.code,
+            message=str(exc),
+            allowed_actions=["curriculum activate", "doctor"],
+            next_action="curriculum activate",
+        )
+        _emit(
+            failure_envelope("metrics", corr, error),
             [f"error: {exc}"],
             fmt,
             ExitCode.PRECONDITION_FAILED,

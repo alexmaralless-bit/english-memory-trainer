@@ -193,6 +193,7 @@ def due_backlog(
                 "schedule_epoch": state.schedule_epoch,
                 "interval_days": state.interval_days,
                 "next_review_at": state.next_review_at.isoformat(),
+                "first_due_at": state.next_review_at.isoformat(),
                 "curriculum_priority_rank": priority_rank.get(target_ref, 10_000_000),
                 "knowledge_state": target_scores.knowledge_state if target_scores else "NEW",
             }

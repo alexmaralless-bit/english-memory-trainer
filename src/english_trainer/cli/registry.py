@@ -106,6 +106,7 @@ _COMMANDS: tuple[CommandDescriptor, ...] = (
         name="availability.set", owner_module="control", mutating=True, requires_idempotency_key=True
     ),
     CommandDescriptor(name="why", owner_module="control", mutating=False, requires_idempotency_key=False),
+    CommandDescriptor(name="metrics", owner_module="control", mutating=False, requires_idempotency_key=False),
     # Scoring (0.4 part 2): scores are a pure fold over the event log -- both
     # commands are read-only by construction.
     CommandDescriptor(

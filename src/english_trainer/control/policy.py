@@ -171,6 +171,38 @@ def validate_control_policy(payload: dict[str, Any]) -> list[str]:
         boost = availability.get("reentry_critical_boost_bp")
         if type(boost) is int and boost > 10000:
             errors.append("control.availability.reentry_critical_boost_bp: must be <= 10000")
+
+    alerts = payload.get("alerts")
+    alert_fields = (
+        "review_share_enter_bp",
+        "review_share_exit_bp",
+        "review_share_consecutive",
+        "growth_rate_enter_bp",
+        "growth_rate_exit_bp",
+        "growth_rate_consecutive",
+    )
+    if not isinstance(alerts, dict):
+        errors.append("control.alerts: missing or not a mapping")
+    else:
+        for field in alert_fields:
+            value = alerts.get(field)
+            if type(value) is not int or value < 0:
+                errors.append(f"control.alerts.{field}: must be a non-negative integer")
+        if (
+            type(alerts.get("review_share_enter_bp")) is int
+            and type(alerts.get("review_share_exit_bp")) is int
+            and alerts["review_share_enter_bp"] <= alerts["review_share_exit_bp"]
+        ):
+            errors.append("control.alerts: review enter must be greater than exit")
+        if (
+            type(alerts.get("growth_rate_enter_bp")) is int
+            and type(alerts.get("growth_rate_exit_bp")) is int
+            and alerts["growth_rate_enter_bp"] >= alerts["growth_rate_exit_bp"]
+        ):
+            errors.append("control.alerts: growth enter must be less than exit")
+        for field in ("review_share_consecutive", "growth_rate_consecutive"):
+            if type(alerts.get(field)) is int and alerts[field] <= 0:
+                errors.append(f"control.alerts.{field}: must be positive")
     return errors
 
 
