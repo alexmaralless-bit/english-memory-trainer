@@ -61,6 +61,7 @@ stateDiagram-v2
 - **MUST — `required_skills` явные** [0.7, бриф §11]: требуемые навыки перечисляются в манифесте, а не подбираются средой по описанию. Implicit invocation делает поведение невоспроизводимым между Codex и Claude Code и лишает [[scoring]] §5 базы для Tutor Compliance: обязательство «вызван нужный skill нужной версии» проверяемо только против явного списка.
 - **MUST — разрешимость при старте, синхронно до commit** [P0-Q1]: порядок строгий — `resolve` всех `required_skills` → открытие UoW → commit → `SESSION_STARTED`. `start` падает **до** создания сессии, если хоть одна затребованная версия неразрешима ([[adapters]] §4.2). Post-commit consumer `SESSION_STARTED` в [[adapters]] — только аудит уже обеспеченного инварианта, а не сама проверка: проверка по событию произошла бы после создания сессии и нарушила бы это MUST.
 - **MUST — safety не пинится** [П.3]: манифест закрепляет структуру, pinned policies и generation policy, но не safety; `production_eligible` проверяется по active policy при `session next`, bank reuse и `EXERCISE_RENDERED`. `STEP_PRESENTED` без `EXERCISE_RENDERED` восстановим на `resume`: тот же шаг возвращается с той же generation directive. `EXERCISE_RENDERED` без попытки ученика — не evidence и становится reusable только после приёма в банк.
+- **MUST — rubric resolution [П.5, PD-5 A/PD-6 B]**: до сохранения open exercise движок разрешает explicit `rubric:<profile_id>` либо exact default по `(step_type, dimension)` только против rubric-версии из Session Manifest. Конкретный versionless ref, `pinned_rubric_version`, `exercise_form`, applicable criteria, machine-check instances/target surfaces/requirements и `rubric_input_hash` входят в immutable `EXERCISE_RENDERED`/content hash. Unknown/incompatible ref или `PinnedPolicyUnavailable` отклоняет render без active/alias fallback. Specialized writing/source-integration требует explicit profile. Для unrendered targeted `free_conversation` exact default разрешается при assessment и материализуется в assessment event; broad fallback запрещён.
 
 ## 5. Публичный API и события
 
@@ -114,6 +115,7 @@ stateDiagram-v2
 
 ## История изменений
 
+- **2026-07-22 (2)**: П.5 применена [PD-2026-07-22] — rubric resolution при рендере: explicit/exact-default ref против pinned rubric-версии манифеста, rubric_input_hash в EXERCISE_RENDERED, без active/alias fallback; unrendered conversation — default при assessment.
 - **2026-07-22**: фазовые теги `[mvp]`/`[post-mvp]` сняты [PD-2026-07-22]: спека описывает одну цель продукта, порядок и статус — только в roadmap (Принцип 4).
 - **2026-07-21**: синхронизированы терминальная диспозиция `ReviewOutcome | CANCELLED` и единый CAS-протокол `plan_version` для `peek → next/replan`.
 - **2026-07-20 (0.7)**: добавлен §4b — содержимое Session Manifest и **`required_skills`** с версиями. Поле требовалось брифом §11 и [[adapters]], но нигде не было объявлено: манифест упоминался только как «pinned versions». Без него Tutor Compliance ([[scoring]] §5) не имеет базы для обязательства «вызван нужный skill нужной версии».

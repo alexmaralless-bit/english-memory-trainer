@@ -156,19 +156,32 @@ def fold_scores(store: EventStore, policy: dict[str, Any]) -> dict[str, TargetSt
             if state.stability_days is None:
                 state.stability_days = initial_stability
 
-            correct = bool(payload.get("correct"))
             origin = str(payload.get("origin") or "session")
             basis = str(payload.get("assessment_basis") or "objective_check")
-            if not correct:
-                # Monotonicity (canon 2.1): no negative delta from a single
-                # miss; decreases arrive only via a confirmed REGRESSION
-                # outcome. control_probe adds nothing negative by the same rule.
-                continue
+            if basis == "objective_check":
+                # Objective checks are binary: an incorrect answer gives no
+                # delta (monotonicity, canon 2.1 -- decreases arrive only via
+                # a confirmed REGRESSION outcome), a correct one full quality.
+                if not bool(payload.get("correct")):
+                    continue
+                quality = _ONE
+            else:
+                # Graduated rubric quality (P.5 PD-2 B): the engine-computed
+                # score_ppm scales the positive delta. Collapsing it back to a
+                # Boolean would make the four-level scale fictitious. Zero
+                # quality adds nothing; it is never a punishment.
+                quality = context.divide(
+                    context.create_decimal(int(payload.get("score_ppm") or 0)), Decimal(1_000_000)
+                )
+                if quality <= 0:
+                    continue
 
             weight = weights.get(dimension, weights["recognition"])
             hints = int(payload.get("hints") or 0)
             independence = _clamp(_ONE - hint_penalty * Decimal(hints), hint_floor, _ONE)
-            delta = context.multiply(context.multiply(base_delta, weight), independence)
+            delta = context.multiply(
+                context.multiply(context.multiply(base_delta, weight), independence), quality
+            )
 
             session_id = str(payload.get("session_id") or "")
             granted = state.session_gain.get(session_id, _ZERO)

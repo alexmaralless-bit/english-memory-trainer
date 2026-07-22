@@ -30,7 +30,7 @@
 - **MUST NOT**: считать упоминание темы, пассивное согласие или пересказ правила за evidence.
 - **MUST — семантическая идентичность и multi-credit** [PD-2026-07-19, ревью C-3]: idempotency key защищает только транспорт; помимо него evidence имеет семантическую идентичность (hash source-span ответа/цитаты, item-exposure ID упражнения). Один source-span засчитывается **не более чем раз** на пару (LearningTarget, dimension); переотправка того же ответа/цитаты/упражнения с новыми ключами и session ID не создаёт нового evidence. Правила admissibility, независимости (новый prompt/контекст/интервал) и multi-credit allocation — механизм в 0.4/0.2 ([[../OPEN]] OPEN-7).
 - **MUST — классификацию считает движок** [ревью A-1/C-1]: агент передаёт только проверяемые наблюдения (raw answer, контекст, hints, rubric-observations); итоговый review outcome вычисляет движок по versioned policy. Клиентская готовая классификация запрещена.
-- **MUST — observation ссылается на span, не готовый вердикт** [rereview C-R1]: rubric-observation обязана ссылаться на конкретный rubric-criterion и на span/error в raw answer, а не быть булевым флагом `criterion_satisfied=true`. Определены machine-checkable часть (проверяется кодом), subjective часть (под cap/trust) и consistency-check; observation, не подтверждаемая raw answer, **отклоняется** (`rejected` + audit-reason; ветки «помечается и всё равно учитывается» нет — [[../modules/evidence]] §4.1). Точная schema — 0.4 ([[../OPEN]] OPEN-7).
+- **MUST — observation ссылается на span, не готовый вердикт** [rereview C-R1; П.5, PD-2026-07-22]: rubric-observation обязана ссылаться на конкретный rubric-criterion, атомарный finding-code и точный UTF-8 span/error в raw answer, а не содержать `criterion_satisfied`, level, score, `correct` или outcome. Machine-checkable часть исполняет движок по закрытым opcodes; subjective часть остаётся под cap/trust и проходит consistency-check. Observation, не подтверждаемая raw answer/rendered snapshot/pinned rubric, **отклоняется** (`rejected` + audit-reason; ветки «помечается и всё равно учитывается» нет — [[../modules/evidence]] §4.1). Criterion levels и integer `score_ppm` вычисляет только движок.
 - **Trust model [PD-2026-07-19, rereview C-R3]**: агент — **trusted reporter** raw_answer (агент и есть интерфейс; единственный ученик — сам пользователь). Допущение зафиксировано явно; границы аудита — через Tutor Compliance Score. Untrusted-захват user-turn на adapter boundary (`provider_message_id` + content hash + span) — в продукте, не ломающий evidence-модель; порядок — [[../roadmap]].
 - **MUST — объяснение агента ≠ evidence** [rereview C-R2]: evidence появляется только при отдельном сохранённом learner response. Целенаправленное объяснение единицы агентом даёт enrollment, но не evidence знания.
 - Источники evidence:
@@ -42,7 +42,7 @@
 - **Правило rubric-оценок [PD-2026-07-19]**:
   - **MUST**: вклад rubric-оценок в Mastery ограничен (cap — численно в 0.4);
   - **MUST**: повышение состояния на основании rubric-evidence требует повторяемости минимум в двух **независимых** сессиях; «разная сессия» сама по себе не доказывает независимость (независимость — по новому контексту/интервалу, ревью C-2, [[../OPEN]] OPEN-7);
-  - **MUST**: одна оценка агента не меняет состояние темы и не двигает уровень.
+  - **MUST**: один engine-computed rubric AttemptAssessment из subjective observations не меняет состояние темы и не двигает уровень; promotion требует принятой повторяемости/independence. Неполное или отклонённое observation coverage даёт non-contributing `insufficient_evidence`, а не learner score zero.
 
 ## 4. Mastery, Stability, Retrievability
 
@@ -161,6 +161,7 @@ stateDiagram-v2
 
 ## История изменений
 
+- **2026-07-22 (2)**: П.5 применена [PD-2026-07-22] — observation несёт atomic finding code + точный span; levels/score считает только движок; неполное покрытие → non-contributing insufficient_evidence, не ноль ученика.
 - **2026-07-22**: фазовые теги `[mvp]`/`[post-mvp]` сняты [PD-2026-07-22]: спека описывает одну цель продукта, порядок и статус — только в roadmap (Принцип 4). untrusted-захват — в продукте (порядок в roadmap); «полный placement из брифа» упразднён как отдельная цель; FSRS — MAY.
 - **2026-07-19 (5)**: rereview — три оси состояния, REVIEW_DUE устранён (D-R1); AT_RISK только подтверждённый/overdue (D-R2); AttemptAssessment vs ReviewOutcome (A-R1); observation ссылается на span (C-R1); trusted-reporter модель (C-R3); объяснение агента ≠ evidence (C-R2); half-step → OPEN-8 (E-R4); per-skill self-report (A-R3); day-attribution streak (G-R3); re-entry порог → OPEN-18 (J-R3).
 - **2026-07-19 (4)**: red-team триаж — evidence семантическая идентичность и вычисление классификации движком (C-1/C-3); restore-on-confirm, review-status слой и тотальность переходов (D-1/D-2/D-3); CEFR coverage и unknown-as-unknown (C-4); Informal→CEFR через contribution_scope с cap (C-5); self_reported_level отдельно (A-2); placement потолок ACTIVE и SHOULD по времени (D-9/E-9); UTC+IANA и streak по локальной дате (G-10); XP award-once (A-6/C-7/E-6); `strong/soft`, mastery_criteria→0.4, банк SHOULD (A-4/E-1/E-4).

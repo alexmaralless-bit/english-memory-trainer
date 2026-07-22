@@ -1,9 +1,10 @@
 # P.5 concept: `rubric@1` for open-response assessment
 
-> Status: concept proposal; no product decision in this document is accepted yet.
+> Status: approved [PD-2026-07-22].
 > Date: 2026-07-22.
 > Canon status: this file is not canon. No `wiki/`, `src/`, `tests/`, or curriculum content is changed.
-> Decision gate: phase-2 authoring starts only after the owner explicitly chooses every PD fork below.
+> Owner approval: PD-1 C, PD-2 B, PD-3 A, PD-4 C, PD-5 A, PD-6 B, PD-7 C.
+> Phase-2 rule: canon changes remain patch proposals until independently verified and applied by the owner.
 
 ## 1. Purpose and boundaries
 
@@ -205,12 +206,16 @@ span_ref:
   span_hash: "sha256:..."
 topic_error_ref: null
 distractor_error_ref: null
+source_fact_ref: null
 ```
 
 Offsets are proposed as a half-open range over the exact UTF-8 bytes of saved `raw_answer`; the engine verifies boundaries,
 hash, non-empty content, and ownership by that attempt. This avoids provider-dependent UTF-16/code-point indexing. For an
 absence finding, the policy may require a whole-answer span plus the relevant rendered requirement. An error ref may
 supplement, but never replace, `rubric_criterion_ref` and the raw-answer anchor.
+
+An academic source-integration observation additionally uses `source_fact_ref` to identify a fact in the saved authored
+exercise source snapshot. The engine rejects refs outside that exact rendered exercise; no third-party excerpt is stored.
 
 The engine rejects an observation when any of these holds:
 
@@ -352,9 +357,10 @@ This section illustrates semantics; it does not pre-accept profile granularity o
 The integrated profile must assess only against project-authored source material saved in the exercise snapshot. It must not
 store or evaluate third-party excerpts.
 
-## 9. PD forks requiring owner approval
+## 9. PD forks and owner decisions
 
-No recommendation below is a decision until the owner explicitly approves it.
+The owner approved the recommended set on 2026-07-22. The original options and trade-offs remain below as decision
+provenance; the selected option is recorded in the approval block and §10.
 
 ### PD-1: Rubric granularity
 
@@ -552,9 +558,10 @@ Together these choices yield a compositional but bounded policy: concrete task-f
 report spans and atomic findings; a closed machine layer checks only what code can prove; the engine maps all accepted facts
 to uniform graduated levels and integer PPM; missing assessment coverage never becomes a false low score.
 
-## 11. Phase-2 artifacts after approval
+## 11. Phase-2 artifacts authorized by approval
 
-No item in this section is authorized until all PD forks are approved.
+The 2026-07-22 owner approval authorizes the artifacts below under the accepted PD set. Canon edits remain proposals for
+independent verification and owner application.
 
 ### Direct artifact
 

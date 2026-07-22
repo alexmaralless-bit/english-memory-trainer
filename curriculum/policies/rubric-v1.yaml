@@ -1,0 +1,724 @@
+# rubric@1 -- deterministic assessment of saved open learner responses.
+# The agent reports raw_answer plus concrete finding/span observations. The
+# engine validates those facts, computes criterion levels, and emits the only
+# authoritative AttemptAssessment. Integers and strings only: YAML floats are
+# forbidden throughout this policy.
+policy_id: "rubric@1"
+schema_version: 1
+status: "accepted"
+decision_record: "PD-2026-07-22"
+canonical_encoding: "kernel.canonical_json_v1"
+numeric_value_rule: "integers_and_decimal_strings_only"
+own_text_rule: "All criterion labels, descriptors, examples, feedback, and machine-check inputs MUST be authored for this project. Third-party rubric wording and excerpts are forbidden."
+
+pd_decisions:
+  - "PD-1:C:shared_criterion_catalog_plus_task_family_profiles"
+  - "PD-2:B:uniform_four_level_criteria_aggregated_to_integer_score_ppm"
+  - "PD-3:A:closed_versioned_machine_check_opcode_list"
+  - "PD-4:C:policy_owned_error_severity_with_one_criterion_local_score_effect"
+  - "PD-5:A:versionless_internal_ref_with_external_pinned_rubric_version"
+  - "PD-6:B:exact_step_type_dimension_defaults_materialized_before_scoring"
+  - "PD-7:C:incomplete_required_coverage_settles_as_non_contributing_insufficient_evidence"
+
+decimal_context:
+  precision: 28
+  rounding: "ROUND_HALF_EVEN"
+
+reference_namespace:
+  profile_prefix: "rubric:"
+  profile_form: "rubric:<profile_id>"
+  criterion_form: "rubric:<profile_id>#criterion:<criterion_id>"
+  version_source: "pinned_rubric_version"
+  unknown_ref: "reject"
+  missing_pinned_version: "PinnedPolicyUnavailable"
+  active_fallback: "forbidden"
+  alias_fallback: "forbidden"
+  topic_error_form: "topic-error:<topic_id>#sha256:<64-lowercase-hex>"
+  topic_error_digest: "sha256(kernel.canonical_json_v1({topic_id,typical_error:NFC(exact_text)}))"
+
+assessment_contract:
+  assessment_basis: "rubric"
+  authoritative_classifier: "engine"
+  agent_role: "trusted_reporter_of_raw_answer_and_concrete_observations"
+  score_scale_ppm: 1000000
+  profile_weight_total_units: 10000
+  criterion_reducer: "finding_units_with_severity_ceiling_v1"
+  criterion_processing_order: "criterion_id_asc"
+  observation_processing_order:
+    - "rubric_criterion_ref_asc"
+    - "finding_code_asc"
+    - "span_start_utf8_asc"
+    - "span_end_utf8_asc"
+    - "error_ref_asc"
+  agent_forbidden_fields:
+    - "criterion_satisfied"
+    - "criterion_level"
+    - "criterion_score"
+    - "score_ppm"
+    - "correct"
+    - "review_outcome"
+    - "mastery_delta"
+    - "error_severity"
+    - "error_penalty"
+  invalid_observation_disposition: "rejected_non_contributing_with_stable_audit_reason"
+  machine_result_precedence: "subjective_conflict_is_rejected"
+  rubric_basis_even_when_machine_only: "true"
+
+span_contract:
+  encoding: "utf8"
+  interval: "half_open"
+  required_fields:
+    - "start_utf8"
+    - "end_utf8"
+    - "span_hash"
+  hash_form: "sha256:<64-lowercase-hex>"
+  hash_input: "exact_raw_answer_utf8_slice"
+  boundary_rule: "offsets_must_be_valid_utf8_code_point_boundaries"
+  nonempty_default: "required"
+  absence_finding_anchor: "whole_raw_answer_plus_rendered_requirement_ref"
+
+observation_schema:
+  subjective_required_fields:
+    - "rubric_criterion_ref"
+    - "finding_code"
+    - "span_ref"
+  subjective_optional_fields:
+    - "topic_error_ref"
+    - "distractor_error_ref"
+    - "requirement_ref"
+    - "source_fact_ref"
+  machine_result_fields:
+    - "rubric_criterion_ref"
+    - "check_id"
+    - "operation"
+    - "configuration_hash"
+    - "result"
+    - "finding_code"
+    - "span_ref"
+  machine_reporter: "engine"
+  duplicate_identity_fields:
+    - "rubric_criterion_ref"
+    - "finding_code"
+    - "span_ref"
+    - "topic_error_ref"
+    - "distractor_error_ref"
+    - "requirement_ref"
+    - "source_fact_ref"
+
+observation_rejection_reasons:
+  - "rubric_ref_unavailable"
+  - "criterion_ref_unavailable"
+  - "criterion_not_in_profile"
+  - "finding_code_not_allowed"
+  - "span_out_of_bounds"
+  - "span_not_utf8_boundary"
+  - "span_empty"
+  - "span_hash_mismatch"
+  - "error_ref_unavailable"
+  - "requirement_ref_unavailable"
+  - "source_fact_ref_unavailable"
+  - "rendered_context_missing"
+  - "duplicate_observation"
+  - "contradicts_machine_result"
+  - "criterion_not_applicable"
+  - "agent_supplied_classification"
+
+level_scale:
+  "0":
+    level_ppm: 0
+    label: "absent"
+    descriptor: "The saved response contains no admissible evidence for this criterion."
+  "1":
+    level_ppm: 333333
+    label: "limited"
+    descriptor: "The saved response contains limited usable evidence for this criterion."
+  "2":
+    level_ppm: 666667
+    label: "adequate"
+    descriptor: "The saved response contains adequate evidence with a remaining local limitation."
+  "3":
+    level_ppm: 1000000
+    label: "strong"
+    descriptor: "The saved response contains clear and sufficient evidence for this criterion."
+
+criterion_reducer:
+  algorithm_id: "finding_units_with_severity_ceiling_v1"
+  accepted_positive_finding: "add_declared_units_once_per_distinct_allowed_occurrence"
+  raw_level: "min(3,sum(accepted_positive_finding.units))"
+  no_positive_finding: 0
+  accepted_negative_finding: "resolve_error_family_and_apply_policy_owned_level_ceiling"
+  multiple_negative_findings: "use_lowest_level_ceiling"
+  final_level: "min(raw_level,lowest_applicable_severity_ceiling)"
+  no_negative_finding_ceiling: 3
+  score_formula: "ROUND_HALF_EVEN(sum(weight_units*level_ppm)/sum(weight_units))"
+  score_result_type: "integer_ppm"
+  runtime_not_applicable: "forbidden_profile_must_fix_applicability_before_assessment"
+
+error_severities:
+  minor:
+    level_ceiling: 2
+    meaning: "A local problem remains, but the intended meaning is still recoverable."
+  major:
+    level_ceiling: 1
+    meaning: "The problem defeats the tested function or materially weakens the response."
+  blocking:
+    level_ceiling: 0
+    meaning: "The problem reverses or removes the required meaning or makes the response unusable for the task."
+
+error_families:
+  local_form_slip:
+    severity: "minor"
+    score_criterion_id: "language-control"
+    diagnostic_criterion_ids: []
+  target_form_failure:
+    severity: "major"
+    score_criterion_id: "target-control"
+    diagnostic_criterion_ids:
+      - "language-control"
+  meaning_distortion:
+    severity: "major"
+    score_criterion_id: "meaning-accuracy"
+    diagnostic_criterion_ids:
+      - "meaning-clarity"
+  meaning_reversal:
+    severity: "blocking"
+    score_criterion_id: "meaning-accuracy"
+    diagnostic_criterion_ids:
+      - "meaning-clarity"
+  clarity_ambiguity:
+    severity: "major"
+    score_criterion_id: "meaning-clarity"
+    diagnostic_criterion_ids: []
+  clarity_blocking:
+    severity: "blocking"
+    score_criterion_id: "meaning-clarity"
+    diagnostic_criterion_ids: []
+  meaning_preservation_failure:
+    severity: "major"
+    score_criterion_id: "meaning-preservation"
+    diagnostic_criterion_ids:
+      - "meaning-accuracy"
+  meaning_preservation_reversal:
+    severity: "blocking"
+    score_criterion_id: "meaning-preservation"
+    diagnostic_criterion_ids:
+      - "meaning-accuracy"
+  task_requirement_omitted:
+    severity: "major"
+    score_criterion_id: "task-fulfilment"
+    diagnostic_criterion_ids: []
+  context_mismatch:
+    severity: "major"
+    score_criterion_id: "context-adaptation"
+    diagnostic_criterion_ids:
+      - "register-fit"
+  register_mismatch:
+    severity: "major"
+    score_criterion_id: "register-fit"
+    diagnostic_criterion_ids: []
+  literal_calque:
+    severity: "major"
+    score_criterion_id: "lexical-appropriacy"
+    diagnostic_criterion_ids:
+      - "meaning-clarity"
+  lexical_wrong_sense:
+    severity: "major"
+    score_criterion_id: "lexical-appropriacy"
+    diagnostic_criterion_ids:
+      - "meaning-accuracy"
+  organization_failure:
+    severity: "major"
+    score_criterion_id: "organization"
+    diagnostic_criterion_ids: []
+  language_pattern_failure:
+    severity: "major"
+    score_criterion_id: "language-control"
+    diagnostic_criterion_ids:
+      - "target-control"
+  unsupported_claim:
+    severity: "major"
+    score_criterion_id: "claim-development"
+    diagnostic_criterion_ids: []
+  source_relation_failure:
+    severity: "major"
+    score_criterion_id: "source-integration"
+    diagnostic_criterion_ids:
+      - "meaning-accuracy"
+  prompt_copying:
+    severity: "major"
+    score_criterion_id: "independent-expression"
+    diagnostic_criterion_ids: []
+
+normalization_algorithms:
+  exact_nfc_v1: "normalize_NFC_then_compare_exact_unicode_scalar_sequence"
+  folded_text_v1: "normalize_NFC_casefold_and_collapse_unicode_whitespace_to_single_ascii_space"
+  line_endings_v1: "replace_CRLF_and_CR_with_LF_before_line_or_paragraph_checks"
+  word_tokens_v1: "maximal_unicode_letter_or_number_runs_with_apostrophe_allowed_only_between_letters"
+
+machine_operations:
+  nonempty_after_trim:
+    parameters: []
+    result_values: ["passed", "failed"]
+    algorithm: "unicode_whitespace_trim_then_length_greater_than_zero"
+  unicode_scalar_count_between:
+    parameters:
+      - "minimum_inclusive"
+      - "maximum_inclusive"
+    result_values: ["passed", "failed"]
+    algorithm: "count_unicode_scalar_values_in_exact_raw_answer"
+  token_count_between:
+    parameters:
+      - "minimum_inclusive"
+      - "maximum_inclusive"
+      - "tokenizer_id"
+    result_values: ["passed", "failed"]
+    algorithm: "count_tokens_under_named_tokenizer"
+  paragraph_count_between:
+    parameters:
+      - "minimum_inclusive"
+      - "maximum_inclusive"
+      - "line_normalization_id"
+    result_values: ["passed", "failed"]
+    algorithm: "count_nonempty_blocks_separated_by_one_or_more_blank_lines"
+  required_literal_sequence_any:
+    parameters:
+      - "authored_sequences"
+      - "normalization_id"
+    result_values: ["passed", "failed"]
+    algorithm: "at_least_one_declared_sequence_occurs"
+  required_literal_sequence_all:
+    parameters:
+      - "authored_sequences"
+      - "normalization_id"
+    result_values: ["passed", "failed"]
+    algorithm: "every_declared_sequence_occurs"
+  forbidden_literal_sequence_none:
+    parameters:
+      - "authored_sequences"
+      - "normalization_id"
+    result_values: ["passed", "failed"]
+    algorithm: "no_declared_sequence_occurs"
+  required_target_surface_any:
+    parameters:
+      - "rendered_target_surfaces"
+      - "normalization_id"
+    result_values: ["passed", "failed"]
+    algorithm: "at_least_one_pinned_and_rendered_target_surface_occurs"
+  required_section_label_sequence:
+    parameters:
+      - "authored_labels_in_order"
+      - "normalization_id"
+    result_values: ["passed", "failed"]
+    algorithm: "declared_authored_labels_occur_in_the_required_order"
+
+machine_check_constraints:
+  operation_source: "closed_machine_operations_map_only"
+  arbitrary_regex: "forbidden"
+  executable_expression: "forbidden"
+  model_judgment_as_machine_check: "forbidden"
+  exact_calque_matching: "forbidden_literal_sequence_none"
+  semantic_calque_inference: "subjective_only"
+  check_instance_required_fields:
+    - "check_id"
+    - "operation"
+    - "rubric_criterion_ref"
+    - "parameters"
+    - "pass_finding_code"
+    - "fail_finding_code"
+  render_capture_fields:
+    - "exercise_form"
+    - "rubric_ref"
+    - "pinned_rubric_version"
+    - "applicable_criterion_refs"
+    - "machine_check_instances"
+    - "rendered_target_surfaces"
+    - "rendered_requirement_refs"
+    - "rubric_input_hash"
+  length_and_structure_role: "task_compliance_only_not_language_quality_proxy"
+
+criterion_catalog:
+  task-fulfilment:
+    kind: "mixed"
+    description: "The response performs the action and covers the requirements saved with the exercise."
+    allowed_machine_operations:
+      - "nonempty_after_trim"
+      - "unicode_scalar_count_between"
+      - "token_count_between"
+      - "required_section_label_sequence"
+    positive_findings:
+      required_action_completed: {units: 2, max_occurrences: 1}
+      required_point_addressed: {units: 1, max_occurrences: 3}
+      required_structure_present: {units: 1, max_occurrences: 1}
+    negative_findings:
+      required_action_missing: {error_family: "task_requirement_omitted"}
+      required_point_missing: {error_family: "task_requirement_omitted"}
+    required_span: "raw_answer_or_whole_answer_for_machine_proven_absence"
+
+  target-control:
+    kind: "mixed"
+    description: "The response uses the intended grammar or lexical target in the function required by the saved prompt."
+    allowed_machine_operations:
+      - "required_literal_sequence_any"
+      - "required_literal_sequence_all"
+      - "required_target_surface_any"
+      - "forbidden_literal_sequence_none"
+    positive_findings:
+      target_surface_present: {units: 1, max_occurrences: 1}
+      target_used_in_required_function: {units: 2, max_occurrences: 1}
+    negative_findings:
+      target_form_is_incorrect: {error_family: "target_form_failure"}
+      target_function_is_not_expressed: {error_family: "target_form_failure"}
+    required_span: "raw_answer"
+
+  meaning-accuracy:
+    kind: "subjective"
+    description: "The response states the required meaning without material distortion."
+    allowed_machine_operations: []
+    positive_findings:
+      required_meaning_stated: {units: 2, max_occurrences: 1}
+      relevant_detail_is_accurate: {units: 1, max_occurrences: 2}
+    negative_findings:
+      meaning_is_distorted: {error_family: "meaning_distortion"}
+      meaning_is_reversed: {error_family: "meaning_reversal"}
+    required_span: "raw_answer"
+
+  meaning-clarity:
+    kind: "subjective"
+    description: "The intended message is recoverable and sufficiently precise in the saved response."
+    allowed_machine_operations: []
+    positive_findings:
+      main_message_is_recoverable: {units: 2, max_occurrences: 1}
+      reference_is_clear: {units: 1, max_occurrences: 2}
+    negative_findings:
+      message_is_not_recoverable: {error_family: "clarity_blocking"}
+      reference_is_ambiguous: {error_family: "clarity_ambiguity"}
+    required_span: "raw_answer"
+
+  meaning-preservation:
+    kind: "subjective"
+    description: "The transformed response preserves the required source meaning in the new form or context."
+    allowed_machine_operations: []
+    positive_findings:
+      core_meaning_is_preserved: {units: 2, max_occurrences: 1}
+      required_implication_is_preserved: {units: 1, max_occurrences: 1}
+    negative_findings:
+      source_meaning_is_distorted: {error_family: "meaning_preservation_failure"}
+      source_meaning_is_reversed: {error_family: "meaning_preservation_reversal"}
+    required_span: "raw_answer"
+
+  context-adaptation:
+    kind: "subjective"
+    description: "The response adapts the target to the new saved context instead of repeating the source mechanically."
+    allowed_machine_operations: []
+    positive_findings:
+      target_is_adapted_to_new_context: {units: 2, max_occurrences: 1}
+      context_specific_detail_is_relevant: {units: 1, max_occurrences: 2}
+    negative_findings:
+      response_does_not_fit_new_context: {error_family: "context_mismatch"}
+    required_span: "raw_answer"
+
+  independent-expression:
+    kind: "mixed"
+    description: "The response supplies learner-authored language beyond wording exposed by the prompt."
+    allowed_machine_operations:
+      - "required_literal_sequence_any"
+      - "forbidden_literal_sequence_none"
+    positive_findings:
+      learner_adds_independent_clause: {units: 2, max_occurrences: 1}
+      learner_adds_relevant_detail: {units: 1, max_occurrences: 2}
+    negative_findings:
+      response_only_copies_prompt: {error_family: "prompt_copying"}
+    required_span: "raw_answer"
+
+  organization:
+    kind: "mixed"
+    description: "The response orders its parts so the reader can follow their relationship."
+    allowed_machine_operations:
+      - "paragraph_count_between"
+      - "required_section_label_sequence"
+    positive_findings:
+      ideas_have_explicit_relation: {units: 1, max_occurrences: 2}
+      paragraph_has_clear_role: {units: 1, max_occurrences: 3}
+      progression_is_easy_to_follow: {units: 2, max_occurrences: 1}
+    negative_findings:
+      relation_between_ideas_is_missing: {error_family: "organization_failure"}
+    required_span: "raw_answer"
+
+  claim-development:
+    kind: "subjective"
+    description: "The response states a claim and develops it with relevant reasons or authored evidence."
+    allowed_machine_operations: []
+    positive_findings:
+      claim_is_stated: {units: 1, max_occurrences: 1}
+      reason_supports_claim: {units: 1, max_occurrences: 2}
+      example_supports_reason: {units: 1, max_occurrences: 2}
+    negative_findings:
+      claim_lacks_relevant_support: {error_family: "unsupported_claim"}
+    required_span: "raw_answer"
+
+  source-integration:
+    kind: "subjective"
+    description: "The response represents saved authored source roles accurately and connects them in its own structure."
+    allowed_machine_operations: []
+    positive_findings:
+      source_role_is_identified: {units: 1, max_occurrences: 2}
+      relation_between_sources_is_accurate: {units: 1, max_occurrences: 2}
+      source_material_is_synthesized: {units: 2, max_occurrences: 1}
+    negative_findings:
+      source_role_is_misrepresented: {error_family: "source_relation_failure"}
+      sources_are_listed_without_relation: {error_family: "source_relation_failure"}
+    required_span: "raw_answer_and_saved_authored_source_fact_ref"
+
+  language-control:
+    kind: "subjective"
+    description: "Sentence forms are controlled well enough for the required message to remain stable."
+    allowed_machine_operations: []
+    positive_findings:
+      well_formed_clause: {units: 1, max_occurrences: 3}
+    negative_findings:
+      local_form_problem: {error_family: "local_form_slip"}
+      repeated_target_form_problem: {error_family: "language_pattern_failure"}
+    required_span: "raw_answer"
+
+  lexical-appropriacy:
+    kind: "mixed"
+    description: "Words and chunks express the intended meaning and fit their immediate combinations."
+    allowed_machine_operations:
+      - "required_literal_sequence_any"
+      - "required_target_surface_any"
+      - "forbidden_literal_sequence_none"
+    positive_findings:
+      lexeme_has_intended_meaning: {units: 1, max_occurrences: 2}
+      chunk_fits_immediate_context: {units: 1, max_occurrences: 2}
+      paraphrase_preserves_meaning: {units: 1, max_occurrences: 1}
+    negative_findings:
+      literal_calque_occurs: {error_family: "literal_calque"}
+      lexeme_has_wrong_sense: {error_family: "lexical_wrong_sense"}
+    required_span: "raw_answer"
+
+  register-fit:
+    kind: "subjective"
+    description: "The response fits the relationship, purpose, and register saved with the prompt."
+    allowed_machine_operations: []
+    positive_findings:
+      register_matches_context: {units: 2, max_occurrences: 1}
+      tone_supports_purpose: {units: 1, max_occurrences: 1}
+    negative_findings:
+      register_conflicts_with_context: {error_family: "register_mismatch"}
+    required_span: "raw_answer"
+
+rubric_profiles:
+  recognition.open:
+    rubric_ref: "rubric:recognition.open"
+    dimensions: ["recognition"]
+    allowed_step_types: ["recognition_check", "gate_item"]
+    criteria:
+      - {criterion_id: "meaning-accuracy", weight_units: 7000, required: true}
+      - {criterion_id: "task-fulfilment", weight_units: 3000, required: true}
+
+  production.controlled:
+    rubric_ref: "rubric:production.controlled"
+    dimensions: ["controlled_production"]
+    allowed_step_types: ["controlled_production", "integration_task", "gate_item"]
+    criteria:
+      - {criterion_id: "target-control", weight_units: 4000, required: true}
+      - {criterion_id: "meaning-clarity", weight_units: 2500, required: true}
+      - {criterion_id: "task-fulfilment", weight_units: 2000, required: true}
+      - {criterion_id: "language-control", weight_units: 1500, required: true}
+
+  production.spontaneous:
+    rubric_ref: "rubric:production.spontaneous"
+    dimensions: ["spontaneous_production"]
+    allowed_step_types: ["spontaneous_production", "integration_task"]
+    criteria:
+      - {criterion_id: "target-control", weight_units: 3000, required: true}
+      - {criterion_id: "meaning-clarity", weight_units: 2500, required: true}
+      - {criterion_id: "context-adaptation", weight_units: 1500, required: true}
+      - {criterion_id: "language-control", weight_units: 1500, required: true}
+      - {criterion_id: "independent-expression", weight_units: 1500, required: true}
+
+  conversation.free:
+    rubric_ref: "rubric:conversation.free"
+    dimensions: ["spontaneous_production"]
+    allowed_step_types: ["free_conversation"]
+    criteria:
+      - {criterion_id: "meaning-clarity", weight_units: 3000, required: true}
+      - {criterion_id: "target-control", weight_units: 2500, required: true}
+      - {criterion_id: "register-fit", weight_units: 2000, required: true}
+      - {criterion_id: "language-control", weight_units: 1500, required: true}
+      - {criterion_id: "independent-expression", weight_units: 1000, required: true}
+
+  transfer.open:
+    rubric_ref: "rubric:transfer.open"
+    dimensions: ["transfer"]
+    allowed_step_types: ["transfer_task", "integration_task"]
+    criteria:
+      - {criterion_id: "meaning-preservation", weight_units: 3000, required: true}
+      - {criterion_id: "target-control", weight_units: 2500, required: true}
+      - {criterion_id: "context-adaptation", weight_units: 2000, required: true}
+      - {criterion_id: "language-control", weight_units: 1500, required: true}
+      - {criterion_id: "register-fit", weight_units: 1000, required: true}
+
+  writing.short-response:
+    rubric_ref: "rubric:writing.short-response"
+    dimensions: ["controlled_production", "spontaneous_production", "transfer"]
+    allowed_step_types: ["controlled_production", "spontaneous_production", "transfer_task", "integration_task"]
+    criteria:
+      - {criterion_id: "task-fulfilment", weight_units: 3000, required: true}
+      - {criterion_id: "language-control", weight_units: 2500, required: true}
+      - {criterion_id: "organization", weight_units: 2000, required: true}
+      - {criterion_id: "lexical-appropriacy", weight_units: 1500, required: true}
+      - {criterion_id: "register-fit", weight_units: 1000, required: true}
+
+  writing.correspondence:
+    rubric_ref: "rubric:writing.correspondence"
+    dimensions: ["controlled_production", "spontaneous_production", "transfer"]
+    allowed_step_types: ["controlled_production", "spontaneous_production", "transfer_task", "integration_task"]
+    criteria:
+      - {criterion_id: "task-fulfilment", weight_units: 2500, required: true}
+      - {criterion_id: "register-fit", weight_units: 2500, required: true}
+      - {criterion_id: "language-control", weight_units: 2000, required: true}
+      - {criterion_id: "organization", weight_units: 1500, required: true}
+      - {criterion_id: "lexical-appropriacy", weight_units: 1500, required: true}
+
+  writing.academic-argument:
+    rubric_ref: "rubric:writing.academic-argument"
+    dimensions: ["spontaneous_production", "transfer"]
+    allowed_step_types: ["spontaneous_production", "transfer_task", "integration_task"]
+    criteria:
+      - {criterion_id: "claim-development", weight_units: 3000, required: true}
+      - {criterion_id: "task-fulfilment", weight_units: 2000, required: true}
+      - {criterion_id: "organization", weight_units: 2000, required: true}
+      - {criterion_id: "language-control", weight_units: 1500, required: true}
+      - {criterion_id: "lexical-appropriacy", weight_units: 1000, required: true}
+      - {criterion_id: "register-fit", weight_units: 500, required: true}
+
+  writing.academic-source-integration:
+    rubric_ref: "rubric:writing.academic-source-integration"
+    dimensions: ["controlled_production", "spontaneous_production", "transfer"]
+    allowed_step_types: ["controlled_production", "spontaneous_production", "transfer_task", "integration_task"]
+    criteria:
+      - {criterion_id: "source-integration", weight_units: 3000, required: true}
+      - {criterion_id: "meaning-accuracy", weight_units: 2000, required: true}
+      - {criterion_id: "organization", weight_units: 1500, required: true}
+      - {criterion_id: "language-control", weight_units: 1500, required: true}
+      - {criterion_id: "task-fulfilment", weight_units: 1000, required: true}
+      - {criterion_id: "lexical-appropriacy", weight_units: 1000, required: true}
+
+default_rubric_map:
+  resolution: "exact_step_type_and_dimension_only"
+  materialization: "store_concrete_rubric_ref_before_scoring"
+  missing_exact_default: "reject_no_broad_fallback"
+  entries:
+    - {step_type: "recognition_check", dimension: "recognition", rubric_ref: "rubric:recognition.open"}
+    - {step_type: "gate_item", dimension: "recognition", rubric_ref: "rubric:recognition.open"}
+    - {step_type: "controlled_production", dimension: "controlled_production", rubric_ref: "rubric:production.controlled"}
+    - {step_type: "gate_item", dimension: "controlled_production", rubric_ref: "rubric:production.controlled"}
+    - {step_type: "integration_task", dimension: "controlled_production", rubric_ref: "rubric:production.controlled"}
+    - {step_type: "spontaneous_production", dimension: "spontaneous_production", rubric_ref: "rubric:production.spontaneous"}
+    - {step_type: "integration_task", dimension: "spontaneous_production", rubric_ref: "rubric:production.spontaneous"}
+    - {step_type: "free_conversation", dimension: "spontaneous_production", rubric_ref: "rubric:conversation.free"}
+    - {step_type: "transfer_task", dimension: "transfer", rubric_ref: "rubric:transfer.open"}
+    - {step_type: "integration_task", dimension: "transfer", rubric_ref: "rubric:transfer.open"}
+  explicit_profile_required_for:
+    - "writing.short-response"
+    - "writing.correspondence"
+    - "writing.academic-argument"
+    - "writing.academic-source-integration"
+
+completeness:
+  required_criterion_coverage: "each_required_criterion_has_at_least_one_accepted_positive_or_negative_finding_or_machine_result"
+  missing_is_zero: "forbidden"
+  renormalize_remaining_weights: "forbidden"
+  before_finalization: "attempt_may_remain_recorded_for_corrected_observations"
+  explicit_finalize_when_incomplete:
+    attempt_status: "assessed"
+    assessment_disposition: "insufficient_evidence"
+    contributing: "false"
+    evidence_added: "forbidden"
+    audit_required: "true"
+  complete_assessment:
+    attempt_status: "assessed"
+    assessment_disposition: "scored"
+    evidence_added: "required_when_targeted_and_semantically_admissible"
+
+atomicity_and_idempotency:
+  unit_of_work_contains:
+    - "attempt_aggregate_transition"
+    - "attempt_assessment_event"
+    - "accepted_and_rejected_observation_dispositions"
+    - "EVIDENCE_ADDED_when_contributing"
+  crash_result: "recorded_attempt_or_complete_settlement_never_partial_contributing_state"
+  idempotency_identity: "attempt_id_plus_assessment_fingerprint"
+  assessment_fingerprint_fields:
+    - "attempt_id"
+    - "raw_answer_span_hash"
+    - "exercise_content_hash"
+    - "rubric_ref"
+    - "pinned_rubric_version"
+    - "rubric_input_hash"
+    - "canonical_accepted_observations"
+    - "canonical_machine_results"
+  same_fingerprint_retry: "return_existing_assessment"
+  different_fingerprint_retry: "conflict_or_explicit_correction_never_overwrite"
+
+evidence_capture:
+  required_fields:
+    - "attempt_id"
+    - "session_id"
+    - "step_id"
+    - "exercise_instance_id"
+    - "primary_target"
+    - "selection_basis"
+    - "credit_allocations"
+    - "origin"
+    - "mode"
+    - "span_hash"
+    - "rubric_ref"
+    - "pinned_rubric_version"
+    - "rubric_input_hash"
+    - "assessment_basis"
+    - "accepted_observations"
+    - "rejected_observations"
+    - "machine_results"
+    - "criterion_results"
+    - "score_ppm"
+    - "hints"
+    - "independence_inputs"
+    - "assessment_fingerprint"
+  targetless_attempt: "audit_only_no_contributing_evidence"
+  historical_reassessment: "forbidden_without_explicit_correction"
+
+scoring_handoff:
+  quality_formula: "Decimal(score_ppm)/Decimal(1000000)"
+  positive_delta_formula: "base_delta*mode_weight*hint_independence*quality"
+  score_zero: "no_positive_mastery_delta"
+  negative_mastery: "only_from_confirmed_REGRESSION"
+  rubric_cap: "apply"
+  session_cap: "apply"
+  independent_session_requirement: "at_least_two_derived_from_new_prompt_context_or_interval_not_session_id_alone"
+  topic_mastery_criteria: "interpret_never_override"
+  compatibility_correct_field: "engine_derived_only_and_never_a_replacement_for_score_ppm_quality"
+
+subjective_only_boundaries:
+  - "grammatical_correctness_beyond_declared_surface_checks"
+  - "semantic_relevance"
+  - "factual_support"
+  - "source_synthesis"
+  - "coherence"
+  - "naturalness"
+  - "style"
+  - "register"
+  - "pragmatic_appropriacy"
+  - "argument_quality"
+  - "general_plagiarism_detection"
+  - "vocabulary_range"
+  - "paraphrase_quality_beyond_declared_surface_matches"
+
+audit_constraints:
+  replay: "use_captured_attempt_assessment_and_pinned_versions_in_event_sequence_order"
+  observation_order_independence: "required"
+  process_hash_seed_independence: "required"
+  provider_order_independence: "required"
+  active_policy_change: "never_changes_historical_assessment"
+  no_external_excerpts: "required"

@@ -1,7 +1,7 @@
 # Модуль: scoring
 
 > **Status**: current
-> **Last updated**: 2026-07-21
+> **Last updated**: 2026-07-22
 > **Sources**: [[../product/learning-model]] · [[evidence]] · Concept Gate 0.4 2026-07-20 (3 развилки, [PD-2026-07-20]) · review triage journals (OPEN-1/8/10/12/13/20) · часть контракта 0.4
 > **Bounded context**: `src/english_trainer/scoring/`
 
@@ -21,7 +21,9 @@
 - **MUST**: per-target Mastery = взвешенный агрегат score по каждой required dimension (веса — часть scoring policy). Overall Mastery не выше покрытия required dimensions (unknown dimension не поднимает).
 - **MUST — дельта за evidence**: каждый admissible evidence даёт градуированную дельту от: correctness, difficulty, independence (hints снижают), mode-weight (`recognition < controlled_production < spontaneous_production < transfer`), error severity, temporal spacing.
 - **MUST — cap за сессию**: прирост Mastery на target за сессию ≤ `session_cap` (*tunable*, дефолт 15). Одна попытка не переводит в MASTERED.
-- **MUST — rubric/informal cap**: вклад rubric- и informal-evidence в Mastery ограничен `rubric_cap` (*tunable*); повышение состояния по ним требует ≥2 независимых сессий ([[evidence]] §4.1).
+- **MUST — rubric/informal cap**: вклад rubric- и informal-evidence в Mastery ограничен `rubric_cap` (*tunable*); повышение состояния по ним требует ≥2 независимых сессий ([[evidence]] §4.1). Любой open response, оценённый через rubric profile, остаётся `assessment_basis: rubric` и под cap, даже если все его criterion checks machine-checkable.
+- **MUST — graduated rubric quality [П.5, PD-2 B]**: engine-computed `AttemptAssessment.score_ppm` — integer `0..1000000`, полученный из четырёхуровневых criteria по pinned `rubric@1`: `ROUND_HALF_EVEN(sum(weight_units × level_ppm) / sum(weight_units))`. Положительная дельта rubric-evidence умножается на `Decimal(score_ppm) / Decimal(1000000)` до session/rubric caps. Boolean `correct`, если сохраняется для совместимости, вычисляет движок и он не заменяет graded quality.
+- **MUST — error severity [П.5, PD-4 C]**: severity принадлежит rubric policy и ограничивает level ровно одного score-bearing criterion; глобального второго штрафа за тот же error-span нет. Нулевая quality не даёт положительной дельты; отрицательная Mastery по-прежнему возникает только из подтверждённого REGRESSION.
 - **MUST — monotonicity**: при устойчивых успехах Mastery не убывает в пределах сессии; убывает только на подтверждённый REGRESSION.
 - **MUST — детерминизм чисел** [ревью 0.4-8]: все вычисления — `Decimal` с **фиксированным контекстом**: precision 28 значащих цифр, rounding `ROUND_HALF_EVEN`; никакого IEEE float в scoring-пути. `exp` вычисляется методом `Decimal.exp()` в этом контексте (детерминированный, не platform-`math.exp`). Порядок агрегации канонический (по `sequence`/`target_id`). Контекст — часть pinned scoring policy; каждая versioned policy **total и executable** (никаких диапазонов).
 
@@ -73,7 +75,7 @@ mastery_criteria:
     retention_confirmations: 2    # подтверждений на разных интервалах
 ```
 
-- **MUST — владение значениями** [rereview R-6]: конкретные значения (`active_threshold`, `retention_*`) **принадлежат теме** и живут в pinned `CurriculumVersion`; scoring policy их только *интерпретирует* (не переопределяет). `schema_version` версионирует форму, а не policy. Апгрейд scoring policy **не** меняет ретроспективно пороги старых тем — retrospective drift исключён.
+- **MUST — владение значениями** [rereview R-6; П.5]: конкретные значения (`active_threshold`, `retention_*`) **принадлежат теме** и живут в pinned `CurriculumVersion`; scoring policy их только *интерпретирует* (не переопределяет). `rubric@1` вычисляет качество одного open response (`score_ppm`) и также не задаёт/не переопределяет required dimensions, mastery thresholds, retention или state transitions. `schema_version` версионирует форму, а не policy. Апгрейд scoring/rubric policy **не** меняет ретроспективно пороги старых тем — retrospective drift исключён.
 - **MUST**: `mastery_criteria` задаёт структуру и связь с transition table (§3). Отсутствие критерия на required dimension = ошибка валидации. Эта schema — то, что делает П.2 authoring-возможным (roadmap).
 - **MUST — relation к table**: `LEARNING → ACTIVE` при выполнении `per_dimension.active_threshold` + `independent_attempts` по всем required; `ACTIVE → MASTERED` при `mastered.*`.
 
@@ -152,6 +154,7 @@ mastery_criteria:
 
 ## История изменений
 
+- **2026-07-22**: П.5 применена [PD-2026-07-22] — graduated `score_ppm` как множитель качества (PD-2 B), rubric-basis всегда под cap, policy-owned severity бьёт один criterion (PD-4 C), rubric не переопределяет mastery-владение темы.
 - **2026-07-21**: `REVIEW_ASSIGNMENT_CANCELLED` закреплён как terminal no-op, не ReviewOutcome.
 - **2026-07-20 (3)**: 0.4-rereview — core_skill_map перечисляет все четыре dimension включая `transfer` (R-3); `schema_version` отделён от scoring policy, значения принадлежат теме (R-6); Learning Score опирается на `measured_working_level` + `no-data` (R-7); STATE_TRANSITION pin-ит scoring policy и связан causation с триггером (R-1).
 - **2026-07-20 (2)**: 0.4-review триаж — добавлена **`Topic.mastery_criteria` schema** (§3b, BLOCKER 0.4-1); AT_RISK применяется из replayable-события, не clock (§3, BLOCKER 0.4-2); таблица переходов тотальна (NEW×RECOVERED, 0.4-6); core-skill map (§4, 0.4-3); origin+placement-cap (§4b, 0.4-4); measured vs provisional level (§4, 0.4-11); точный Decimal-контекст + конкретные дефолты (§2, 0.4-8); XP award-schema и Tutor Compliance measurement (§5/§7, 0.4-9).

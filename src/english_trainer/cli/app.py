@@ -57,6 +57,8 @@ from english_trainer.curriculum.service import (
 from english_trainer.curriculum.validate import validate_program
 from english_trainer.evidence.attempts import EvidencePrecondition, list_notes, record_attempt
 from english_trainer.evidence.reviews import close_review
+from english_trainer.evidence.rubric import RUBRIC_KIND, RubricPolicyInvalid
+from english_trainer.evidence.rubric import require_valid as require_valid_rubric
 from english_trainer.kernel.check import database_check
 from english_trainer.kernel.clock import SystemClock, SystemRandom
 from english_trainer.kernel.encoding import payload_hash
@@ -571,6 +573,8 @@ def curriculum_activate(
                     require_valid_scoring(payload)
                 elif kind == SCHEDULER_KIND:
                     require_valid_scheduler(payload)
+                elif kind == RUBRIC_KIND:
+                    require_valid_rubric(payload)
                 registry.register(kind, policy_version, payload)
                 registry.activate(kind, policy_version)
             event = activate_version(
@@ -597,7 +601,7 @@ def curriculum_activate(
             next_action="curriculum activate --idempotency-key <fresh-key>",
         )
         _emit(failure_envelope("curriculum.activate", corr, error), [f"error: {exc}"], fmt, ExitCode.CONFLICT)
-    except (ControlPolicyInvalid, ScoringPolicyInvalid, SchedulerPolicyInvalid) as exc:
+    except (ControlPolicyInvalid, ScoringPolicyInvalid, SchedulerPolicyInvalid, RubricPolicyInvalid) as exc:
         error = ErrorPayload(
             error_code=exc.code,
             message=str(exc),

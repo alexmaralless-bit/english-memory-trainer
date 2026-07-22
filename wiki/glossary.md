@@ -100,6 +100,9 @@
 - **volatility** — устойчивость единицы: `stable` / `changing`. Отделена от currency.
 - **currency** — актуальность изменчивой единицы: `current` / `dated` / `obsolete`, с датами наблюдения/проверки и владельцем reverification. Истёкший review interval приостанавливает production и открывает review-задачу; `dated` — recognition-only по умолчанию; `obsolete` блокирует новые production/review assignments.
 - **generation_policy** — versioned policy-снапшот, pinned в Session Manifest: допустимые схемы упражнений, формы step-type, правила дистракторов, правила приёма/reuse банка, dedup-ключи и safety-предикаты для сгенерированных упражнений.
+- **rubric_policy / `rubric@1`** — versioned pinned policy, по которой движок валидирует observations открытого ответа, вычисляет criterion levels и integer `AttemptAssessment.score_ppm`; не владеет topic mastery thresholds или state transitions.
+- **RubricProfile / `rubric_ref`** — task-family профиль из общего criterion-каталога; ссылка имеет форму `rubric:<profile_id>`, а версия берётся из `pinned_rubric_version`, не из самой ссылки.
+- **rubric_criterion_ref** — ссылка `rubric:<profile_id>#criterion:<criterion_id>` на конкретный criterion; agent observation связывает её с atomic finding code и проверяемым span, но не передаёт готовый verdict/level/score.
 - **stale-safety** — ре-валидация по active safety перед доставкой/reuse/рендером; если active usage/currency теперь запрещает production-шаг, шаг или банк-item отменяется/заменяется/ретайрится append-only, а не выдаётся молча.
 - **usage_policy** — политика употребления: `safe_to_use` / `context_dependent` / `recognition_only` / `avoid`. Понимать ≠ употреблять; assessable dimensions зависят от policy.
 - **contribution_scope** — тег evidence, определяющий, куда оно засчитывается (informal-профиль / writing / transfer / core CEFR). Разделяет informal recognition (никогда не в CEFR) и письменное производство в рабочем контексте.
@@ -137,6 +140,7 @@
 
 ## История изменений
 
+- **2026-07-22 (2)**: П.5 — термины rubric_policy/`rubric@1`, RubricProfile/`rubric_ref`, rubric_criterion_ref [PD-2026-07-22].
 - **2026-07-22**: фазовые теги `[mvp]`/`[post-mvp]` сняты [PD-2026-07-22]: спека описывает одну цель продукта, порядок и статус — только в roadmap (Принцип 4). untrusted-захват — в продукте (порядок в roadmap).
 - **2026-07-21**: разведены `SessionBudget` и `DeliveryLedger`, введён `plan_version`; `STEP_PRESENTED` исправлен до наблюдаемой границы тьютора; ReviewAssignment получил диспозицию `ReviewOutcome | CANCELLED`; availability приведена к §4.7a.
 - **2026-07-20 (6)**: 0.4 — Learning Score и Tutor Compliance получили конкретные определения (владение текущим уровнем / доля соблюдённых обязательств).

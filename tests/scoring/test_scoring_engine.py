@@ -166,6 +166,37 @@ def test_probe_cannot_punish_and_placement_is_capped(store, clock, random_source
     assert any("placement-ceiling" in line for line in scores["t.pl"].audit)
 
 
+def test_rubric_quality_scales_the_delta(store, clock, random_source, policy) -> None:
+    # Graduated rubric quality (P.5 PD-2 B): score_ppm scales the positive
+    # delta instead of collapsing to a Boolean.
+    _evidence(
+        store,
+        clock,
+        random_source,
+        target="t.rub",
+        dimension="spontaneous_production",
+        assessment_basis="rubric",
+        score_ppm=666667,
+        correct=False,
+    )
+    _evidence(
+        store,
+        clock,
+        random_source,
+        target="t.zero",
+        dimension="spontaneous_production",
+        assessment_basis="rubric",
+        score_ppm=0,
+        correct=False,
+    )
+    scores = fold_scores(store, policy)
+    got = scores["t.rub"].mastery["spontaneous_production"]
+    expected = Decimal("8") * Decimal("1.0") * (Decimal(666667) / Decimal(1_000_000))
+    assert got == expected  # base * mode * independence(1) * quality
+    assert scores["t.rub"].rubric_gain == got  # rubric-basis gain counts toward the cap
+    assert scores["t.zero"].mastery == {}  # zero quality adds nothing, never punishes
+
+
 def test_fold_is_byte_deterministic(store, clock, random_source, policy) -> None:
     for n in range(5):
         _evidence(store, clock, random_source, target=f"t.{n:02d}", session_id=f"s{n % 2}")
