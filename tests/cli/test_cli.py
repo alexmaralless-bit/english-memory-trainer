@@ -483,7 +483,9 @@ def test_registry_matches_published_surface() -> None:
         "exercise.bank",
         "scoring.replay",
         "status",
+        "review.due",
     }
+    assert not registry["review.due"].mutating  # the backlog recommends, never blocks
     assert not registry["scoring.replay"].mutating  # scores ARE the fold
     assert not registry["status"].mutating
     assert registry["exercise.accept"].mutating and registry["exercise.accept"].requires_idempotency_key

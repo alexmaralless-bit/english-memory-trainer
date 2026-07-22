@@ -101,6 +101,10 @@ _COMMANDS: tuple[CommandDescriptor, ...] = (
         name="scoring.replay", owner_module="scoring", mutating=False, requires_idempotency_key=False
     ),
     CommandDescriptor(name="status", owner_module="scoring", mutating=False, requires_idempotency_key=False),
+    # Scheduler (0.4 part 3): the backlog recommends, never blocks.
+    CommandDescriptor(
+        name="review.due", owner_module="scheduler", mutating=False, requires_idempotency_key=False
+    ),
 )
 
 

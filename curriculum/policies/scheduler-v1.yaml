@@ -1,0 +1,25 @@
+# scheduler@1 -- the executable review-scheduling policy (wiki/modules/scheduler.md).
+# Concrete authored defaults (tunable, versioned). Day counts are integers;
+# ratios are decimal STRINGS parsed under scoring's pinned Decimal context --
+# floats are banned on the whole decision path. The base interval table IS the
+# v1 formula behind the scheduler interface; FSRS is a MAY replacement that
+# changes this file's successor, not the domain model.
+policy_id: "scheduler@1"
+schema_version: 1
+status: "accepted"
+canonical_encoding: "kernel.canonical_json_v1"
+numeric_value_rule: "integers_and_decimal_strings_only"
+
+intervals_days: [1, 3, 7, 14, 30, 60, 120, 180]
+retry_days: 1
+target_recall: "0.9"
+
+# due when now >= next_review_at; overdue when lateness > overdue_factor * interval.
+overdue_factor: "0.5"
+# AT_RISK boundary: next_review_at + at_risk_overdue_factor * interval
+# (a deterministic instant -- never the wall clock of the sweep run).
+at_risk_overdue_factor: "1.0"
+
+re_entry:
+  gap_threshold_days: 14
+  retrievability_floor: "0.5"

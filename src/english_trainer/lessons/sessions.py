@@ -186,6 +186,22 @@ def start_session(
         duration_minutes if duration_minutes is not None else int(policy["budget"]["default_total_minutes"])
     ) * 60
 
+    if "scheduler" in pinned:
+        # The overdue sweep runs before composition so AT_RISK facts exist
+        # before any plan is built on them (scheduler 4). Idempotent by
+        # (target, dimension, schedule_epoch): a crash between sweep and start
+        # leaves committed facts, and the retried start mints no duplicates.
+        from english_trainer.scheduler.engine import sweep_overdue
+
+        sweep_overdue(
+            store,
+            pinned["scheduler"],
+            registry.resolve_pinned("scheduler", pinned["scheduler"]),
+            clock,
+            random_source,
+            actor=actor,
+        )
+
     session_id = new_ulid(clock, random_source)
     manifest: dict[str, Any] = {
         "session_id": session_id,

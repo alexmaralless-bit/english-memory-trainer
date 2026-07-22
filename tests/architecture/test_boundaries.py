@@ -40,13 +40,25 @@ LAYER_ALLOWLIST: dict[str, set[str]] = {
     # lessons owns the session triggers and delegates attempt closures to
     # evidence inside its own UoW (0.5/0.4 4.3) -- the dependency points
     # lessons -> evidence, never back.
-    "lessons": {"kernel", "control", "evidence", "lessons"},
+    "lessons": {"kernel", "control", "evidence", "scheduler", "lessons"},
     # evidence consumes published events, never other modules' code (0.4):
     # the event log is its boundary with lessons/control.
     "evidence": {"kernel", "evidence"},
     # scoring folds published events under its pinned policy; same boundary.
     "scoring": {"kernel", "scoring"},
-    "cli": {"kernel", "storage", "curriculum", "control", "lessons", "evidence", "scoring", "cli"},
+    # scheduler consumes scoring's fold (Retrievability/Stability) by canon.
+    "scheduler": {"kernel", "scoring", "scheduler"},
+    "cli": {
+        "kernel",
+        "storage",
+        "curriculum",
+        "control",
+        "lessons",
+        "evidence",
+        "scoring",
+        "scheduler",
+        "cli",
+    },
 }
 
 # Rule 2/3: module -> stdlib modules it may import from the restricted set.

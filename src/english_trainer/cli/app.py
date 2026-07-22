@@ -82,6 +82,9 @@ from english_trainer.lessons.sessions import (
     get_session,
     start_session,
 )
+from english_trainer.scheduler.engine import due_backlog
+from english_trainer.scheduler.policy import SCHEDULER_KIND, SchedulerPolicyInvalid
+from english_trainer.scheduler.policy import require_valid as require_valid_scheduler
 from english_trainer.scoring.policy import SCORING_KIND, ScoringPolicyInvalid
 from english_trainer.scoring.policy import require_valid as require_valid_scoring
 from english_trainer.scoring.replay import replay_scores
@@ -103,6 +106,8 @@ attempt_app = typer.Typer(add_completion=False, help="Learner attempts against d
 app.add_typer(attempt_app, name="attempt")
 scoring_app = typer.Typer(add_completion=False, help="Deterministic scores from the event log.")
 app.add_typer(scoring_app, name="scoring")
+review_app = typer.Typer(add_completion=False, help="Review scheduling: what is due, and when.")
+app.add_typer(review_app, name="review")
 
 _FormatOpt = Annotated[str, typer.Option("--format", help="Output format: text (human) or json (contract).")]
 _RootOpt = Annotated[Path, typer.Option("--root", help="Trainer home directory (storage layout root).")]
@@ -556,6 +561,8 @@ def curriculum_activate(
                     require_valid(payload)
                 elif kind == SCORING_KIND:
                     require_valid_scoring(payload)
+                elif kind == SCHEDULER_KIND:
+                    require_valid_scheduler(payload)
                 registry.register(kind, policy_version, payload)
                 registry.activate(kind, policy_version)
             event = activate_version(
@@ -582,7 +589,7 @@ def curriculum_activate(
             next_action="curriculum activate --idempotency-key <fresh-key>",
         )
         _emit(failure_envelope("curriculum.activate", corr, error), [f"error: {exc}"], fmt, ExitCode.CONFLICT)
-    except (ControlPolicyInvalid, ScoringPolicyInvalid) as exc:
+    except (ControlPolicyInvalid, ScoringPolicyInvalid, SchedulerPolicyInvalid) as exc:
         error = ErrorPayload(
             error_code=exc.code,
             message=str(exc),
@@ -1471,6 +1478,58 @@ def scoring_replay(
         f"  snapshot hash: {report['snapshot_hash']}",
     ]
     _emit(success_envelope("scoring.replay", corr, report), human, fmt, ExitCode.OK)
+
+
+@review_app.command("due")
+def review_due(
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Due and overdue review targets in the canonical priority order
+    (loss risk first). Read-only; the backlog recommends, never blocks."""
+    corr = _correlation(correlation_id)
+    layout = resolve_layout(root)
+    if not layout.db.exists():
+        error = ErrorPayload(
+            error_code="DATABASE_NOT_FOUND",
+            message=f"{layout.db} does not exist.",
+            allowed_actions=["init"],
+            next_action="init",
+        )
+        _emit(
+            failure_envelope("review.due", corr, error), ["error: not initialized"], fmt, ExitCode.NOT_FOUND
+        )
+    try:
+        with open_storage(layout) as storage:
+            registry = PolicyRegistry(storage._conn, SystemClock())
+            _, scheduler_policy = registry.resolve_active(SCHEDULER_KIND)
+            _, scoring_policy = registry.resolve_active(SCORING_KIND)
+            _, program = registry.resolve_active("curriculum")
+            backlog = due_backlog(
+                storage.store,
+                require_valid_scheduler(scheduler_policy),
+                scoring_policy,
+                program,
+                SystemClock().now(),
+            )
+    except KernelError as exc:
+        error = ErrorPayload(
+            error_code=exc.code,
+            message=str(exc),
+            allowed_actions=["curriculum activate", "doctor"],
+            next_action="curriculum activate",
+        )
+        _emit(
+            failure_envelope("review.due", corr, error), [f"error: {exc}"], fmt, ExitCode.PRECONDITION_FAILED
+        )
+    data = {"count": len(backlog), "due": backlog}
+    human = [f"{len(backlog)} review target(s) due"] + [
+        f"  {c['target_ref']}/{c['dimension']} [{c['status']}] R={c['retrievability'][:6]} "
+        f"overdue {c['overdue_days']}d"
+        for c in backlog[:15]
+    ]
+    _emit(success_envelope("review.due", corr, data), human, fmt, ExitCode.OK)
 
 
 @app.command("status")
