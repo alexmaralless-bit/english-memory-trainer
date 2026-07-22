@@ -42,10 +42,14 @@ def test_start_pins_active_policies_into_the_manifest(store, registry, clock, ra
     assert manifest["plan"] == {"composition_revision": 1, "plan_version": 1}
     assert manifest["required_skills"] == []
 
+    # start returns the tutor briefing in one call (finding 1), but the
+    # persisted, immutable manifest never carries that computed view.
+    assert "briefing" in manifest
     session_id = manifest["session_id"]
     assert active_session_id(store) == session_id
     state, revision = get_session(store, session_id)
     assert state["status"] == STARTED and revision == 1
+    assert "briefing" not in state["manifest"]
 
     events = list(store.read())
     # start attaches the starting tutor in the same UoW (lessons 5 [R-3]).

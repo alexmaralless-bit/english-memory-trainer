@@ -425,22 +425,17 @@ def observed_scenario(tmp_path_factory: pytest.TempPathFactory) -> dict[str, Any
     return _run_scenario(tmp_path_factory.mktemp("tutor-swap-contract"), note=NOTE)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="2.5 finding: session start returns only the manifest, not the required tutor briefing",
-)
 def test_start_returns_tutor_briefing_in_one_call(observed_scenario: dict[str, Any]) -> None:
+    # Fixed (2.5 finding 1): `session start` returns the tutor briefing in one
+    # call, not only the manifest -- an agent runs the session from a single CLI
+    # call (continuation flow "Правила").
     assert "briefing" in observed_scenario["start_response"]
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "2.5 finding: resume briefing lacks active topics, top errors, recent vocabulary/chunks, "
-        "re-entry, recommendations, and last-session summary"
-    ),
-)
 def test_resume_returns_contract_complete_briefing(observed_scenario: dict[str, Any]) -> None:
+    # Fixed (2.5 finding 2): the resume briefing carries all seven contract
+    # sections -- active topics, top errors, recent vocabulary/chunks, re-entry,
+    # recommendations, and the last-session summary.
     briefing = observed_scenario["resume_response"]["briefing"]
     assert set(briefing) >= REQUIRED_BRIEFING_FIELDS
 

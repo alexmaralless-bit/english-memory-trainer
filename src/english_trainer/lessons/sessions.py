@@ -268,7 +268,10 @@ def start_session(
     agent_skills_dir: Path | str | None = None,
     required_skills: Sequence[tuple[str, str]] | None = None,
 ) -> dict[str, Any]:
-    """Open a session, compose its plan and return the immutable manifest.
+    """Open a session, compose its plan, and return the immutable manifest plus a
+    tutor ``briefing`` (continuation flow: one CLI call is enough to run the
+    session). The briefing is a computed view riding the response only -- the
+    persisted manifest stays immutable.
 
     Preconditions: active curriculum, control and generation policies must
     exist (composition is executed by control@1 and every step carries a
@@ -448,7 +451,19 @@ def start_session(
                 ),
             ]
         )
-    return manifest
+
+    # `start` returns the tutor briefing too, not only the manifest: an agent
+    # needs a single CLI call to run the session (continuation flow "Правила" --
+    # `resume` и `start` возвращают tutor briefing). It is built from committed
+    # engine state via the SAME builder `resume` uses (one source of truth), and
+    # rides the START RESPONSE only -- never baked into the immutable Session
+    # Manifest that was already persisted above (lessons 4b: manifest неизменяем;
+    # continuation §2 trust boundary: computed state stays separate). Imported
+    # locally to avoid a start-time import cycle (resume imports this module).
+    from english_trainer.lessons.resume import build_briefing
+
+    briefing = build_briefing(store, registry, clock, session_id, manifest)
+    return {**manifest, "briefing": briefing}
 
 
 def mark_in_progress(store: EventStore, clock: Clock, session_id: str) -> None:
