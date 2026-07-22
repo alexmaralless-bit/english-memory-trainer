@@ -47,6 +47,7 @@ from english_trainer.control.policy import (
     step_cost,
 )
 from english_trainer.control.signals import apply_signals, is_excluded
+from english_trainer.control.trace import build_decision_trace
 
 Candidate = dict[str, Any]
 NewId = Callable[[], str]
@@ -212,6 +213,8 @@ def compose_plan(
     probe: dict[str, Any] | None = None,
     starvation_candidates: list[Candidate] | None = None,
     availability_long_break: bool = False,
+    pinned_versions: dict[str, str] | None = None,
+    active_safety_version: str | None = None,
     new_id: NewId,
 ) -> dict[str, Any]:
     """Compose the plan slice of the ``session_plan`` aggregate state.
@@ -311,6 +314,7 @@ def compose_plan(
     planned = {"review": 0, "growth": 0, "integration": 0, "choice": 0}
     waivers: list[str] = list(signal_waivers)
     consumed: list[str] = []
+    admission_occupancy: dict[str, tuple[dict[str, int], dict[str, int]]] = {}
     diversity = policy["diversity"]
     max_consecutive = int(diversity["max_consecutive_same_mode"])
     max_per_topic = int(diversity["max_steps_per_topic"])
@@ -334,9 +338,11 @@ def compose_plan(
         return True
 
     def admit(candidate: Candidate) -> None:
+        before = dict(planned)
         planned[candidate["bucket"]] += candidate["expected_seconds"]
         admitted.append(candidate)
         pool[candidate["bucket"]].remove(candidate)
+        admission_occupancy[str(candidate["candidate_id"])] = (before, dict(planned))
 
     # Step 5: reserve residual floors, growth -> integration -> choice. The
     # step that first reaches or crosses a non-zero floor is admitted whole if
@@ -435,8 +441,10 @@ def compose_plan(
         if blocked or not fits:
             waivers.append("PROBE_BUDGET_UNAVAILABLE")
         else:
+            before = dict(planned)
             planned[probe["bucket"]] += int(probe["expected_seconds"])
             admitted.append(probe)
+            admission_occupancy[str(probe["candidate_id"])] = (before, dict(planned))
             consumed.append(str(probe["signal_id"]))
 
     # Step 7: review by urgency class, critical -> important -> normal ->
@@ -480,6 +488,8 @@ def compose_plan(
     next_index = max((int(s["order_index"]) for s in presented_steps), default=-1) + 1
     steps: list[dict[str, Any]] = [dict(s) for s in presented_steps]
     for offset, candidate in enumerate(admitted):
+        decision_id = new_id()
+        occupancy = admission_occupancy[str(candidate["candidate_id"])]
         directive = {
             "schema_version": 1,
             "generation_policy": generation_version,
@@ -496,7 +506,7 @@ def compose_plan(
             directive["avoid_context"] = candidate.get("avoid_context")
         step = {
             "step_id": keep_step_ids.get(candidate["candidate_id"]) or new_id(),
-            "decision_id": new_id(),
+            "decision_id": decision_id,
             "candidate_id": candidate["candidate_id"],
             "kind": candidate["kind"],
             "bucket": candidate["bucket"],
@@ -508,6 +518,16 @@ def compose_plan(
             "lexicon_first": candidate["lexicon_first"],
             "bank_item_id": None,
             "generation_directive": directive,
+            "decision_trace": build_decision_trace(
+                candidate,
+                decision_id=decision_id,
+                policy=policy,
+                generation_version=generation_version,
+                pinned_versions=pinned_versions,
+                active_safety_version=active_safety_version,
+                bucket_before=occupancy[0],
+                bucket_after=occupancy[1],
+            ),
         }
         if candidate["kind"] == "growth":
             step["target_ref"] = candidate["target_ref"]

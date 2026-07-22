@@ -58,6 +58,12 @@ from english_trainer.control.signals import (
     is_excluded,
     record_signal,
 )
+from english_trainer.control.trace import (
+    DecisionTraceUnavailable,
+    build_decision_trace,
+    explain,
+    save_decision_traces,
+)
 
 __all__ = [
     "CLASS_ORDER",
@@ -66,6 +72,7 @@ __all__ = [
     "AvailabilityInvalid",
     "BudgetTooSmall",
     "ControlPolicyInvalid",
+    "DecisionTraceUnavailable",
     "DeferralState",
     "NoCandidates",
     "PlanVersionConflict",
@@ -76,6 +83,7 @@ __all__ = [
     "apply_signals",
     "availability_get",
     "availability_set",
+    "build_decision_trace",
     "build_probe_candidate",
     "build_signal",
     "classify_review_candidates",
@@ -83,6 +91,7 @@ __all__ = [
     "current_session_seq",
     "derive_probe",
     "divergence_ppm",
+    "explain",
     "is_excluded",
     "is_long_break",
     "is_saturated",
@@ -95,6 +104,7 @@ __all__ = [
     "reduce_saturation",
     "require_valid",
     "resolve_total_seconds",
+    "save_decision_traces",
     "step_cost",
     "step_targets",
     "validate_control_policy",

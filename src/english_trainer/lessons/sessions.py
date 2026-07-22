@@ -33,6 +33,7 @@ from english_trainer.adapters.events import SKILL_REQUIRED
 from english_trainer.adapters.skills import resolve as resolve_skill
 from english_trainer.control.compose import compose_plan
 from english_trainer.control.policy import CONTROL_KIND, require_valid
+from english_trainer.control.trace import save_decision_traces
 from english_trainer.kernel.clock import Clock, RandomSource
 from english_trainer.kernel.envelopes import DomainEvent, make_event
 from english_trainer.kernel.errors import KernelError, NoActivePolicy
@@ -350,6 +351,8 @@ def start_session(
         total_seconds=total_seconds,
         presented_targets=presented_targets(store),
         review_candidates=review_candidates_for(store, registry, pinned, program, policy, clock),
+        pinned_versions=pinned,
+        active_safety_version=pinned["curriculum"],
         new_id=lambda: new_ulid(clock, random_source),
     )
     plan_state: dict[str, Any] = {
@@ -372,6 +375,7 @@ def start_session(
             expected_revision=0,
         )
         uow.save_aggregate(PLAN_AGGREGATE, manifest["session_plan_id"], plan_state, expected_revision=0)
+        save_decision_traces(uow, plan_state)
         save_new_review_assignments(uow, plan_state, session_id, clock.now().isoformat())
         pointer = uow.get_aggregate(POINTER_AGGREGATE, POINTER_ID)
         if pointer is None:

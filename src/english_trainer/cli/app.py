@@ -71,6 +71,7 @@ from english_trainer.control.errors import (
 )
 from english_trainer.control.policy import CONTROL_KIND, require_valid
 from english_trainer.control.signals import record_signal
+from english_trainer.control.trace import DecisionTraceUnavailable, explain
 from english_trainer.curriculum.loader import load_policies, load_program
 from english_trainer.curriculum.service import (
     activate_version,
@@ -2278,6 +2279,43 @@ def availability_show(
             fmt,
             ExitCode.PRECONDITION_FAILED,
         )
+
+
+@app.command("why")
+def why_command(
+    step: Annotated[str, typer.Option("--step", help="Persisted planned-step id.")],
+    fmt: _FormatOpt = "text",
+    root: _RootOpt = Path(),
+    correlation_id: _CorrOpt = None,
+) -> None:
+    """Explain a persisted composition decision; read-only and replay-safe."""
+    corr = _correlation(correlation_id)
+    layout = resolve_layout(root)
+    if not layout.db.exists():
+        error = ErrorPayload(
+            error_code="DATABASE_NOT_FOUND",
+            message=f"{layout.db} does not exist.",
+            allowed_actions=["init"],
+            next_action="init",
+        )
+        _emit(failure_envelope("why", corr, error), ["error: not initialized"], fmt, ExitCode.NOT_FOUND)
+    try:
+        with open_storage(layout) as storage:
+            trace = explain(storage.store, step)
+        data = {"step_id": step, "trace": trace}
+        human = [
+            f"step {step}: decision {trace['decision_id']}",
+            f"  rules: {', '.join(trace['rule_refs'])}",
+        ]
+        _emit(success_envelope("why", corr, data), human, fmt, ExitCode.OK)
+    except DecisionTraceUnavailable as exc:
+        error = ErrorPayload(
+            error_code=exc.code,
+            message=str(exc),
+            allowed_actions=["session status", "session peek"],
+            next_action="session status",
+        )
+        _emit(failure_envelope("why", corr, error), [f"error: {exc}"], fmt, ExitCode.NOT_FOUND)
 
 
 @availability_app.command("set")

@@ -107,21 +107,27 @@ def classify_review_candidates(
         stake = bands.get(target) in ("CORE", "HIGH") or leverage.get(target, 0) >= min_dependents
 
         saturated = False
+        saturation_state: SaturationState | None = None
         if saturation is not None and now is not None:
-            state = saturation.get(key)
-            saturated = state is not None and is_saturated(state, control_policy, now)
+            saturation_state = saturation.get(key)
+            saturated = saturation_state is not None and is_saturated(saturation_state, control_policy, now)
 
         # The total ordered §4.5 table, first match wins, risk before saturation.
         if risk and stake:
             urgency = CRITICAL
+            matched_rule = "control.4.5.rule.1"
         elif risk:
             urgency = IMPORTANT
+            matched_rule = "control.4.5.rule.2"
         elif saturated:
             urgency = DEFERRABLE
+            matched_rule = "control.4.5.rule.3"
         elif retrievability_ppm >= maintenance_floor:
             urgency = MAINTENANCE
+            matched_rule = "control.4.5.rule.4"
         else:
             urgency = NORMAL
+            matched_rule = "control.4.5.rule.5"
 
         deferral_count = 0
         qualified_at_session_seq: int | None = None
@@ -143,6 +149,8 @@ def classify_review_candidates(
                 "target_ref": target,
                 "dimension": dimension,
                 "urgency_class": urgency,
+                "risk": risk,
+                "stake": stake,
                 "stake_rank": 1 if stake else 2,  # 0 = relevance, joins with learner
                 "retrievability_ppm": retrievability_ppm,
                 "deferral_count": deferral_count,  # from the starvation fold (4.5)
@@ -152,6 +160,36 @@ def classify_review_candidates(
                 "lexicon_first": False,
                 "lexicon_refs": [str(r) for r in (topic.get("lexicon") or [])] if topic else [target],
                 "schedule_epoch": int(entry.get("schedule_epoch") or 0),
+                "classification_trace": {
+                    "matched_rule": matched_rule,
+                    "risk": risk,
+                    "risk_factors": {
+                        "at_risk_state": entry.get("knowledge_state") == "AT_RISK",
+                        "recurring_error": recurring,
+                        "below_retrievability_floor": retrievability_ppm < critical_floor,
+                    },
+                    "stake": stake,
+                    "stake_factors": {
+                        "priority_band": bands.get(target) in ("CORE", "HIGH"),
+                        "prerequisite_leverage": leverage.get(target, 0) >= min_dependents,
+                        "relevance": False,
+                    },
+                    "retrievability_ppm": retrievability_ppm,
+                    "urgency_class": urgency,
+                    "saturation": (
+                        {
+                            "exposures_in_window": saturation_state.exposures_in_window,
+                            "consecutive_independent_successes": (
+                                saturation_state.consecutive_independent_successes
+                            ),
+                            "distinct_contexts": saturation_state.distinct_contexts,
+                            "last_transfer_check_at": saturation_state.last_transfer_check_at,
+                            "saturated": saturated,
+                        }
+                        if saturation_state is not None
+                        else None
+                    ),
+                },
             }
         )
     return out

@@ -5,6 +5,7 @@ computes the outcome, scoring and the scheduler both move."""
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+from decimal import Decimal
 
 import pytest
 
@@ -79,11 +80,21 @@ def test_review_loop_closes_end_to_end(store, full_registry, clock, random_sourc
     assert review["step_type"] == "recognition_check"
     assert review["urgency_class"] == "important"  # R ~ 0.37 < critical floor, no stake data
     review_id = str(review["review_assignment_id"])
+    composition_prediction_ppm = int(review["decision_trace"]["computed_inputs"]["retrievability_ppm"])
     (assignment,) = pending_assignments(store, session_id)
     assert assignment["review_id"] == review_id and assignment["step_id"] == review["step_id"]
 
     # Deliver up to the review step; the open assignment now gates finish (0.5).
+    later.advance(seconds=86_400)  # delivery is a day after composition
     step = _next_until_review(store, full_registry, later, random_source, session_id)
+    presented = [
+        event
+        for event in store.read()
+        if event.type == "session.step_presented" and event.payload.get("step_id") == step["step_id"]
+    ]
+    assert presented[-1].payload["review_assignment_id"] == review_id
+    issued_prediction_ppm = int(Decimal(presented[-1].payload["predicted_retrievability"]) * 1_000_000)
+    assert issued_prediction_ppm < composition_prediction_ppm
     with pytest.raises(SessionPrecondition, match="review assignment"):
         finish_session(store, later, random_source, session_id)
     rendered = record_rendered_exercise(

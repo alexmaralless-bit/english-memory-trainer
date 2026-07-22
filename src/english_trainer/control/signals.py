@@ -350,6 +350,12 @@ def _is_risk(candidate: dict[str, Any]) -> bool:
     return bool(candidate.get("risk")) or candidate.get("urgency_class") in ("critical", "important")
 
 
+def _trace_signal(candidate: dict[str, Any], signal: dict[str, Any]) -> None:
+    signal_id = signal.get("signal_id")
+    if signal_id is not None:
+        candidate.setdefault("applied_signal_ids", []).append(str(signal_id))
+
+
 def apply_signals(
     candidates: list[dict[str, Any]],
     signals: list[dict[str, Any]],
@@ -379,6 +385,7 @@ def apply_signals(
         for signal in by_kind["need_more_practice"]:
             if str(signal.get("target_ref")) == str(candidate.get("target_ref")):
                 candidate["urgency_class"] = _shift_up(str(candidate["urgency_class"]))
+                _trace_signal(candidate, signal)
                 break
 
     # Step 3: prefer_different_context excludes matching contexts.
@@ -407,9 +414,15 @@ def apply_signals(
             scope_target = signal.get("target_ref")
             if scope_target is None or str(scope_target) == str(candidate.get("target_ref")):
                 candidate["urgency_class"] = _shift_down(str(candidate["urgency_class"]))
+                _trace_signal(candidate, signal)
                 break
 
-    # Step 5: too_easy -- no class change (the probe is built by compose 6a).
+    # Step 5: too_easy -- no class change (the probe is built by compose 6a),
+    # but the decision trace still records that the live signal was consulted.
+    for candidate in survivors:
+        for signal in by_kind["too_easy"]:
+            if str(signal.get("target_ref")) == str(candidate.get("target_ref")):
+                _trace_signal(candidate, signal)
     return survivors, waivers
 
 

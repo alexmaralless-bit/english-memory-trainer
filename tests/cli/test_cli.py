@@ -614,6 +614,7 @@ def test_registry_matches_published_surface() -> None:
         "signal",
         "availability.show",
         "availability.set",
+        "why",
         "scoring.replay",
         "status",
         "review.due",
@@ -662,6 +663,7 @@ def test_registry_matches_published_surface() -> None:
     assert not registry["availability.show"].mutating
     assert registry["availability.set"].mutating
     assert registry["availability.set"].requires_idempotency_key
+    assert not registry["why"].mutating
 
 
 def test_root_option_drives_default_paths(tmp_path: Path, capsys) -> None:

@@ -37,6 +37,7 @@ from typing import Any
 from english_trainer.control.compose import compose_plan, step_targets
 from english_trainer.control.errors import PlanVersionConflict
 from english_trainer.control.policy import CONTROL_KIND, PRODUCTION_STEP_TYPES, require_valid
+from english_trainer.control.trace import save_decision_traces
 from english_trainer.evidence.reviews import cancel_assignment
 from english_trainer.kernel.clock import Clock, RandomSource
 from english_trainer.kernel.encoding import payload_hash
@@ -132,6 +133,41 @@ def peek_step(store: EventStore, session_id: str) -> dict[str, Any]:
     }
 
 
+def _predicted_retrievability(
+    store: EventStore,
+    registry: PolicyRegistry,
+    manifest: dict[str, Any],
+    step: dict[str, Any],
+    clock: Clock,
+) -> str | None:
+    """Recompute the review prediction at the delivery instant (control 4.10).
+
+    The planned candidate's value is deliberately ignored: a resumed session
+    may issue the step days later. Missing neighboring policies means honest
+    no-data, never a fabricated prediction.
+    """
+    if step.get("kind") != "review":
+        return None
+    pinned = dict(manifest.get("pinned_versions") or {})
+    if not {"curriculum", "scheduler", "scoring"} <= set(pinned):
+        return None
+    from english_trainer.scheduler.engine import due_backlog
+
+    backlog = due_backlog(
+        store,
+        registry.resolve_pinned("scheduler", pinned["scheduler"]),
+        registry.resolve_pinned("scoring", pinned["scoring"]),
+        registry.resolve_pinned("curriculum", pinned["curriculum"]),
+        clock.now(),
+    )
+    for candidate in backlog:
+        if str(candidate.get("target_ref")) == str(step.get("target_ref")) and str(
+            candidate.get("dimension")
+        ) == str(step.get("dimension")):
+            return str(candidate["retrievability"])
+    return None
+
+
 def next_step(
     store: EventStore,
     registry: PolicyRegistry,
@@ -185,6 +221,7 @@ def next_step(
         )
 
     presented_at = clock.now().isoformat()
+    predicted_retrievability = _predicted_retrievability(store, registry, manifest, step, clock)
     cost = int(step["expected_seconds"])
     bucket = str(step["bucket"])
     new_version = int(plan_state["plan_version"]) + 1
@@ -218,11 +255,16 @@ def next_step(
         "kind": step["kind"],
         "bucket": bucket,
         "step_type": step["step_type"],
+        "expected_seconds": cost,
         "targets": step_targets(step),
         "context_id": step["context_id"],
         "presented_at": presented_at,
         "active_safety_version": active_safety_version,
     }
+    if step.get("review_assignment_id") is not None:
+        payload["review_assignment_id"] = step["review_assignment_id"]
+    if predicted_retrievability is not None:
+        payload["predicted_retrievability"] = predicted_retrievability
     # Exactly one exercise source (control 4.3a): a bank item id once the bank
     # exists, otherwise the hash of the canonical generation directive.
     if step.get("bank_item_id"):
@@ -298,6 +340,8 @@ def replan_session(
         keep_step_ids=keep_step_ids,
         review_candidates=review_candidates_for(store, registry, pinned, program, policy, clock),
         keep_review_ids=keep_review_ids,
+        pinned_versions=pinned,
+        active_safety_version=active_safety_version,
         new_id=lambda: new_ulid(clock, random_source),
     )
     new_revision = int(plan_state["composition_revision"]) + 1
@@ -313,6 +357,7 @@ def replan_session(
     }
     with UnitOfWork(store, clock) as uow:
         uow.save_aggregate(PLAN_AGGREGATE, plan_id, new_state, expected_revision=plan_revision)
+        save_decision_traces(uow, new_state)
         # Replan leaves no orphans and creates no debt (4.2 [RR2-4]): an
         # unpresented review step dropped from the new revision is CANCELLED
         # in the same UoW -- terminal, but never a learning outcome. Steps
