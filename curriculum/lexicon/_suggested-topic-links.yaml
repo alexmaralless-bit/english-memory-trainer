@@ -866,3 +866,65 @@ links:
   - {lexical_item: word.undermine, topics: [written-production.counterargument-response, reading.evidence-quality]}
   - {lexical_item: word.variability, topics: [toefl-reading.supporting-evidence, reading.evidence-quality]}
   - {lexical_item: word.viable, topics: [us-tech.architecture-tradeoff, written-production.technical-position-paper]}
+
+  # ===== P.4e academic C1-C2 stable core =====
+  - {lexical_item: word.connotation, topics: [toefl-reading.implicit-qualification, word-formation.register-shift]}
+  - {lexical_item: word.correspondence, topics: [reading.cross-source-tension, written-production.critical-synthesis]}
+  - {lexical_item: word.critically, topics: [reading.methodology-limitations, written-production.critical-synthesis]}
+  - {lexical_item: word.descriptor, topics: [grammar.nominalization-information-flow, reading.methodology-limitations]}
+  - {lexical_item: word.differentiate, topics: [toefl-reading.dense-passage-synthesis, reading.cross-source-tension]}
+  - {lexical_item: word.dilemma, topics: [toefl-writing.counterargument-nuance, written-production.evidence-qualified-argument]}
+  - {lexical_item: word.discrete, topics: [reading.methodology-limitations, toefl-reading.dense-passage-synthesis]}
+  - {lexical_item: word.dominance, topics: [reading.implicit-assumptions, toefl-reading.implicit-qualification]}
+  - {lexical_item: word.emergence, topics: [toefl-reading.dense-passage-synthesis, written-production.critical-synthesis]}
+  - {lexical_item: word.essence, topics: [written-production.critical-synthesis, written-production.decision-memo]}
+  - {lexical_item: word.facet, topics: [written-production.critical-synthesis, reading.cross-source-tension]}
+  - {lexical_item: word.formulation, topics: [written-production.evidence-qualified-argument, written-production.style-revision]}
+  - {lexical_item: word.generalization, topics: [reading.methodology-limitations, reading.implicit-assumptions]}
+  - {lexical_item: word.hierarchy, topics: [toefl-reading.dense-passage-synthesis, grammar.reference-cohesion]}
+  - {lexical_item: word.ideology, topics: [reading.implicit-assumptions, reading.cross-source-tension]}
+  - {lexical_item: word.inclusion, topics: [reading.methodology-limitations, written-production.evidence-qualified-argument]}
+  - {lexical_item: word.instability, topics: [us-tech.risk-governance-brief, us-tech.strategic-technical-brief]}
+  - {lexical_item: word.longitudinal, topics: [reading.methodology-limitations, toefl-reading.dense-passage-synthesis]}
+  - {lexical_item: word.metaphor, topics: [toefl-reading.implicit-qualification, reading.implicit-assumptions]}
+  - {lexical_item: word.motif, topics: [toefl-reading.dense-passage-synthesis, written-production.critical-synthesis]}
+  - {lexical_item: word.norm, topics: [reading.implicit-assumptions, toefl-writing.counterargument-nuance]}
+  - {lexical_item: word.notation, topics: [reading.methodology-limitations, toefl-reading.dense-passage-synthesis]}
+  - {lexical_item: word.obscure, topics: [written-production.style-revision, toefl-writing.source-integration]}
+  - {lexical_item: word.pragmatic, topics: [written-production.decision-memo, written-interaction.executive-recommendation]}
+  - {lexical_item: word.profound, topics: [written-production.evidence-qualified-argument, toefl-reading.dense-passage-synthesis]}
+  - {lexical_item: word.rationality, topics: [reading.implicit-assumptions, toefl-writing.counterargument-nuance]}
+  - {lexical_item: word.regime, topics: [everyday-life.bureaucratic-document-navigation, reading.cross-source-tension]}
+  - {lexical_item: word.repertoire, topics: [word-formation.register-shift, written-production.style-revision]}
+  - {lexical_item: word.rhetoric, topics: [toefl-reading.implicit-qualification, reading.implicit-assumptions]}
+  - {lexical_item: word.semantic, topics: [toefl-reading.dense-passage-synthesis, written-production.style-revision]}
+  - {lexical_item: word.sensitivity, topics: [reading.methodology-limitations, us-tech.risk-governance-brief]}
+  - {lexical_item: word.simultaneously, topics: [written-production.critical-synthesis, grammar.participle-clauses.precision]}
+  - {lexical_item: word.systematic, topics: [reading.methodology-limitations, written-production.critical-synthesis]}
+  - {lexical_item: word.temporal, topics: [reading.methodology-limitations, toefl-reading.dense-passage-synthesis]}
+  - {lexical_item: word.trajectory, topics: [toefl-reading.dense-passage-synthesis, us-tech.strategic-technical-brief]}
+  - {lexical_item: word.validity, topics: [reading.methodology-limitations, written-production.evidence-qualified-argument]}
+  - {lexical_item: word.variance, topics: [reading.methodology-limitations, us-tech.risk-governance-brief]}
+  - {lexical_item: word.whereby, topics: [written-production.style-revision, grammar.nominalization-information-flow]}
+  - {lexical_item: word.whichever, topics: [written-production.style-revision, grammar.reference-cohesion]}
+  - {lexical_item: word.congruent, topics: [reading.dense-interdisciplinary-synthesis, written-production.source-voice-balance]}
+  - {lexical_item: word.confound, topics: [us-tech.uncertainty-and-model-risk, reading.dense-interdisciplinary-synthesis]}
+  - {lexical_item: word.corpus, topics: [reading.dense-interdisciplinary-synthesis, reading.methodology-limitations]}
+  - {lexical_item: word.dimensional, topics: [us-tech.uncertainty-and-model-risk, reading.dense-interdisciplinary-synthesis]}
+  - {lexical_item: word.exponential, topics: [us-tech.uncertainty-and-model-risk, reading.dense-interdisciplinary-synthesis]}
+  - {lexical_item: word.gradient, topics: [us-tech.uncertainty-and-model-risk, reading.dense-interdisciplinary-synthesis]}
+  - {lexical_item: word.innate, topics: [reading.implicit-assumptions, reading.dense-interdisciplinary-synthesis]}
+  - {lexical_item: word.lexical, topics: [reading.ambiguity-resolution, grammar.syntactic-ambiguity-control]}
+  - {lexical_item: word.nonlinear, topics: [us-tech.uncertainty-and-model-risk, reading.dense-interdisciplinary-synthesis]}
+  - {lexical_item: word.nominal, topics: [grammar.syntactic-ambiguity-control, grammar.ellipsis-substitution]}
+  - {lexical_item: word.paradox, topics: [reading.rhetorical-subtext, written-production.complex-argument-architecture]}
+  - {lexical_item: word.peripheral, topics: [written-production.complex-argument-architecture, reading.rhetorical-subtext]}
+  - {lexical_item: word.phenomenal, topics: [written-production.audience-adaptation, reading.rhetorical-subtext]}
+  - {lexical_item: word.substitution, topics: [grammar.ellipsis-substitution, grammar.syntactic-ambiguity-control]}
+  - {lexical_item: word.syntactic, topics: [grammar.syntactic-ambiguity-control, reading.ambiguity-resolution]}
+  - {lexical_item: word.theorem, topics: [reading.dense-interdisciplinary-synthesis, us-tech.uncertainty-and-model-risk]}
+  - {lexical_item: word.theorist, topics: [written-production.source-voice-balance, reading.dense-interdisciplinary-synthesis]}
+  - {lexical_item: word.trivial, topics: [reading.rhetorical-subtext, written-production.complex-argument-architecture]}
+  - {lexical_item: word.vague, topics: [written-production.editorial-rewrite, reading.ambiguity-resolution]}
+  - {lexical_item: word.vector, topics: [us-tech.uncertainty-and-model-risk, reading.dense-interdisciplinary-synthesis]}
+  - {lexical_item: word.volition, topics: [reading.dense-interdisciplinary-synthesis, written-production.source-voice-balance]}

@@ -8,7 +8,7 @@ topics:
       strong: [toefl-reading.academic-main-idea, written-production.multi-source-synthesis]
       soft: [toefl-reading.text-organization]
     dimensions: [recognition, transfer]
-    lexicon: [word.summary, word.although]
+    lexicon: [word.summary, word.although, word.emergence, word.hierarchy, word.trajectory]
     contexts: [dense-academic-passage, argument-synthesis]
     typical_errors:
       - "Flattening a qualified argument into one categorical Russian summary sentence."
@@ -29,7 +29,7 @@ topics:
       strong: [toefl-reading.inference, reading.author-stance-bias]
       soft: [toefl-reading.rhetorical-purpose]
     dimensions: [recognition, transfer]
-    lexicon: [word.although, word.reason]
+    lexicon: [word.although, word.reason, word.connotation, word.metaphor, word.rhetoric]
     contexts: [dense-academic-passage, stance-analysis]
     typical_errors:
       - "Treating the absence of an explicit but as proof that the author has no reservation."
@@ -220,7 +220,7 @@ topics:
       strong: [reading.argument-structure, toefl-reading.inference]
       soft: [reading.evidence-quality]
     dimensions: [recognition, transfer]
-    lexicon: [word.reason, word.result]
+    lexicon: [word.reason, word.result, word.connotation, word.ideology, word.rationality]
     contexts: [policy-argument, technical-proposal]
     typical_errors:
       - "Repeating an explicit premise instead of identifying what must be true but is unstated."
@@ -241,7 +241,7 @@ topics:
       strong: [reading.evidence-quality, toefl-reading.rhetorical-purpose]
       soft: [toefl-reading.implicit-qualification]
     dimensions: [recognition, transfer]
-    lexicon: [informal.do-you-have-a-source, word.result, word.detail]
+    lexicon: [informal.do-you-have-a-source, word.result, word.detail, word.generalization, word.longitudinal, word.systematic, word.validity]
     contexts: [research-report, product-study]
     typical_errors:
       - "Calling a study invalid because it has a limitation instead of delimiting the supported conclusion."
@@ -262,7 +262,7 @@ topics:
       strong: [reading.compare-source-claims, written-production.multi-source-synthesis]
       soft: [toefl-writing.source-integration]
     dimensions: [recognition, transfer]
-    lexicon: [chunk.according-to, word.summary, word.result]
+    lexicon: [chunk.according-to, word.summary, word.result, word.correspondence, word.differentiate]
     contexts: [research-synthesis, policy-comparison]
     typical_errors:
       - "Looking only for direct contradiction and missing sources that disagree at different levels of analysis."
@@ -283,7 +283,7 @@ topics:
       strong: [reading.cross-source-tension, written-production.multi-source-synthesis]
       soft: [reading.methodology-limitations]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: [chunk.according-to, word.summary, word.result]
+    lexicon: [chunk.according-to, word.summary, word.result, word.essence, word.facet, word.simultaneously]
     contexts: [literature-synthesis, decision-evidence-review]
     typical_errors:
       - "Organizing the response as a sequence of source summaries rather than around the research question."
@@ -304,7 +304,7 @@ topics:
       strong: [reading.evidence-quality, toefl-writing.counterargument-nuance]
       soft: [grammar.hedging-stance.control]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: [word.reason, word.result, word.recommendation]
+    lexicon: [word.reason, word.result, word.recommendation, word.formulation, word.validity]
     contexts: [policy-recommendation, research-based-proposal]
     typical_errors:
       - "Making a universal claim from a single local example."
@@ -412,7 +412,7 @@ topics:
       strong: [toefl-writing.academic-register, toefl-writing.cohesion]
       soft: [grammar.reference-cohesion]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: [word.summary, word.reason]
+    lexicon: [word.summary, word.reason, word.obscure, word.semantic, word.whereby]
     contexts: [report-revision, executive-edit]
     typical_errors:
       - "Replacing simple words with longer cognates and calling the result more formal."
@@ -475,7 +475,7 @@ topics:
       strong: [us-tech.incident-postmortem, us-tech.strategic-technical-brief]
       soft: [written-production.evidence-qualified-argument]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: [chunk.the-main-risk-is, word.impact, word.action]
+    lexicon: [chunk.the-main-risk-is, word.impact, word.action, word.instability, word.sensitivity, word.variance]
     contexts: [risk-committee, control-review]
     typical_errors:
       - "Combining uncertainty and exposure into one vague risk rating."

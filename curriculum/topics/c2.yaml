@@ -9,7 +9,7 @@ topics:
       soft: [grammar.cleft-sentences.focus]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: tail
-    lexicon: []
+    lexicon: [word.rhetoric]
     contexts: [editorial-argument, executive-address]
     typical_errors:
       - "Moving a phrase to the front as in Russian prose without supplying the English structure that marks its relation."
@@ -31,7 +31,7 @@ topics:
       soft: [written-production.style-revision]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: core
-    lexicon: []
+    lexicon: [word.substitution, word.nominal]
     contexts: [formal-comparison, editorial-revision]
     typical_errors:
       - "Omitting a verb that English cannot recover merely because Russian permits a verbless parallel."
@@ -52,7 +52,7 @@ topics:
       strong: [written-production.style-revision, written-production.critical-synthesis]
       soft: [grammar.ellipsis-substitution]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: [word.summary, word.reason, word.result]
+    lexicon: [word.summary, word.reason, word.result, word.vague]
     contexts: [policy-edit, technical-publication]
     typical_errors:
       - "Replacing plain English with longer cognates to imitate Russian academic prestige."
@@ -94,7 +94,7 @@ topics:
       strong: [toefl-reading.implicit-qualification, reading.cross-source-tension]
       soft: [reading.implicit-assumptions]
     dimensions: [recognition, transfer]
-    lexicon: [word.reason, word.detail]
+    lexicon: [word.reason, word.detail, word.lexical, word.syntactic, word.vague]
     contexts: [contract-analysis, academic-argument]
     typical_errors:
       - "Choosing the interpretation closest to Russian syntax without testing the wider discourse."
@@ -115,7 +115,7 @@ topics:
       strong: [written-production.critical-synthesis, toefl-reading.dense-passage-synthesis]
       soft: [reading.methodology-limitations]
     dimensions: [recognition, transfer]
-    lexicon: [word.summary, chunk.according-to, word.result]
+    lexicon: [word.summary, chunk.according-to, word.result, word.congruent, word.corpus, word.paradox]
     contexts: [interdisciplinary-review, policy-research]
     typical_errors:
       - "Treating similarly named concepts from two disciplines as interchangeable."
@@ -136,7 +136,7 @@ topics:
       strong: [reading.implicit-assumptions, everyday-online-informal.subtle-humor]
       soft: [toefl-reading.implicit-qualification]
     dimensions: [recognition, transfer]
-    lexicon: [informal.yeah-right]
+    lexicon: [informal.yeah-right, word.paradox, word.peripheral, word.trivial]
     contexts: [policy-commentary, public-statement]
     typical_errors:
       - "Reporting an inferred strategic motive as an explicit fact."
@@ -157,7 +157,7 @@ topics:
       strong: [written-production.evidence-qualified-argument, toefl-writing.counterargument-nuance]
       soft: [reading.implicit-assumptions]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: [word.reason, word.result, word.although]
+    lexicon: [word.reason, word.result, word.although, word.paradox, word.peripheral]
     contexts: [policy-essay, strategic-analysis]
     typical_errors:
       - "Accumulating claims without making the warrant between evidence and conclusion explicit."
@@ -178,7 +178,7 @@ topics:
       strong: [toefl-writing.source-integration, written-production.critical-synthesis]
       soft: [grammar.hedging-stance.control]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: [chunk.according-to, word.summary, word.result]
+    lexicon: [chunk.according-to, word.summary, word.result, word.theorist, word.congruent]
     contexts: [research-article, evidence-based-brief]
     typical_errors:
       - "Letting a long paraphrase continue into personal analysis without a clear boundary."
@@ -241,7 +241,7 @@ topics:
       strong: [us-tech.risk-governance-brief, written-production.evidence-qualified-argument]
       soft: [grammar.hedging-stance.control]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: [chunk.the-main-risk-is, word.impact, word.result]
+    lexicon: [chunk.the-main-risk-is, word.impact, word.result, word.confound, word.nonlinear, word.vector]
     contexts: [model-governance, system-risk-review]
     typical_errors:
       - "Reporting an accuracy average without the failure boundary relevant to the decision."
@@ -284,7 +284,7 @@ topics:
       soft: [reading.ambiguity-resolution]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: core
-    lexicon: []
+    lexicon: [word.lexical, word.syntactic, word.nominal]
     contexts: [contract-edit, technical-specification]
     typical_errors:
       - "Assuming punctuation alone resolves an attachment that the syntax leaves open."
