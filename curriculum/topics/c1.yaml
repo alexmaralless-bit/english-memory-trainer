@@ -8,7 +8,17 @@ topics:
       strong: [toefl-reading.academic-main-idea, written-production.multi-source-synthesis]
       soft: [toefl-reading.text-organization]
     dimensions: [recognition, transfer]
-    lexicon: []
+    lexicon: [word.summary, word.although]
+    contexts: [dense-academic-passage, argument-synthesis]
+    typical_errors:
+      - "Flattening a qualified argument into one categorical Russian summary sentence."
+      - "Giving equal weight to a minor illustration and the evidence that controls the conclusion."
+      - "Preserving paragraph order but losing the hierarchy among claim, qualification, and implication."
+    examples:
+      - "The study finds that shared offices increase informal exchange, but only for teams with overlapping schedules. Its broader claim is therefore conditional: proximity helps when colleagues are present at the same time."
+      - "The author rejects a single-cause account of migration while retaining climate as one contributing pressure. Economic networks explain where movement occurs, whereas environmental change helps explain when it intensifies."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 80, independent_attempts: 3}, transfer: {active_threshold: 85, independent_attempts: 3}}, mastered: {all_required_active: true, retention_stability_days: 60, retention_confirmations: 3}}
 
   - id: toefl-reading.implicit-qualification
     cefr: C1
@@ -19,7 +29,17 @@ topics:
       strong: [toefl-reading.inference, reading.author-stance-bias]
       soft: [toefl-reading.rhetorical-purpose]
     dimensions: [recognition, transfer]
-    lexicon: []
+    lexicon: [word.although, word.reason]
+    contexts: [dense-academic-passage, stance-analysis]
+    typical_errors:
+      - "Treating the absence of an explicit but as proof that the author has no reservation."
+      - "Missing distributed hedging when the limitation appears several sentences after the headline claim."
+      - "Converting a narrow exception into complete rejection, following an all-or-nothing Russian paraphrase."
+    examples:
+      - "The author initially calls the reform effective, then notes that participation rose only in well-funded districts. The later distributional limit qualifies the earlier praise."
+      - "No sentence directly rejects the standard model. Nevertheless, repeated references to unmeasured variables show that the author regards its predictions as provisional."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 80, independent_attempts: 3}, transfer: {active_threshold: 85, independent_attempts: 3}}, mastered: {all_required_active: true, retention_stability_days: 60, retention_confirmations: 3}}
 
   - id: toefl-writing.source-integration
     cefr: C1
@@ -30,7 +50,17 @@ topics:
       strong: [toefl-writing.integrated-synthesis, toefl-writing.source-note-taking]
       soft: [toefl-writing.academic-register]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [chunk.according-to, word.summary, word.result]
+    contexts: [integrated-writing, source-based-essay]
+    typical_errors:
+      - "Following a paraphrase with an unsupported claim so closely that source and writer voices merge."
+      - "Changing the source's degree of certainty while translating its idea through Russian."
+      - "Using long near-copy passages instead of proportionate paraphrase and analysis."
+    examples:
+      - "Rao attributes the decline mainly to changing land use, although her sample excludes coastal regions. That limitation matters because the proposed national policy would apply to those regions as well."
+      - "The survey reports a preference for flexible schedules, not evidence of higher productivity. My conclusion therefore concerns employee choice rather than output."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 80, independent_attempts: 3}, controlled_production: {active_threshold: 82, independent_attempts: 3}, spontaneous_production: {active_threshold: 82, independent_attempts: 3}, transfer: {active_threshold: 85, independent_attempts: 3}}, mastered: {all_required_active: true, retention_stability_days: 60, retention_confirmations: 3}}
 
   - id: toefl-writing.counterargument-nuance
     cefr: C1
@@ -41,7 +71,17 @@ topics:
       strong: [toefl-writing.discussion-response, written-production.counterargument-response]
       soft: [toefl-writing.thesis-position]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [word.agree, word.disagree, word.reason]
+    contexts: [academic-essay, discussion-response]
+    typical_errors:
+      - "Using although I agree as a formula but conceding nothing specific."
+      - "Refuting an exaggerated version of the opposing position rather than its strongest scope."
+      - "Ending with the original absolute thesis after the concession logically requires refinement."
+    examples:
+      - "Critics correctly note that free transit alone cannot solve suburban access, where routes remain sparse. It can still reduce central congestion, so the policy is defensible as one part of a broader network plan."
+      - "Standardized deadlines help instructors coordinate feedback across large courses. However, limited extensions should remain available when the same deadline creates unequal barriers."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 80, independent_attempts: 3}, controlled_production: {active_threshold: 82, independent_attempts: 3}, spontaneous_production: {active_threshold: 82, independent_attempts: 3}, transfer: {active_threshold: 85, independent_attempts: 3}}, mastered: {all_required_active: true, retention_stability_days: 60, retention_confirmations: 3}}
 
   - id: toefl-writing.timed-response-control
     cefr: C1
@@ -52,7 +92,17 @@ topics:
       strong: [toefl-writing.argument-development, toefl-writing.discussion-response]
       soft: [toefl-writing.academic-email]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [word.summary, word.reason, word.result]
+    contexts: [timed-writing, academic-response]
+    typical_errors:
+      - "Spending most of the available time translating an elaborate introduction from Russian."
+      - "Adding a new argument during the final minutes instead of revising task coverage and clarity."
+      - "Proofreading only articles and verb endings while leaving a missing thesis or unsupported paragraph."
+    examples:
+      - "The response first states a narrow thesis, then develops two reasons with one example each. The final review checks whether every paragraph answers the prompt before correcting local grammar."
+      - "A concise outline reserves time for source attribution and revision. When the second reason proves weak, the writer strengthens the first rather than opening an unfinished third point."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 80, independent_attempts: 3}, controlled_production: {active_threshold: 82, independent_attempts: 3}, spontaneous_production: {active_threshold: 82, independent_attempts: 3}, transfer: {active_threshold: 85, independent_attempts: 3}}, mastered: {all_required_active: true, retention_stability_days: 60, retention_confirmations: 3}}
 
   - id: grammar.hedging-stance.control
     cefr: C1

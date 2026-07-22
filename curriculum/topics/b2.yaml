@@ -645,7 +645,17 @@ topics:
       strong: [toefl-reading.skimming-main-purpose, reading.argument-structure]
       soft: [reading.compare-source-claims]
     dimensions: [recognition, transfer]
-    lexicon: []
+    lexicon: [chunk.the-key-point-is, word.summary]
+    contexts: [academic-passage, main-idea-analysis]
+    typical_errors:
+      - "Restating the field or topic instead of the passage's specific central claim."
+      - "Choosing the most detailed paragraph because Russian summaries often privilege factual density."
+      - "Writing a main idea so broad that it could describe any passage on the subject."
+    examples:
+      - "Early maps of the ocean floor were incomplete, yet they revealed continuous mountain chains beneath the sea. The passage argues that these observations helped transform theories of crustal movement."
+      - "Several cities replaced fixed bus schedules with demand-based routes. The central idea is that flexible routing can improve access but requires safeguards for predictable service."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 80, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 45, retention_confirmations: 2}}
 
   - id: toefl-reading.supporting-evidence
     cefr: B2
@@ -656,7 +666,17 @@ topics:
       strong: [toefl-reading.academic-main-idea, reading.evidence-quality]
       soft: [toefl-reading.scanning-key-detail]
     dimensions: [recognition, transfer]
-    lexicon: []
+    lexicon: [informal.do-you-have-a-source, word.reason, word.result]
+    contexts: [academic-passage, claim-evidence-analysis]
+    typical_errors:
+      - "Choosing a fact that is true in the passage but does not support the stated claim."
+      - "Treating an author's conclusion as if it were independent evidence."
+      - "Ignoring whether a numerical result measures the same population or outcome as the claim."
+    examples:
+      - "The author claims that shade increased seedling survival. The relevant evidence is that sixty-eight percent survived under screens, compared with thirty-one percent in open plots."
+      - "A longer museum visit does not by itself prove greater learning. The supporting result must show what visitors understood or remembered."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 80, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 45, retention_confirmations: 2}}
 
   - id: toefl-reading.inference
     cefr: B2
@@ -667,7 +687,17 @@ topics:
       strong: [written-production.fact-inference, reading.author-stance-bias]
       soft: [toefl-reading.supporting-evidence]
     dimensions: [recognition, transfer]
-    lexicon: []
+    lexicon: [word.reason, word.result]
+    contexts: [academic-passage, inference-question]
+    typical_errors:
+      - "Selecting a plausible conclusion based on outside knowledge rather than one required by the text."
+      - "Turning may or likely into certainty when expressing the inferred conclusion."
+      - "Reversing cause and effect because Russian word order allows the relation to remain more implicit."
+    examples:
+      - "No nesting birds were found on islands with introduced rats, although similar rat-free islands had large colonies. The evidence supports the inference that rats reduced nesting success."
+      - "The archive contains receipts after 1910 but none from earlier years, when records were kept elsewhere. It cannot be inferred that the business had no earlier sales."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 80, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 45, retention_confirmations: 2}}
 
   - id: toefl-reading.rhetorical-purpose
     cefr: B2
@@ -678,7 +708,17 @@ topics:
       strong: [reading.argument-structure, reading.author-stance-bias]
       soft: [toefl-reading.paragraph-organization]
     dimensions: [recognition, transfer]
-    lexicon: []
+    lexicon: [word.reason, word.although]
+    contexts: [academic-passage, rhetorical-analysis]
+    typical_errors:
+      - "Explaining what an example says instead of why the author places it there."
+      - "Calling every contrast a disagreement and missing concession or qualification."
+      - "Using because the author wants to show as an empty formula without naming the argument function."
+    examples:
+      - "The author mentions glass frogs after describing camouflage. The example demonstrates that transparency can protect animals as effectively as color matching."
+      - "A brief account of the failed pilot precedes the new method. Its purpose is to establish the limitation that the later design addresses."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 80, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 45, retention_confirmations: 2}}
 
   - id: toefl-reading.text-organization
     cefr: B2
@@ -689,7 +729,17 @@ topics:
       strong: [toefl-reading.paragraph-organization, reading.argument-structure]
       soft: [toefl-reading.academic-main-idea]
     dimensions: [recognition, transfer]
-    lexicon: []
+    lexicon: [word.because, word.although, word.result]
+    contexts: [multi-paragraph-passage, organization-map]
+    typical_errors:
+      - "Listing paragraph topics without describing the relationship among them."
+      - "Assuming chronological order whenever the text contains dates."
+      - "Missing a shift from one explanation to competing explanations because the transition is implicit."
+    examples:
+      - "The first paragraph defines soil salinity, and the next two compare natural and human causes. The final paragraph evaluates two restoration methods."
+      - "The passage first presents a popular explanation for the decline. It then tests that view against new data and proposes a narrower alternative."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 80, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 45, retention_confirmations: 2}}
 
   - id: toefl-reading.contextual-word-completion
     cefr: B2
@@ -700,7 +750,17 @@ topics:
       strong: [toefl-reading.vocabulary-context, word-formation.academic-nominalization]
       soft: [toefl-writing.sentence-building]
     dimensions: [recognition, controlled_production, transfer]
-    lexicon: []
+    lexicon: [word.requirement, word.improvement, word.result]
+    contexts: [academic-cloze, word-formation-task]
+    typical_errors:
+      - "Completing only from the Russian meaning without checking the required word class."
+      - "Choosing a grammatically possible form that violates the surrounding collocation."
+      - "Ignoring meaning elsewhere in the paragraph when several local completions appear possible."
+    examples:
+      - "The repeated observations increased the reliab___ of the estimate. The article and of-phrase require the noun reliability."
+      - "Because the two habitats differ greatly, a direct compar___ would be misleading. The sentence requires comparison rather than comparative."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 75, independent_attempts: 2}, controlled_production: {active_threshold: 78, independent_attempts: 2}, transfer: {active_threshold: 80, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 45, retention_confirmations: 2}}
 
   - id: toefl-writing.source-note-taking
     cefr: B2
@@ -711,7 +771,17 @@ topics:
       strong: [toefl-reading.scanning-key-detail, written-production.multi-source-synthesis]
       soft: [toefl-reading.text-organization]
     dimensions: [recognition, controlled_production, transfer]
-    lexicon: []
+    lexicon: [chunk.according-to, word.summary, word.result]
+    contexts: [source-notes, integrated-writing]
+    typical_errors:
+      - "Copying complete source sentences instead of selecting claim, evidence, and relation."
+      - "Dropping attribution so that a source claim appears to be the student's own fact."
+      - "Recording isolated Russian keywords that no longer preserve cause, contrast, or uncertainty."
+    examples:
+      - "Source claim: rooftop gardens reduce storm runoff. Note: Patel—three buildings, lower peak drainage after heavy rain; effect smaller in winter."
+      - "The historian disputes a trade explanation but accepts that trade accelerated the change. A useful note preserves both the disagreement and the concession."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 75, independent_attempts: 2}, controlled_production: {active_threshold: 78, independent_attempts: 2}, transfer: {active_threshold: 80, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 45, retention_confirmations: 2}}
 
   - id: toefl-writing.integrated-synthesis
     cefr: B2
@@ -722,7 +792,17 @@ topics:
       strong: [toefl-writing.source-note-taking, written-production.multi-source-synthesis]
       soft: [reading.compare-source-claims]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [chunk.according-to, word.summary, word.result]
+    contexts: [integrated-writing, multi-source-response]
+    typical_errors:
+      - "Writing one source summary after another rather than organizing by shared issues."
+      - "Blending source positions until the reader cannot tell who supports which claim."
+      - "Adding unsupported personal opinion to a task that asks for source synthesis."
+    examples:
+      - "Both sources link the population decline to habitat loss, but they differ on timing. The field report identifies a recent acceleration, whereas the historical records show a slower century-long trend."
+      - "The proposal predicts lower energy use, while the audit questions the assumed occupancy rate. Their disagreement therefore concerns the model's input rather than the value of efficiency itself."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 75, independent_attempts: 2}, controlled_production: {active_threshold: 78, independent_attempts: 2}, spontaneous_production: {active_threshold: 78, independent_attempts: 2}, transfer: {active_threshold: 80, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 45, retention_confirmations: 2}}
 
   - id: toefl-writing.thesis-position
     cefr: B2
@@ -733,7 +813,17 @@ topics:
       strong: [toefl-writing.discussion-claim-reason, written-production.technical-position-paper]
       soft: [reading.argument-structure]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [word.reason, word.recommendation]
+    contexts: [academic-essay, discussion-response]
+    typical_errors:
+      - "Writing a topic announcement such as I will discuss instead of a defensible position."
+      - "Using an absolute thesis that the available example cannot reasonably support."
+      - "Copying the Russian prompt structure and leaving the controlling reason unstated."
+    examples:
+      - "Universities should fund open digital textbooks for introductory courses because predictable access matters more than minor gains from frequent editions. This thesis states both the decision and its controlling reason."
+      - "Remote work should remain optional rather than universal. Different tasks require different levels of coordination and quiet concentration."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 75, independent_attempts: 2}, controlled_production: {active_threshold: 78, independent_attempts: 2}, spontaneous_production: {active_threshold: 78, independent_attempts: 2}, transfer: {active_threshold: 80, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 45, retention_confirmations: 2}}
 
   - id: toefl-writing.argument-development
     cefr: B2
@@ -744,7 +834,17 @@ topics:
       strong: [toefl-writing.thesis-position, reading.evidence-quality]
       soft: [written-production.counterargument-response]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [word.reason, word.because, word.result]
+    contexts: [academic-essay, discussion-board]
+    typical_errors:
+      - "Moving from claim to example without explaining how the example proves the point."
+      - "Using a memorized universal example about society that does not fit the prompt."
+      - "Repeating the thesis in different words instead of adding a causal step or consequence."
+    examples:
+      - "Public libraries should lend basic tools as well as books because occasional users cannot justify buying them. In one neighborhood trial, residents completed small repairs while borrowing each tool only a few times."
+      - "A short planning stage improves group work by exposing incompatible assumptions early. When our class defined each role before research began, duplicate work fell and the final report was more coherent."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 75, independent_attempts: 2}, controlled_production: {active_threshold: 78, independent_attempts: 2}, spontaneous_production: {active_threshold: 78, independent_attempts: 2}, transfer: {active_threshold: 80, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 45, retention_confirmations: 2}}
 
   - id: toefl-writing.cohesion
     cefr: B2
@@ -755,7 +855,17 @@ topics:
       strong: [toefl-reading.paragraph-organization, written-production.multi-source-synthesis]
       soft: [grammar.connectors.cause-contrast]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [word.although, word.because, word.result]
+    contexts: [academic-response, revision-task]
+    typical_errors:
+      - "Adding moreover or however mechanically where the logical relation does not match."
+      - "Using this or it without a clear noun referent, especially after several possible Russian antecedents."
+      - "Repeating the same noun in every sentence instead of using controlled reference and progression."
+    examples:
+      - "The city expanded the cycle network, but winter use remained low. This seasonal limit does not erase the safety gains reported during the rest of the year."
+      - "Small classes permit frequent feedback. Because that feedback arrives while students are still drafting, they can revise their reasoning rather than only correct the final text."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 75, independent_attempts: 2}, controlled_production: {active_threshold: 78, independent_attempts: 2}, spontaneous_production: {active_threshold: 78, independent_attempts: 2}, transfer: {active_threshold: 80, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 45, retention_confirmations: 2}}
 
   - id: toefl-writing.academic-register
     cefr: B2
@@ -766,7 +876,17 @@ topics:
       strong: [reading.author-stance-bias, word-formation.academic-nominalization]
       soft: [everyday-online-informal.tone-repair]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [chunk.according-to, word.result, word.reason]
+    contexts: [academic-essay, source-based-response]
+    typical_errors:
+      - "Using conversational fillers such as you know or a lot of in formal analysis."
+      - "Replacing cautious source language with categorical Russian-style certainty."
+      - "Overloading the response with nominalizations to imitate academic style and obscuring the action."
+    examples:
+      - "The findings suggest that later start times may improve attendance; they do not establish a universal effect. This wording preserves the study's limited claim."
+      - "The policy created substantial administrative work, yet its effect on access remains uncertain. A precise verb and a calibrated conclusion keep the register formal without becoming inflated."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 75, independent_attempts: 2}, controlled_production: {active_threshold: 78, independent_attempts: 2}, spontaneous_production: {active_threshold: 78, independent_attempts: 2}, transfer: {active_threshold: 80, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 45, retention_confirmations: 2}}
 
   - id: toefl-writing.discussion-response
     cefr: B2
@@ -777,4 +897,14 @@ topics:
       strong: [toefl-writing.discussion-claim-reason, written-production.counterargument-response]
       soft: [written-interaction.decision-challenge]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [word.agree, word.disagree, informal.not-sure-i-agree]
+    contexts: [discussion-board, peer-response]
+    typical_errors:
+      - "Writing I agree followed by a paraphrase of the previous post and no original contribution."
+      - "Rejecting a peer's position in blunt translated language instead of delimiting the disagreement."
+      - "Introducing an example that is interesting but unrelated to the shared academic question."
+    examples:
+      - "Mina is right that public transport reduces congestion, but reliability matters as much as route coverage. A bus that frequently misses its schedule cannot replace a private car for time-sensitive trips."
+      - "I would qualify Tomas's claim that online courses always widen access. They remove travel barriers, yet students with unstable internet may face a new form of exclusion."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 75, independent_attempts: 2}, controlled_production: {active_threshold: 78, independent_attempts: 2}, spontaneous_production: {active_threshold: 78, independent_attempts: 2}, transfer: {active_threshold: 80, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 45, retention_confirmations: 2}}

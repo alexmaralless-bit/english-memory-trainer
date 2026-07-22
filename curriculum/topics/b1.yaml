@@ -622,7 +622,17 @@ topics:
       strong: [reading.main-idea-details, reading.connected-technical-explanation]
       soft: [reading.short-news-item]
     dimensions: [recognition, transfer]
-    lexicon: []
+    lexicon: [chunk.the-key-point-is, word.summary]
+    contexts: [academic-passage, campus-notice]
+    typical_errors:
+      - "Translating every sentence before deciding what the text is trying to do."
+      - "Naming the broad subject as the main purpose, a common Russian-school summary habit."
+      - "Choosing a vivid example as the purpose because it is easier to remember than the controlling idea."
+    examples:
+      - "A campus garden reduced summer heat around two residence halls. The passage explains why small planted areas can improve local conditions."
+      - "The library will test longer weekend hours for one month. The notice invites students to use the trial and submit feedback."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
 
   - id: toefl-reading.scanning-key-detail
     cefr: B1
@@ -633,7 +643,17 @@ topics:
       strong: [reading.documentation-scan, reading.multi-step-service-information]
       soft: [reading.ticket-basics]
     dimensions: [recognition, transfer]
-    lexicon: []
+    lexicon: [word.detail, word.requirement]
+    contexts: [academic-passage, campus-information]
+    typical_errors:
+      - "Selecting the first sentence that repeats a keyword instead of checking the requested relationship."
+      - "Missing except, unless, or a negative condition while scanning quickly."
+      - "Returning a nearby number or name without verifying its unit or role."
+    examples:
+      - "The field study ran from April through June, but soil samples were collected only in May. The required detail is the sampling month, not the full study period."
+      - "Students may reserve the lab until 8 p.m. on weekdays. On Friday, however, the building closes at 6 p.m."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
 
   - id: toefl-reading.paraphrase-match
     cefr: B1
@@ -644,7 +664,17 @@ topics:
       strong: [written-production.paraphrase-summary, reading.connected-technical-explanation]
       soft: [written-production.paraphrase-expression]
     dimensions: [recognition, transfer]
-    lexicon: []
+    lexicon: [word.summary, word.reason]
+    contexts: [academic-passage, sentence-equivalence]
+    typical_errors:
+      - "Choosing an option because it repeats source words even though it changes the relationship."
+      - "Replacing individual words with synonyms while preserving an un-English Russian sentence structure."
+      - "Ignoring a change from possibility to certainty or from cause to simple sequence."
+    examples:
+      - "The new coating slowed water loss from the leaves. In other words, treated plants retained moisture longer."
+      - "Few residents used the first survey because it was available for only two days. The limited response period reduced participation."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
 
   - id: toefl-reading.vocabulary-context
     cefr: B1
@@ -655,7 +685,17 @@ topics:
       strong: [reading.idioms-in-context, word-formation.quality-suffix]
       soft: [word-formation.surpass-out]
     dimensions: [recognition, transfer]
-    lexicon: []
+    lexicon: [word.detail, word.reason]
+    contexts: [academic-passage, campus-article]
+    typical_errors:
+      - "Choosing the first dictionary meaning or Russian cognate without testing it in the sentence."
+      - "Ignoring the word's grammatical role when deciding among possible meanings."
+      - "Using general topic knowledge instead of the local contrast, definition, or example."
+    examples:
+      - "The committee called the early estimate conservative because actual demand was much higher. Here, conservative means deliberately low rather than politically traditional."
+      - "The beetle population declined after the cold spring, yet it rebounded by midsummer. The contrast shows that rebounded means recovered."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
 
   - id: toefl-reading.paragraph-organization
     cefr: B1
@@ -666,7 +706,17 @@ topics:
       strong: [reading.main-idea-details, written-production.cause-effect-explanation]
       soft: [grammar.connectors.cause-contrast]
     dimensions: [recognition, transfer]
-    lexicon: []
+    lexicon: [word.because, word.although, word.result]
+    contexts: [academic-paragraph, expository-analysis]
+    typical_errors:
+      - "Reading the paragraph as a list of facts instead of identifying the controlling idea."
+      - "Treating however as a generic Russian linking word and missing the contrast it introduces."
+      - "Mistaking an example for a new claim rather than support for the preceding explanation."
+    examples:
+      - "Urban trees cool streets in two ways. They block direct sunlight, and water released by their leaves lowers nearby air temperature."
+      - "The first model was inexpensive to build. However, its frequent repairs made it the costlier option over five years."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
 
   - id: toefl-writing.sentence-building
     cefr: B1
@@ -677,7 +727,17 @@ topics:
       strong: [grammar.basic-word-order, grammar.relative-clauses.specification]
       soft: [grammar.connectors.cause-contrast]
     dimensions: [recognition, controlled_production, transfer]
-    lexicon: []
+    lexicon: [word.because, word.although, word.result]
+    contexts: [academic-sentence, context-completion]
+    typical_errors:
+      - "Keeping Russian information order when English requires a fixed subject before the finite verb."
+      - "Omitting an article, auxiliary, or dummy subject because Russian has no equivalent word."
+      - "Attaching a relative or adverbial clause to the wrong noun when arranging supplied phrases."
+    examples:
+      - "Although the sample was small, the pattern appeared in all three groups. This order keeps the concession subordinate to the main finding."
+      - "The device that measured soil moisture was calibrated each morning. The relative clause identifies the device, not the moisture."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
 
   - id: toefl-writing.academic-email
     cefr: B1
@@ -688,7 +748,17 @@ topics:
       strong: [written-interaction.formal-service-request, written-interaction.project-risk-update]
       soft: [written-interaction.polite-request]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [chunk.could-you-please, word.deadline, word.requirement]
+    contexts: [academic-email, campus-request]
+    typical_errors:
+      - "Beginning with I want or You must, a direct Russian transfer that sounds unnecessarily demanding."
+      - "Giving a long personal history but omitting the exact request and relevant deadline."
+      - "Using teacher as a form of address instead of the recipient's name or appropriate title."
+    examples:
+      - "Dear Professor Lee, I missed Monday's lab because the campus clinic asked me to isolate. Could I attend the Thursday section instead?"
+      - "Hello Ms. Ortiz, the registration page lists two different submission dates. Could you confirm which deadline applies to visiting students?"
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
 
   - id: toefl-writing.discussion-claim-reason
     cefr: B1
@@ -699,4 +769,14 @@ topics:
       strong: [everyday-life.expressing-an-opinion-with-reasons, written-production.reasoned-recommendation]
       soft: [written-interaction.respectful-disagreement]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
-    lexicon: []
+    lexicon: [word.reason, word.agree, word.disagree]
+    contexts: [discussion-board, academic-response]
+    typical_errors:
+      - "Repeating the prompt as a thesis without taking a specific position."
+      - "Giving a broad Russian-style example about people in general rather than a concrete case."
+      - "Rejecting another participant's view bluntly without adding an original reason."
+    examples:
+      - "Universities should keep a limited number of quiet study rooms open overnight. Students with jobs often cannot use the library during normal hours, so access affects them unevenly."
+      - "I agree that group projects build collaboration, but individual reflection should remain part of the grade. It reveals whether each student understands the shared result."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
