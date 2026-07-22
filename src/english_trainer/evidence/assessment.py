@@ -28,6 +28,7 @@ result. The agent reports facts; every level and score here is engine-made.
 
 from __future__ import annotations
 
+import decimal
 import hashlib
 import re
 import unicodedata
@@ -85,6 +86,18 @@ def _is_utf8_boundary(data: bytes, offset: int) -> bool:
     if offset in (0, len(data)):
         return True
     return (data[offset] & 0xC0) != 0x80
+
+
+def _decimal_context(payload: dict[str, Any]) -> decimal.Context:
+    """The fixed Decimal context the rubric policy pins (precision 28,
+    ROUND_HALF_EVEN). The score aggregation runs inside it so the ``score_ppm``
+    division does not read the mutable ambient thread context -- the same
+    hermetic-fold guarantee the scoring engine keeps."""
+    section = payload.get("decimal_context") or {}
+    return decimal.Context(
+        prec=int(section.get("precision", 28)),
+        rounding=getattr(decimal, str(section.get("rounding", "ROUND_HALF_EVEN"))),
+    )
 
 
 # -- machine opcodes (closed set, PD-3 A) ------------------------------------
@@ -374,41 +387,46 @@ def finalize_attempt(
         else:
             rejected.append({"observation": obs, "reason": reason})
 
-    # 3. Reduce criteria; check PD-7 completeness.
+    # 3. Reduce criteria; check PD-7 completeness. The weighted-mean arithmetic
+    # runs inside the rubric's pinned Decimal context so the bare ``+``/``*``
+    # and the final division use precision 28 / ROUND_HALF_EVEN -- not the
+    # ambient thread context -- keeping ``score_ppm`` hermetic under replay.
     context_prec = Decimal(1)  # integer quantum for ROUND_HALF_EVEN below
     level_ppm = {level: int(spec["level_ppm"]) for level, spec in payload["level_scale"].items()}
     trace: list[dict[str, Any]] = []
     covered: set[str] = set()
-    numerator = Decimal(0)
-    total_weight = Decimal(0)
-    for criterion_id, selected in sorted(profile_criteria.items()):
-        relevant = [f for f in accepted if f.get("criterion_id") == criterion_id]
-        if relevant:
-            covered.add(criterion_id)
-        level = criterion_level(catalog[criterion_id], relevant, families, severities)
-        weight = Decimal(int(selected["weight_units"]))
-        numerator += weight * Decimal(level_ppm[str(level)])
-        total_weight += weight
-        trace.append(
-            {
-                "criterion_id": criterion_id,
-                "weight_units": int(selected["weight_units"]),
-                "level": level,
-                "level_ppm": level_ppm[str(level)],
-                "findings": len(relevant),
-            }
-        )
-    required = {cid for cid, sel in profile_criteria.items() if sel.get("required")}
-    complete = required <= covered
+    score_ppm: int | None
+    with decimal.localcontext(_decimal_context(payload)):
+        numerator = Decimal(0)
+        total_weight = Decimal(0)
+        for criterion_id, selected in sorted(profile_criteria.items()):
+            relevant = [f for f in accepted if f.get("criterion_id") == criterion_id]
+            if relevant:
+                covered.add(criterion_id)
+            level = criterion_level(catalog[criterion_id], relevant, families, severities)
+            weight = Decimal(int(selected["weight_units"]))
+            numerator += weight * Decimal(level_ppm[str(level)])
+            total_weight += weight
+            trace.append(
+                {
+                    "criterion_id": criterion_id,
+                    "weight_units": int(selected["weight_units"]),
+                    "level": level,
+                    "level_ppm": level_ppm[str(level)],
+                    "findings": len(relevant),
+                }
+            )
+        required = {cid for cid, sel in profile_criteria.items() if sel.get("required")}
+        complete = required <= covered
 
-    if complete:
-        score_ppm = int((numerator / total_weight).quantize(context_prec, rounding=ROUND_HALF_EVEN))
-        disposition = "scored"
-        contributing = bool(primary.get("target_ref"))
-    else:
-        score_ppm = None
-        disposition = "insufficient_evidence"
-        contributing = False  # missing assessor coverage is never a learner zero (PD-7 C)
+        if complete:
+            score_ppm = int((numerator / total_weight).quantize(context_prec, rounding=ROUND_HALF_EVEN))
+            disposition = "scored"
+            contributing = bool(primary.get("target_ref"))
+        else:
+            score_ppm = None
+            disposition = "insufficient_evidence"
+            contributing = False  # missing assessor coverage is never a learner zero (PD-7 C)
 
     assessment: dict[str, Any] = {
         "basis": "rubric",

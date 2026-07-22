@@ -3,7 +3,8 @@ rules, origin protections (canon 0.4 part 2)."""
 
 from __future__ import annotations
 
-from decimal import Decimal
+import decimal
+from decimal import ROUND_DOWN, Context, Decimal
 from typing import Any
 
 from english_trainer.kernel.encoding import payload_hash
@@ -204,3 +205,17 @@ def test_fold_is_byte_deterministic(store, clock, random_source, policy) -> None
     first = snapshot(fold_scores(store, policy))
     second = snapshot(fold_scores(store, policy))
     assert payload_hash(first) == payload_hash(second)
+
+
+def test_fold_is_hermetic_to_the_ambient_decimal_context(store, clock, random_source, policy) -> None:
+    # The fold pins its OWN Decimal context (precision 28, ROUND_HALF_EVEN): a
+    # hostile ambient context must not change the replayed snapshot hash. The
+    # stability update divides, so a truncating ambient context (prec 6,
+    # ROUND_DOWN) would diverge if the fold read the thread context (finding 1).
+    _evidence(store, clock, random_source, target="t.h", dimension="spontaneous_production")
+    for outcome in ("PROGRESS", "CONFIRMED", "CONFIRMED"):
+        _outcome(store, clock, random_source, target="t.h", outcome=outcome)
+    baseline = payload_hash(snapshot(fold_scores(store, policy)))
+    with decimal.localcontext(Context(prec=6, rounding=ROUND_DOWN)):
+        altered = payload_hash(snapshot(fold_scores(store, policy)))
+    assert altered == baseline  # hermetic: the fold ignores the ambient context

@@ -58,6 +58,10 @@ EVENT_ABANDONED = "session.abandoned"
 EVENT_COMPOSED = "session.composed"
 EVENT_STEP_PRESENTED = "session.step_presented"
 EVENT_SAFETY_REJECTED = "session.step_safety_rejected"
+# Owned by lessons (lessons 5): both `session start` and `session resume`
+# attach the tutor in the same UoW as the operation. Defined here so both call
+# sites (start below, resume via import) share one source of truth.
+EVENT_AGENT_ATTACHED = "session.agent_attached"
 
 STARTED = "STARTED"
 IN_PROGRESS = "IN_PROGRESS"
@@ -421,6 +425,26 @@ def start_session(
                         pinned_versions=pinned,
                     )
                     for item in resolved_required_skills
+                ),
+                # `--provider` is mandatory at start too, and `attach_agent`
+                # runs in the same UoW as the operation (lessons 5 [R-3]): start
+                # attaches the starting tutor, alongside the start events, so an
+                # AGENT_ATTACHED fact exists from the first connection -- resume
+                # is not the only path that attaches.
+                make_event(
+                    id=new_ulid(clock, random_source),
+                    type=EVENT_AGENT_ATTACHED,
+                    occurred_at=clock.now(),
+                    actor="agent",
+                    provider=provider,
+                    correlation_id=session_id,
+                    payload={
+                        "session_id": session_id,
+                        "provider": provider,
+                        "skills": resolved_required_skills,
+                        "attached_at": clock.now().isoformat(),
+                    },
+                    pinned_versions=pinned,
                 ),
             ]
         )

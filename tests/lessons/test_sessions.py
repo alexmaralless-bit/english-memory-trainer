@@ -11,6 +11,7 @@ from english_trainer.kernel.store import EventStore
 from english_trainer.lessons.sessions import (
     ABANDONED,
     EVENT_ABANDONED,
+    EVENT_AGENT_ATTACHED,
     EVENT_COMPOSED,
     EVENT_FINISHED,
     EVENT_STARTED,
@@ -47,10 +48,12 @@ def test_start_pins_active_policies_into_the_manifest(store, registry, clock, ra
     assert state["status"] == STARTED and revision == 1
 
     events = list(store.read())
-    assert [event.type for event in events] == [EVENT_STARTED, EVENT_COMPOSED]
+    # start attaches the starting tutor in the same UoW (lessons 5 [R-3]).
+    assert [event.type for event in events] == [EVENT_STARTED, EVENT_COMPOSED, EVENT_AGENT_ATTACHED]
     assert events[0].pinned_versions == manifest["pinned_versions"]
     assert events[0].correlation_id == session_id
     assert events[1].payload["session_plan_id"] == manifest["session_plan_id"]
+    assert events[2].provider == "claude-code" and events[2].payload["provider"] == "claude-code"
 
 
 def test_start_without_active_curriculum_is_refused(store, clock, random_source) -> None:
@@ -66,7 +69,7 @@ def test_second_start_requires_explicit_closure(store, registry, clock, random_s
     with pytest.raises(SessionPrecondition, match="still active"):
         _start(store, registry, clock, random_source)
     assert active_session_id(store) == first  # contract C-1: no implicit abandon
-    assert store.count() == 2  # started + composed; the refused start wrote nothing
+    assert store.count() == 3  # started + composed + agent_attached; the refused start wrote nothing
 
 
 def test_started_session_cannot_finish_only_abandon(store, registry, clock, random_source) -> None:
@@ -118,6 +121,6 @@ def test_lifecycle_events_and_outbox_stay_paired(store, registry, clock, random_
     session_id = _start(store, registry, clock, random_source)
     mark_in_progress(store, clock, session_id)
     finish_session(store, clock, random_source, session_id)
-    assert store.count() == 3  # started + composed + finished
+    assert store.count() == 4  # started + composed + agent_attached + finished
     outbox = store._conn.execute("SELECT COUNT(*) AS n FROM outbox;").fetchone()["n"]
-    assert outbox == 3  # every lifecycle event rode the transactional outbox
+    assert outbox == 4  # every lifecycle event rode the transactional outbox

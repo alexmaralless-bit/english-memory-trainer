@@ -107,3 +107,29 @@ def test_xp_awards_once_and_caps_per_day(store, clock, random_source, policy) ->
     _emit(store, next_day, random_source, "attempt.recorded", {"attempt_id": "c1", "status": "assessed"})
     two_days = xp_ledger(store, policy)
     assert two_days["practice_days"] == 2 and two_days["streak"] == 2
+
+
+def test_xp_awards_rubric_finalized_attempts_once(store, clock, random_source, policy) -> None:
+    # A rubric attempt is recorded (recorded) then finalized via
+    # attempt.state_changed(to_status=assessed) -- it must earn XP exactly once,
+    # and the objective/rubric paths stay mutually exclusive (no double count).
+    _emit(store, clock, random_source, "attempt.recorded", {"attempt_id": "r1", "status": "recorded"})
+    _emit(
+        store,
+        clock,
+        random_source,
+        "attempt.state_changed",
+        {"attempt_id": "r1", "from_status": "recorded", "to_status": "assessed", "reason": "scored"},
+    )
+    # An abandoned attempt (state_changed -> closed_unassessed) awards nothing.
+    _emit(store, clock, random_source, "attempt.recorded", {"attempt_id": "r2", "status": "recorded"})
+    _emit(
+        store,
+        clock,
+        random_source,
+        "attempt.state_changed",
+        {"attempt_id": "r2", "from_status": "recorded", "to_status": "closed_unassessed"},
+    )
+    ledger = xp_ledger(store, policy)
+    assert ledger["total"] == 10  # exactly one attempt_finalized award (10 XP)
+    assert {a["source_id"] for a in ledger["awards"]} == {"r1"}

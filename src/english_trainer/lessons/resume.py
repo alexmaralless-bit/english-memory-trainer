@@ -27,6 +27,7 @@ from english_trainer.kernel.store import EventStore
 from english_trainer.kernel.uow import UnitOfWork
 from english_trainer.lessons.delivery import peek_step
 from english_trainer.lessons.sessions import (
+    EVENT_AGENT_ATTACHED,
     IN_PROGRESS,
     STARTED,
     SessionPrecondition,
@@ -40,7 +41,9 @@ from english_trainer.scoring.aggregates import (
 )
 from english_trainer.scoring.engine import fold_scores
 
-EVENT_AGENT_ATTACHED = "session.agent_attached"
+# ``EVENT_AGENT_ATTACHED`` now lives in sessions.py (both start and resume
+# attach); it is imported above and stays importable from here for callers
+# that use its historical home.
 
 _ACTIVE_STATES = (STARTED, IN_PROGRESS)
 

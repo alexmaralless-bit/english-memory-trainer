@@ -28,6 +28,7 @@ for a long time, and pretending otherwise would fake progress (canon 4.10).
 
 from __future__ import annotations
 
+import decimal
 from decimal import Decimal
 from typing import Any
 
@@ -36,6 +37,7 @@ from english_trainer.scoring.engine import ACTIVE, MASTERED, TargetState
 from english_trainer.scoring.policy import scoring_context
 
 ATTEMPT_RECORDED_EVENT = "attempt.recorded"
+ATTEMPT_STATE_CHANGED_EVENT = "attempt.state_changed"
 REVIEW_OUTCOME_EVENT = "review.outcome"
 
 CONFIDENCE_ORDER = ("very_low", "low", "medium", "high")
@@ -125,18 +127,22 @@ def learning_score(
     if measured_level is None:
         return None
     context = scoring_context(policy)
-    values: list[Decimal] = []
-    for topic in program.get("topics", []):
-        if str(topic.get("cefr")) != measured_level:
-            continue
-        state = scores.get(str(topic.get("id")))
-        if state is None or state.knowledge_state not in _STEADY or not state.mastery:
-            continue
-        per_dimension = list(state.mastery.values())
-        values.append(context.divide(sum(per_dimension, Decimal(0)), Decimal(len(per_dimension))))
-    if not values:
-        return None
-    return str(context.divide(sum(values, Decimal(0)), Decimal(len(values))))
+    # The mean runs inside the pinned context so the bare ``+`` inside ``sum``
+    # uses precision 28 / ROUND_HALF_EVEN too, not the ambient thread context
+    # (hermetic aggregate, matching ``fold_scores``).
+    with decimal.localcontext(context):
+        values: list[Decimal] = []
+        for topic in program.get("topics", []):
+            if str(topic.get("cefr")) != measured_level:
+                continue
+            state = scores.get(str(topic.get("id")))
+            if state is None or state.knowledge_state not in _STEADY or not state.mastery:
+                continue
+            per_dimension = list(state.mastery.values())
+            values.append(context.divide(sum(per_dimension, Decimal(0)), Decimal(len(per_dimension))))
+        if not values:
+            return None
+        return str(context.divide(sum(values, Decimal(0)), Decimal(len(values))))
 
 
 def xp_ledger(store: EventStore, policy: dict[str, Any]) -> dict[str, Any]:
@@ -154,6 +160,14 @@ def xp_ledger(store: EventStore, policy: dict[str, Any]) -> dict[str, Any]:
 
     for event in store.read():  # sequence order: the cap is deterministic
         if event.type == ATTEMPT_RECORDED_EVENT and event.payload.get("status") == "assessed":
+            # Objective checks are recorded already-assessed.
+            source_id = str(event.payload.get("attempt_id"))
+            kind, amount = "attempt_finalized", attempt_award
+        elif event.type == ATTEMPT_STATE_CHANGED_EVENT and event.payload.get("to_status") == "assessed":
+            # Rubric finalization: an open answer is recorded then assessed via
+            # attempt.state_changed (finalize_attempt), never recorded-assessed.
+            # Award-once by attempt_id keeps the objective and rubric paths
+            # mutually exclusive -- an attempt is counted on exactly one fact.
             source_id = str(event.payload.get("attempt_id"))
             kind, amount = "attempt_finalized", attempt_award
         elif event.type == REVIEW_OUTCOME_EVENT:

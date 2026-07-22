@@ -9,9 +9,14 @@ punishment), or a replan that dropped the unpresented step (``CANCELLED`` --
 NOT a learning outcome: the system withdrew the goal itself, so scoring and
 the scheduler both treat it as a terminal no-op [RR2-4]).
 
-The v1 outcome computation: the latest assessed attempt against the
-assignment's step decides -- correct → CONFIRMED, incorrect → REGRESSION; no
-assessed attempt → INSUFFICIENT_EVIDENCE(reason=not_attempted). RECOVERED is
+The v1 outcome computation: the latest attempt that reached the terminal
+``assessed`` state against the assignment's step decides, read from the attempt
+aggregate so BOTH assessment paths count. An objective check maps by its
+``correct`` boolean (True → CONFIRMED, False → REGRESSION); an open (rubric)
+answer maps by its finalized disposition -- a scored, contributing answer at or
+above the v1 ppm threshold → CONFIRMED, a scored-but-weaker one → REGRESSION,
+and a non-contributing / insufficient one → INSUFFICIENT_EVIDENCE. No assessed
+attempt at all → INSUFFICIENT_EVIDENCE(reason=not_attempted). RECOVERED is
 never emitted separately: the scoring transition table already restores the
 remembered steady state when CONFIRMED lands on AT_RISK. Mastery-criteria
 gating of CONFIRMED (thresholds, independence across sessions) refines this
@@ -27,6 +32,8 @@ from __future__ import annotations
 from typing import Any
 
 from english_trainer.evidence.attempts import (
+    ASSESSED,
+    ATTEMPT_AGGREGATE,
     EVENT_ATTEMPT_RECORDED,
     EvidencePrecondition,
     _session_manifest,
@@ -47,6 +54,11 @@ PENDING = "pending"
 CLOSED = "closed"
 CANCELLED = "cancelled"
 
+# v1 default: a scored, contributing open (rubric) answer confirms at or above
+# half the ppm scale (500000 = 0.5 of 1_000_000). Integer-thresholded and
+# deterministic; the mastery-criteria increment refines it, the channel stays.
+_RUBRIC_CONFIRMED_PPM = 500_000
+
 
 def pending_assignments(store: EventStore, session_id: str) -> list[dict[str, Any]]:
     """The session's assignments still awaiting a terminal disposition."""
@@ -58,16 +70,51 @@ def pending_assignments(store: EventStore, session_id: str) -> list[dict[str, An
 
 
 def _latest_assessed_attempt(store: EventStore, session_id: str, step_id: str) -> dict[str, Any] | None:
+    """The step's most recent attempt that reached the terminal ``assessed``
+    state, read from the attempt AGGREGATE (the authoritative lifecycle status).
+
+    Objective checks are recorded already-assessed; an open answer is recorded
+    as ``recorded`` and only later finalized to ``assessed`` via
+    ``attempt.state_changed`` (``finalize_attempt``). Both settle in the attempt
+    aggregate, so reading it covers BOTH paths -- matching only
+    ``attempt.recorded(status=assessed)`` would miss every rubric finalization
+    (finding 2). The ``attempt.recorded`` event supplies the step -> attempt_id
+    link (the state-change fact carries no ``step_id``)."""
     found: dict[str, Any] | None = None
     for event in store.read():
         if (
             event.type == EVENT_ATTEMPT_RECORDED
             and event.correlation_id == session_id
             and str(event.payload.get("step_id")) == step_id
-            and event.payload.get("status") == "assessed"
         ):
-            found = dict(event.payload)
+            aggregate = read_aggregate(store._conn, ATTEMPT_AGGREGATE, str(event.payload.get("attempt_id")))
+            if aggregate is None:
+                continue
+            state, _ = aggregate
+            if state.get("status") == ASSESSED:
+                found = dict(state)
     return found
+
+
+def _outcome_from_assessment(assessment: dict[str, Any]) -> tuple[str, str | None]:
+    """Map a FINALIZED attempt assessment to a ``(review_outcome, reason)`` pair
+    (v1 rule). Objective checks carry a boolean ``correct``; open (rubric)
+    answers carry ``disposition``/``score_ppm``/``contributing``.
+
+    - objective ``correct`` True -> CONFIRMED, else REGRESSION;
+    - rubric ``scored`` + contributing + ``score_ppm`` >= ``_RUBRIC_CONFIRMED_PPM``
+      -> CONFIRMED, a scored-but-weaker one -> REGRESSION;
+    - anything non-contributing / insufficient -> INSUFFICIENT_EVIDENCE.
+
+    The rubric threshold is a documented v1 default; the mapping is fully
+    integer-thresholded and deterministic."""
+    if str(assessment.get("basis")) == "objective_check":
+        return ("CONFIRMED", None) if bool(assessment.get("correct")) else ("REGRESSION", None)
+    if assessment.get("disposition") == "scored" and bool(assessment.get("contributing")):
+        if int(assessment.get("score_ppm") or 0) >= _RUBRIC_CONFIRMED_PPM:
+            return "CONFIRMED", None
+        return "REGRESSION", None
+    return "INSUFFICIENT_EVIDENCE", "insufficient_evidence"
 
 
 def close_review(
@@ -102,15 +149,15 @@ def close_review(
             f"review assignment {review_id} was cancelled by the system; there is nothing to close"
         )
 
+    outcome: str
+    reason: str | None
     attempt = _latest_assessed_attempt(store, session_id, str(state.get("step_id")))
-    reason: str | None = None
     if attempt is None:
-        outcome = "INSUFFICIENT_EVIDENCE"
-        reason = "not_attempted"
-    elif attempt.get("assessment", {}).get("correct"):
-        outcome = "CONFIRMED"
+        # No assessed attempt at all (never answered, or answered open and not
+        # yet finalized): hold the interval, book a short retry -- no movement.
+        outcome, reason = "INSUFFICIENT_EVIDENCE", "not_attempted"
     else:
-        outcome = "REGRESSION"
+        outcome, reason = _outcome_from_assessment(attempt.get("assessment") or {})
 
     closed_at = clock.now().isoformat()
     pinned = dict(manifest.get("pinned_versions") or {})

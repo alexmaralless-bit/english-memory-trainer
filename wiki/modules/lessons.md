@@ -84,14 +84,14 @@ stateDiagram-v2
 
 - **MUST — session facade не второй владелец алгоритма**: `peek_next_step`, `claim_next_step` и `replan` здесь — транзакционная CLI-фасада lessons; она без собственной сортировки и бюджетных правил делегирует одноимённым операциям [[control]] §3b. Нормативное поведение композиции и CAS живёт только в control.
 - **MUST — владелец `AGENT_ATTACHED` — lessons** [P0-5]: событие сессионное, поэтому живёт здесь, а не в audit; audit его только читает. Flow [[../flows/continuation]] требовал события, но ни один owner его не публиковал — обязательство flow без владельца не исполнимо.
-- **MUST — подключение фиксируется теми же командами, что и вход в сессию** [R-3]: `--provider` обязателен у `session start` и `session resume`, и `attach_agent` вызывается **в той же UoW**, что и сама операция. Отдельной CLI-команды `session attach` **нет** намеренно: она позволила бы объявить агента подключённым к сессии, которую он не загрузил, и создать состояние, где `AGENT_ATTACHED` есть, а briefing агент не получал. Смена агента на холодную — это `resume` с новым `--provider`.
+- **MUST — подключение фиксируется теми же командами, что и вход в сессию** [R-3]: `--provider` обязателен у `session start` и `session resume`, и `attach_agent` вызывается **в той же UoW**, что и сама операция — **оба** пути публикуют `AGENT_ATTACHED` для своего провайдера (`start` — стартового, `resume` — возобновляющего). Отдельной CLI-команды `session attach` **нет** намеренно: она позволила бы объявить агента подключённым к сессии, которую он не загрузил, и создать состояние, где `AGENT_ATTACHED` есть, а briefing агент не получал. Смена агента на холодную — это `resume` с новым `--provider`.
 - **MUST — session notes untrusted** [P0-5]: заметка агента (`--note` при любой фиксации) — свободный текст с автором и меткой времени; она **не evidence**, не влияет на scoring и не участвует в mastery. Схему и хранение владеет [[evidence]] §3 вместе с attempt; здесь — только факт, что фиксация может её нести.
 
 ## 6. CLI-поверхность
 
 | Команда | Что делает |
 |---|---|
-| `trainer session start [--duration N] --provider X [--mode balanced\|maintenance\|re_entry] --format json` | старт или конфликт с `allowed_actions` |
+| `trainer session start [--duration N] --provider X [--mode balanced\|maintenance\|re_entry] --format json` | старт или конфликт с `allowed_actions`; фиксирует `AGENT_ATTACHED` для стартового провайдера |
 | `trainer session next --session ID --expected-plan-version V --idempotency-key K --format json` | **выдаёт** следующий шаг, фиксирует `STEP_PRESENTED`, возвращает новый `plan_version`; идемпотентна |
 | `trainer session peek --session ID --format json` | показывает следующий шаг и текущий `plan_version`, ничего не меняя |
 | `trainer session replan --session ID --expected-plan-version V --idempotency-key K --format json` | пересборка остатка: `composition_revision + 1`, `plan_version + 1`; выпавшие непредъявленные review-цели получают `CANCELLED` в той же UoW ([[control]] §4.2) |

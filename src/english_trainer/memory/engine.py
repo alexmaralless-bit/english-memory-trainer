@@ -205,16 +205,17 @@ def render_pages(store: EventStore, registry: PolicyRegistry) -> dict[str, str]:
                 "operational", [plan_id, session_id], versions
             ) + "\n".join(body)
 
-    # -- reviews by date (operational schedule projection)
+    # -- reviews by date (event-sourced schedule projection: schedules are a
+    # pure fold over the event log, not SQLite-authoritative operational state)
     by_date: dict[str, list[str]] = defaultdict(list)
     for (target_id, dimension), schedule in sorted(schedules.items()):
         by_date[schedule.next_review_at.date().isoformat()].append(
             f"- [[{_slug(target_id)}]] · {dimension} (интервал {schedule.interval_days}д)"
         )
     for date, lines in sorted(by_date.items()):
-        pages[f"reviews/{date}.md"] = _frontmatter("operational", [f"reviews:{date}"], versions) + "\n".join(
-            [f"# Повторения на {date}", "", *lines, ""]
-        )
+        pages[f"reviews/{date}.md"] = _frontmatter(
+            "event-sourced", [f"reviews:{date}"], versions
+        ) + "\n".join([f"# Повторения на {date}", "", *lines, ""])
 
     # -- dashboards
     skill_lines = [
@@ -255,7 +256,7 @@ def render_pages(store: EventStore, registry: PolicyRegistry) -> dict[str, str]:
 
     upcoming = sorted(by_date.items())[:5]
     next_lines = [f"- [[{date}]] — {len(items)} целей" for date, items in upcoming]
-    pages["current/next-session.md"] = _frontmatter("operational", ["schedules"], versions) + "\n".join(
+    pages["current/next-session.md"] = _frontmatter("event-sourced", ["schedules"], versions) + "\n".join(
         [
             "# Следующая сессия",
             "",
@@ -270,9 +271,9 @@ def render_pages(store: EventStore, registry: PolicyRegistry) -> dict[str, str]:
         for (target_id, dimension), schedule in sorted(schedules.items())
         if target_id in lexicon
     ]
-    pages["current/vocabulary-review.md"] = _frontmatter("operational", ["schedules"], versions) + "\n".join(
-        ["# Лексика к повторению", "", *(vocab_lines or ["- пока нечего повторять"]), ""]
-    )
+    pages["current/vocabulary-review.md"] = _frontmatter(
+        "event-sourced", ["schedules"], versions
+    ) + "\n".join(["# Лексика к повторению", "", *(vocab_lines or ["- пока нечего повторять"]), ""])
 
     pages["current/recurring-errors.md"] = _frontmatter("event-sourced", ["errors"], versions) + "\n".join(
         [

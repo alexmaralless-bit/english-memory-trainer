@@ -111,10 +111,11 @@ def test_resume_attaches_the_agent_and_builds_a_briefing(
 
     events = list(store.read())
     attached = [event for event in events if event.type == EVENT_AGENT_ATTACHED]
-    assert len(attached) == 1
-    assert attached[0].provider == "codex"
-    assert attached[0].payload["skills"] == manifest["required_skills"]
-    assert result["agent_attached_event_id"] == attached[0].id
+    # start attaches the starting tutor too, so there are two attaches now:
+    # the claude-code start, then the codex resume.
+    assert [event.provider for event in attached] == ["claude-code", "codex"]
+    assert attached[-1].payload["skills"] == manifest["required_skills"]
+    assert result["agent_attached_event_id"] == attached[-1].id
 
 
 def test_resume_refuses_a_terminal_session(store, full_registry, clock, random_source) -> None:
@@ -143,4 +144,5 @@ def test_resume_is_idempotent_by_provider_change_not_by_the_call_itself(
     resume_session(store, full_registry, clock, random_source, session_id, provider="codex")
     resume_session(store, full_registry, clock, random_source, session_id, provider="claude-code")
     attached = [event for event in store.read() if event.type == EVENT_AGENT_ATTACHED]
-    assert [event.provider for event in attached] == ["codex", "claude-code"]
+    # The start attaches the starting provider first, then the two resumes.
+    assert [event.provider for event in attached] == ["claude-code", "codex", "claude-code"]

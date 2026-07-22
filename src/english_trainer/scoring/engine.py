@@ -114,150 +114,159 @@ def _clamp(value: Decimal, low: Decimal, high: Decimal) -> Decimal:
 
 
 def fold_scores(store: EventStore, policy: dict[str, Any]) -> dict[str, TargetState]:
-    """Fold the whole event log into per-target scoring state."""
+    """Fold the whole event log into per-target scoring state.
+
+    The whole fold body runs inside the policy's pinned Decimal context via
+    ``decimal.localcontext`` so that the bare ``+ - *`` operators use precision
+    28 / ROUND_HALF_EVEN too -- not the mutable ambient thread context. This is
+    the same idiom ``retrievability``/``due_backlog`` already use, and it is
+    what makes the replay hash hermetic: two folds over the same events are
+    byte-identical regardless of any ambient ``decimal`` state.
+    """
     context = scoring_context(policy)
-    mastery_cfg = policy["mastery"]
-    stability_cfg = policy["stability"]
-    origin_cfg = policy.get("origin_rules") or {}
+    with decimal.localcontext(context):
+        mastery_cfg = policy["mastery"]
+        stability_cfg = policy["stability"]
+        origin_cfg = policy.get("origin_rules") or {}
 
-    def dec(value: Any) -> Decimal:
-        return context.create_decimal(str(value))
+        def dec(value: Any) -> Decimal:
+            return context.create_decimal(str(value))
 
-    base_delta = dec(mastery_cfg["base_delta"])
-    weights = {k: dec(v) for k, v in mastery_cfg["mode_weights"].items()}
-    hint_penalty = dec(mastery_cfg["hint_penalty_per_hint"])
-    hint_floor = dec(mastery_cfg["hint_penalty_floor"])
-    session_cap = dec(mastery_cfg["session_cap"])
-    rubric_cap = dec(mastery_cfg["rubric_cap"])
-    regression_penalty = dec(mastery_cfg["regression_penalty"])
-    initial_stability = dec(stability_cfg["initial_stability_days"])
-    growth_base = dec(stability_cfg["success_growth_base"])
-    damping = dec(stability_cfg["growth_damping_days"])
-    shrink = dec(stability_cfg["regression_shrink_factor"])
-    qualities = {k: dec(v) for k, v in stability_cfg["outcome_quality"].items()}
+        base_delta = dec(mastery_cfg["base_delta"])
+        weights = {k: dec(v) for k, v in mastery_cfg["mode_weights"].items()}
+        hint_penalty = dec(mastery_cfg["hint_penalty_per_hint"])
+        hint_floor = dec(mastery_cfg["hint_penalty_floor"])
+        session_cap = dec(mastery_cfg["session_cap"])
+        rubric_cap = dec(mastery_cfg["rubric_cap"])
+        regression_penalty = dec(mastery_cfg["regression_penalty"])
+        initial_stability = dec(stability_cfg["initial_stability_days"])
+        growth_base = dec(stability_cfg["success_growth_base"])
+        damping = dec(stability_cfg["growth_damping_days"])
+        shrink = dec(stability_cfg["regression_shrink_factor"])
+        qualities = {k: dec(v) for k, v in stability_cfg["outcome_quality"].items()}
 
-    targets: dict[str, TargetState] = {}
+        targets: dict[str, TargetState] = {}
 
-    def target_state(ref: str) -> TargetState:
-        if ref not in targets:
-            targets[ref] = TargetState()
-        return targets[ref]
+        def target_state(ref: str) -> TargetState:
+            if ref not in targets:
+                targets[ref] = TargetState()
+            return targets[ref]
 
-    for event in store.read():  # canonical sequence order (foundation 3.3)
-        if event.type == EVIDENCE_ADDED_EVENT:
-            payload = event.payload
-            primary = payload.get("primary_target")
-            if not primary or not primary.get("target_ref"):
-                continue  # target-less evidence (free conversation) scores nothing yet
-            ref = str(primary["target_ref"])
-            dimension = str(primary.get("dimension") or "recognition")
-            state = target_state(ref)
-            state.evidence_count += 1
-            if state.stability_days is None:
-                state.stability_days = initial_stability
+        for event in store.read():  # canonical sequence order (foundation 3.3)
+            if event.type == EVIDENCE_ADDED_EVENT:
+                payload = event.payload
+                primary = payload.get("primary_target")
+                if not primary or not primary.get("target_ref"):
+                    continue  # target-less evidence (free conversation) scores nothing yet
+                ref = str(primary["target_ref"])
+                dimension = str(primary.get("dimension") or "recognition")
+                state = target_state(ref)
+                state.evidence_count += 1
+                if state.stability_days is None:
+                    state.stability_days = initial_stability
 
-            origin = str(payload.get("origin") or "session")
-            basis = str(payload.get("assessment_basis") or "objective_check")
-            if basis == "objective_check":
-                # Objective checks are binary: an incorrect answer gives no
-                # delta (monotonicity, canon 2.1 -- decreases arrive only via
-                # a confirmed REGRESSION outcome), a correct one full quality.
-                if not bool(payload.get("correct")):
-                    continue
-                quality = _ONE
-            else:
-                # Graduated rubric quality (P.5 PD-2 B): the engine-computed
-                # score_ppm scales the positive delta. Collapsing it back to a
-                # Boolean would make the four-level scale fictitious. Zero
-                # quality adds nothing; it is never a punishment.
-                quality = context.divide(
-                    context.create_decimal(int(payload.get("score_ppm") or 0)), Decimal(1_000_000)
+                origin = str(payload.get("origin") or "session")
+                basis = str(payload.get("assessment_basis") or "objective_check")
+                if basis == "objective_check":
+                    # Objective checks are binary: an incorrect answer gives no
+                    # delta (monotonicity, canon 2.1 -- decreases arrive only via
+                    # a confirmed REGRESSION outcome), a correct one full quality.
+                    if not bool(payload.get("correct")):
+                        continue
+                    quality = _ONE
+                else:
+                    # Graduated rubric quality (P.5 PD-2 B): the engine-computed
+                    # score_ppm scales the positive delta. Collapsing it back to a
+                    # Boolean would make the four-level scale fictitious. Zero
+                    # quality adds nothing; it is never a punishment.
+                    quality = context.divide(
+                        context.create_decimal(int(payload.get("score_ppm") or 0)), Decimal(1_000_000)
+                    )
+                    if quality <= 0:
+                        continue
+
+                weight = weights.get(dimension, weights["recognition"])
+                hints = int(payload.get("hints") or 0)
+                independence = _clamp(_ONE - hint_penalty * Decimal(hints), hint_floor, _ONE)
+                delta = context.multiply(
+                    context.multiply(context.multiply(base_delta, weight), independence), quality
                 )
-                if quality <= 0:
+
+                session_id = str(payload.get("session_id") or "")
+                granted = state.session_gain.get(session_id, _ZERO)
+                room = session_cap - granted
+                if room <= 0:
+                    state.audit.append(f"session-cap: {event.id}")
                     continue
-
-            weight = weights.get(dimension, weights["recognition"])
-            hints = int(payload.get("hints") or 0)
-            independence = _clamp(_ONE - hint_penalty * Decimal(hints), hint_floor, _ONE)
-            delta = context.multiply(
-                context.multiply(context.multiply(base_delta, weight), independence), quality
-            )
-
-            session_id = str(payload.get("session_id") or "")
-            granted = state.session_gain.get(session_id, _ZERO)
-            room = session_cap - granted
-            if room <= 0:
-                state.audit.append(f"session-cap: {event.id}")
-                continue
-            delta = min(delta, room)
-            if basis != "objective_check":
-                rubric_room = rubric_cap - state.rubric_gain
-                if rubric_room <= 0:
-                    state.audit.append(f"rubric-cap: {event.id}")
-                    continue
-                delta = min(delta, rubric_room)
-                state.rubric_gain += delta
-            state.session_gain[session_id] = granted + delta
-            current = state.mastery.get(dimension, _ZERO)
-            state.mastery[dimension] = _clamp(current + delta, _ZERO, _HUNDRED)
-            _ = origin  # placement evidence gains mastery normally; only the state is capped
-
-        elif event.type == REVIEW_OUTCOME_EVENT:
-            payload = event.payload
-            ref = str(payload.get("target_ref") or "")
-            if not ref:
-                continue
-            outcome = str(payload.get("outcome") or "")
-            if outcome not in OUTCOMES:
-                target_state(ref).audit.append(f"unknown-outcome: {event.id}")
-                continue
-            origin = str(payload.get("origin") or "session")
-            state = target_state(ref)
-            if (
-                origin == "control_probe"
-                and origin_cfg.get("control_probe_no_negative", True)
-                and outcome == "REGRESSION"
-            ):
-                # No-negative (canon 4b): a probe can never punish.
-                state.audit.append(f"probe-regression-suppressed: {event.id}")
-                continue
-            new_state, prior = transition(state.knowledge_state, outcome, state.prior_steady_state)
-            if origin == "placement":
-                ceiling = str(origin_cfg.get("placement_state_ceiling", ACTIVE))
-                order = [NEW, LEARNING, ACTIVE, MASTERED]
-                if new_state in order and order.index(new_state) > order.index(ceiling):
-                    state.audit.append(f"placement-ceiling: {event.id}")
-                    new_state = ceiling
-            state.knowledge_state = new_state
-            state.prior_steady_state = prior
-            # Stability update from the outcome
-            if state.stability_days is None:
-                state.stability_days = initial_stability
-            if outcome in qualities:
-                quality = qualities[outcome]
-                factor = _ONE + context.divide(
-                    context.multiply(growth_base - _ONE, quality),
-                    _ONE + context.divide(state.stability_days, damping),
-                )
-                state.stability_days = context.multiply(state.stability_days, factor)
-            elif outcome == "REGRESSION":
-                state.stability_days = context.multiply(state.stability_days, shrink)
-                dimension = str(payload.get("dimension") or "recognition")
+                delta = min(delta, room)
+                if basis != "objective_check":
+                    rubric_room = rubric_cap - state.rubric_gain
+                    if rubric_room <= 0:
+                        state.audit.append(f"rubric-cap: {event.id}")
+                        continue
+                    delta = min(delta, rubric_room)
+                    state.rubric_gain += delta
+                state.session_gain[session_id] = granted + delta
                 current = state.mastery.get(dimension, _ZERO)
-                state.mastery[dimension] = _clamp(current - regression_penalty, _ZERO, _HUNDRED)
+                state.mastery[dimension] = _clamp(current + delta, _ZERO, _HUNDRED)
+                _ = origin  # placement evidence gains mastery normally; only the state is capped
 
-        elif event.type == OVERDUE_AT_RISK_EVENT:
-            ref = str(event.payload.get("target_ref") or "")
-            if not ref:
-                continue
-            state = target_state(ref)
-            if state.knowledge_state in _STEADY:
-                # AT_RISK enters ONLY from this replayable event (canon 3):
-                # "knew it, at risk of forgetting" -- never from a wall clock.
-                state.prior_steady_state = state.knowledge_state
-                state.knowledge_state = AT_RISK
+            elif event.type == REVIEW_OUTCOME_EVENT:
+                payload = event.payload
+                ref = str(payload.get("target_ref") or "")
+                if not ref:
+                    continue
+                outcome = str(payload.get("outcome") or "")
+                if outcome not in OUTCOMES:
+                    target_state(ref).audit.append(f"unknown-outcome: {event.id}")
+                    continue
+                origin = str(payload.get("origin") or "session")
+                state = target_state(ref)
+                if (
+                    origin == "control_probe"
+                    and origin_cfg.get("control_probe_no_negative", True)
+                    and outcome == "REGRESSION"
+                ):
+                    # No-negative (canon 4b): a probe can never punish.
+                    state.audit.append(f"probe-regression-suppressed: {event.id}")
+                    continue
+                new_state, prior = transition(state.knowledge_state, outcome, state.prior_steady_state)
+                if origin == "placement":
+                    ceiling = str(origin_cfg.get("placement_state_ceiling", ACTIVE))
+                    order = [NEW, LEARNING, ACTIVE, MASTERED]
+                    if new_state in order and order.index(new_state) > order.index(ceiling):
+                        state.audit.append(f"placement-ceiling: {event.id}")
+                        new_state = ceiling
+                state.knowledge_state = new_state
+                state.prior_steady_state = prior
+                # Stability update from the outcome
+                if state.stability_days is None:
+                    state.stability_days = initial_stability
+                if outcome in qualities:
+                    quality = qualities[outcome]
+                    factor = _ONE + context.divide(
+                        context.multiply(growth_base - _ONE, quality),
+                        _ONE + context.divide(state.stability_days, damping),
+                    )
+                    state.stability_days = context.multiply(state.stability_days, factor)
+                elif outcome == "REGRESSION":
+                    state.stability_days = context.multiply(state.stability_days, shrink)
+                    dimension = str(payload.get("dimension") or "recognition")
+                    current = state.mastery.get(dimension, _ZERO)
+                    state.mastery[dimension] = _clamp(current - regression_penalty, _ZERO, _HUNDRED)
 
-    return targets
+            elif event.type == OVERDUE_AT_RISK_EVENT:
+                ref = str(event.payload.get("target_ref") or "")
+                if not ref:
+                    continue
+                state = target_state(ref)
+                if state.knowledge_state in _STEADY:
+                    # AT_RISK enters ONLY from this replayable event (canon 3):
+                    # "knew it, at risk of forgetting" -- never from a wall clock.
+                    state.prior_steady_state = state.knowledge_state
+                    state.knowledge_state = AT_RISK
+
+        return targets
 
 
 def retrievability(stability_days: Decimal, elapsed_days: Decimal, policy: dict[str, Any]) -> Decimal:

@@ -30,13 +30,13 @@ from english_trainer.lessons.rendering import (
     record_rendered_exercise,
 )
 from english_trainer.lessons.resume import (
-    EVENT_AGENT_ATTACHED,
     attach_agent,
     resume_session,
 )
 from english_trainer.lessons.sessions import (
     ABANDONED,
     EVENT_ABANDONED,
+    EVENT_AGENT_ATTACHED,
     EVENT_COMPOSED,
     EVENT_FINISHED,
     EVENT_SAFETY_REJECTED,
