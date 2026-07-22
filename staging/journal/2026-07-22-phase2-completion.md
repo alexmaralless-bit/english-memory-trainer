@@ -33,3 +33,12 @@ Append-only implementation trail for the ordered completion handoff.
 - Status: not implemented; strict xfail `test_versioned_tunable_catalogue_exists_with_bidirectional_control_coverage` records the boundary.
 - Finding: §4.9 supplies `allowed_range`, `unit`, `observed_by`, and trace mapping only for one `review_max` example, while requiring complete rows for every control parameter and previously declared neighboring tunable. Inventing the missing ranges would violate the handoff's no-PD rule and would make activation constraints look authoritative without an approved source.
 - Owner decision needed: approve the complete catalogue metadata (or a rule that derives it) before `tunables list` and calibration propose/confirm can be implemented honestly.
+
+## 2.8e — Exercise-bank reuse and observed errors
+
+- Commit: `40b44b3` (`Wire exercise bank reuse and observed errors`).
+- Composition now selects accepted bank items conservatively and deterministically by exact step type, target, dimension, and context. The step carries exactly one source: `bank_item_id` or `generation_directive`.
+- `session next` re-reads the authoritative accepted state, revalidates target/lexicon safety against the active curriculum, resolves the immutable rendered snapshot, and commits `STEP_PRESENTED` plus `ExerciseUse` in one UoW. A safety change leaves the plan version untouched. Reused snapshots are valid attempt inputs through the published `exercise.used` fact; delivery alone creates no evidence.
+- Added `trainer observed record`: the engine derives target/dimension and rubric-owned error family/severity from an assessed attempt, validates the exact UTF-8 span, rejects agent-supplied verdicts and `contradicts_machine_result`, and emits `evidence.error_observed`. Semantic duplicate observations are idempotent.
+- The real evidence event now feeds `recurring_error_keys`; an integration test proves two emitted observations activate the recurring-error risk branch in classification.
+- Gates: full pytest `441 passed, 2 xfailed` (443 collected); `ruff check .` clean; `ruff format --check src tests` clean (143 files); `mypy src` clean (72 source files).
