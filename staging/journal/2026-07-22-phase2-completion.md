@@ -42,3 +42,13 @@ Append-only implementation trail for the ordered completion handoff.
 - Added `trainer observed record`: the engine derives target/dimension and rubric-owned error family/severity from an assessed attempt, validates the exact UTF-8 span, rejects agent-supplied verdicts and `contradicts_machine_result`, and emits `evidence.error_observed`. Semantic duplicate observations are idempotent.
 - The real evidence event now feeds `recurring_error_keys`; an integration test proves two emitted observations activate the recurring-error risk branch in classification.
 - Gates: full pytest `441 passed, 2 xfailed` (443 collected); `ruff check .` clean; `ruff format --check src tests` clean (143 files); `mypy src` clean (72 source files).
+
+## Lessons wiring — live control inputs
+
+- Commit: `7e5a172` (`Activate live control inputs in lessons`).
+- `session start` and `session replan` now fold active learner signals, probe requests, saturation, recurring observed errors, terminal-session deferrals, starvation qualification, and AvailabilityProfile state from the authoritative log before composition.
+- Probe signal consumption, plan/assignment state, `SESSION_COMPOSED`, and immutable decision traces commit in the same UoW. Composition events persist eligible/excluded review facts, allowing terminal session events to advance the deferral fold without a second mutable counter.
+- End-to-end tests prove: `too_easy` produces and consumes one control probe; `need_more_practice` raises a live urgency class; repeated real exposures make a target deferrable; three terminal systematic deferrals qualify and admit the target through the starvation reserve; declared availability changes the live session budget.
+- New optional live fields remain absent from the historical `compose_plan` result when their inputs are omitted, preserving the default canonical shape.
+- OPEN-11 remains intentionally open. The contract requires optimistic session revision but `wiki/OPEN.md` explicitly leaves multi-aggregate CAS and idempotency scope unresolved. `staging/concepts/2026-07-22-open11-session-revision-concept.md` documents the concrete aggregate conflict and three options; coarse session fencing is recommended. The strict xfail remains a truthful executable finding.
+- Gates: full pytest `447 passed, 2 xfailed` (449 collected); `ruff check .` clean; `ruff format --check src tests` clean (144 files); `mypy src` clean (72 source files).
