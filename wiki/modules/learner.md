@@ -21,7 +21,7 @@
 |---|---|---|
 | `LearnerProfile` | сам ученик и его настройки | `learner_id`, `locale`, `timezone`, `goals[]`, `created_at` |
 | `SelfReportedLevel` | **заявленный** уровень, отдельно от измеренного | `skill_id`, `level`, `declared_at`, `superseded_at?` |
-| `LearnerLexiconEntry` | личный словарь: слой 3 ([[../product/lexical-system]] §3) | `entry_id`, `surface`, `note_ru?`, `added_at`, `source` (`learner` \| `encountered`), `linked_item_id?` |
+| `LearnerLexiconEntry` | личный словарь: слой 3 ([[../product/lexical-system]] §3) | `entry_id`, `surface`, `note_ru?`, `added_at`, `source` (`learner` \| `encountered`), `linked_item_id?`; provenance `session_id?`/`provider?`/`source_event_id?`; движковое `normalized_surface` [PD-2026-07-22] |
 | `TutorBriefing` | собранная сводка для агента при старте/возобновлении | read-model, не хранится как истина |
 
 `SelfReportedLevel` не имеет состояний, кроме «действует / замещён»: замещение происходит **по каждому навыку отдельно** после первого допустимого evidence по нему.
@@ -49,6 +49,7 @@
 - **MUST — briefing выдаётся одним документом**: агент получает его целиком при `session start`/`resume`, а не собирает по кускам. Иначе поведение зависит от того, сколько запросов агент успел сделать.
 - **MUST — личный словарь не влияет на scoring**: `LearnerLexiconEntry` — заметка ученика. Она может быть связана с `LexicalItem` (`linked_item_id`), и тогда влияет на `learner_relevance` при планировании ([[control]] §4.5), но **никогда** не даёт Mastery. Добавить слово в словарь не значит его знать.
 - **MUST — личный словарь не редактирует программу**: запись в личный словарь не создаёт `LexicalItem` в curriculum. Пополнение и stable core, и living layer — только через workflow [[curriculum]] (living layer в продукте — [PD-2026-07-21]); прямой путь из личного словаря в программу отсутствует в любом случае.
+- **MUST — логическая идентичность записи и dedup** [PD-2026-07-22]: запись идентифицируется `linked_item_id` (если привязана), иначе нормализованной surface (NFC + collapse whitespace + casefold, как `evidence` §4.1 нормализует ответ). Повторная встреча той же идентичности не создаёт второй логической записи — append-only факт дедуплицируется детерминированной свёрткой, retry/re-encounter возвращает сохранённую запись без второго события. Омонимы с разными надёжными `linked_item_id` не сливаются; одну surface без надёжного id движок не разбивает на смыслы сам. Session-bound запись (`encountered`) требует `expected_session_revision` и атомарно (одна UoW) добавляет событие и увеличивает session revision.
 - **MUST — цели ученика влияют только на приоритет**: `goals[]` (например, «скоро поездка») повышают `learner_relevance` в [[control]] и не объявляют темы изученными.
 
 ## 5. CLI-поверхность
@@ -75,5 +76,6 @@
 
 ## История изменений
 
+- **2026-07-22 (2)**: [PD-2026-07-22] задокументированы logical identity записи (`linked_item_id`, иначе нормализованная surface) + provenance-поля (`session_id`/`provider`/`source_event_id`) и движковое `normalized_surface`; dedup повторных встреч и атомарность session-fence при `encountered`. Реализация — модуль `learner` (roadmap 99).
 - **2026-07-22**: фазовые теги `[mvp]`/`[post-mvp]` сняты [PD-2026-07-22]: спека описывает одну цель продукта, порядок и статус — только в roadmap (Принцип 4).
 - **2026-07-20**: создан (контракт 0.11, P0-4/OPEN-25). Граница проведена по источнику истины: заявленное — здесь, измеренное — в scoring. Снято лишнее присвоение из [[../flows/session]], где XP-ledger и streak числились за learner, хотя описаны в [[scoring]] §7.

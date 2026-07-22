@@ -218,7 +218,7 @@ control_policy:
 
 Детерминирован целиком; два корректных исполнения дают побайтово равный `SessionPlan`.
 
-1. **Кандидаты.** `review` — due/overdue от [[scheduler]] §5, включая review LexicalItem'ов. `growth` — рекомендации [[curriculum]], отфильтрованные по `is_first_exposure`, плюс lexicon-first micro lane из `generation@1` для learner-requested / observed-error / due-review / CORE-HIGH safe unlinked-единиц (advisory: не более одного growth item за сбалансированную сессию, кроме maintenance или явного vocabulary-запроса). `integration` — пары (новая цель, освоенная цель). `choice` — цели из `goals[]`/личного словаря [[learner]] и рекомендация гейта от [[gates]], если она есть.
+1. **Кандидаты.** `review` — due/overdue от [[scheduler]] §5, включая review LexicalItem'ов. `growth` — рекомендации [[curriculum]], отфильтрованные по `is_first_exposure`, плюс lexicon-first micro lane из `generation@1` для learner-requested / observed-error / due-review / CORE-HIGH safe unlinked-единиц (advisory: не более одного growth item за сбалансированную сессию, кроме maintenance или явного vocabulary-запроса). **Явный learner-request** — привязанная запись личного словаря ([[learner]] §3, §4.5) с разрешимым `linked_item_id` — допускает свой `LexicalItem` в этот lane **даже если он уже привязан к теме**: именованное исключение из «только unlinked» и из кэпа «один item», поднимает `learner_relevance` цели, но evidence/schedule не создаёт [PD-2026-07-22]. `integration` — пары (новая цель, освоенная цель). `choice` — цели из `goals[]`/личного словаря [[learner]] и рекомендация гейта от [[gates]], если она есть.
 2. **Исключение по safety** — по active policy; исключённое фиксируется в trace.
 3. **Классификация** review-кандидатов — §4.5.
 3a. **Активные сигналы** — фильтры и сдвиги §4.7 применяются после базовой классификации.
@@ -401,6 +401,7 @@ trace_field: review_max
 
 ## История изменений
 
+- **2026-07-22 (7)**: [PD-2026-07-22] §4.4 шаг 1 — явный learner-request (привязанная запись личного словаря) допускает `LexicalItem` в lexicon-first micro-lane даже при привязке к теме; поднимает `learner_relevance`, evidence/schedule не создаёт. Реализация — модуль `learner` (roadmap 99).
 - **2026-07-22 (6)**: [PD-2026-07-22] принят `tunables@1`: 60 параметров (48 control + 12 соседних), balanced review range 3000–6000, остальные ranges честно frozen; confirm атомарно активирует successor policy и причинно связывает `calibration.applied`.
 - **2026-07-22**: фазовые теги `[mvp]`/`[post-mvp]` сняты [PD-2026-07-22]: спека описывает одну цель продукта, порядок и статус — только в roadmap (Принцип 4). calibration-API — часть цели (порядок в roadmap); календарная модель — нерешённое расширение OPEN-29.
 - **2026-07-21**: после подтверждающего red-team устранены структурные дефекты: введён CAS-токен `plan_version`, связанный с каждой мутацией; бюджет текущей ревизии отделён от накопительного ledger через `effective`; валидатор полов согласован с разрешённым overshoot; fairness считает deferral один раз за сессию и гарантирует admission через `ceil`; сигналы получили точные сроки, преобразования и явный replan-протокол; availability переведена в целочисленные размерности и детерминированный boost. Статус 0.12 остаётся `blocked` до независимого подтверждения.
