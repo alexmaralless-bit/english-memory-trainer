@@ -1,38 +1,32 @@
 ---
 name: run-placement-assessment
 version: "1"
-description: "Провести первичную калибровочную сессию (placement): собрать evidence по нескольким темам без предположений об исходном уровне ученика."
+description: "Провести первичную калибровочную диагностику (placement) через выделенный placement-lifecycle: собрать evidence по фиксированной форме без предположений об исходном уровне ученика."
 required_inputs:
-  - "--provider"
-  - "необязательно: --mode (по умолчанию balanced)"
+  - "необязательно: --self-assessment (объект по core-skill ID) при decline — скаляр запрещён"
 forbidden_actions:
   - "не присваивать CEFR-уровень самому — только measured_working_level из `trainer status`"
-  - "не выставлять score/mastery самому"
-  - "не завершать сессию в обход `trainer session finish` / `trainer session abandon`"
+  - "не выставлять score/mastery самому — placement оценивает движок (origin=placement, потолок ACTIVE, никогда MASTERED)"
+  - "не терминализировать в обход `placement submit` / `placement abandon` / `placement decline`"
   - "не редактировать файлы состояния напрямую"
 cli_calls:
-  - session.start
-  - session.peek
-  - session.next
-  - exercise.rendered
-  - attempt.record
-  - attempt.finalize
-  - session.finish
+  - placement.start
+  - placement.answer
+  - placement.resume
+  - placement.submit
+  - placement.abandon
+  - placement.decline
   - status
 outputs:
-  - "предварительная картина сильных/слабых сторон (по данным `trainer status`)"
+  - "предварительная картина сильных/слабых сторон (по данным `trainer status` после `placement submit`)"
 postconditions:
-  - "хотя бы одна оценённая (assessed) попытка записана"
-  - "сессия FINISHED или ABANDONED"
+  - "placement submitted (scored) — либо abandoned/declined, если ученик прервал или отказался"
 ---
 
 ## Steps
 
-1. `session start --provider <id> --format json`.
-2. Цикл `session peek` → `exercise rendered` (для структурированных заданий)
-   → ответ ученика → `attempt record` → при необходимости `attempt finalize`
-   → `session next`.
-3. После нескольких шагов свериться с `trainer status`: `measured_working_level`
-   и `skills` — единственный источник вывода об уровне, никогда не
-   собственная оценка агента.
-4. Завершить через `session finish` (или `session abandon`, если прервано).
+1. `placement start --format json` — движок выбирает фиксированную версионированную форму и возвращает секции и items (answer keys остаются на стороне движка; генерация формы на лету запрещена — сравнимость результатов).
+2. Предъявляй items ученику по секциям; собирай ответы; фиксируй инкрементально через `placement answer` (checkpoint) по каждой секции. При обрыве чата — `placement resume` в пределах resume-окна, чтобы продолжить с сохранённой секции.
+3. `placement submit` — терминальный идемпотентный submit: движок оценивает форму (evidence с `origin=placement`, потолок ACTIVE — placement никогда не даёт MASTERED). Повторный submit возвращает тот же сохранённый результат.
+4. Сверься с `trainer status`: `measured_working_level` и `lexicon_progress`/`skills` — единственный источник вывода об уровне; никогда не собственная оценка агента.
+5. Альтернативы: если ученик отказывается проходить — `placement decline` с `--self-assessment` как объектом по навыкам (`{"schema_version":1,"levels":{...}}`; скаляр запрещён — отсутствующий навык остаётся unknown и перекрывается первым реальным evidence). Чтобы прервать без результата — `placement abandon` (только из STARTED/IN_PROGRESS).
