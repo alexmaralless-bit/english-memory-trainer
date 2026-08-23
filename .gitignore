@@ -41,3 +41,6 @@ snapshots/
 .vscode/
 .DS_Store
 Thumbs.db
+
+# Generated skill deployments (written by `trainer skills sync`)
+versions/

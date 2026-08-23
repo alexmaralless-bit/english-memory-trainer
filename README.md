@@ -2,6 +2,35 @@
 
 One page for any AI agent (Claude Code, Codex) or developer to operate this app correctly on first read. This complements — does not duplicate — `CLAUDE.md` (Claude Code) and `AGENTS.md` (Codex), which own the invariant rules and source-of-truth ordering in full.
 
+## 0. If you arrived from a link
+
+This repository is a work sample for one specific claim: **it was built by AI
+agents under a spec-first process, and the commit history says so.**
+
+- 194 commits over four days (19–22 July 2026); **158 of them carry a
+  `Co-Authored-By:` trailer** naming the agent that wrote the code —
+  Claude Opus 4.8, Claude Fable 5 or Codex. Check with
+  `git log --format=%B | grep -c Co-Authored-By`.
+- The specs came first and own the code. Every module spec in `wiki/modules/`
+  declares the code it owns, e.g. `**Bounded context**: src/english_trainer/scheduler/`,
+  and is marked as *target* state rather than after-the-fact documentation.
+  Requirements are written as `MUST` with traceability tags back to the review
+  that produced them.
+- Agents are driven by committed procedures, not by chat: ten skills in
+  `agent-skills/`, deployed as read-only copies into `.claude/skills/` and
+  `.agents/skills/`, with the invariants owned by `CLAUDE.md` and `AGENTS.md`.
+- Working memory is separated from canon: `wiki/` is canon, `staging/` holds
+  the session journal, handoffs and reviews — including an independent PASS
+  verdict on Phase 2 and a task delegated to one agent and reviewed by another.
+
+What is *not* here: a mechanical spec-sync gate. In this project the discipline
+is visible but not enforced by a hook; the enforcing version lives in a closed
+project. That gap is stated in `wiki/README.md` under
+"Что сознательно НЕ переняли".
+
+Licensing: code under MIT, `curriculum/` data under CC BY-SA 4.0 — see
+`LICENSE`, `curriculum/LICENSE` and `ATTRIBUTIONS.md`.
+
 ## 1. What it is
 
 A local-first, deterministic Python CLI for learning American English with interchangeable AI tutors (Claude Code, Codex, or others). The `trainer` engine is the **sole authority** over learner state — SQLite + an append-only JSONL event log, projected read-only into an Obsidian vault. Chat context is never memory: any agent can resume a session or a whole learner history from engine state alone. Scope is text-only — Reading, Writing, grammar, vocabulary. Listening and Speaking are intentionally, permanently out of scope `[PD-2026-07-22]`. Status: **Phase 2 (vertical slice) complete** — 12 modules implemented, 55 CLI commands published, full test suite green (see `wiki/roadmap.md` for the current line).
