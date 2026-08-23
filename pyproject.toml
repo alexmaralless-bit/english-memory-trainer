@@ -3,7 +3,9 @@ name = "english-memory-trainer"
 version = "0.0.0"
 description = "Local-first CLI trainer for American English with interchangeable AI tutors"
 requires-python = ">=3.12"
-license = { text = "Proprietary" }
+# Код под MIT, данные учебной программы под CC BY-SA 4.0.
+# См. LICENSE, curriculum/LICENSE и ATTRIBUTIONS.md.
+license = { text = "MIT" }
 
 # Runtime dependencies of code that actually exists today. The kernel (roadmap
 # 1.2) needs pydantic for envelope validation (foundation contract 7: stdlib +

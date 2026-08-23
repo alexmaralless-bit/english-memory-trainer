@@ -19,6 +19,8 @@ agents under a spec-first process, and the commit history says so.**
 - Agents are driven by committed procedures, not by chat: ten skills in
   `agent-skills/`, deployed as read-only copies into `.claude/skills/` and
   `.agents/skills/`, with the invariants owned by `CLAUDE.md` and `AGENTS.md`.
+- It runs. A clean checkout installs from `pyproject.toml` and the suite is
+  green: **504 tests pass**, and the `trainer` CLI starts.
 - Working memory is separated from canon: `wiki/` is canon, `staging/` holds
   the session journal, handoffs and reviews — including an independent PASS
   verdict on Phase 2 and a task delegated to one agent and reviewed by another.
@@ -54,6 +56,11 @@ trainer doctor
 ```
 
 Run `trainer doctor` first whenever diagnosing a broken local setup.
+
+Verified on a clean checkout: `pip install -e .` plus `pytest` gives **504
+passing tests**. If pytest errors at setup with a `PermissionError` on the
+system temp directory, point it somewhere writable:
+`pytest --basetemp=.pytest_tmp`.
 
 ## 3. Skill catalog
 

@@ -44,3 +44,4 @@ Thumbs.db
 
 # Generated skill deployments (written by `trainer skills sync`)
 versions/
+.pytest_tmp/
