@@ -19,15 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
----
-
-NOTE ON SCOPE
-
-This MIT license covers the SOFTWARE only: `src/`, `tests/`, `tools/`,
-`pyproject.toml`, and the development knowledge base (`wiki/`, `staging/`,
-`docs/`, `agent-skills/`, `AGENTS.md`, `CLAUDE.md`, `README.md`).
-
-The curriculum data under `curriculum/` is licensed separately under
-CC BY-SA 4.0 — see `curriculum/LICENSE` and `ATTRIBUTIONS.md`. It is derived
-from sources released under CC BY-SA 4.0, and ShareAlike applies.

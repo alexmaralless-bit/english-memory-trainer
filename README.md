@@ -30,8 +30,8 @@ is visible but not enforced by a hook; the enforcing version lives in a closed
 project. That gap is stated in `wiki/README.md` under
 "Что сознательно НЕ переняли".
 
-Licensing: code under MIT, `curriculum/` data under CC BY-SA 4.0 — see
-`LICENSE`, `curriculum/LICENSE` and `ATTRIBUTIONS.md`.
+Licensing: code under MIT, `curriculum/` data under CC BY-SA 4.0. The split
+and the reasoning behind it are in `LICENSES.md`.
 
 ## 1. What it is
 
