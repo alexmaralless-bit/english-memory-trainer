@@ -1,10 +1,10 @@
-"""The rubric assessment pipeline for open attempts (P.5 [PD-2026-07-22];
+"""The rubric assessment pipeline for open answers (P.5 [PD-2026-07-22];
 evidence 4.1/4.5; rubric@1 ``criterion_reducer``).
 
-``finalize_attempt`` settles a recorded open attempt: resolve the pinned
-rubric profile (explicit ``rubric_ref`` from the rendered exercise, or the
-EXACT (step_type, dimension) default -- never a broad fallback), execute the
-closed machine-check opcodes over the exact saved inputs, validate every
+:func:`compute_rubric_assessment` is a PURE read: resolve the pinned rubric
+profile (explicit ``rubric_ref`` from a rendered exercise or the caller, or
+the EXACT (step_type, dimension) default -- never a broad fallback), execute
+the closed machine-check opcodes over the exact saved inputs, validate every
 subjective observation (criterion in profile, finding allowed, UTF-8 span
 inside the saved answer with a matching hash -- one ``rejected`` branch with
 stable reasons, nothing "flagged but counted"), reduce findings to four-level
@@ -12,18 +12,19 @@ criteria under policy-owned severity ceilings, and aggregate the integer
 ``score_ppm`` with ROUND_HALF_EVEN.
 
 Completeness is PD-7 C: every required criterion needs at least one accepted
-finding or machine result. An explicitly finalized incomplete attempt settles
-``assessed / insufficient_evidence``, non-contributing -- missing assessor
-coverage is never a false learner zero, and it stops blocking finish. A
-target-less turn (free conversation without a derived target) assesses for
-audit but cannot mint contributing evidence.
+finding or machine result; an incomplete assessment is ``insufficient_evidence``
+and non-contributing -- missing assessor coverage is never a false learner
+zero. A target-less answer assesses for audit but cannot mint contributing
+evidence.
 
-Settlement is atomic: the attempt aggregate leaves ``recorded``, the
-state-change event captures the full calculation (accepted and rejected
-observations, machine results, per-criterion trace, ``score_ppm``, rubric ref
-and pin), and ``EVIDENCE_ADDED`` rides the same UnitOfWork when contributing.
-Re-finalizing an assessed attempt is idempotent and returns the stored
-result. The agent reports facts; every level and score here is engine-made.
+Its live caller is placement (``assessments.placement`` assesses writing items
+through the rubric profile the placement pins). Lesson sessions no longer run
+it: since the brief/report protocol [PD-2026-09-23] a lesson item's
+correctness is the tutor's verdict (evidence@2). The per-step settlement path
+(``attempt record`` with observations, ``attempt finalize``) was removed with
+that protocol; the ``attempt.state_changed`` facts it wrote stay readable by
+every consumer. The agent reports facts; every level and score here is
+engine-made.
 """
 
 from __future__ import annotations
@@ -36,27 +37,25 @@ from decimal import ROUND_HALF_EVEN, Decimal
 from typing import Any
 
 from english_trainer.evidence.attempts import (
-    ASSESSED,
-    ATTEMPT_AGGREGATE,
-    EVENT_ATTEMPT_STATE_CHANGED,
-    EVENT_EVIDENCE_ADDED,
-    RECORDED,
     EvidencePrecondition,
-    _session_manifest,
 )
-from english_trainer.evidence.policy import allocate_credit, multi_credit_policy
 from english_trainer.evidence.rubric import RUBRIC_KIND, require_valid
-from english_trainer.kernel.aggregates import read_aggregate
-from english_trainer.kernel.clock import Clock, RandomSource
 from english_trainer.kernel.encoding import payload_hash
-from english_trainer.kernel.envelopes import make_event
-from english_trainer.kernel.ids import new_ulid
 from english_trainer.kernel.policy import PolicyRegistry
-from english_trainer.kernel.session_fence import bump_session, load_session_for_update
 from english_trainer.kernel.store import EventStore
-from english_trainer.kernel.uow import UnitOfWork
 
 EXERCISE_RENDERED_EVENT = "exercise.rendered"
+
+#: The rubric-facing step type the RENDER stored inside the immutable snapshot
+#: for a form whose own step type no pinned rubric profile enumerates
+#: (``reconstruction`` -> ``controlled_production``, ``timed_writing`` ->
+#: ``spontaneous_production``; generation@3 ``rubric_step_type_equivalence``,
+#: [PD-2026-09-22]). The mapping is owned by lessons and resolved once, at
+#: render; evidence may not import lessons (architecture gate), and re-deriving
+#: it here would be a second source of truth -- so only the stored field is
+#: read. Absent means "the attempt's own step type is what the rubric
+#: enumerates", which is every pre-generation@3 snapshot.
+RUBRIC_STEP_TYPE_FIELD = "rubric_step_type"
 
 _WORD_TOKEN = re.compile(r"[^\W_]+(?:'[^\W_]+)*", re.UNICODE)
 
@@ -282,46 +281,33 @@ def _resolve_profile(
     return profile_id, profile
 
 
-def finalize_attempt(
+def compute_rubric_assessment(
     store: EventStore,
     registry: PolicyRegistry,
-    clock: Clock,
-    random_source: RandomSource,
-    session_id: str,
-    attempt_id: str,
     *,
-    expected_session_revision: int,
+    pinned: dict[str, Any],
+    attempt: dict[str, Any],
     extra_observations: list[dict[str, Any]] | None = None,
-    actor: str = "agent",
+    explicit_rubric_ref: str | None = None,
+    rubric_step_type: str | None = None,
 ) -> dict[str, Any]:
-    """Assess and atomically settle a recorded open attempt."""
-    session_state, session_revision = load_session_for_update(store, session_id, expected_session_revision)
-    manifest = _session_manifest(store, session_id)
-    found = read_aggregate(store._conn, ATTEMPT_AGGREGATE, attempt_id)
-    if found is None:
-        raise EvidencePrecondition(f"attempt {attempt_id} does not exist")
-    attempt, revision = found
-    if str(attempt.get("session_id")) != session_id:
-        raise EvidencePrecondition(f"attempt {attempt_id} belongs to another session")
-    if attempt.get("status") == ASSESSED:
-        prior = attempt.get("assessment") or {}
-        return {
-            "attempt_id": attempt_id,
-            "status": ASSESSED,
-            "already": True,
-            "score_ppm": prior.get("score_ppm"),
-            "disposition": prior.get("disposition", "scored"),
-            "contributing": bool(prior.get("contributing")),
-        }
-    if attempt.get("status") != RECORDED:
-        raise EvidencePrecondition(f"attempt {attempt_id} is {attempt.get('status')}; nothing to finalize")
+    """The whole rubric pipeline as a PURE read: resolve, check, reduce, score.
 
-    pinned = dict(manifest.get("pinned_versions") or {})
+    Nothing here writes: the caller owns the settlement of the result
+    (placement records it in its own aggregate).
+
+    ``explicit_rubric_ref`` / ``rubric_step_type`` carry the rendering context
+    for a caller that HAS no rendered exercise to read it from -- a placement
+    writing item declares its own profile and is assessed through the
+    rubric-facing step type the placement pins. A rendered exercise always
+    wins: its stored snapshot is the authoritative record of what was shown.
+    """
     if RUBRIC_KIND not in pinned:
         raise EvidencePrecondition(
             "the session pins no rubric policy; re-activate the curriculum so rubric@1 registers"
         )
     payload = require_valid(registry.resolve_pinned(RUBRIC_KIND, pinned[RUBRIC_KIND]))
+    attempt_id = str(attempt.get("attempt_id"))
     raw_answer = str(attempt.get("raw_answer") or "")
     step_type = str(attempt.get("step_type"))
     primary = attempt.get("primary_target") or {}
@@ -331,6 +317,7 @@ def finalize_attempt(
     # the exact default (materialized into the assessment fact).
     explicit_ref: str | None = None
     machine_checks: list[dict[str, Any]] = []
+    mapped_step_type: str | None = None
     instance_id = attempt.get("exercise_instance_id")
     if instance_id:
         for event in store.read():
@@ -339,8 +326,19 @@ def finalize_attempt(
             ) == str(instance_id):
                 explicit_ref = event.payload.get("rubric_ref")
                 machine_checks = list(event.payload.get("machine_checks") or [])
+                stored = event.payload.get(RUBRIC_STEP_TYPE_FIELD)
+                mapped_step_type = str(stored) if isinstance(stored, str) and stored else None
+    if explicit_ref is None and explicit_rubric_ref:
+        explicit_ref = str(explicit_rubric_ref)
+    if mapped_step_type is None and rubric_step_type:
+        mapped_step_type = str(rubric_step_type)
+    # A `timed_writing` or `reconstruction` attempt is assessed through the
+    # rubric-facing step type its snapshot recorded; the attempt keeps its REAL
+    # step type everywhere else, so nothing downstream sees a timed writing as
+    # spontaneous production.
+    rubric_facing_step_type = mapped_step_type or step_type
     profile_id, profile = _resolve_profile(
-        payload, explicit_ref=explicit_ref, step_type=step_type, dimension=dimension
+        payload, explicit_ref=explicit_ref, step_type=rubric_facing_step_type, dimension=dimension
     )
     profile_criteria = {str(c["criterion_id"]): c for c in profile["criteria"]}
     catalog = payload["criterion_catalog"]
@@ -448,81 +446,9 @@ def finalize_attempt(
             {"attempt": attempt_id, "profile": profile_id, "accepted": accepted, "trace": trace}
         ),
     }
-
-    finalized_at = clock.now().isoformat()
-    with UnitOfWork(store, clock) as uow:
-        new_session_revision = bump_session(uow, session_id, session_state, session_revision, clock.now())
-        uow.save_aggregate(
-            ATTEMPT_AGGREGATE,
-            attempt_id,
-            {**attempt, "status": ASSESSED, "assessment": assessment, "assessed_at": finalized_at},
-            expected_revision=revision,
-        )
-        events = [
-            make_event(
-                id=new_ulid(clock, random_source),
-                type=EVENT_ATTEMPT_STATE_CHANGED,
-                occurred_at=clock.now(),
-                actor=actor,
-                provider=manifest.get("provider"),
-                correlation_id=session_id,
-                payload={
-                    "attempt_id": attempt_id,
-                    "session_id": session_id,
-                    "from_status": RECORDED,
-                    "to_status": ASSESSED,
-                    "reason": disposition,
-                    "non_contributing": not contributing,
-                    "assessment": assessment,
-                },
-                pinned_versions=pinned,
-            )
-        ]
-        if contributing:
-            events.append(
-                make_event(
-                    id=new_ulid(clock, random_source),
-                    type=EVENT_EVIDENCE_ADDED,
-                    occurred_at=clock.now(),
-                    actor=actor,
-                    provider=manifest.get("provider"),
-                    correlation_id=session_id,
-                    causation_id=events[0].id,
-                    payload={
-                        "evidence_id": new_ulid(clock, random_source),
-                        "attempt_id": attempt_id,
-                        "session_id": session_id,
-                        "step_id": attempt.get("step_id"),
-                        "exercise_instance_id": instance_id,
-                        "origin": attempt.get("origin"),
-                        "mode": step_type,
-                        "primary_target": primary,
-                        "selection_basis": attempt.get("selection_basis"),
-                        "credit_allocations": allocate_credit(
-                            [dict(item) for item in attempt.get("targets") or []],
-                            primary,
-                            multi_credit_policy(registry, pinned),
-                        ),
-                        "span_hash": attempt.get("span_hash"),
-                        "assessment_basis": "rubric",
-                        "score_ppm": score_ppm,
-                        "rubric_ref": f"rubric:{profile_id}",
-                        "pinned_rubric_version": pinned[RUBRIC_KIND],
-                        "hints": attempt.get("hints", 0),
-                        "recorded_at": finalized_at,
-                    },
-                    pinned_versions=pinned,
-                )
-            )
-        uow.append(events)
-    return {
-        "attempt_id": attempt_id,
-        "status": ASSESSED,
-        "already": False,
-        "score_ppm": score_ppm,
-        "disposition": disposition,
-        "contributing": contributing,
-        "rejected": len(rejected),
-        "criteria": trace,
-        "session_revision": new_session_revision,
-    }
+    if mapped_step_type is not None and mapped_step_type != step_type:
+        # Recorded only when it differs: replay and audit see WHICH profile the
+        # attempt was assessed through without inferring the mapping, and a
+        # snapshot that needed no mapping keeps exactly the shape it had.
+        assessment[RUBRIC_STEP_TYPE_FIELD] = mapped_step_type
+    return assessment

@@ -36,12 +36,12 @@
 ## Env (Windows)
 
 - Python из venv: `.\.venv\Scripts\python.exe` (НЕ `python` из PATH).
-- pytest с `--basetemp "<local-tmp>/pytest"`.
+- pytest с `--basetemp "<tmp>/pytest"`.
 
 ## Self-verification (обязательно ОБА набора тестов)
 
 1. `trainer curriculum validate --format json` → `ok: true, errors: []`.
-2. `.\.venv\Scripts\python.exe -m pytest tests/curriculum tests/test_lexicon_invariants.py --basetemp "<local-tmp>/pytest" -q` — зелёно. **Важно: инварианты лексикона живут в `tests/test_lexicon_invariants.py` (корень `tests/`), НЕ под `tests/curriculum/` — scoped-прогон их пропустит.**
+2. `.\.venv\Scripts\python.exe -m pytest tests/curriculum tests/test_lexicon_invariants.py --basetemp "<tmp>/pytest" -q` — зелёно. **Важно: инварианты лексикона живут в `tests/test_lexicon_invariants.py` (корень `tests/`), НЕ под `tests/curriculum/` — scoped-прогон их пропустит.**
 3. Отчёт: какие neutral-юниты выправлены и как (какие поля удалены/изменены), покрытие advisory (было/привязал/оставил с причиной), findings, команды и их вывод, что НЕ трогал (границы).
 
 Владелец проведёт независимую приёмку (свой `curriculum validate` + оба набора тестов + проверка, что тронуты только несовместимые поля и реальные topic id) и примет по домену.

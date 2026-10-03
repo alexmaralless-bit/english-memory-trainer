@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.past-irregular-events.project-update
+    title: "Project update"
+    cefr: A2
+    topic: grammar.past-irregular-events
+    carries: [tense:past-simple]
+    domain: work
+    context: incident-update
+    text: "Yesterday the team met to discuss the project. We ran into several technical issues during the meeting. The lead developer began working on the solution immediately. We found the root cause in the old code. The client chose to extend the deadline. The architect went back to review it. We broke down the tasks into smaller pieces. The team felt confident about next phase."
+    word_count: 64
+    keywords: ["team met", "ran into", "technical issues", "began", "solution", "found", "root cause", "client chose", "extend deadline", "architect reviewed"]
+    target_spans: ["ran into", "began working", "found the root cause", "chose to extend", "went back to review", "broke down the tasks", "felt confident"]
+    summary_ru: "Проектная встреча: натолкнулись на проблемы, начали решение, нашли причину, расширили срок."
+    transformations: [authored]
+  - id: text.recon.past-irregular-events.weekend-adventure
+    title: "Weekend adventure"
+    cefr: A2
+    topic: grammar.past-irregular-events
+    carries: [tense:past-simple]
+    domain: everyday
+    context: incident-update
+    text: "Last Saturday, we went to the mountains for a hike. We took a long trail up to the top. My friends chose to rest at the summit. I saw beautiful birds near the trees. We ate lunch together on the rocks. The sun began to set at 5 p.m. We ran down the path to get back before dark. Everyone felt happy."
+    word_count: 62
+    keywords: ["Saturday", "went", "mountains", "long hike", "chose to rest", "birds", "ate lunch", "sun began", "ran down", "felt happy"]
+    target_spans: ["went to the mountains", "took a long trail", "chose to rest", "saw beautiful birds", "ate lunch", "began to set", "ran down the path", "felt happy"]
+    summary_ru: "Выходной в горах: поход, завтрак на вершине, птицы, спуск до темноты."
+    transformations: [authored]

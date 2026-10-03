@@ -1,6 +1,7 @@
-"""Fixtures for assessments tests: a deterministic migrated store, an empty
-policy registry (placement self-registers assessments@1), and the shipped
-scoring@1 for the fold assertions."""
+"""Fixtures for assessments tests: a deterministic migrated store, a policy
+registry holding the fixture curriculum (forms are curriculum data now, so the
+legacy stub form is loaded explicitly through it), and the shipped scoring
+policies for the fold assertions."""
 
 from __future__ import annotations
 
@@ -15,6 +16,11 @@ import yaml
 from english_trainer.kernel.clock import FixedClock, SeededRandomSource
 from english_trainer.kernel.policy import PolicyRegistry
 from english_trainer.kernel.store import EventStore, connect, migrate
+from tests.assessments.fixtures import full_program, policy, stub_program
+
+CURRICULUM_KIND = "curriculum"
+STUB_VERSION = "placement-stub@1"
+FULL_VERSION = "placement-fixture@1"
 
 EPOCH = datetime(2026, 7, 22, 12, 0, 0, tzinfo=UTC)
 SEED = 20260722
@@ -49,7 +55,29 @@ def store(tmp_path: Path) -> Iterator[EventStore]:
 
 @pytest.fixture
 def registry(store: EventStore, clock: FixedClock) -> PolicyRegistry:
-    return PolicyRegistry(store._conn, clock)
+    """A registry with the STUB form active as the curriculum snapshot.
+
+    ``placement start`` resolves its form from the active curriculum; the
+    lifecycle/exposure/ceiling tests keep using the six-item stub, now loaded
+    explicitly as a fixture instead of being embedded in the engine.
+    """
+    registry = PolicyRegistry(store._conn, clock)
+    registry.register(CURRICULUM_KIND, STUB_VERSION, stub_program())
+    registry.activate(CURRICULUM_KIND, STUB_VERSION)
+    return registry
+
+
+@pytest.fixture
+def full_registry(store: EventStore, clock: FixedClock) -> PolicyRegistry:
+    """The measurable fixture form plus scoring@2 and rubric@1."""
+    registry = PolicyRegistry(store._conn, clock)
+    registry.register(CURRICULUM_KIND, FULL_VERSION, full_program())
+    registry.activate(CURRICULUM_KIND, FULL_VERSION)
+    for kind, filename in (("scoring", "scoring-v2.yaml"), ("rubric", "rubric-v1.yaml")):
+        payload = policy(filename)
+        registry.register(kind, str(payload["policy_id"]), payload)
+        registry.activate(kind, str(payload["policy_id"]))
+    return registry
 
 
 @pytest.fixture

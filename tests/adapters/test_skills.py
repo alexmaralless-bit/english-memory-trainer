@@ -10,6 +10,7 @@ import pytest
 
 from english_trainer.adapters.errors import SkillInvalid, SkillUnavailable
 from english_trainer.adapters.skills import (
+    _package_hash,
     discover_canonical_skills,
     load_canonical_skill,
     parse_skill,
@@ -31,7 +32,7 @@ forbidden_actions:
   - "не выставлять score самому"
 cli_calls:
   - session.start
-  - session.finish
+  - session.abandon
 outputs:
   - "session summary"
 postconditions:
@@ -59,14 +60,14 @@ def test_parse_skill_reads_frontmatter_and_body() -> None:
     skill = parse_skill(_VALID_SKILL, source="demo-skill/SKILL.md")
     assert skill.name == "demo-skill"
     assert skill.version == "1"
-    assert skill.cli_calls == ("session.start", "session.finish")
+    assert skill.cli_calls == ("session.start", "session.abandon")
     assert skill.forbidden_actions == ("не выставлять score самому",)
     assert "Do the thing" in skill.body
     assert skill.content_hash  # a real hash was computed
 
 
 def test_parse_skill_rejects_missing_field() -> None:
-    broken = _VALID_SKILL.replace("cli_calls:\n  - session.start\n  - session.finish\n", "")
+    broken = _VALID_SKILL.replace("cli_calls:\n  - session.start\n  - session.abandon\n", "")
     with pytest.raises(SkillInvalid, match="cli_calls"):
         parse_skill(broken, source="demo-skill/SKILL.md")
 
@@ -157,7 +158,7 @@ def test_validate_is_clean_right_after_sync(tmp_path: Path) -> None:
     claude = tmp_path / ".claude" / "skills"
     sync(canon, [codex, claude], tmp_path / "manifest.json", FixedClock(EPOCH))
 
-    violations = validate(canon, [codex, claude], ["session.start", "session.finish"])
+    violations = validate(canon, [codex, claude], ["session.start", "session.abandon"])
     assert violations == []
 
 
@@ -170,7 +171,7 @@ def test_validate_catches_hand_edited_copy_as_drift(tmp_path: Path) -> None:
     copy = codex / "demo-skill" / "SKILL.md"
     copy.write_text(copy.read_text(encoding="utf-8") + "\nhand edit\n", encoding="utf-8")
 
-    violations = validate(canon, [codex, claude], ["session.start", "session.finish"])
+    violations = validate(canon, [codex, claude], ["session.start", "session.abandon"])
     drift = [v for v in violations if v["kind"] == "drift"]
     assert len(drift) == 1
     assert drift[0]["skill"] == "demo-skill"
@@ -189,7 +190,7 @@ def test_validate_catches_canon_edited_without_resync(tmp_path: Path) -> None:
         _VALID_SKILL.replace("A demo skill for tests.", "A CHANGED demo skill."), encoding="utf-8"
     )
 
-    violations = validate(canon, [codex, claude], ["session.start", "session.finish"])
+    violations = validate(canon, [codex, claude], ["session.start", "session.abandon"])
     drift_targets = {v["target"] for v in violations if v["kind"] == "drift"}
     assert str(codex / "demo-skill" / "SKILL.md") in drift_targets
     assert str(claude / "demo-skill" / "SKILL.md") in drift_targets
@@ -201,11 +202,11 @@ def test_validate_catches_unresolvable_cli_call(tmp_path: Path) -> None:
     claude = tmp_path / ".claude" / "skills"
     sync(canon, [codex, claude], tmp_path / "manifest.json", FixedClock(EPOCH))
 
-    # `session.finish` is not in this registry's known command names.
+    # `session.abandon` is not in this registry's known command names.
     violations = validate(canon, [codex, claude], ["session.start"])
     unresolvable = [v for v in violations if v["kind"] == "unresolvable_call"]
     assert len(unresolvable) == 1
-    assert "session.finish" in unresolvable[0]["message"]
+    assert "session.abandon" in unresolvable[0]["message"]
 
 
 def test_validate_catches_broken_structure(tmp_path: Path) -> None:
@@ -229,4 +230,62 @@ def test_validate_defaults_to_the_live_command_registry(tmp_path: Path) -> None:
     sync(canon, [codex, claude], tmp_path / "manifest.json", FixedClock(EPOCH))
 
     violations = validate(canon, [codex, claude])
-    assert violations == []  # session.start / session.finish are real commands
+    assert violations == []  # session.start / session.abandon are real commands
+
+
+def test_sync_copies_references_and_resolves_archived_version(tmp_path: Path) -> None:
+    current = _VALID_SKILL.replace('version: "1"', 'version: "2"')
+    canon = _write_canon(tmp_path, "demo-skill", current)
+    skill_dir = canon / "demo-skill"
+    references = skill_dir / "references"
+    references.mkdir()
+    (references / "rules.md").write_text("# Rules\n", encoding="utf-8")
+    archived = skill_dir / "versions" / "1"
+    archived.mkdir(parents=True)
+    (archived / "SKILL.md").write_text(_VALID_SKILL, encoding="utf-8")
+    target = tmp_path / ".agents" / "skills"
+
+    result = sync(canon, [target], tmp_path / "manifest.json", FixedClock(EPOCH))
+
+    assert str(target / "demo-skill" / "references" / "rules.md") in result["written"]
+    assert (target / "demo-skill" / "versions" / "1" / "SKILL.md").is_file()
+    assert validate(canon, [target]) == []
+    assert resolve("demo-skill", "1", canon).version == "1"
+    assert resolve("demo-skill", "2", canon).version == "2"
+
+
+def test_resolve_exact_archived_package_hash_and_remove_stale_generated_file(
+    tmp_path: Path,
+) -> None:
+    current = _VALID_SKILL.replace('version: "1"', 'version: "3"')
+    canon = _write_canon(tmp_path, "demo-skill", current)
+    skill_dir = canon / "demo-skill"
+    archived = skill_dir / "versions" / "2" / "placeholder"
+    archived.mkdir(parents=True)
+    archived_skill = _VALID_SKILL.replace('version: "1"', 'version: "2"')
+    (archived / "SKILL.md").write_text(archived_skill, encoding="utf-8")
+    archived_refs = archived / "references"
+    archived_refs.mkdir()
+    (archived_refs / "rules.md").write_text("# Archived rules\n", encoding="utf-8")
+    archived_hash = _package_hash(archived)
+    hash_named_archive = archived.parent / archived_hash
+    archived.rename(hash_named_archive)
+    target = tmp_path / ".agents" / "skills"
+
+    sync(canon, [target], tmp_path / "manifest.json", FixedClock(EPOCH))
+    stale = target / "demo-skill" / "references" / "stale.md"
+    stale.parent.mkdir(parents=True, exist_ok=True)
+    stale.write_text("stale", encoding="utf-8")
+    assert any(item["target"] == str(stale) for item in validate(canon, [target]))
+
+    result = sync(canon, [target], tmp_path / "manifest.json", FixedClock(EPOCH))
+
+    assert str(stale) in result["removed"]
+    assert not stale.exists()
+    archived_skill_resolved = resolve(
+        "demo-skill",
+        "2",
+        canon,
+        content_hash=archived_hash,
+    )
+    assert archived_skill_resolved.content_hash == archived_hash

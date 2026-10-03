@@ -26,7 +26,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterable, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
@@ -47,6 +47,7 @@ CANONICAL_SKILL_NAMES: tuple[str, ...] = (
     "run-english-session",
     "run-placement-assessment",
     "run-spaced-review",
+    "run-drill-block",
     "teach-english-topic",
     "coach-english-conversation",
     "correct-learner-output",
@@ -165,12 +166,43 @@ def parse_skill(text: str, *, source: str) -> ParsedSkill:
     )
 
 
+def _package_files(skill_dir: Path, *, include_versions: bool) -> tuple[Path, ...]:
+    """Deterministic skill-package files, optionally including archives."""
+    files = []
+    for path in skill_dir.rglob("*"):
+        if not path.is_file():
+            continue
+        relative = path.relative_to(skill_dir)
+        if not include_versions and relative.parts and relative.parts[0] == "versions":
+            continue
+        if "__pycache__" in relative.parts or path.suffix == ".pyc":
+            continue
+        files.append(path)
+    return tuple(sorted(files, key=lambda item: item.relative_to(skill_dir).as_posix()))
+
+
+def _package_hash(skill_dir: Path) -> str:
+    """Hash the active SKILL.md plus every progressive-disclosure resource."""
+    return payload_hash(
+        {
+            "files": [
+                {
+                    "path": path.relative_to(skill_dir).as_posix(),
+                    "content": path.read_text(encoding="utf-8"),
+                }
+                for path in _package_files(skill_dir, include_versions=False)
+            ]
+        }
+    )
+
+
 def load_canonical_skill(agent_skills_dir: Path | str, name: str) -> ParsedSkill:
     """Parse ``<agent_skills_dir>/<name>/SKILL.md``; raise if it is missing."""
     path = Path(agent_skills_dir) / name / SKILL_FILENAME
     if not path.is_file():
         raise SkillUnavailable(f"canonical skill {name!r} not found under {agent_skills_dir}")
-    return parse_skill(path.read_text(encoding="utf-8"), source=f"{name}/{SKILL_FILENAME}")
+    parsed = parse_skill(path.read_text(encoding="utf-8"), source=f"{name}/{SKILL_FILENAME}")
+    return replace(parsed, content_hash=_package_hash(path.parent))
 
 
 def discover_canonical_skills(agent_skills_dir: Path | str) -> tuple[ParsedSkill, ...]:
@@ -188,19 +220,52 @@ def discover_canonical_skills(agent_skills_dir: Path | str) -> tuple[ParsedSkill
     return tuple(load_canonical_skill(root, name) for name in names)
 
 
-def resolve(name: str, version: str, agent_skills_dir: Path | str) -> ParsedSkill:
+def resolve(
+    name: str,
+    version: str,
+    agent_skills_dir: Path | str,
+    content_hash: str | None = None,
+) -> ParsedSkill:
     """Return the pinned skill content, or raise :class:`SkillUnavailable`.
 
     This is the synchronous check ``lessons.start_session`` runs BEFORE
     opening its commit UnitOfWork (lessons 4b [P0-Q1]): a session never gets
     created if a required skill fails to resolve here.
     """
+    root = Path(agent_skills_dir) / name
     skill = load_canonical_skill(agent_skills_dir, name)
-    if skill.version != str(version):
-        raise SkillUnavailable(
-            f"skill {name!r} version {version!r} is unavailable; canon is at version {skill.version!r}"
+    if skill.version == str(version) and (content_hash is None or skill.content_hash == content_hash):
+        return skill
+
+    version_root = root / "versions" / str(version)
+    candidates: list[Path] = []
+    if content_hash is not None:
+        candidates.append(version_root / content_hash / SKILL_FILENAME)
+    candidates.append(version_root / SKILL_FILENAME)
+    if version_root.is_dir():
+        candidates.extend(sorted(version_root.glob(f"*/{SKILL_FILENAME}")))
+    for candidate in candidates:
+        if not candidate.is_file():
+            continue
+        parsed = parse_skill(
+            candidate.read_text(encoding="utf-8"),
+            source=f"{name}/{candidate.relative_to(root).as_posix()}",
         )
-    return skill
+        if parsed.version != str(version):
+            continue
+        package_hash = _package_hash(candidate.parent)
+        if content_hash is None or package_hash == content_hash:
+            return replace(parsed, content_hash=package_hash)
+        # Version-1 manifests predate package hashes and pinned the raw
+        # SKILL.md hash.  Keep that exact historical identity resolvable while
+        # all new archives use the recursive package hash.
+        if parsed.content_hash == content_hash:
+            return parsed
+    suffix = f" with content hash {content_hash}" if content_hash is not None else ""
+    raise SkillUnavailable(
+        f"skill {name!r} version {version!r}{suffix} is unavailable; "
+        f"active canon is {skill.version!r} ({skill.content_hash})"
+    )
 
 
 def manifest_path_for(layout: StorageLayout) -> Path:
@@ -232,20 +297,30 @@ def sync(
     now = clock.now().isoformat()
 
     written: list[str] = []
+    removed: list[str] = []
     unchanged = 0
     manifest_entries: list[dict[str, Any]] = []
     for skill in skills:
-        raw = (canon_dir / skill.name / SKILL_FILENAME).read_bytes()
+        skill_dir = canon_dir / skill.name
+        package_files = _package_files(skill_dir, include_versions=True)
+        package_relatives = {source.relative_to(skill_dir) for source in package_files}
         target_paths: list[str] = []
         for target_dir in target_dirs:
-            dest = target_dir / skill.name / SKILL_FILENAME
-            dest.parent.mkdir(parents=True, exist_ok=True)
-            target_paths.append(str(dest))
-            if dest.exists() and dest.read_bytes() == raw:
-                unchanged += 1
-                continue
-            dest.write_bytes(raw)
-            written.append(str(dest))
+            target_skill_dir = target_dir / skill.name
+            target_paths.append(str(target_skill_dir / SKILL_FILENAME))
+            for existing in _package_files(target_skill_dir, include_versions=True):
+                if existing.relative_to(target_skill_dir) not in package_relatives:
+                    existing.unlink()
+                    removed.append(str(existing))
+            for source in package_files:
+                relative = source.relative_to(skill_dir)
+                dest = target_skill_dir / relative
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                if dest.exists() and dest.read_bytes() == source.read_bytes():
+                    unchanged += 1
+                    continue
+                dest.write_bytes(source.read_bytes())
+                written.append(str(dest))
         manifest_entries.append(
             SkillSyncManifest(
                 skill_name=skill.name,
@@ -266,6 +341,7 @@ def sync(
         "skills": len(skills),
         "targets": [str(target) for target in target_dirs],
         "written": written,
+        "removed": removed,
         "unchanged": unchanged,
         "manifest": manifest_entries,
     }
@@ -346,26 +422,43 @@ def validate(
                 )
 
         for target_dir in target_dirs:
-            dest = target_dir / name / SKILL_FILENAME
-            if not dest.is_file():
+            source_files = _package_files(canon_dir / name, include_versions=True)
+            source_relatives = {source.relative_to(canon_dir / name) for source in source_files}
+            target_skill_dir = target_dir / name
+            for extra in _package_files(target_skill_dir, include_versions=True):
+                if extra.relative_to(target_skill_dir) in source_relatives:
+                    continue
                 violations.append(
                     {
                         "skill": name,
                         "kind": "drift",
-                        "target": str(dest),
+                        "target": str(extra),
                         "code": SkillDrift.code,
-                        "message": f"{name}: not synced to {dest} (`trainer skills sync`)",
+                        "message": f"{name}: stale generated file {extra} (`trainer skills sync`)",
                     }
                 )
-                continue
-            if dest.read_bytes() != raw_canon:
-                violations.append(
-                    {
-                        "skill": name,
-                        "kind": "drift",
-                        "target": str(dest),
-                        "code": SkillDrift.code,
-                        "message": f"{name}: {dest} has diverged from canon (`trainer skills sync`)",
-                    }
-                )
+            for source in source_files:
+                relative = source.relative_to(canon_dir / name)
+                dest = target_skill_dir / relative
+                if not dest.is_file():
+                    violations.append(
+                        {
+                            "skill": name,
+                            "kind": "drift",
+                            "target": str(dest),
+                            "code": SkillDrift.code,
+                            "message": f"{name}: not synced to {dest} (`trainer skills sync`)",
+                        }
+                    )
+                    continue
+                if dest.read_bytes() != source.read_bytes():
+                    violations.append(
+                        {
+                            "skill": name,
+                            "kind": "drift",
+                            "target": str(dest),
+                            "code": SkillDrift.code,
+                            "message": f"{name}: {dest} has diverged from canon (`trainer skills sync`)",
+                        }
+                    )
     return violations

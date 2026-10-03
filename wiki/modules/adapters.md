@@ -1,8 +1,8 @@
 # Модуль: adapters
 
 > **Status**: current
-> **Last updated**: 2026-07-22
-> **Sources**: `docs/english-memory-trainer-build-prompt.md` §11 (Agent Skills), §12 · `CLAUDE.md` (канонические skills в `agent-skills/`, deterministic copies, без MCP) · [[cli]] (реестр команд) · [[lessons]] (Session Manifest, `required_skills`) · [[scoring]] §5 (Tutor Compliance) · все решения [PD-2026-07-20]
+> **Last updated**: 2026-09-23
+> **Sources**: `docs/english-memory-trainer-build-prompt.md` §11 (Agent Skills), §12 · `CLAUDE.md` (канонические skills в `agent-skills/`, deterministic copies, без MCP) · [[cli]] (реестр команд) · [[lessons]] (Session Manifest, `required_skills`, LessonBrief/LessonReport) · [[scoring]] §5 (Tutor Compliance) · `staging/concepts/2026-09-23-lesson-brief-report-concept.md` (одобрен, [PD-2026-09-23]) · все решения [PD-2026-07-20]
 > **Bounded context**: `src/english_trainer/adapters/`
 
 > Спека — **target**. Одна цель продукта, без фазовых тегов (Принцип 4). Термины — по [[../glossary]].
@@ -19,12 +19,12 @@
 
 | Сущность | Назначение | Ключевые поля |
 |---|---|---|
-| `Skill` | канонический навык в `agent-skills/<name>/SKILL.md` | `name`, `version`, `description`, `required_inputs`, `steps`, `forbidden_actions`, `cli_calls[]`, `outputs`, `postconditions` |
+| `SkillPackage` | канонический пакет в `agent-skills/<name>/` | active `SKILL.md`, `references/**`, immutable `versions/<version>/<content_hash>/**` |
 | `SkillSyncManifest` | что и куда разложено | `skill_name`, `version`, `content_hash`, `targets[]`, `synced_at` |
 | `AdapterProfile` | описание среды-тьютора | `id` (`codex` \| `claude-code`), `skills_dir`, `format_notes` |
 | `ParityFixture` | сценарий для сравнения адаптеров | `id`, `given_state`, `agent_input`, `expected_effects` |
 
-Канонический набор: `run-english-session`, `run-placement-assessment`, `run-spaced-review`, `teach-english-topic`, `coach-english-conversation`, `correct-learner-output`, `assess-english-gate`, `finish-english-session`, `audit-english-tutor`, `maintain-english-curriculum`.
+Канонический набор: `run-english-session`, `run-placement-assessment`, `run-spaced-review`, `run-drill-block`, `teach-english-topic`, `coach-english-conversation`, `correct-learner-output`, `assess-english-gate`, `finish-english-session`, `audit-english-tutor`, `maintain-english-curriculum`.
 
 ```mermaid
 stateDiagram-v2
@@ -42,7 +42,7 @@ stateDiagram-v2
 | `sync(targets)` | API | раскладывает канонические skills детерминированными копиями |
 | `validate()` | API | проверяет структуру skills, разрешимость `cli_calls`, отсутствие drift |
 | `compare(fixtures)` | API | прогоняет фикстуры на адаптерах и сравнивает наблюдаемые эффекты |
-| `resolve(skill, version)` | API | отдаёт содержимое закреплённой версии skill для манифеста сессии |
+| `resolve(skill, version, content_hash?)` | API | отдаёт exact active/archive SkillPackage; используется до start и resume mutation |
 | `capture_user_turn(provider, provider_message_id, session_id, raw_content, span, expected_session_revision)` | API | фиксирует untrusted пользовательскую реплику на provider boundary |
 | `report_skill(session_id, skill, version, status, expected_session_revision)` | API | принимает недоверенный самоотчёт агента о ходе skill |
 | `SKILL_REQUIRED` | publishes | манифест сессии затребовал skill определённой версии |
@@ -51,32 +51,34 @@ stateDiagram-v2
 
 - **MUST — события skill'ов не доверенные** [P0-Q3]: `SKILL_STARTED`/`COMPLETED`/`FAILED` сообщает агент. Они **не являются evidence**, не влияют на Mastery и **сами по себе не закрывают obligation** Tutor Compliance: obligation засчитывается только при наличии наблюдаемых движком эффектов — вызовов [[cli]] и доменных событий ([[scoring]] §5). Ценность самоотчёта — в корреляции и аудите: `SKILL_COMPLETED` без доменных эффектов означает, что агент отчитался о работе, которой не было, и это само по себе диагностический сигнал.
 - **MUST — provider ingress [PD-2026-07-22]**: до learner-facing мутации bridge вызывает `capture_user_turn`. Локальное событие хранит полный raw text, `sha256`, проверяемые границы UTF-8 byte span и `(provider, provider_message_id)`. Идентификатор уникален глобально внутри provider: точный повтор идемпотентен, тот же id с другим содержимым даёт `PROVIDER_MESSAGE_CONFLICT`. Capture разделяет trust-контур, но никогда не создаёт evidence и не влияет на scoring.
-- **MUST — pinned skill snapshot**: `SKILL_REQUIRED` и Session Manifest несут не только имя/версию, но и `content_hash` и разрешённые `cli_calls`; obligations проверяются против этого снапшота, а не против текущего изменившегося файла.
+- **MUST — pinned skill snapshot**: `SKILL_REQUIRED` и Session Manifest несут точную тройку `(skill_name, version, content_hash)` и разрешённые `cli_calls`; obligations проверяются против этого снапшота, а не против текущего изменившегося файла. `resolve()` сначала допускает только точное совпадение active package, затем ищет immutable archive той же тройки; совпадения лишь имени и версии недостаточно.
 
 ## 4. Поведение
 
 ### 4.1 Канон и раскладка
 
 - **MUST — один источник**: канон живёт в `agent-skills/`. `.agents/skills/` (Codex) и `.claude/skills/` (Claude Code) — **производные**, их не правят руками.
-- **MUST — детерминированные копии, не симлинки**: симлинки ломаются на Windows и в архивах. Копия сопровождается `SkillSyncManifest` с `content_hash`.
+- **MUST — детерминированные копии, не симлинки**: симлинки ломаются на Windows и в архивах. Sync рекурсивно копирует active `SKILL.md`, `references/**` и `versions/**`; копия сопровождается `SkillSyncManifest` с package `content_hash`.
 - **MUST — идемпотентный sync**: повторный `sync` без изменений канона не меняет ни одного байта. Иначе drift-check станет шумом, и его перестанут читать.
+- **MUST — exact package mirror**: файл, удалённый из канонического package, считается stale drift и удаляется следующей `skills sync`; старый reference не может тихо оставаться видимым провайдеру.
 - **MUST — `validate` не чинит**: обнаружив drift, `trainer skills validate` сообщает о нём и завершается с ненулевым кодом, но не синхронизирует. Чинит только `sync` ([[cli]] §4.4).
 - **MUST — drift в обе стороны**: расхождение фиксируется и когда правили копию, и когда правили канон без последующего sync. Второе опаснее: копия, которую читает агент, тихо отстаёт от канона, который читает человек.
 - **MUST NOT — без MCP**: интеграция только через файлы skills и вызовы [[cli]]. MCP-сервер не вводится (`CLAUDE.md`).
 
 ### 4.2 Версии и закрепление
 
-- **MUST — версия иммутабельна**: содержимое `Skill` определённой версии не меняется. Правка канона — это **новая версия**; старая остаётся разрешимой, пока на неё ссылается хоть один Session Manifest.
+- **MUST — версия иммутабельна**: содержимое `SkillPackage` определённой версии не меняется. До изменения active-пакета его точный снимок архивируется как `versions/<version>/<content_hash>/`; правка active-канона получает **новую версию**. Старый снимок остаётся разрешимым, пока на него ссылается хоть один Session Manifest.
 - **MUST — манифест пинит skills**: Session Manifest несёт `required_skills` с версиями ([[lessons]]). Сессия, возобновлённая через неделю, получает тот skill, под который начиналась, — иначе поведение тьютора внутри одной сессии поменяется на середине.
 - **MUST — не полагаться на implicit invocation**: требуемые skills объявляются в манифесте явно. Расчёт на то, что среда «сама подхватит» нужный skill по описанию, делает поведение невоспроизводимым между средами.
 - **MUST — safety не пинится**: закрепление версии skill не закрепляет safety-правила; `production_eligible` всегда проверяется по active policy (safety-overlay, [[../OPEN]] OPEN-14).
 
 ### 4.3 Структура skill
 
-- **MUST — короткий SKILL.md**: `name`, точный `description`, обязательные inputs, steps, **forbidden actions**, вызовы [[cli]], outputs, postconditions. Подробности — в `references/`.
+- **MUST — короткий SKILL.md**: `name`, точный `description`, обязательные inputs, steps, **forbidden actions**, вызовы [[cli]], outputs, postconditions. Подробности и изменяемые автором методические правила — в `references/`; они входят в package hash и pinned snapshot.
+- **MUST — методика отделена от состояния** [PD-2026-07-23]: правила preflight, полноты объяснения и профилей уроков редактируются как Markdown в каноническом skill-пакете. Они не являются learner state и не требуют заранее генерировать тексты всех уроков.
 - **MUST — валидация детерминизмом, а не длиной промпта**: то, что можно проверить кодом, проверяется кодом. Раздувание инструкции ради надёжности — замена механизма уговорами.
 - **MUST — `cli_calls` разрешимы**: каждая упомянутая команда существует в `command_registry()` ([[cli]] §3). Skill, зовущий несуществующую команду, не проходит `validate`. Это ловит рассинхрон skills и CLI при переименованиях.
-- **MUST — forbidden actions явные**: у каждого skill перечислено запрещённое (не выставлять оценки, не завершать сессию в обход `trainer session finish`, не править файлы состояния). Движок всё равно это не позволит, но явный запрет снижает число попыток и делает нарушение видимым в аудите.
+- **MUST — forbidden actions явные**: у каждого skill перечислено запрещённое: не редактировать состояние в обход CLI, не завершать сессию иначе чем через `trainer session report`/`trainer session abandon`, не подавать в отчёте ответ, которого ученик не писал дословно ([[evidence]] §4.2). [PD-2026-09-23] «Не выставлять оценки» из этого списка убрано и развёрнуто: тьютор **обязан** подать вердикт по каждому item'у отчёта — движок его не пересчитывает. Движок всё равно не позволит того, что запрещено, но явный запрет снижает число попыток и делает нарушение видимым в аудите.
 
 ### 4.4 Паритет адаптеров
 
@@ -86,7 +88,7 @@ stateDiagram-v2
 - **MUST — нормализация перед сравнением**: из сравнения исключаются недетерминированные поля (идентификаторы, метки времени, `correlation_id`). Сравнение идёт по канонической форме, иначе паритет не пройдёт никогда.
 - **MUST — критерий паритета**: фикстура задаёт `expected_effects` в виде обязательных эффектов и запрещённых. Адаптер проходит, если **все обязательные** наступили и **ни один запрещённый** — нет. Требование побайтового совпадения двух прогонов невыполнимо и было бы ложной строгостью.
 - **MUST — compare диагностический**: команда сообщает расхождения и код возврата, но ничего не меняет и никого не «чинит».
-- **MUST — минимальный набор фикстур**, по контракту брифа: правильный триггер skill; неправильный триггер; попытка перескочить prerequisite; **попытка агента самостоятельно выставить score**; незавершённое обязательное review; попытка закончить сессию без persistence; одинаковое поведение Codex и Claude Code на общем сценарии.
+- **MUST — минимальный набор фикстур**, по контракту брифа: правильный триггер skill; неправильный триггер; попытка перескочить prerequisite; [PD-2026-09-23] отчёт с вердиктом тьютора, дающий сохранённое evidence и ожидаемый score (заменяет прежнюю «попытка агента самостоятельно выставить score» — вердикт тьютора теперь ожидаемое поведение, [[evidence]] §4.2, не нарушение); незавершённое обязательное review (не адресовано и не отмечено skip'ом в отчёте → `INSUFFICIENT_EVIDENCE(reason=not_attempted)`); отчёт с объяснением вместо сохранённого ответа ученика (не evidence, [[evidence]] §4.2); одинаковое поведение Codex и Claude Code на общем сценарии.
 - **SHOULD**: фикстуры покрывают и отказные пути — агент обязан корректно обработать `CONFLICT` и `PRECONDITION_FAILED`, а не зациклиться на повторах.
 
 ### 4.5 Отношение к принуждению
@@ -119,6 +121,9 @@ stateDiagram-v2
 
 ## История изменений
 
+- **2026-09-23**: [PD-2026-09-23] переход на протокол «задание → отчёт»: forbidden actions больше не включают «не выставлять оценки» — тьютор обязан подавать вердикт по item'у отчёта, запрет развёрнут; фикстура паритета «попытка самостоятельно выставить score» заменена фикстурой принятого отчёта с вердиктом.
+- **2026-09-22**: [PD-2026-09-22] `run-drill-block` внесён в канонический набор skills (пакет существовал с профиля `drill`, но в перечне не значился).
+- **2026-07-23**: [PD-2026-07-23] Skill расширен до рекурсивного SkillPackage; введены точные архивы `(name, version, content_hash)`, package hash для `references/**` и детерминированный sync active/reference/version файлов.
 - **2026-07-22 (2)**: [PD-2026-07-22] добавлены provider ingress с полным локальным raw text/hash/UTF-8 span, provider-global dedup/conflict, untrusted skill-report channel и pinned `content_hash`/`cli_calls` required-skill.
 - **2026-07-22**: фазовые теги `[mvp]`/`[post-mvp]` сняты [PD-2026-07-22]: спека описывает одну цель продукта, порядок и статус — только в roadmap (Принцип 4).
 - **2026-07-20**: спека создана (0.7). Skill объявлен подсказкой, а не механизмом принуждения; события skill'ов не доверены и не являются evidence; версия skill иммутабельна и пинится манифестом сессии; паритет определён над наблюдаемыми эффектами, а не над текстом, с нормализацией и критерием «все обязательные, ни одного запрещённого»; `validate` не чинит drift. Заведён OPEN-24.

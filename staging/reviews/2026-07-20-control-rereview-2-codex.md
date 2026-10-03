@@ -1,4 +1,4 @@
-# Второе повторное red-team ревью 0.12 после `5f9f047`
+# Второе повторное red-team ревью 0.12 после `92d5f4c`
 
 Дата: 2026-07-20  
 Предмет: `wiki/modules/control.md` после триажа R-1…R-15 и его нормативные стыки с `lessons`, `evidence`, `scoring`, `scheduler`, CLI, session-flow, OPEN и roadmap.  
@@ -20,7 +20,7 @@
 
 ## Статус находок прошлого rereview
 
-| Предыдущая находка | Статус после `5f9f047` | Комментарий |
+| Предыдущая находка | Статус после `92d5f4c` | Комментарий |
 |---|---|---|
 | R-1 delivery mutation | **частично, BLOCKER остаётся** | mutating `claim_next_step` добавлен в control/CLI, но owner `lessons`, glossary, OPEN и flow остались на read-only/старом протоколе (RR2-1) |
 | R-2 modes/empty baskets | **BLOCKER снят** | mode-specific shares и детерминированные waiver существуют; осталась дискретная feasibility-дыра уровня MAJOR (RR2-5) |

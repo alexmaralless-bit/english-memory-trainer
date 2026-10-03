@@ -1,8 +1,8 @@
 # Flow: placement (стартовая диагностика)
 
 > **Status**: current
-> **Last updated**: 2026-07-19
-> **Sources**: [[../product/learning-model]] §6 · [[../product/lexical-system]] · Concept Gate 2026-07-19 (две развилки, [PD-2026-07-19]) · концепт одобрен («ок»)
+> **Last updated**: 2026-09-22
+> **Sources**: [[../product/learning-model]] §6 · [[../product/lexical-system]] · Concept Gate 2026-07-19 (две развилки, [PD-2026-07-19]) · концепт одобрен («ок») · реальные placement-формы `staging/handoff/2026-09-22-placement-forms-spec.md` ([PD-2026-09-22])
 > **Роль**: спинной сценарий (roadmap 0.8, третий из трёх). Как ученик получает стартовые уровни без листания старых чатов и без фиктивных оценок.
 
 ---
@@ -71,6 +71,9 @@ sequenceDiagram
 ## Правила сценария
 
 - **MUST**: агент предъявляет items дословно — без подсказок, упрощений и переформулировок; это диагностика, не обучение.
+- **MUST — порядок и форма предъявления** [PD-2026-09-22]: items предъявляются по секциям, внутри секции — в порядке band'ов (A1→C1); `choice` показывается вариантами a–d; passage показывается **один раз** перед своими вопросами; writing-секция предъявляется с объявленным диапазоном слов (`min_words`–`max_words`). Никаких подсказок, объяснений или переформулировок ни для одного kind.
+- **MUST — checkpoint после каждой секции**: агент фиксирует ответы `placement answer` сразу по завершении секции (не дожидаясь конца формы) — inline с checkpoint-жизненным циклом выше.
+- **MUST — writing observations, не вердикт** [PD-2026-09-22]: по writing-секции агент передаёт в `placement answer` span-ссылочные rubric-observations по `rubric@1` (та же форма, что у обычной сессии, [[../product/learning-model]] §3) — никогда готовую оценку, level или `correct`. Rubric-assessment (provisional, `rubric_step_type: spontaneous_production`) и cap вычисляет движок на `submit` ([[../modules/assessments]] §3, [[../modules/scoring]] §4c).
 - **MUST**: объективные секции оценивает только код; по writing агент даёт rubric-observations, outcome и cap считает движок ([[../product/learning-model]] §3).
 - **MUST**: placement-items, проверяющие лексику, создают записи личного словаря (enrollment) по критерию «была целью упражнения»; evidence знания — только по learner response ([[../product/lexical-system]] §3).
 - **MUST — self-report per-skill** [rereview A-R3]: `self_reported_level` при decline хранится отдельно и замещается измерением **по каждому навыку** после его первого evidence, не глобально ([[../product/learning-model]] §5).
@@ -98,6 +101,7 @@ sequenceDiagram
 
 ## История изменений
 
+- **2026-09-22**: [PD-2026-09-22] реальные placement-формы (Д15) — «Правила сценария» дополнены порядком/формой предъявления (секции → band'ы, choice a–d, passage один раз, объявленный диапазон слов writing), явным checkpoint после каждой секции и шагом writing-observations (span-ссылочные, не вердикт). Формы теперь curriculum-данные ([[../modules/assessments]] §3, [[../modules/curriculum]] §2f), правило уровня — [[../modules/scoring]] §4c.
 - **2026-07-19 (3)**: rereview — формальная state diagram с `STARTED|IN_PROGRESS → ABANDONED`, командой `placement abandon`, событиями checkpoint/abandon; запрет abandon после SUBMITTED (D-R3); self-report per-skill (A-R3).
 - **2026-07-19 (2)**: red-team триаж — placement lifecycle с checkpoint/resume/одним терминальным submit (G-1); потолок ACTIVE, никогда MASTERED (D-9); `self_reported_level` отдельно (A-2); exposure history и cooldown (C-6); консервативные рекомендации и confidence → versioned policy (E-8); ~30–40 мин → SHOULD (E-9); rubric-observations вместо готовой оценки.
 - **2026-07-19**: создан по Concept Gate: evidence только проверенным темам, placement рекомендован с правом отказа. Все решения [PD-2026-07-19]. Закрывает 0.8.

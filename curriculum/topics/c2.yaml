@@ -9,7 +9,7 @@ topics:
       soft: [grammar.cleft-sentences.focus]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: tail
-    lexicon: [word.rhetoric]
+    lexicon: [word.rhetoric, chunk.marked-word-order-rhetoric.adjective-though-it, chunk.marked-word-order-rhetoric.among-the-most, chunk.marked-word-order-rhetoric.crucial-though-they-were, chunk.marked-word-order-rhetoric.direct-object-fronting, chunk.marked-word-order-rhetoric.into-this-came, chunk.marked-word-order-rhetoric.little-did-they, chunk.marked-word-order-rhetoric.never-before-had, chunk.marked-word-order-rhetoric.not-only-did, chunk.marked-word-order-rhetoric.nowhere-was-this, chunk.marked-word-order-rhetoric.only-then-did, chunk.marked-word-order-rhetoric.remarkable-as-it-was, chunk.marked-word-order-rhetoric.so-adjective-was, chunk.marked-word-order-rhetoric.such-was-that, chunk.marked-word-order-rhetoric.what-clause-was]
     contexts: [editorial-argument, executive-address]
     typical_errors:
       - "Moving a phrase to the front as in Russian prose without supplying the English structure that marks its relation."
@@ -31,7 +31,7 @@ topics:
       soft: [written-production.style-revision]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: core
-    lexicon: [word.substitution, word.nominal]
+    lexicon: [word.substitution, word.nominal, chunk.ellipsis-substitution.and-that, chunk.ellipsis-substitution.as-expected, chunk.ellipsis-substitution.be-so-too, chunk.ellipsis-substitution.but-not, chunk.ellipsis-substitution.can-have, chunk.ellipsis-substitution.can-one, chunk.ellipsis-substitution.did-it-work, chunk.ellipsis-substitution.do-so-instead, chunk.ellipsis-substitution.does-not-either, chunk.ellipsis-substitution.does-the, chunk.ellipsis-substitution.former-latter, chunk.ellipsis-substitution.had-not-yet, chunk.ellipsis-substitution.if-not, chunk.ellipsis-substitution.just-as, chunk.ellipsis-substitution.likewise, chunk.ellipsis-substitution.likewise-has, chunk.ellipsis-substitution.neither-can, chunk.ellipsis-substitution.nor-would, chunk.ellipsis-substitution.ones-plural, chunk.ellipsis-substitution.opposite-is-true, chunk.ellipsis-substitution.same-goes-for, chunk.ellipsis-substitution.so-did, chunk.ellipsis-substitution.so-have, chunk.ellipsis-substitution.so-will, chunk.ellipsis-substitution.some-others-dont, chunk.ellipsis-substitution.will-you, chunk.ellipsis-substitution.would-be-too, chunk.ellipsis-substitution.would-have-too]
     contexts: [formal-comparison, editorial-revision]
     typical_errors:
       - "Omitting a verb that English cannot recover merely because Russian permits a verbless parallel."
@@ -284,7 +284,7 @@ topics:
       soft: [reading.ambiguity-resolution]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: core
-    lexicon: [word.lexical, word.syntactic, word.nominal]
+    lexicon: [word.lexical, word.syntactic, word.nominal, chunk.syntactic-ambiguity-control.all-except, chunk.syntactic-ambiguity-control.antecedent, chunk.syntactic-ambiguity-control.as-intended, chunk.syntactic-ambiguity-control.both-and, chunk.syntactic-ambiguity-control.coordinate-parallel, chunk.syntactic-ambiguity-control.dangling-participle, chunk.syntactic-ambiguity-control.each-of, chunk.syntactic-ambiguity-control.either-or, chunk.syntactic-ambiguity-control.instead-of, chunk.syntactic-ambiguity-control.neither-nor, chunk.syntactic-ambiguity-control.not-only, chunk.syntactic-ambiguity-control.only-not, chunk.syntactic-ambiguity-control.only-scope, chunk.syntactic-ambiguity-control.passive-agent, chunk.syntactic-ambiguity-control.respectively, chunk.syntactic-ambiguity-control.restrict-only, chunk.syntactic-ambiguity-control.scope-placement, chunk.syntactic-ambiguity-control.sequencing, chunk.syntactic-ambiguity-control.such-result, chunk.syntactic-ambiguity-control.that-clause, chunk.syntactic-ambiguity-control.that-vs-which, chunk.syntactic-ambiguity-control.the-latter, chunk.syntactic-ambiguity-control.which-non-restrictive, chunk.syntactic-ambiguity-control.who-vs-that, chunk.syntactic-ambiguity-control.with-attachment]
     contexts: [contract-edit, technical-specification]
     typical_errors:
       - "Assuming punctuation alone resolves an attachment that the syntax leaves open."

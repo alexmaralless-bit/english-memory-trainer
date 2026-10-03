@@ -59,6 +59,50 @@ PROGRAM: dict[str, Any] = {
             "usage_policy": "safe_to_use",
             "currency": "current",
             "domains": ["conversation"],
+        },
+        {
+            # A frame (lexical-system 1c): a chunk carrying `frame_of`/`carries`,
+            # fixture-owned by grammar.be.identity so topic-page grouping and
+            # frame-page enrichment both have real data to render.
+            "id": "chunk.be-identity.im-a",
+            "title": "I'm a ___",
+            "type": "chunk",
+            "cefr": "A1",
+            "curriculum_priority_band": "CORE",
+            "register": "neutral",
+            "transparency": "transparent",
+            "domains": ["work"],
+            "meaning_ru": "я … (профессия/роль)",
+            "frame_of": "grammar.be.identity",
+            "carries": ["tense:present-simple", "article:indefinite-first-mention"],
+            "slot_hint_ru": "название профессии или роли",
+            "tier": 2,
+            "examples": ["I'm a project manager.", "I'm a developer here."],
+            "contrast": {
+                "frame": "I'm the ___",
+                "note_ru": "the — когда роль уникальна и уже известна собеседнику",
+            },
+            "trap": {
+                "learner_form": "I'm project manager.",
+                "correction": "I'm a project manager.",
+                "cause_ru": "в русском перед названием профессии артикль не нужен",
+            },
+        },
+    ],
+    "texts": [
+        {
+            "id": "text.recon.be-identity.roles",
+            "title": "Project roles",
+            "cefr": "A1",
+            "topic": "grammar.be.identity",
+            "domain": "work",
+            "context": "team-introduction",
+            "text": "I am a developer. You are a manager.",
+            "word_count": 8,
+            "keywords": ["developer", "manager"],
+            "target_spans": ["I am a developer"],
+            "summary_ru": "Кто есть кто в команде.",
+            "transformations": ["authored"],
         }
     ],
 }
@@ -100,6 +144,7 @@ def registry(store: EventStore, clock: FixedClock) -> PolicyRegistry:
         ("scoring-v1.yaml", "scoring", "scoring@1"),
         ("scheduler-v1.yaml", "scheduler", "scheduler@1"),
         ("rubric-v1.yaml", "rubric", "rubric@1"),
+        ("automaticity-v1.yaml", "automaticity", "automaticity@1"),
     ):
         reg.register(kind, version, _payload(name))
         reg.activate(kind, version)

@@ -1,0 +1,11 @@
+{
+  "automaticity_consistent": true,
+  "automaticity_policy_version": "automaticity@1",
+  "automaticity_snapshot_hash": "7c741718b0dedd72447df270b8c497d2ffbde3f6e091962ca404740ec55bdb69",
+  "automaticity_targets": 1,
+  "event_count": 45,
+  "scoring_consistent": true,
+  "scoring_policy_version": "scoring@1",
+  "scoring_snapshot_hash": "e8eadff1e7c2cc86b738bf48fbd4fc0179a47a3aa6c659d456327c64c92304c4",
+  "scoring_targets": 2
+}

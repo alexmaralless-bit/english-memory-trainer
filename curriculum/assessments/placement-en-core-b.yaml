@@ -1,0 +1,1015 @@
+# Placement Form B - curriculum/assessments. Own text only, American English.
+schema_version: 1
+form_version: placement-en-core-b@1
+title: Placement B
+target_minutes: 35
+sections:
+- grammar
+- vocabulary
+- reading
+- writing
+passages:
+- passage_id: p-a2-1
+  cefr: A2
+  title: New expense tool
+  text: Starting next Monday, the finance team will roll out a new expense-report tool called QuickClaim.
+    The old system will still work until the end of the month, so staff can submit either one for now.
+    IT ran a short pilot last week with volunteers from three departments, and the pilot hit a few snags
+    with photo uploads on older phones. Those bugs are already fixed. Every employee must create a QuickClaim
+    account before March 30, because after that date the finance team will stop accepting paper receipts
+    completely. If you need help setting up your account, message the IT help desk any time this week.
+- passage_id: p-b1-1
+  cefr: B1
+  title: VPN client migration
+  text: 'Posted in #it-updates by Priya, IT Operations: starting next week, remote access will move to
+    the new VPN client. To switch over, uninstall the old client, restart your laptop, and install the
+    new one from the internal portal before Friday. If your team handles production deployments, you will
+    also need to request the elevated-access role separately, since the new client no longer grants it
+    automatically. I tested the migration on my own laptop yesterday, and it went smoothly, though a few
+    people on the mobile team reported longer login times right after switching. That is probably a temporary
+    caching issue rather than anything wrong with the new client itself, so please just restart once if
+    it happens to you.'
+- passage_id: p-b2-1
+  cefr: B2
+  title: Remote work productivity
+  text: Several companies have reduced their office space over the past two years, citing data that shows
+    employees completing more tasks per week when working from home. Critics argue that this productivity
+    figure is misleading, since it usually counts finished tickets rather than the quality or complexity
+    of the work involved. A recent internal survey at one software firm found that remote engineers closed
+    more tickets on average, but their code required more follow-up fixes than code written by employees
+    who worked in the office at least three days a week. The company's leadership still describes the
+    shift to remote work as an unambiguous success, pointing mainly to the ticket counts and rarely mentioning
+    the follow-up fixes in public updates.
+- passage_id: p-c1-1
+  cefr: C1
+  title: Two retrospectives, one quarter
+  text: Team A's retrospective attributed last quarter's slower release cadence to an increase in code
+    review turnaround time, based on a sample of forty pull requests from a single, unusually busy sprint.
+    Team B's independent review of the same quarter reached a different conclusion, pointing instead to
+    a rise in flaky integration tests as the primary bottleneck. Both analyses assume that the recorded
+    timestamps in the project tracker accurately reflect when engineers actually did the work, rather
+    than when they merely updated a ticket's status. Management's proposed fix, hiring two additional
+    reviewers, would address Team A's explanation but would do little for the flaky-test problem Team
+    B identified, unless the shared assumption about the timestamps also holds true across both samples.
+items:
+- item_id: g-a1-01
+  section: grammar
+  band: A1
+  kind: choice
+  target_ref: grammar.be.identity
+  dimension: recognition
+  prompt: Maria and Tom ___ engineers on the same team.
+  options:
+  - are
+  - is
+  - am
+  - be
+  answer_key:
+  - are
+- item_id: g-a1-02
+  section: grammar
+  band: A1
+  kind: choice
+  target_ref: grammar.basic-word-order
+  dimension: recognition
+  prompt: Which sentence has correct word order?
+  options:
+  - The QA lead reviews the test plan every sprint.
+  - Reviews the QA lead the test plan every sprint.
+  - The QA lead the test plan reviews every sprint.
+  - Every sprint reviews the QA lead the test plan.
+  answer_key:
+  - The QA lead reviews the test plan every sprint.
+- item_id: g-a1-03
+  section: grammar
+  band: A1
+  kind: cloze
+  target_ref: grammar.present-simple.routines
+  dimension: controlled_production
+  prompt: He ___ (check) the deployment dashboard every morning before the stand-up.
+  answer_key:
+  - checks
+- item_id: g-a1-04
+  section: grammar
+  band: A1
+  kind: choice
+  target_ref: grammar.frequency-adverbs
+  dimension: recognition
+  prompt: The release team ___ tests new builds before lunch.
+  options:
+  - usually
+  - are usually
+  - usually are
+  - usual
+  answer_key:
+  - usually
+- item_id: g-a1-05
+  section: grammar
+  band: A1
+  kind: choice
+  target_ref: grammar.there-is-are.systems
+  dimension: recognition
+  prompt: ___ three unresolved comments on the pull request.
+  options:
+  - There are
+  - There is
+  - They are
+  - Is there
+  answer_key:
+  - There are
+- item_id: g-a1-06
+  section: grammar
+  band: A1
+  kind: cloze
+  target_ref: grammar.nouns-singular-plural
+  dimension: controlled_production
+  prompt: The database stores three ___ (record) for each customer.
+  answer_key:
+  - records
+- item_id: g-a1-07
+  section: grammar
+  band: A1
+  kind: choice
+  target_ref: grammar.quantifiers.basic
+  dimension: recognition
+  prompt: The analysis lacks ___ context to explain the sudden spike in traffic.
+  options:
+  - much
+  - many
+  - a few
+  - several
+  answer_key:
+  - much
+- item_id: g-a1-08
+  section: grammar
+  band: A1
+  kind: choice
+  target_ref: grammar.articles.zero-plural-uncountable
+  dimension: recognition
+  prompt: ___ update automatically whenever the configuration file changes.
+  options:
+  - Settings
+  - The settings
+  - A setting
+  - Setting
+  answer_key:
+  - Settings
+- item_id: g-a2-01
+  section: grammar
+  band: A2
+  kind: cloze
+  target_ref: grammar.past-continuous.incident-context
+  dimension: controlled_production
+  prompt: The deployment pipeline ___ (run) the test suite when the network dropped.
+  answer_key:
+  - was running
+- item_id: g-a2-02
+  section: grammar
+  band: A2
+  kind: choice
+  target_ref: grammar.past-irregular-events
+  dimension: recognition
+  prompt: Priya ___ the corrupted backup after searching through old logs.
+  options:
+  - found
+  - finded
+  - founded
+  - find
+  answer_key:
+  - found
+- item_id: g-a2-03
+  section: grammar
+  band: A2
+  kind: cloze
+  target_ref: grammar.past-participle.forms
+  dimension: controlled_production
+  prompt: The dashboard bug ___ (fix) already, so the client no longer needs to wait.
+  answer_key:
+  - has been fixed
+- item_id: g-a2-04
+  section: grammar
+  band: A2
+  kind: choice
+  target_ref: grammar.future-forms.planning
+  dimension: recognition
+  prompt: Daniel ___ update the client portal tomorrow morning; the team agreed on it yesterday.
+  options:
+  - is going to
+  - will
+  - is
+  - going
+  answer_key:
+  - is going to
+- item_id: g-a2-05
+  section: grammar
+  band: A2
+  kind: choice
+  target_ref: grammar.sequencing.delivery
+  dimension: recognition
+  prompt: ___, we review the requirements with the client before writing any code.
+  options:
+  - First
+  - Finally
+  - Meanwhile
+  - Subsequently
+  answer_key:
+  - First
+- item_id: g-a2-06
+  section: grammar
+  band: A2
+  kind: cloze
+  target_ref: grammar.comparatives.options
+  dimension: controlled_production
+  prompt: Automating the report is ___ (fast) than checking each spreadsheet by hand.
+  answer_key:
+  - faster
+- item_id: g-a2-07
+  section: grammar
+  band: A2
+  kind: choice
+  target_ref: grammar.quantifiers.requirements
+  dimension: recognition
+  prompt: There ___ enough documentation to onboard a new hire quickly.
+  options:
+  - isn't
+  - aren't
+  - doesn't
+  - don't
+  answer_key:
+  - isn't
+- item_id: g-a2-08
+  section: grammar
+  band: A2
+  kind: choice
+  target_ref: grammar.connectors.cause-contrast
+  dimension: recognition
+  prompt: The deployment stalled ___ the queue reached its maximum size during peak hours.
+  options:
+  - because
+  - so
+  - although
+  - however
+  answer_key:
+  - because
+- item_id: g-b1-01
+  section: grammar
+  band: B1
+  kind: cloze
+  target_ref: grammar.present-perfect.duration
+  dimension: controlled_production
+  prompt: Elena ___ (support) this client account for three years now, since she joined the team.
+  answer_key:
+  - has supported
+- item_id: g-b1-02
+  section: grammar
+  band: B1
+  kind: choice
+  target_ref: grammar.past-perfect.sequence
+  dimension: recognition
+  prompt: The alert reached the on-call engineer only after the retry job ___ three times.
+  options:
+  - had failed
+  - failed
+  - has failed
+  - was failing
+  answer_key:
+  - had failed
+- item_id: g-b1-03
+  section: grammar
+  band: B1
+  kind: cloze
+  target_ref: grammar.passive.expanded-process
+  dimension: controlled_production
+  prompt: The temporary credentials ___ (revoke) before the security review even started.
+  answer_key:
+  - had been revoked
+- item_id: g-b1-04
+  section: grammar
+  band: B1
+  kind: choice
+  target_ref: grammar.relative-clauses.specification
+  dimension: recognition
+  prompt: The team hired a contractor ___ specializes in database migrations.
+  options:
+  - who
+  - that
+  - whose
+  - which
+  answer_key:
+  - who
+- item_id: g-b1-05
+  section: grammar
+  band: B1
+  kind: choice
+  target_ref: grammar.articles.proper-nouns-geography
+  dimension: recognition
+  prompt: ___ Thames has flooded parts of the city several times this century.
+  options:
+  - The
+  - A
+  - An
+  - Some
+  answer_key:
+  - The
+- item_id: g-b1-06
+  section: grammar
+  band: B1
+  kind: choice
+  target_ref: grammar.articles.generic-statements
+  dimension: recognition
+  prompt: ___ expect the checkout process to stay reliable during a sale.
+  options:
+  - Customers
+  - A customer
+  - The customers
+  - An customer
+  answer_key:
+  - Customers
+- item_id: g-b1-07
+  section: grammar
+  band: B1
+  kind: cloze
+  target_ref: grammar.second-conditional.hypothetical
+  dimension: controlled_production
+  prompt: If the budget ___ (allow) it, we would hire two more support engineers.
+  answer_key:
+  - allowed
+- item_id: g-b1-08
+  section: grammar
+  band: B1
+  kind: choice
+  target_ref: grammar.reported-speech.work-updates
+  dimension: recognition
+  prompt: The vendor said the replacement part ___ before the end of the week.
+  options:
+  - would arrive
+  - will arrive
+  - arrives
+  - arrived
+  answer_key:
+  - would arrive
+- item_id: g-b2-01
+  section: grammar
+  band: B2
+  kind: choice
+  target_ref: grammar.third-conditional.retrospective
+  dimension: recognition
+  prompt: If the team ___ the logs sooner, they would have caught the memory leak before the outage.
+  options:
+  - had reviewed
+  - reviewed
+  - have reviewed
+  - would review
+  answer_key:
+  - had reviewed
+- item_id: g-b2-02
+  section: grammar
+  band: B2
+  kind: choice
+  target_ref: grammar.passive.reporting-structures
+  dimension: recognition
+  prompt: The root cause ___ to have been a misconfigured load balancer, though the report is not final.
+  options:
+  - is believed
+  - believes
+  - is believing
+  - believed
+  answer_key:
+  - is believed
+- item_id: g-b2-03
+  section: grammar
+  band: B2
+  kind: cloze
+  target_ref: grammar.modal-perfect.speculation
+  dimension: controlled_production
+  prompt: The script ___ (must / fail) silently, because there is no error entry in the log at all.
+  answer_key:
+  - must have failed
+- item_id: g-b2-04
+  section: grammar
+  band: B2
+  kind: choice
+  target_ref: grammar.cleft-sentences.focus
+  dimension: recognition
+  prompt: ___ the missing index that slowed down every query on the reports page.
+  options:
+  - It was
+  - It is
+  - This was
+  - That was
+  answer_key:
+  - It was
+- item_id: g-b2-05
+  section: grammar
+  band: B2
+  kind: cloze
+  target_ref: grammar.mixed-conditionals.consequences
+  dimension: controlled_production
+  prompt: If the team ___ (write) better test coverage last year, the current release would be far more
+    stable.
+  answer_key:
+  - had written
+- item_id: g-b2-06
+  section: grammar
+  band: B2
+  kind: choice
+  target_ref: grammar.inversion.emphasis
+  dimension: recognition
+  prompt: Only after the second restart ___ the service begin to respond normally again.
+  options:
+  - did
+  - does
+  - had
+  - would
+  answer_key:
+  - did
+- item_id: g-c1-01
+  section: grammar
+  band: C1
+  kind: choice
+  target_ref: grammar.hedging-stance.control
+  dimension: recognition
+  prompt: The data ___ a correlation between the two metrics, though causation has not been established.
+  options:
+  - suggest
+  - prove
+  - confirm
+  - establish
+  answer_key:
+  - suggest
+- item_id: g-c1-02
+  section: grammar
+  band: C1
+  kind: choice
+  target_ref: grammar.reference-cohesion
+  dimension: recognition
+  prompt: The vendor missed the deadline, not the client. ___ delay pushed the launch back by a week.
+  options:
+  - This
+  - It
+  - They
+  - Such
+  answer_key:
+  - This
+- item_id: g-c1-03
+  section: grammar
+  band: C1
+  kind: choice
+  target_ref: grammar.participle-clauses.precision
+  dimension: recognition
+  prompt: ___ the audit logs, the analyst discovered a pattern of failed login attempts.
+  options:
+  - Having reviewed
+  - Reviewed
+  - To review
+  - Review
+  answer_key:
+  - Having reviewed
+- item_id: g-c1-04
+  section: grammar
+  band: C1
+  kind: choice
+  target_ref: grammar.inversion.formal-emphasis
+  dimension: recognition
+  prompt: Under no circumstances ___ the fallback service be disabled during a live incident.
+  options:
+  - should
+  - would
+  - does
+  - did
+  answer_key:
+  - should
+- item_id: g-c1-05
+  section: grammar
+  band: C1
+  kind: choice
+  target_ref: grammar.nominalization-information-flow
+  dimension: recognition
+  prompt: The committee approved the redesign, and this ___ accelerated the entire schedule.
+  options:
+  - approval
+  - approve
+  - approving
+  - approved
+  answer_key:
+  - approval
+- item_id: v-a1-01
+  section: vocabulary
+  band: A1
+  kind: choice
+  target_ref: word.company
+  dimension: recognition
+  prompt: Our ___ has grown to two hundred employees this year.
+  options:
+  - company
+  - country
+  - community
+  - concert
+  answer_key:
+  - company
+- item_id: v-a1-02
+  section: vocabulary
+  band: A1
+  kind: choice
+  target_ref: phrasal-verb.log-in
+  dimension: recognition
+  prompt: Type your password and click the button to ___ to your account.
+  options:
+  - log in
+  - log out
+  - sign up
+  - check out
+  answer_key:
+  - log in
+- item_id: v-a1-03
+  section: vocabulary
+  band: A1
+  kind: choice
+  target_ref: word.error
+  dimension: recognition
+  prompt: The message showed an ___ because the file was missing.
+  options:
+  - error
+  - effort
+  - offer
+  - order
+  answer_key:
+  - error
+- item_id: v-a1-04
+  section: vocabulary
+  band: A1
+  kind: choice
+  target_ref: word.ticket
+  dimension: recognition
+  prompt: Please open a new ___ if the printer stops working again.
+  options:
+  - ticket
+  - jacket
+  - pocket
+  - ceiling
+  answer_key:
+  - ticket
+- item_id: v-a1-05
+  section: vocabulary
+  band: A1
+  kind: choice
+  target_ref: word.deadline
+  dimension: recognition
+  prompt: We must finish the report before the ___ on Friday.
+  options:
+  - deadline
+  - headline
+  - outline
+  - timeline
+  answer_key:
+  - deadline
+- item_id: v-a2-01
+  section: vocabulary
+  band: A2
+  kind: choice
+  target_ref: word.incident
+  dimension: recognition
+  prompt: The team wrote a short summary of the ___ for the manager.
+  options:
+  - incident
+  - instant
+  - insight
+  - instance
+  answer_key:
+  - incident
+- item_id: v-a2-02
+  section: vocabulary
+  band: A2
+  kind: choice
+  target_ref: phrasal-verb.run-into
+  dimension: recognition
+  prompt: We ___ a strange bug while testing the new update.
+  options:
+  - ran into
+  - ran out of
+  - ran through
+  - ran off
+  answer_key:
+  - ran into
+- item_id: v-a2-03
+  section: vocabulary
+  band: A2
+  kind: choice
+  target_ref: word.requirement
+  dimension: recognition
+  prompt: The client sent a document that lists every ___ for the new feature.
+  options:
+  - requirement
+  - recruitment
+  - refinement
+  - retirement
+  answer_key:
+  - requirement
+- item_id: v-a2-04
+  section: vocabulary
+  band: A2
+  kind: choice
+  target_ref: word.feedback
+  dimension: recognition
+  prompt: After the demo, the manager wrote detailed ___ about what to improve.
+  options:
+  - feedback
+  - setback
+  - drawback
+  - playback
+  answer_key:
+  - feedback
+- item_id: v-a2-05
+  section: vocabulary
+  band: A2
+  kind: choice
+  target_ref: word.priority
+  dimension: recognition
+  prompt: We must decide which task is the top ___ this week.
+  options:
+  - priority
+  - property
+  - prosperity
+  - proximity
+  answer_key:
+  - priority
+- item_id: v-b1-01
+  section: vocabulary
+  band: B1
+  kind: choice
+  target_ref: word.evident
+  dimension: recognition
+  prompt: The delay became ___ once the team compared the two schedules.
+  options:
+  - evident
+  - evidence
+  - event
+  - eventual
+  answer_key:
+  - evident
+- item_id: v-b1-02
+  section: vocabulary
+  band: B1
+  kind: choice
+  target_ref: word.coherent
+  dimension: recognition
+  prompt: Reviewers said the proposal was well organized and ___.
+  options:
+  - coherent
+  - coherence
+  - component
+  - convenient
+  answer_key:
+  - coherent
+- item_id: v-b1-03
+  section: vocabulary
+  band: B1
+  kind: choice
+  target_ref: idiom.on-the-same-page
+  dimension: recognition
+  prompt: After the meeting, both teams felt they were finally ___ about the plan.
+  options:
+  - on the same page
+  - in the same boat
+  - on the right track
+  - at the same time
+  answer_key:
+  - on the same page
+- item_id: v-b1-04
+  section: vocabulary
+  band: B1
+  kind: choice
+  target_ref: word.justification
+  dimension: recognition
+  prompt: The manager asked for a clear ___ before approving the budget increase.
+  options:
+  - justification
+  - justice
+  - adjustment
+  - injustice
+  answer_key:
+  - justification
+- item_id: v-b1-05
+  section: vocabulary
+  band: B1
+  kind: choice
+  target_ref: word.aggregate
+  dimension: recognition
+  prompt: The report shows ___ sales numbers for the whole region, not each store separately.
+  options:
+  - aggregate
+  - accurate
+  - adequate
+  - arrogant
+  answer_key:
+  - aggregate
+- item_id: v-b2-01
+  section: vocabulary
+  band: B2
+  kind: choice
+  target_ref: word.methodology
+  dimension: recognition
+  prompt: The paper explains its ___ in detail so other researchers can repeat the study.
+  options:
+  - methodology
+  - mythology
+  - morality
+  - monopoly
+  answer_key:
+  - methodology
+- item_id: v-b2-02
+  section: vocabulary
+  band: B2
+  kind: choice
+  target_ref: word.credibility
+  dimension: recognition
+  prompt: Citing reliable sources increases the ___ of a research report.
+  options:
+  - credibility
+  - credit
+  - creativity
+  - curiosity
+  answer_key:
+  - credibility
+- item_id: v-b2-03
+  section: vocabulary
+  band: B2
+  kind: choice
+  target_ref: idiom.touch-base
+  dimension: recognition
+  prompt: Let's ___ next week to check how the project is progressing.
+  options:
+  - touch base
+  - touch up
+  - keep in touch
+  - lose touch
+  answer_key:
+  - touch base
+- item_id: v-b2-04
+  section: vocabulary
+  band: B2
+  kind: choice
+  target_ref: word.threshold
+  dimension: recognition
+  prompt: The alert only fires when errors cross a certain ___.
+  options:
+  - threshold
+  - threat
+  - thread
+  - through
+  answer_key:
+  - threshold
+- item_id: v-b2-05
+  section: vocabulary
+  band: B2
+  kind: choice
+  target_ref: word.subjective
+  dimension: recognition
+  prompt: Because the score depends on personal opinion, reviewers called it too ___.
+  options:
+  - subjective
+  - objective
+  - subjunctive
+  - substantive
+  answer_key:
+  - subjective
+- item_id: v-c1-01
+  section: vocabulary
+  band: C1
+  kind: choice
+  target_ref: word.rhetoric
+  dimension: recognition
+  prompt: The senator's speech relied more on ___ than on factual evidence.
+  options:
+  - rhetoric
+  - rhythm
+  - rhetorical
+  - arithmetic
+  answer_key:
+  - rhetoric
+- item_id: v-c1-02
+  section: vocabulary
+  band: C1
+  kind: choice
+  target_ref: word.fallacy
+  dimension: recognition
+  prompt: Assuming every user behaves the same way is a common ___ in this kind of analysis.
+  options:
+  - fallacy
+  - fantasy
+  - falsity
+  - fatality
+  answer_key:
+  - fallacy
+- item_id: v-c1-03
+  section: vocabulary
+  band: C1
+  kind: choice
+  target_ref: word.nuance
+  dimension: recognition
+  prompt: A good editor pays attention to small differences in tone and ___ between drafts.
+  options:
+  - nuance
+  - nuisance
+  - distance
+  - balance
+  answer_key:
+  - nuance
+- item_id: v-c1-04
+  section: vocabulary
+  band: C1
+  kind: choice
+  target_ref: word.warrant
+  dimension: recognition
+  prompt: The limited sample size does not ___ such a broad conclusion.
+  options:
+  - warrant
+  - warn
+  - worn
+  - warren
+  answer_key:
+  - warrant
+- item_id: r-a2-01
+  section: reading
+  band: A2
+  kind: choice
+  passage_id: p-a2-1
+  target_ref: reading.main-idea-details
+  dimension: recognition
+  prompt: What is this message mainly about?
+  options:
+  - A new tool for submitting expense reports
+  - A change to the office parking policy
+  - A survey about employee satisfaction
+  - A reminder to update passwords
+  answer_key:
+  - A new tool for submitting expense reports
+- item_id: r-a2-02
+  section: reading
+  band: A2
+  kind: true_false
+  passage_id: p-a2-1
+  target_ref: reading.documentation-scan
+  dimension: recognition
+  prompt: Employees must create a QuickClaim account before March 30.
+  answer_key:
+  - 'true'
+- item_id: r-a2-03
+  section: reading
+  band: A2
+  kind: choice
+  passage_id: p-a2-1
+  target_ref: reading.idioms-in-context
+  dimension: recognition
+  prompt: What does "hit a few snags" mean in the message?
+  options:
+  - Encountered some small problems
+  - Received extra funding
+  - Finished earlier than planned
+  - Cancelled the pilot
+  answer_key:
+  - Encountered some small problems
+- item_id: r-b1-01
+  section: reading
+  band: B1
+  kind: choice
+  passage_id: p-b1-1
+  target_ref: reading.connected-technical-explanation
+  dimension: recognition
+  prompt: What is the main topic of Priya's message?
+  options:
+  - Switching to a new VPN client
+  - A new performance review process
+  - A change in the office schedule
+  - A request to submit expense reports
+  answer_key:
+  - Switching to a new VPN client
+- item_id: r-b1-02
+  section: reading
+  band: B1
+  kind: true_false
+  passage_id: p-b1-1
+  target_ref: reading.multi-step-service-information
+  dimension: recognition
+  prompt: Everyone gets the elevated-access role automatically after installing the new client.
+  answer_key:
+  - 'false'
+- item_id: r-b1-03
+  section: reading
+  band: B1
+  kind: choice
+  passage_id: p-b1-1
+  target_ref: reading.implied-online-stance
+  dimension: recognition
+  prompt: What does Priya seem to believe about the longer login times some people reported?
+  options:
+  - They are probably a temporary caching problem, not a sign of a deeper issue
+  - They mean the new client failed and should be uninstalled
+  - They only happen to people who skipped the restart step
+  - They prove the migration should be delayed
+  answer_key:
+  - They are probably a temporary caching problem, not a sign of a deeper issue
+- item_id: r-b2-01
+  section: reading
+  band: B2
+  kind: choice
+  passage_id: p-b2-1
+  target_ref: reading.argument-structure
+  dimension: recognition
+  prompt: What is the central claim being examined in this passage?
+  options:
+  - Whether working from home actually increases productivity, once quality is considered
+  - Whether employees prefer working from home
+  - How much office space costs per employee
+  - Whether the software firm should hire more engineers
+  answer_key:
+  - Whether working from home actually increases productivity, once quality is considered
+- item_id: r-b2-02
+  section: reading
+  band: B2
+  kind: true_false
+  passage_id: p-b2-1
+  target_ref: reading.evidence-quality
+  dimension: recognition
+  prompt: The internal survey found that remote engineers' code needed more follow-up fixes than code
+    from employees working in the office.
+  answer_key:
+  - 'true'
+- item_id: r-b2-03
+  section: reading
+  band: B2
+  kind: choice
+  passage_id: p-b2-1
+  target_ref: reading.author-stance-bias
+  dimension: recognition
+  prompt: What does the passage suggest about the company's leadership?
+  options:
+  - They present a one-sided view by emphasizing ticket counts and downplaying the follow-up fixes
+  - They have stopped tracking productivity altogether
+  - They believe office work is more productive than remote work
+  - They plan to cancel the remote work policy
+  answer_key:
+  - They present a one-sided view by emphasizing ticket counts and downplaying the follow-up fixes
+- item_id: r-c1-01
+  section: reading
+  band: C1
+  kind: choice
+  passage_id: p-c1-1
+  target_ref: reading.methodology-limitations
+  dimension: recognition
+  prompt: What limits how much weight should be given to Team A's conclusion?
+  options:
+  - It is based on a small sample from one unusually busy sprint
+  - It was reviewed by too many people
+  - It ignores the release cadence entirely
+  - It was written before the quarter ended
+  answer_key:
+  - It is based on a small sample from one unusually busy sprint
+- item_id: r-c1-02
+  section: reading
+  band: C1
+  kind: true_false
+  passage_id: p-c1-1
+  target_ref: reading.cross-source-tension
+  dimension: recognition
+  prompt: Team A and Team B agree on the main cause of the slower release cadence.
+  answer_key:
+  - 'false'
+- item_id: r-c1-03
+  section: reading
+  band: C1
+  kind: choice
+  passage_id: p-c1-1
+  target_ref: reading.implicit-assumptions
+  dimension: recognition
+  prompt: What unstated assumption do both analyses rely on?
+  options:
+  - That ticket-tracker timestamps accurately reflect when the work was actually done
+  - That management will approve the proposed fix
+  - That flaky tests are more common in Team A's sprint
+  - That code review turnaround time cannot be measured
+  answer_key:
+  - That ticket-tracker timestamps accurately reflect when the work was actually done
+- item_id: w-a2-01
+  section: writing
+  band: A2
+  kind: writing
+  target_ref: written-production.project-update
+  dimension: spontaneous_production
+  prompt: Write a short message to a new colleague describing your typical working day. Say what time
+    you usually start, what your main tasks are, and how your day usually ends.
+  rubric_ref: rubric:production.spontaneous
+  min_words: 60
+  max_words: 90
+- item_id: w-b1-01
+  section: writing
+  band: B1
+  kind: writing
+  target_ref: written-production.cause-effect-explanation
+  dimension: spontaneous_production
+  prompt: 'A client has written to you saying that the export feature in your product stopped working
+    yesterday afternoon. Reply to the client: explain what you have already checked, what you found, and
+    what will happen next.'
+  rubric_ref: rubric:production.spontaneous
+  min_words: 80
+  max_words: 120

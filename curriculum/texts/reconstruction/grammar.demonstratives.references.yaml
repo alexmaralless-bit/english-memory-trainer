@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.demonstratives-references.interface-tour
+    title: "Showing interface elements"
+    cefr: A1
+    topic: grammar.demonstratives.references
+    carries: [structure:demonstrative]
+    domain: work
+    context: interface-walkthrough
+    text: "Look at this form on the screen. This field stores your name here. That button over there opens settings. These checkboxes are important options. Those items in the list need your review. This area shows what you did. That text displays your results. These messages show errors. Those buttons close the page."
+    word_count: 52
+    keywords: ["this form", "screen", "this field", "that button", "these checkboxes", "those items", "this area", "that text", "these messages", "those buttons"]
+    target_spans: ["This field stores", "That button over", "These checkboxes are", "Those items in", "This area shows", "That text displays", "These messages show", "Those buttons close"]
+    summary_ru: "Указание на элементы интерфейса используя demonstratives this/that/these/those для близких и дальних предметов."
+    transformations: [authored]
+  - id: text.recon.demonstratives-references.shopping-with-friend
+    title: "Pointing to things in a store"
+    cefr: A1
+    topic: grammar.demonstratives.references
+    carries: [structure:demonstrative]
+    domain: everyday
+    context: interface-walkthrough
+    text: "This shirt is nice and fits well today. That jacket there is very expensive. These shoes fit good here. Those bags on the shelf are on sale. This price is cheap. That color is my favorite. These pants are new. Those books here look good. This store has many items."
+    word_count: 50
+    keywords: ["this shirt", "nice", "that jacket", "expensive", "these shoes", "fit", "those bags", "sale", "this price", "that color", "favorite", "these pants", "new"]
+    target_spans: ["This shirt is", "That jacket there", "These shoes fit", "Those bags on", "This price is", "That color is", "These pants are", "Those books here", "This store has"]
+    summary_ru: "Указание на предметы в магазине при помощи demonstratives this/that/these/those для близких и дальних предметов."
+    transformations: [authored]

@@ -1,32 +1,36 @@
 ---
 name: assess-english-gate
-version: "1"
-description: "Провести gate-проверку (контрольную точку) по предъявленному gate_item шагу и честно сообщить результат по данным движка."
+version: "2"
+description: "Педагогическая справка: провести gate-проверку (контрольную точку) из advisory-плана brief в чате без подсказок, честно вынести вердикт тьютора, занести его в отчёт и сообщать результат только по `trainer status`."
 required_inputs:
-  - "активная сессия с предъявленным gate_item шагом"
+  - "brief активной сессии с шагом `gate_item` в `plan.steps[]`"
 forbidden_actions:
-  - "не выставлять исход gate самому"
-  - "не пропускать `exercise rendered` для структурированного gate-задания"
-  - "не сообщать про уровень/прохождение без вызова `trainer status`"
+  - "не подсказывать и не объяснять ответ до ответа ученика"
+  - "не объявлять gate пройденным или уровень достигнутым самому — только по `trainer status` после отчёта"
+  - "не завышать вердикт контрольного задания"
+  - "не вызывать команды системы между `session start` и отчётом"
 cli_calls:
-  - session.peek
-  - session.next
-  - exercise.rendered
-  - attempt.record
-  - attempt.finalize
   - status
 outputs:
-  - "сообщение ученику о результате gate-проверки"
+  - "контрольное задание, показанное одним сообщением"
+  - "item отчёта с вердиктом тьютора по цели и dimension шага `gate_item`"
+  - "сообщение ученику о результате по данным `trainer status`"
 postconditions:
-  - "попытка по gate_item доведена до assessed"
+  - "ответ по gate_item занесён в журнал урока дословно, с вердиктом тьютора"
 ---
+
+## References
+
+- `../run-english-session/references/pedagogy.md` — «Gate items», «Tutor
+  verdict».
 
 ## Steps
 
-1. `session peek` — подтвердить, что предъявлен шаг типа `gate_item`.
-2. `exercise rendered` перед показом задания ученику (structured check).
-3. Получить ответ → `attempt record` (объективная проверка выставит статус
-   `assessed` автоматически, если есть `answer_key`) → при открытом ответе
-   `attempt finalize`.
-4. Сообщить результат ученику ровно так, как вернул движок; для общей
-   картины свериться с `trainer status`.
+1. Найти в `brief.plan.steps[]` шаг `step_type: gate_item`: его `target_ref`
+   и `dimension` — цель контрольного задания.
+2. Показать задание одним сообщением, без подсказок и без предварительного
+   разбора ответа.
+3. Принять ответ, вынести вердикт по правилам «Tutor verdict», занести в
+   журнал item (`target_ref`/`dimension` шага, дословный ответ, ошибки).
+4. После принятого `session report` сообщить ученику результат ровно так, как
+   показывает `trainer status`; самому прохождение gate не объявлять.

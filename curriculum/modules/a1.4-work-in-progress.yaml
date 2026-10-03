@@ -4,6 +4,7 @@ can_do: "Report what is happening now and distinguish current work from routine 
 tracks: [grammar-engine, written-interaction, us-tech-english, everyday-online-informal]
 topics:
   - grammar.present-continuous.status
+  - grammar.articles.second-mention
   - grammar.present-simple-continuous.choice
   - written-interaction.current-status
   - us-tech.work-in-progress

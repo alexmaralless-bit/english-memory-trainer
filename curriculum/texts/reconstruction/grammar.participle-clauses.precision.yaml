@@ -1,0 +1,29 @@
+schema_version: 1
+texts:
+  - id: text.recon.participle-clauses-precision.incident-report
+    title: "System failure incident report"
+    cefr: C1
+    topic: grammar.participle-clauses.precision
+    carries: [structure:participle-clause]
+    domain: work
+    context: incident-analysis
+    text: "The database service failed catastrophically on Tuesday evening, affecting all downstream systems and applications. Having ignored earlier warning signals about escalating disk space usage, the operations team did not initiate preventive maintenance on schedule. Occurring without advance notification to stakeholders, the outage lasted approximately six hours in total. Database transactions suspended during the outage could not resume automatically after power restoration procedures completed. Engineers, beginning their recovery work at midnight, encountered corrupted transaction logs and damaged metadata. Stored without recent backups in the redundant location, the critical data required manual recovery from archive tape systems. Completing this recovery process by Friday afternoon, the team identified three transactions that had been permanently lost in the incident."
+    word_count: 115
+    keywords: ["database failed", "Tuesday evening", "affecting systems", "ignored warning signals", "disk space usage", "occurring without notification", "lasted six hours", "suspended transactions", "beginning recovery work", "corrupted logs", "stored without backups", "completing process"]
+    target_spans: ["Having ignored earlier warning signals about escalating disk space usage", "Occurring without advance notification to stakeholders, the outage lasted", "Database transactions suspended during the outage", "Engineers, beginning their recovery work at midnight, encountered", "Stored without recent backups in the redundant location", "Completing this recovery process by Friday afternoon, the team identified"]
+    summary_ru: "Сервер упал во вторник; игнорируя предупреждения, команда не сделала обслуживание; отключение произошло без уведомления; восстановление нашло потери данных."
+    transformations: [authored]
+
+  - id: text.recon.participle-clauses-precision.research-methodology
+    title: "Research methodology clarification"
+    cefr: C1
+    topic: grammar.participle-clauses.precision
+    carries: [structure:participle-clause]
+    domain: academic
+    context: research-report
+    text: "The preliminary study employed a randomized sample of five hundred participants, selected from urban centers across four regions. Having recruited these participants through direct outreach and community organizations, the research team conducted structured interviews over a twelve-week period. Administered in the native language of each participant, the survey instrument contained eighty-seven items measuring various dimensions. The responses, collected at weekly intervals throughout the study, revealed significant variation in participant engagement levels. Analyzed using multivariate regression techniques, the data showed three primary clusters with distinct patterns. Having identified these patterns through careful statistical analysis, the researchers published preliminary findings in a working paper series. Acknowledging the sample's limitations regarding geographic scope and urban bias, the team designed a second phase targeting rural populations and underrepresented communities."
+    word_count: 125
+    keywords: ["preliminary study", "randomized sample", "five hundred participants", "recruited through outreach", "structured interviews", "administered in native language", "responses collected", "variation in engagement", "analyzed using regression", "three primary clusters", "identified patterns", "acknowledged limitations"]
+    target_spans: ["Having recruited these participants through direct outreach and community organizations", "Administered in the native language of each participant, the survey instrument", "The responses, collected at weekly intervals", "Analyzed using multivariate regression techniques, the data showed", "Having identified these patterns through careful statistical analysis", "Acknowledging the sample's limitations regarding geographic scope and urban bias"]
+    summary_ru: "Исследование с пятьюстами участниками из городских центров; опрос на родном языке; ответы показали вариацию; данные выявили три кластера; команда опубликовала выводы и запланировала вторую фазу."
+    transformations: [authored]

@@ -1,0 +1,29 @@
+schema_version: 1
+texts:
+  - id: text.recon.participle-clauses-compression.migration-process
+    title: "Migration process"
+    cefr: B2
+    topic: grammar.participle-clauses.compression
+    carries: [structure:participle-clause]
+    domain: work
+    context: technical-report
+    text: "Having verified the backup integrity, the engineer proceeded with the migration. Running on the latest version, the service handled increased traffic. Finding the bottleneck in the query, the team optimized the database. Testing the failover procedure, the operations team discovered a flaw. Completing the code review, the developer deployed the changes to production. Analyzing the logs, the analyst identified three error patterns. Monitoring the system, the team noticed unusual latency spikes. Considering the constraints, the architect proposed a hybrid solution. Exhausting all alternatives, the vendor finally agreed to the contract."
+    word_count: 90
+    keywords: ["backup verified", "engineer migration", "latest version", "increased traffic", "bottleneck query", "failover procedure", "code review", "error patterns", "latency spikes", "hybrid solution", "vendor contract"]
+    target_spans: ["Having verified the backup integrity", "Running on the latest version", "Finding the bottleneck in the query", "Testing the failover procedure", "Completing the code review", "Analyzing the logs", "Monitoring the system", "Considering the constraints"]
+    summary_ru: "Инженер, проверив резервную копию, приступил к миграции, выявив узкие места в запросах и выбрав гибридное решение после исчерпания всех альтернатив."
+    transformations: [authored]
+
+  - id: text.recon.participle-clauses-compression.research-methodology
+    title: "Research methodology"
+    cefr: B2
+    topic: grammar.participle-clauses.compression
+    carries: [structure:participle-clause]
+    domain: academic
+    context: technical-report
+    text: "Having completed the preliminary research, the scholars prepared for a comprehensive longitudinal study. Drawing on existing literature, the team identified the key research questions. Establishing the theoretical framework, the researchers clarified their methodology. Collecting the data over eighteen months, the study captured seasonal variations in behavior. Removing outliers and anomalies, the analysts ensured the data quality. Refining the statistical model, the team improved prediction accuracy substantially. Interpreting the results, the authors proposed three distinct possible mechanisms. Acknowledging the significant limitations, the paper suggested avenues for future investigations. Publishing the findings, the research contributed substantially to the emerging field."
+    word_count: 98
+    keywords: ["preliminary research", "comprehensive study", "existing literature", "key questions", "theoretical framework", "data collection", "seasonal variations", "outliers anomalies", "statistical model", "prediction accuracy", "proposed mechanisms", "limitations"]
+    target_spans: ["Having completed the preliminary research", "Drawing on existing literature", "Establishing the theoretical framework", "Collecting the data over eighteen months", "Removing outliers and anomalies", "Refining the statistical model", "Interpreting the results", "Acknowledging the significant limitations"]
+    summary_ru: "Исследователи, завершив предварительное изучение, провели продольное исследование в течение восемнадцати месяцев, удалили аномалии и предложили три механизма, при этом признав ограничения исследования."
+    transformations: [authored]

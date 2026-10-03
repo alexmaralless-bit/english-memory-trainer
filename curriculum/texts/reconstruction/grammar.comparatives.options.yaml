@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.comparatives-options.framework-selection
+    title: "Comparing frameworks"
+    cefr: A2
+    topic: grammar.comparatives.options
+    carries: [structure:comparative, article:indefinite-first-mention]
+    domain: work
+    context: option-review
+    text: "React is more popular than Vue today, but Vue is simpler than React for beginners. The newer version is more powerful than the old version for complex projects. Vue is easier to learn for new developers, while React is more flexible overall. Django is more secure than Flask in production environments. Python is more readable than Java, and the code is much cleaner as a result."
+    word_count: 66
+    keywords: ["React - more popular - Vue", "Vue - simpler", "newer - more powerful", "easier to learn", "React - flexible", "Django - secure", "Python - readable"]
+    target_spans: ["is more popular than", "is simpler than", "is more powerful than", "is easier to learn", "is more secure", "is more readable"]
+    summary_ru: "Сравнение различных фреймворков и языков программирования по характеристикам производительности, простоты и надёжности."
+    transformations: [authored]
+  - id: text.recon.comparatives-options.transportation-choice
+    title: "Choosing transportation"
+    cefr: A2
+    topic: grammar.comparatives.options
+    carries: [structure:comparative]
+    domain: everyday
+    context: option-review
+    text: "A car is faster than a bus, but the bus is cheaper than a car. The train is more comfortable than the car for long trips every week. A bicycle is slower than any vehicle, but cycling is healthier than sitting in traffic. The taxi is more expensive than public transport, and it is much more costly. Walking is the cheapest option, although it is slower than everything else on the road."
+    word_count: 72
+    keywords: ["car - faster - bus", "bus - cheaper", "train - more comfortable", "bicycle - slower", "healthier - sitting", "taxi - expensive", "public transport", "walking - cheapest", "slower"]
+    target_spans: ["is faster than", "is cheaper than", "is more comfortable than", "is slower than", "is healthier", "is more expensive", "is slower than"]
+    summary_ru: "Сравнение способов транспорта по скорости, стоимости, удобству и воздействию на здоровье."
+    transformations: [authored]

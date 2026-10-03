@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.going-to-plans.sprint-planning
+    title: "Sprint planning"
+    cefr: A1
+    topic: grammar.going-to.plans
+    carries: [tense:future-going-to]
+    domain: work
+    context: task-planning
+    text: "Next week we are going to start the new project. The team is going to work on the API redesign first. We are going to test everything on Monday morning. The client is going to review the prototype after testing. We are going to make changes based on feedback. Everyone is going to meet on Friday to discuss progress."
+    word_count: 59
+    keywords: ["are going to start", "new project", "next week", "team is going to work", "API redesign", "going to test", "Monday morning", "client is going to review", "prototype", "going to make changes", "Friday meeting", "discuss progress"]
+    target_spans: ["are going to start the new project", "is going to work on", "are going to test everything", "is going to review the prototype", "are going to make changes", "is going to meet"]
+    summary_ru: "Планирование спринта: команда будет работать над новым проектом, тестировать и обсуждать."
+    transformations: [authored]
+  - id: text.recon.going-to-plans.weekend-plans
+    title: "Weekend plans"
+    cefr: A1
+    topic: grammar.going-to.plans
+    carries: [tense:future-going-to]
+    domain: everyday
+    context: task-planning
+    text: "This weekend I am going to visit my friend in the city. We are going to have lunch at a nice restaurant on Saturday. After that, we are going to walk around the shops and buy some clothes. Later, we are going to see a movie. On Sunday morning I am going to take the train back home. It is going to be a wonderful weekend."
+    word_count: 66
+    keywords: ["am going to visit", "friend in city", "this weekend", "are going to have lunch", "nice restaurant", "Saturday", "going to walk around", "shops and buy clothes", "going to see", "movie", "take the train", "Sunday morning", "going to be wonderful"]
+    target_spans: ["am going to visit my friend", "are going to have lunch", "are going to walk around", "are going to see a movie", "am going to take the train", "is going to be a wonderful"]
+    summary_ru: "Планы на выходные: навещу подругу, обедаем, смотрим кино, возвращаюсь домой."
+    transformations: [authored]

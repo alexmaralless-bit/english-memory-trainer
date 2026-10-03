@@ -45,13 +45,25 @@ _COMMANDS: tuple[CommandDescriptor, ...] = (
         name="curriculum.lexicon", owner_module="curriculum", mutating=False, requires_idempotency_key=False
     ),
     CommandDescriptor(
+        name="curriculum.texts", owner_module="curriculum", mutating=False, requires_idempotency_key=False
+    ),
+    CommandDescriptor(
         name="curriculum.activate", owner_module="curriculum", mutating=True, requires_idempotency_key=True
     ),
     CommandDescriptor(
         name="session.start", owner_module="lessons", mutating=True, requires_idempotency_key=True
     ),
     CommandDescriptor(
-        name="session.finish", owner_module="lessons", mutating=True, requires_idempotency_key=True
+        name="session.propose", owner_module="lessons", mutating=False, requires_idempotency_key=False
+    ),
+    # The brief/report protocol [PD-2026-09-23]: `check-report` validates a
+    # lesson report and writes nothing; `report` commits it atomically and
+    # finishes the session, so it requires the key in json mode.
+    CommandDescriptor(
+        name="session.check-report", owner_module="lessons", mutating=False, requires_idempotency_key=False
+    ),
+    CommandDescriptor(
+        name="session.report", owner_module="lessons", mutating=True, requires_idempotency_key=True
     ),
     CommandDescriptor(
         name="session.abandon", owner_module="lessons", mutating=True, requires_idempotency_key=True
@@ -59,49 +71,6 @@ _COMMANDS: tuple[CommandDescriptor, ...] = (
     CommandDescriptor(
         name="session.status", owner_module="lessons", mutating=False, requires_idempotency_key=False
     ),
-    # Step delivery (control defines the behavior, lessons owns the commands):
-    # `next` and `replan` are CAS mutations [R-1]; `peek` observes and never
-    # publishes (control 4.2).
-    CommandDescriptor(
-        name="session.peek", owner_module="lessons", mutating=False, requires_idempotency_key=False
-    ),
-    CommandDescriptor(
-        name="session.next", owner_module="lessons", mutating=True, requires_idempotency_key=True
-    ),
-    CommandDescriptor(
-        name="session.replan", owner_module="lessons", mutating=True, requires_idempotency_key=True
-    ),
-    # Evidence persistence (2.2 increment 3): the rendered snapshot commits
-    # before the learner sees the prompt (P.3 PD-1 A), attempts reference the
-    # delivered step and the snapshot (evidence 4.5 [RR2-3]).
-    CommandDescriptor(
-        name="exercise.rendered", owner_module="lessons", mutating=True, requires_idempotency_key=True
-    ),
-    CommandDescriptor(
-        name="attempt.record", owner_module="evidence", mutating=True, requires_idempotency_key=True
-    ),
-    CommandDescriptor(
-        name="observed.record", owner_module="evidence", mutating=True, requires_idempotency_key=True
-    ),
-    # The exercise bank (generation@1 bank_lifecycle, PD-2 A): admission after
-    # an assessed attempt or the explicit maintainer fast-path; rejected and
-    # retired are terminal.
-    CommandDescriptor(
-        name="exercise.accept", owner_module="lessons", mutating=True, requires_idempotency_key=True
-    ),
-    CommandDescriptor(
-        name="exercise.reject", owner_module="lessons", mutating=True, requires_idempotency_key=True
-    ),
-    CommandDescriptor(
-        name="exercise.retire", owner_module="lessons", mutating=True, requires_idempotency_key=True
-    ),
-    CommandDescriptor(
-        name="exercise.bank", owner_module="lessons", mutating=False, requires_idempotency_key=False
-    ),
-    # Learner control signals (control 4.7, roadmap 2.8a): a nudge to the next
-    # composition, never a plan edit. Mutating -- it records a signal event (and
-    # for too_easy a PROBE_REQUESTED) -- so it requires the key in json mode.
-    CommandDescriptor(name="signal", owner_module="control", mutating=True, requires_idempotency_key=True),
     CommandDescriptor(
         name="availability.show", owner_module="control", mutating=False, requires_idempotency_key=False
     ),
@@ -151,16 +120,6 @@ _COMMANDS: tuple[CommandDescriptor, ...] = (
     CommandDescriptor(
         name="review.due", owner_module="scheduler", mutating=False, requires_idempotency_key=False
     ),
-    # Closing computes the single terminal ReviewOutcome (evidence 4.3): the
-    # engine grades, the agent only marks done.
-    CommandDescriptor(
-        name="review.close", owner_module="evidence", mutating=True, requires_idempotency_key=True
-    ),
-    # Finalizing an open attempt runs the pinned rubric pipeline and settles
-    # atomically (P.5): the engine grades, the agent only reports facts.
-    CommandDescriptor(
-        name="attempt.finalize", owner_module="evidence", mutating=True, requires_idempotency_key=True
-    ),
     # The Obsidian projection (0.6): render/rebuild mutate generated files
     # (never learner state); check is read-only and repairs nothing.
     CommandDescriptor(
@@ -203,7 +162,7 @@ _COMMANDS: tuple[CommandDescriptor, ...] = (
     CommandDescriptor(
         name="audit.target", owner_module="audit", mutating=False, requires_idempotency_key=False
     ),
-    # Session resume (lessons 4b/5): full state + tutor briefing + notes,
+    # Session resume (lessons 4b/5): state + the rebuilt lesson brief,
     # attaching the resuming agent (AGENT_ATTACHED) in the same UoW.
     CommandDescriptor(
         name="session.resume", owner_module="lessons", mutating=True, requires_idempotency_key=True
@@ -230,6 +189,19 @@ _COMMANDS: tuple[CommandDescriptor, ...] = (
     ),
     CommandDescriptor(
         name="placement.decline", owner_module="assessments", mutating=True, requires_idempotency_key=True
+    ),
+    # LearnerPreferences (learner 4a, roadmap Д8): the form a session takes --
+    # round size, explanation language, drill forms, timed limit, feedback
+    # mode. `set` publishes a full-snapshot LEARNER_PREFERENCES_UPDATED, so it
+    # requires the key in json mode; `show` is a read-only fold.
+    CommandDescriptor(
+        name="learner.preferences.show",
+        owner_module="learner",
+        mutating=False,
+        requires_idempotency_key=False,
+    ),
+    CommandDescriptor(
+        name="learner.preferences.set", owner_module="learner", mutating=True, requires_idempotency_key=True
     ),
 )
 

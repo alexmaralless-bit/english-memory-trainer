@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.articles-institutional-places.weekly-schedule
+    title: "Weekly schedule"
+    cefr: A2
+    topic: grammar.articles.institutional-places
+    carries: [article:institutional, structure:preposition-place]
+    domain: work
+    context: task-planning
+    text: "Every morning I go to the office at eight o'clock. First I go to my desk and check the computer. At lunchtime I go to the company cafeteria with colleagues. Sometimes I go to the clinic in the building for medical help. After work I go home and rest. On Monday afternoon I visit the doctor's for a check-up. On Friday I work from home because of meetings. The schedule changes, but I'm always at work or at home."
+    word_count: 79
+    keywords: ["go to office", "eight o'clock", "go to cafeteria lunch", "go to clinic", "go home", "visit doctor's", "work from home Friday", "at work or at home"]
+    target_spans: ["go to the office", "go to the company cafeteria", "go to the clinic", "go home", "visit the doctor's", "work from home", "at work or at home"]
+    summary_ru: "Еженедельный график: хожу в офис, кафе, кабинет врача, дома работаю по пятницам."
+    transformations: [authored]
+  - id: text.recon.articles-institutional-places.family-moments
+    title: "Family moments"
+    cefr: A2
+    topic: grammar.articles.institutional-places
+    carries: [article:institutional, structure:preposition-place]
+    domain: everyday
+    context: task-planning
+    text: "My family has busy days. My sister goes to school in the morning. My father goes to work early and doesn't come home until evening. My mother takes the children to the doctor's when they are sick. Grandma stays at home and prepares lunch. I spend weekends at home with the family. When someone is ill, they stay in bed for recovery. Last year my uncle was in the hospital for surgery. Now everyone is healthy and at home again."
+    word_count: 80
+    keywords: ["sister goes to school morning", "father goes to work early", "come home evening", "takes children to doctor's", "stays at home", "weekends at home", "stay in bed", "in the hospital", "healthy at home"]
+    target_spans: ["goes to school", "goes to work", "come home", "to the doctor's", "at home and prepares", "at home with the family", "in bed for recovery", "in the hospital", "at home again"]
+    summary_ru: "Семейные моменты: сестра в школу, отец на работу, мама к врачу, бабушка дома."
+    transformations: [authored]

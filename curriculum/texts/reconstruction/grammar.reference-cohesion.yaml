@@ -1,0 +1,29 @@
+schema_version: 1
+texts:
+  - id: text.recon.reference-cohesion.contract-agreement
+    title: "Contract agreement"
+    cefr: C1
+    topic: grammar.reference-cohesion
+    carries: [structure:reference]
+    domain: work
+    context: technical-report
+    text: "The vendor submitted the contract with revisions. The contract specified a new liability clause. This clause limited our exposure. We accepted it because the restriction was reasonable. The restriction allowed us to cap reimbursement. Our team requested modifications to the liability definition. The definition needed to exclude software licenses. This exclusion aligned our insurance with contract terms. The broker reviewed these terms and confirmed consistency. These terms became the basis for the agreement. The agreement was signed last month. The agreement requires quarterly policy reviews. These reviews must address inflation adjustments. Our team coordinates adjustments with the vendor. The vendor's legal team approves figures. These figures then become binding. We must maintain commitment for the duration. The contract expires in three years. We will renegotiate at that time. The renegotiation will address emerging risks that this version does not cover."
+    word_count: 140
+    keywords: ["vendor contract", "liability clause", "exposure", "restriction reimbursement", "definition software", "insurance terms", "agreement signed", "quarterly reviews", "inflation adjustments", "vendor approval", "binding figures", "contract duration"]
+    target_spans: ["The contract specified", "This clause limited", "The restriction allowed", "The definition needed", "This exclusion aligned", "These terms became the basis", "The agreement was signed", "These figures then become binding"]
+    summary_ru: "Поставщик прислал контракт с пересмотренным пунктом об ответственности, который ограничивает возмещение; команда добилась изменений в определении и согласовала условия со страховым брокером для финального подписания."
+    transformations: [authored]
+
+  - id: text.recon.reference-cohesion.linguistic-study
+    title: "Linguistic study"
+    cefr: C1
+    topic: grammar.reference-cohesion
+    carries: [structure:reference]
+    domain: academic
+    context: academic-paragraph
+    text: "The study examined two cohorts that differed educationally. The first cohort had formal instruction. The second learned through exposure. These cohorts showed different error patterns. The first cohort corrected errors strategically. These errors were systematic. The second cohort demonstrated intuitive responses. These responses reflected pattern recognition. The data showed instruction changed the trajectory. This trajectory persisted beyond training. The findings suggest explicit knowledge changes behavior. The behavior became more consistent over time. The consistency was measured through assessments. These assessments revealed populations converged gradually. The convergence indicated knowledge transfer to untrained domains. This transfer supported the exposure hypothesis. The abstraction emerged despite method differences. The method influenced only acquisition speed. The speed differed between groups, but final level was comparable. The level attained suggests a common endpoint. This endpoint reflects the underlying linguistic system. The system is universal across learners."
+    word_count: 140
+    keywords: ["cohorts educational", "formal instruction", "exposure", "error patterns", "systematic errors", "intuitive responses", "trajectory", "explicit knowledge behavior", "consistency assessments", "knowledge transfer", "acquisition speed", "endpoint", "linguistic system"]
+    target_spans: ["The study examined two cohorts", "The first cohort had formal", "These cohorts showed different", "These errors were systematic", "These responses reflected", "This trajectory persisted", "The behavior became more consistent", "These assessments revealed"]
+    summary_ru: "Исследование сравнило две группы обучающихся: первая получала явное обучение, вторая — только воздействие; обе группы сошлись к единому уровню, что указывает на универсальность лингвистической системы."
+    transformations: [authored]

@@ -1,8 +1,8 @@
 # Phase 2 completion — independent review handoff
 
 > Date: 2026-07-22
-> Implementation commit: `2d7373c` (`Complete Phase 2 safety and trust contracts`)
-> Canon/roadmap commit: `9c41105` (`Finalize the Reading and Writing roadmap`)
+> Implementation commit: `6a2ca43` (`Complete Phase 2 safety and trust contracts`)
+> Canon/roadmap commit: `4744437` (`Finalize the Reading and Writing roadmap`)
 > Review rule: the author does not accept their own fixes; this report is evidence for an independent reviewer.
 
 ## 1. Requested outcome
@@ -198,13 +198,13 @@ Pytest may warn that `.pytest_cache` cannot be written in a restricted Windows s
 
 ## 5. Commit and scope audit
 
-### `2d7373c` — runtime and executable contracts
+### `6a2ca43` — runtime and executable contracts
 
 - 65 files;
 - 4499 insertions, 347 deletions;
 - contains only `curriculum/policies/**`, `src/english_trainer/**`, and `tests/**` needed by the accepted completion work.
 
-### `9c41105` — canon, journal, and roadmap
+### `4744437` — canon, journal, and roadmap
 
 - 20 files;
 - 763 insertions, 89 deletions;
@@ -226,7 +226,7 @@ None blocks deterministic personal use of the current Reading/Writing trainer. O
 
 ## 7. Requested independent verdict
 
-Review `2d7373c` against the accepted four decisions and the current canon, then verify `9c41105` describes the implementation without overclaiming. Suggested verdict format:
+Review `6a2ca43` against the accepted four decisions and the current canon, then verify `4744437` describes the implementation without overclaiming. Suggested verdict format:
 
 1. `PASS`, `PASS-with-findings`, or `FAIL`;
 2. status of R1–R7 individually;

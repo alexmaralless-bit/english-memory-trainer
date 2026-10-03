@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.can-cant-ability-requests.team-chat
+    title: "Asking for help in team chat"
+    cefr: A1
+    topic: grammar.can-cant.ability-requests
+    carries: [structure:modal]
+    domain: work
+    context: work-chat
+    text: "Can you open the shared folder? I can't find the latest report. My colleague can help with the API issue. We can't deploy today because the vendor can't approve the changes yet. Can anyone test the staging environment? I can do that at three o'clock this afternoon. Can we postpone the meeting?"
+    word_count: 52
+    keywords: ["Can you open", "I can't find", "colleague can help", "We can't deploy", "can't approve", "Can anyone test", "I can do"]
+    target_spans: ["Can you open", "I can't find", "can help with", "We can't deploy", "can't approve", "Can anyone test", "I can do"]
+    summary_ru: "Просьба открыть папку, не могу найти отчёт, коллега поможет с API, не можем деплоить — вендор пока не одобрил изменения, нужно протестировать staging в три часа."
+    transformations: [authored]
+  - id: text.recon.can-cant-ability-requests.everyday-abilities
+    title: "Abilities and requests at home"
+    cefr: A1
+    topic: grammar.can-cant.ability-requests
+    carries: [structure:modal]
+    domain: everyday
+    context: work-chat
+    text: "Can you help me carry this box? I can't open the jar by myself. My son can reach the top shelf easily. We can't watch the movie tonight because we can't find the remote. Can someone fix the light? I can do it but I need a ladder. Can the kids help us prepare dinner?"
+    word_count: 55
+    keywords: ["Can you help", "I can't open", "son can reach", "We can't watch", "can't find remote", "Can someone fix", "Can kids help"]
+    target_spans: ["Can you help me", "I can't open", "can reach the top shelf", "We can't watch", "can't find the remote", "Can someone fix"]
+    summary_ru: "Просьба помочь донести коробку, не могу открыть банку, сын легко достаёт с полки, не можем посмотреть фильм — не найти пульт, нужно кому-то починить свет."
+    transformations: [authored]

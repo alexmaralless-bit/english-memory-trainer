@@ -1,0 +1,236 @@
+# generation@3 [PD-2026-09-22] adds the three automaticity-loop exercise forms
+# (drill_block, reconstruction, timed_writing) beside the pedagogy contract of
+# generation@2. Like generation@2 before it, this file is a DELTA: generation@1
+# (schemas, safety predicates, bank lifecycle, dedup) and generation@2 (lesson
+# contract, teaching segment, delivery order) stay registered and
+# pinned-resolvable, and sessions pinned to them keep rendering exactly the
+# forms they knew. Only a session that pins generation@3 may render a drill
+# block, a reconstruction or a timed writing -- an older snapshot must never
+# gain a form its own policy could not describe.
+policy_id: "generation@3"
+schema_version: 3
+status: "accepted"
+decision_record: "PD-2026-09-22"
+canonical_encoding: "kernel.canonical_json_v1"
+numeric_value_rule: "integer_and_string_policy_values_only"
+own_text_rule: "All learner-facing text is authored for this project; third-party excerpts are forbidden."
+inherits:
+  - "generation@1"
+  - "generation@2"
+
+# One form per new step type: the form IS the step type. A block of six
+# Russian-cue sentences is not a variant of `controlled_production`; it is a
+# different learner-facing object with its own evidence shape (evidence 4.6).
+step_type_forms:
+  drill_block:
+    - "drill_block"
+  reconstruction:
+    - "reconstruction"
+  timed_writing:
+    - "timed_writing"
+
+# A form is admissible ONLY for its own step type, in both directions: a
+# `drill_block` step may not be rendered as a single-prompt exercise, and a
+# `controlled_production` step may not be rendered as a block.
+form_step_type_binding:
+  drill_block: "drill_block"
+  reconstruction: "reconstruction"
+  timed_writing: "timed_writing"
+  binding_rule: "exclusive_in_both_directions"
+
+drill_block:
+  rounds_min: 2
+  rounds_max: 3
+  default_round_size: 6
+  round_size_preference_key: "round_size"
+  round_size_source_order:
+    - "step_declared_round_size"
+    - "briefing_preferences_round_size"
+    - "default_round_size"
+  modes:
+    - "blocked"
+    - "interleaved"
+  # Round 0 is always massed on the primary target's frames: blocked practice
+  # is what makes the pattern form at all. Later rounds interleave the step's
+  # `role: contrast` targets, and only when the directive says so.
+  first_round_mode: "blocked"
+  later_round_mode_when_interleaved: "interleaved"
+  interleaved_requires_contrast_item: "true"
+  blocked_forbids_contrast_item: "true"
+  item_forms:
+    ru_to_en_sentence:
+      cue_language: "ru"
+      expected_answer: "one_full_english_sentence"
+      guidance: "A Russian line the learner turns into a full English sentence of about 8-12 words."
+    frame_recall:
+      cue_language: "ru"
+      expected_answer: "the_frame_verbatim"
+      deletion_scope: "whole_frame"
+      guidance: "The meaning or situation is given; the learner produces the whole frame. Deleting only an article would drill the article, not the frame."
+    cue_to_sentence:
+      cue_language: "en"
+      expected_answer: "one_full_english_sentence"
+      guidance: "Keywords only; the learner supplies the grammar the keywords do not show."
+    transformation:
+      cue_language: "en"
+      expected_answer: "the_transformed_sentence"
+      guidance: "A given sentence plus a changed condition (a finished-time marker forcing Past Simple)."
+    minimal_pair:
+      cue_language: "en"
+      expected_answer: "the_correct_member_in_a_full_sentence"
+      guidance: "a / the / zero, or Past Simple / Present Perfect, in one and the same context."
+  item_required_fields:
+    - "index"
+    - "prompt"
+    - "answer_key"
+    - "target_ref"
+  item_optional_fields:
+    - "id"
+    - "form"
+    - "contrast"
+    - "frame_ref"
+  round_required_fields:
+    - "index"
+    - "mode"
+    - "item_indexes"
+  answer_key_rule: "list_of_acceptable_variants_contracted_and_full"
+  answer_key_example:
+    - "I've already sent the report."
+    - "I have already sent the report."
+  prompt_rule: "prompt_must_not_contain_any_answer_variant_or_the_target_form"
+  declared_limit_seconds: "optional_from_preferences_timed_limit_seconds_when_the_step_asks_for_a_timed_round"
+  evidence_mode: "objective_check_per_item_one_attempt_per_block"
+  frames_max_primary: 12
+  frames_max_per_contrast: 4
+
+reconstruction:
+  snapshot_required_fields:
+    - "text_id"
+    - "text"
+    - "keywords"
+    - "target_spans"
+    - "cefr"
+    - "carries"
+  text_source: "curriculum_reconstruction_texts_of_the_pinned_snapshot"
+  text_selection: "first_text_not_used_in_the_last_window_presentations_else_first_by_id"
+  text_selection_window_presentations: 10
+  text_shown: "once_before_the_learner_rebuilds_it"
+  prompt_rule: "prompt_must_not_contain_the_text_body"
+  # rubric@1 has no reconstruction profile, and rubric@2 is NOT created here
+  # [PD-2026-09-22]: an authored rubric version is a curriculum decision, not a
+  # side effect of a form. The reconstruction is therefore assessed as a
+  # constrained short answer -- the same open-response channel
+  # `controlled_production` already uses -- and `target_spans` travel inside the
+  # immutable snapshot so the tutor's feedback and the machine check have them.
+  assessed_as: "constrained_short_answer"
+  rubric_step_type_equivalent: "controlled_production"
+  target_span_check:
+    operation: "required_literal_sequence_all"
+    authored_sequences_source: "target_spans"
+    rule: "declared_sequences_must_be_a_subset_of_target_spans"
+  evidence_mode: "rubric_observation_plus_objective_span_check"
+
+timed_writing:
+  default_limit_seconds: 240
+  limit_preference_key: "timed_limit_seconds"
+  limit_source_order:
+    - "step_declared_limit_seconds"
+    - "briefing_preferences_timed_limit_seconds"
+    - "default_limit_seconds"
+  snapshot_required_fields:
+    - "prompt"
+    - "declared_limit_seconds"
+    - "expected_targets"
+  # The number the tutor announces and the number the engine stores are one
+  # number (lessons 5): it is recorded inside the immutable snapshot and enters
+  # the content hash. It is a measurement, never a penalty.
+  limit_is_recorded_never_penalised: "true"
+  assessed_as: "spontaneous_production"
+  rubric_step_type_equivalent: "spontaneous_production"
+  evidence_mode: "rubric_observation_with_assessable_span_required"
+
+# rubric@1 profiles list `allowed_step_types` and know nothing of the three new
+# step types. Rather than fork the rubric policy, generation@3 declares which
+# EXISTING rubric-facing step type each new step type is assessed as; rubric
+# resolution at render applies the mapping before checking compatibility.
+rubric_step_type_equivalence:
+  reconstruction: "controlled_production"
+  timed_writing: "spontaneous_production"
+# The resolved value is PERSISTED in the snapshot as `rubric_step_type`
+# [PD-2026-09-22]. Assessment resolves the profile through the stored field
+# instead of re-deriving the mapping: evidence may not import lessons, and a
+# second derivation would be a second source of truth. A snapshot whose step
+# type the rubric already enumerates carries no such field.
+rubric_step_type_snapshot_field: "rubric_step_type"
+
+# The content hash covers the WHOLE learner-facing snapshot. Adding items,
+# rounds or a declared limit outside the hash would let two different blocks
+# claim the same identity, and "done in four minutes" would be uncheckable.
+content_hash_scope:
+  base_fields:
+    - "prompt"
+    - "answer_key"
+    - "rubric_ref"
+    - "distractor_error_refs"
+    - "lexicon_refs"
+    - "machine_checks"
+  automaticity_fields:
+    - "form"
+    - "items"
+    - "rounds"
+    - "declared_limit_seconds"
+    - "text_id"
+    - "text"
+    - "keywords"
+    - "target_spans"
+    - "cefr"
+    - "carries"
+    - "expected_targets"
+    # Engine-resolved at render from `rubric_step_type_equivalence` below, never
+    # client-supplied: the profile the snapshot was checked against is part of
+    # what the learner faced, so it is part of the identity.
+    - "rubric_step_type"
+  absent_field_rule: "a_field_the_exercise_does_not_carry_is_absent_from_the_hash_input"
+
+# generation@1 `canonical_dedup_key` is unchanged for single-prompt exercises.
+# A block's identity is its set of prompts, not its wrapper line: two blocks
+# with the same heading and different sentences are different exercises.
+canonical_dedup_key:
+  drill_block_extra_fields:
+    - "sorted_item_prompt_skeletons"
+  drill_block_answer_key_hash_input:
+    - "answer_key"
+    - "rubric_ref"
+    - "items"
+  reuse_revalidation: "production_eligible_is_revalidated_per_item_target_at_reuse"
+
+# What `session next` hands the tutor for these step types. It stays inside the
+# existing generation-directive mechanism: a computed view on the delivered
+# step, never a second source of truth.
+generation_directive:
+  common_fields:
+    - "form"
+    - "primary_target"
+    - "contrast_targets"
+  drill_block_fields:
+    - "mode"
+    - "rounds"
+    - "round_size"
+    - "frames"
+  reconstruction_fields:
+    - "text"
+  timed_writing_fields:
+    - "declared_limit_seconds"
+    - "expected_targets"
+  frame_fields:
+    - "frame_ref"
+    - "role"
+    - "target_ref"
+    - "title"
+    - "meaning_ru"
+    - "slot_hint_ru"
+    - "examples"
+    - "contrast"
+    - "trap"
+    - "carries"
+  frame_source: "lexicon_items_of_the_target_topic_with_frame_of"

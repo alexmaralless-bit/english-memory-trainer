@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.past-participle-forms.system-updates
+    title: "System updates"
+    cefr: A2
+    topic: grammar.past-participle.forms
+    carries: [tense:present-perfect]
+    domain: work
+    context: deployment-update
+    text: "The system has been updated with comprehensive new security features this morning. We have installed the latest patches from the vendor recently. The database has been optimized for better performance across all queries. Two critical bugs have been fixed in the API layer recently. The server has been restarted successfully and all connections have been restored without any issues affecting our users."
+    word_count: 62
+    keywords: ["system - updated", "security", "installed - patches", "database - optimized", "performance", "bugs - fixed", "API", "server - restarted"]
+    target_spans: ["has been updated", "have installed", "has been optimized", "have been fixed", "has been restarted", "have been restored"]
+    summary_ru: "Описание выполненных обновлений системы с акцентом на применённые причастия прошедшего времени."
+    transformations: [authored]
+  - id: text.recon.past-participle-forms.furniture-arranged
+    title: "Furniture arranged"
+    cefr: A2
+    topic: grammar.past-participle.forms
+    carries: [tense:present-perfect]
+    domain: everyday
+    context: home-update
+    text: "The new sofa has been delivered this morning by the shipping company, right on schedule. We have rearranged the entire living room with the new furniture very carefully. The old cabinet has been moved to the storage room upstairs. The pictures have been hung on the wall in the correct positions. Everything has been organized in a new way and the space looks absolutely different from before."
+    word_count: 67
+    keywords: ["sofa - delivered", "rearranged - living room", "furniture", "cabinet - moved", "storage room", "pictures - hung", "wall", "organized"]
+    target_spans: ["has been delivered", "have rearranged", "has been moved", "have been hung", "has been organized"]
+    summary_ru: "Рассказ о переустройстве комнаты с применением причастий в конструкции have been + причастие."
+    transformations: [authored]

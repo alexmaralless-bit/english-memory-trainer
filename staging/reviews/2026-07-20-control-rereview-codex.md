@@ -1,4 +1,4 @@
-# Повторное red-team ревью 0.12 после `4135f33`
+# Повторное red-team ревью 0.12 после `3e4cb3d`
 
 Дата: 2026-07-20  
 Предмет: revised `wiki/modules/control.md` и изменённые стыки с lessons/CLI/evidence/scoring/foundation.  
@@ -20,7 +20,7 @@
 
 ## Статус исходных находок
 
-| Исходная находка | Статус после `4135f33` | Комментарий |
+| Исходная находка | Статус после `3e4cb3d` | Комментарий |
 |---|---|---|
 | CTRL-1 budget/partition | **частично, BLOCKER остаётся** | корзины названы взаимоисключающими, но mode/candidate/discrete feasibility и schema integration не закрыты (R-2/R-3) |
 | CTRL-2 composition lifecycle | **частично, BLOCKER остаётся** | start+compose UoW исправлен, но delivery event недостижим и replan не закрывает assignments (R-1/R-3) |

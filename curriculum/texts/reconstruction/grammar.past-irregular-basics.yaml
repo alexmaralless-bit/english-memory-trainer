@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.past-irregular-basics.migration-update
+    title: "Migration update"
+    cefr: A1
+    topic: grammar.past-irregular-basics
+    carries: [tense:past-simple]
+    domain: work
+    context: incident-note
+    text: "Yesterday I went to the server room and found a serious issue. My colleague came to help me with the configuration. We began the migration at noon and got the first set of data across. The vendor sent new documentation that afternoon. We took a break after lunch and went back to work. Everything went smoothly and we finished by evening."
+    word_count: 61
+    keywords: ["went to server room", "found issue", "colleague came to help", "began migration at noon", "got data across", "vendor sent documentation", "took a break", "went back to work", "finished by evening"]
+    target_spans: ["went to the server room", "came to help", "began the migration", "got the first set", "sent new documentation", "took a break", "went back to work"]
+    summary_ru: "Обновление миграции: прошли в комнату сервера, начали работу, помощник пришёл помочь."
+    transformations: [authored]
+  - id: text.recon.past-irregular-basics.travel-story
+    title: "Travel story"
+    cefr: A1
+    topic: grammar.past-irregular-basics
+    carries: [tense:past-simple]
+    domain: everyday
+    context: incident-note
+    text: "Last week I went to the mountains with my family. We drove for three hours and got to a small village. My brother came with us because he knew the area. We began hiking early in the morning. The weather was great and we spent the whole day outside. We took many pictures and enjoyed every moment together."
+    word_count: 58
+    keywords: ["went to mountains", "last week", "family", "drove three hours", "got to village", "brother came", "knew the area", "began hiking", "early morning", "spent the day", "took pictures"]
+    target_spans: ["went to the mountains", "drove for three hours", "got to a small village", "came with us", "began hiking early", "took many pictures", "enjoyed every moment"]
+    summary_ru: "История путешествия: ездила в горы, брат пришёл с нами, начали ходить в поход."
+    transformations: [authored]

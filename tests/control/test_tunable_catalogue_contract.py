@@ -4,15 +4,28 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
 import yaml
 
 REPO = Path(__file__).resolve().parents[2]
 
 
-def test_versioned_tunable_catalogue_exists_with_bidirectional_control_coverage() -> None:
-    catalogue_path = REPO / "curriculum" / "policies" / "tunables-v1.yaml"
+@pytest.mark.parametrize(
+    ("catalogue_file", "control_file", "control_rows"),
+    [
+        ("tunables-v1.yaml", "control-v1.yaml", 48),
+        # [PD-2026-09-22] control@3 added three numeric decision leaves, so the
+        # bidirectional check forces the successor catalogue; pairing v2 with
+        # control@1 would fail it, which is exactly what it is for.
+        ("tunables-v2.yaml", "control-v3.yaml", 51),
+    ],
+)
+def test_versioned_tunable_catalogue_exists_with_bidirectional_control_coverage(
+    catalogue_file: str, control_file: str, control_rows: int
+) -> None:
+    catalogue_path = REPO / "curriculum" / "policies" / catalogue_file
     catalogue = yaml.safe_load(catalogue_path.read_text("utf-8"))
-    control = yaml.safe_load((REPO / "curriculum" / "policies" / "control-v1.yaml").read_text("utf-8"))
+    control = yaml.safe_load((REPO / "curriculum" / "policies" / control_file).read_text("utf-8"))
     assert isinstance(catalogue, dict) and isinstance(control, dict)
 
     def leaves(value: object, prefix: str) -> set[str]:
@@ -38,6 +51,7 @@ def test_versioned_tunable_catalogue_exists_with_bidirectional_control_coverage(
         if isinstance(row, dict) and str(row.get("owner")) == "0.12 control"
     }
     assert catalogued == control_parameters
+    assert len(catalogued) == control_rows
     assert all(
         isinstance(row.get("allowed_range"), list)
         and len(row["allowed_range"]) == 2

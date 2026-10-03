@@ -1,0 +1,29 @@
+schema_version: 1
+texts:
+  - id: text.recon.nominalization-information-flow.audit-decision
+    title: "Audit findings and decision"
+    cefr: C1
+    topic: grammar.nominalization-information-flow
+    carries: [structure:nominalization]
+    domain: work
+    context: formal-report
+    text: "The audit's identification of three critical vulnerabilities in our infrastructure triggered an immediate review across all operational departments and divisions. Each vulnerability's remediation required significant resource allocation that the current budget did not initially anticipate or plan for. Management's rejection of the first security proposal delayed the actual implementation effort for two weeks beyond the scheduled timeline. This rejection, however, forced a more thorough security assessment and comprehensive planning that improved the overall strategy substantially. The team's completion of the revised implementation plan coincided unexpectedly with the discovery of a fourth critical issue in the system architecture. Its discovery prompted serious reconsideration of the entire approach to deployment and testing procedures. Final approval came only after the addition of a secondary verification layer and comprehensive testing."
+    word_count: 126
+    keywords: ["audit identification", "three critical vulnerabilities", "immediate review", "remediation required", "resource allocation", "management rejection", "delayed implementation", "forced assessment", "completion of plan", "discovery of issue", "prompted reconsideration", "final approval"]
+    target_spans: ["The audit's identification of three critical vulnerabilities", "Each vulnerability's remediation required significant resource allocation", "Management's rejection of the first security proposal delayed", "This rejection, however, forced a more thorough security assessment", "The team's completion of the revised implementation plan", "Its discovery prompted serious reconsideration", "the addition of a secondary verification layer"]
+    summary_ru: "Аудит выявил три уязвимости; управление отклонило первый план; это заставило переделать подход и добавить проверку; обнаружение четвертой проблемы потребовало пересмотра."
+    transformations: [authored]
+
+  - id: text.recon.nominalization-information-flow.policy-impact
+    title: "Policy implementation impact"
+    cefr: C1
+    topic: grammar.nominalization-information-flow
+    carries: [structure:nominalization]
+    domain: academic
+    context: decision-analysis
+    text: "The government's announcement of new employment regulations generated immediate concern among industry observers, legal experts, and business leaders nationwide. The regulations' scope encompassed multiple areas including hiring practices, compensation disclosure requirements, and worker classification standards. Each requirement's implementation presented distinct technical challenges and complex legal complications that affected different industries. The delay in the provision of enforcement guidelines extended considerable uncertainty across three consecutive fiscal quarters and operational cycles. Industry advocates argued persuasively that the announcement's inherent vagueness, rather than the regulations themselves, created the most substantial disruption in business planning. Subsequent clarification of the ambiguous provisions through detailed advisory memoranda and official guidance documents reduced compliance costs significantly. The revision process's transparency and stakeholder engagement throughout earned modest recognition from major industry organizations and associations."
+    word_count: 126
+    keywords: ["announcement of regulations", "generated concern", "scope encompassed", "hiring practices", "compensation disclosure", "worker classification", "implementation presented", "delay in provision", "extended uncertainty", "announcement's vagueness", "clarification through memoranda", "revision transparency"]
+    target_spans: ["The government's announcement of new employment regulations generated", "The regulations' scope encompassed multiple areas including hiring practices", "Each requirement's implementation presented distinct technical challenges", "The delay in the provision of enforcement guidelines", "the announcement's inherent vagueness, rather than the regulations themselves, created", "Subsequent clarification of the ambiguous provisions through detailed advisory memoranda", "The revision process's transparency and stakeholder engagement"]
+    summary_ru: "Объявление о новых трудовых нормах вызвало беспокойство; неясность в объявлении, а не сами нормы, создали нарушение; уточнение и прозрачность улучшили соответствие."
+    transformations: [authored]

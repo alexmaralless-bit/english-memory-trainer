@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.when-while-sequence.payment-incident
+    title: "Payment incident"
+    cefr: A2
+    topic: grammar.when-while.sequence
+    carries: [tense:past-continuous, tense:past-simple]
+    domain: work
+    context: incident-update
+    text: "The payment system failed while we were processing customer orders, even outside business hours. The error occurred when we were running the backup. We discovered the issue while monitoring the logs at night. The database was recovering when the alert reached our team. We lost data while the server was restarting. The team worked on repairs when the outage happened."
+    word_count: 60
+    keywords: ["payment system", "failed", "processing orders", "error", "backup", "discovered", "monitoring logs", "alert", "database recovering", "lost data", "server restarting"]
+    target_spans: ["while we were processing", "when we were running", "while monitoring", "when the alert reached", "while the server was restarting", "when the outage happened"]
+    summary_ru: "Платежная ошибка: обрабатывали заказы, запускали бэкап, восстанавливали БД."
+    transformations: [authored]
+  - id: text.recon.when-while-sequence.work-accident
+    title: "Work accident"
+    cefr: A2
+    topic: grammar.when-while.sequence
+    carries: [tense:past-continuous, tense:past-simple]
+    domain: everyday
+    context: incident-update
+    text: "I dropped my laptop suddenly while I was carrying it down the stairs. The screen broke when it hit the floor hard. I was trying to catch it while it was falling. The keyboard stopped working when I picked it up. I called the technician while the laptop was still broken. He arrived when I was waiting by the door."
+    word_count: 60
+    keywords: ["laptop", "carrying", "stairs", "screen broke", "hit floor", "falling", "keyboard", "technician", "waiting", "door"]
+    target_spans: ["while I was carrying", "when it hit", "while it was falling", "when I picked it up", "while the laptop was still broken", "when I was waiting"]
+    summary_ru: "Ноутбук упал со ступеней: нес его вниз, экран разбился, ждал техника."
+    transformations: [authored]

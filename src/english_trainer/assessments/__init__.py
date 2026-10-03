@@ -8,9 +8,11 @@ aggregates; the event log is its boundary with scoring/scheduler/learner.
 """
 
 from english_trainer.assessments.forms import (
-    DEFAULT_FORM_VERSION,
+    FORMS_KEY,
     UnknownForm,
+    grade_item,
     item_exposure_id,
+    program_forms,
     select_form,
 )
 from english_trainer.assessments.placement import (
@@ -29,6 +31,7 @@ from english_trainer.assessments.placement import (
     answer_placement,
     decline_placement,
     ensure_policy,
+    form_exposure_history,
     get_placement,
     resume_placement,
     start_placement,
@@ -57,7 +60,6 @@ __all__ = [
     "ASSESSMENTS_VERSION",
     "CEFR_LEVELS",
     "CORE_SKILLS",
-    "DEFAULT_FORM_VERSION",
     "EVENT_ABANDONED",
     "EVENT_CHECKPOINT",
     "EVENT_DECLINED",
@@ -66,6 +68,7 @@ __all__ = [
     "EVENT_SCORED",
     "EVENT_STARTED",
     "EVENT_SUBMITTED",
+    "FORMS_KEY",
     "PLACEMENT_AGGREGATE",
     "SELF_ASSESSMENT_SCHEMA_VERSION",
     "AssessmentsPolicyInvalid",
@@ -78,9 +81,12 @@ __all__ = [
     "decline_placement",
     "default_policy",
     "ensure_policy",
+    "form_exposure_history",
     "get_placement",
+    "grade_item",
     "item_exposure_id",
     "normalize_self_assessment",
+    "program_forms",
     "require_valid",
     "resume_placement",
     "resume_window",

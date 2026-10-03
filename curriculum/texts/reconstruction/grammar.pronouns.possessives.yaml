@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.pronouns-possessives.project-team
+    title: "Project team roles"
+    cefr: A1
+    topic: grammar.pronouns.possessives
+    carries: [structure:possessive, article:indefinite-first-mention]
+    domain: work
+    context: team-introduction
+    text: "My team works on a big project for a major client now. I lead the planning tasks and meetings. My colleague Alex handles the code. His code is clean and organized. Her expertise is strong and valuable. Our goal is to ship the product. His role is very critical for success. Their effort is amazing and dedicated. Their team is focused on delivery."
+    word_count: 63
+    keywords: ["My team works", "project", "I lead", "My colleague Alex", "His code", "Her expertise", "Our goal", "ship", "His role", "Their effort", "Their team focused"]
+    target_spans: ["My team works", "My colleague Alex", "His code is", "Her expertise is", "Our goal is", "His role is", "Their effort is", "Their team is"]
+    summary_ru: "Роли в команде проекта: моя команда работает, я лидирую, коллега Алекс, его код, её опыт, наша цель, их усилие."
+    transformations: [authored]
+  - id: text.recon.pronouns-possessives.family-everyday
+    title: "Family and their things"
+    cefr: A1
+    topic: grammar.pronouns.possessives
+    carries: [structure:possessive]
+    domain: everyday
+    context: team-introduction
+    text: "My sister has a good job downtown. Her office is downtown near the metro station and park. His desk is always very organized and neat. Their children go to school every morning. My parents are proud of everyone in the family. Their house is warm and comfortable for everyone. Our family is close and supportive. His job is stable and good for the future."
+    word_count: 64
+    keywords: ["My sister", "job", "Her office", "downtown", "His desk", "organized", "Their children", "school", "My parents", "proud", "Their house", "Our family", "His job"]
+    target_spans: ["My sister has", "Her office is", "His desk is", "Their children go", "My parents are", "Their house is", "Our family is", "His job is"]
+    summary_ru: "Семья и их вещи: сестра работает, её офис, его стол, их дети в школе, мои родители, их дом, наша семья."
+    transformations: [authored]

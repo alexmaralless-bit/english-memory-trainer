@@ -1,9 +1,10 @@
 id: a1.10-home-and-daily-life
 level: A1
 can_do: "Describe a home, locate common items, and explain a simple daily routine."
-tracks: [everyday-life]
+tracks: [everyday-life, grammar-engine]
 topics:
   - everyday-life.describing-home
+  - grammar.articles.fixed-time-expressions
   - everyday-life.locating-household-items
   - everyday-life.talking-about-home-routines
   - everyday-life.sharing-household-chores

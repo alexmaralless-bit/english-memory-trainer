@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.past-time-sequencing.incident-report
+    title: "Incident report"
+    cefr: A1
+    topic: grammar.past-time-sequencing
+    carries: [tense:past-simple, structure:sequencing]
+    domain: work
+    context: incident-note
+    text: "Yesterday we had a critical incident that affected our production system. First, I received the alert from the monitoring system at three o'clock. Then, I immediately called the team lead. After that, we started the investigation. Within an hour, we identified the root cause. Next, we implemented the fix on staging. Finally, we deployed the solution to production at six o'clock."
+    word_count: 61
+    keywords: ["critical incident yesterday", "received alert", "three o'clock", "called team lead", "started investigation", "identified root cause", "implemented fix - staging", "deployed solution", "six o'clock"]
+    target_spans: ["First, I received the alert", "Then, I immediately called", "After that, we started", "we identified the root cause", "Next, we implemented the fix", "Finally, we deployed"]
+    summary_ru: "Инцидент вчера: сначала получили алерт, потом вызвали команду, нашли и исправили проблему."
+    transformations: [authored]
+  - id: text.recon.past-time-sequencing.cooking-dinner
+    title: "Cooking dinner"
+    cefr: A1
+    topic: grammar.past-time-sequencing
+    carries: [tense:past-simple, structure:sequencing]
+    domain: everyday
+    context: incident-note
+    text: "I prepared a special dinner last Saturday for my family. First, I went to the farmers market to buy fresh produce. Then, I carefully cleaned all the vegetables. After that, I started cooking the main dish. While I cooked, my friend suddenly arrived with wine. Next, I set the table carefully. Finally, we all sat down and ate together."
+    word_count: 59
+    keywords: ["prepared dinner", "last Saturday", "family", "went to market", "fresh produce", "cleaned vegetables", "started cooking", "friend arrived", "wine", "set the table", "sat down and ate"]
+    target_spans: ["First, I went to the farmers market", "Then, I carefully cleaned", "After that, I started cooking", "my friend suddenly arrived", "Next, I set the table", "Finally, we all sat down"]
+    summary_ru: "Готовила ужин: сначала ходила на рынок, потом готовила, в конце ели все вместе."
+    transformations: [authored]

@@ -1,0 +1,29 @@
+schema_version: 1
+texts:
+  - id: text.recon.passive-basic-process.deployment-workflow
+    title: "Deployment workflow"
+    cefr: A2
+    topic: grammar.passive.basic-process
+    carries: [tense:passive]
+    domain: work
+    context: support-ticket
+    text: "Every request is carefully checked before formal approval by management. All files are thoroughly validated after each upload from the team. The new code is completely tested in our staging environment before production. Critical changes are deployed to production only after testing. System logs are continuously monitored for any errors or problems. Performance is tracked carefully for one full hour after deployment."
+    word_count: 62
+    keywords: ["request is checked", "before approval", "files are validated", "after upload", "code is tested", "staging", "changes are deployed", "production", "logs are monitored", "performance is tracked"]
+    target_spans: ["is carefully checked", "are thoroughly validated", "is completely tested", "are deployed to production", "are continuously monitored", "is tracked carefully"]
+    summary_ru: "Каждый запрос проверяют перед утверждением. Файлы валидируют после загрузки. Код тестируют на staging. Изменения деплоят в production. Логи отслеживают на ошибки. Производительность проверяют час."
+    transformations: [authored]
+
+  - id: text.recon.passive-basic-process.laundry-morning
+    title: "Laundry routine"
+    cefr: A2
+    topic: grammar.passive.basic-process
+    carries: [tense:passive]
+    domain: everyday
+    context: support-ticket
+    text: "All dirty clothes are sorted carefully by color before washing. White items are washed separately in cold water to preserve brightness. Dark clothes are dried outside on the line to save energy. Delicate linens are ironed gently once they are completely dry. Clean clothes are folded neatly and stored in the correct drawers. Everything is organized properly in the bedroom closet, so items are easy to find."
+    word_count: 67
+    keywords: ["clothes are sorted", "by color", "whites are washed", "separately", "darks are dried", "outside", "linens are ironed", "after drying", "clean clothes are folded", "stored", "organized in closet"]
+    target_spans: ["are sorted carefully", "are washed separately", "are dried outside", "are ironed gently", "are folded neatly", "is organized"]
+    summary_ru: "Одежду сортируют по цвету. Белое белье стирают отдельно в холодной воде. Тёмное сушат на улице. Деликатное белье гладят после сушки. Чистую одежду складывают и убирают в ящики. Всё организовано в шкафу."
+    transformations: [authored]

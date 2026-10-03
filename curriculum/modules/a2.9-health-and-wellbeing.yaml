@@ -1,9 +1,10 @@
 id: a2.9-health-and-wellbeing
 level: A2
 can_do: "Describe common symptoms, seek basic help, discuss healthy habits, and follow simple advice."
-tracks: [everyday-life]
+tracks: [everyday-life, grammar-engine]
 topics:
   - everyday-life.describing-symptoms
+  - grammar.articles.institutional-places
   - everyday-life.asking-for-medical-help
   - everyday-life.giving-basic-health-advice
   - everyday-life.talking-about-wellbeing-habits

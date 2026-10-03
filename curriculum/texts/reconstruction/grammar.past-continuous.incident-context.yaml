@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.past-continuous-incident-context.database-crash
+    title: "Database crash"
+    cefr: A2
+    topic: grammar.past-continuous.incident-context
+    carries: [tense:past-continuous]
+    domain: work
+    context: incident-update
+    text: "At 3 p.m. yesterday, the production database was running slowly. We were testing the new migration process when the server crashed. The team was monitoring the system at the time. Two technicians were checking the logs when they found the error. We were backing up the data when the issue began. Everyone was working on recovery for hours after that."
+    word_count: 60
+    keywords: ["3 p.m.", "database", "running slowly", "testing", "migration", "crash", "monitoring", "checking logs", "backing up", "recovery"]
+    target_spans: ["was running slowly", "We were testing", "when the server crashed", "was monitoring", "were checking", "were backing up", "was working on recovery"]
+    summary_ru: "Крах БД: база работала медленно, тестировали миграцию, сервер упал, восстановление часами."
+    transformations: [authored]
+  - id: text.recon.past-continuous-incident-context.internet-outage
+    title: "Internet outage"
+    cefr: A2
+    topic: grammar.past-continuous.incident-context
+    carries: [tense:past-continuous]
+    domain: everyday
+    context: incident-update
+    text: "Yesterday afternoon, my internet was down for two hours. I was working on an important document when the connection stopped suddenly. My family was streaming a video at the same time. I was calling the internet provider when the service came back. The neighbors were also affected by the outage. I was frustrated while waiting for the internet to return."
+    word_count: 60
+    keywords: ["afternoon", "internet down", "two hours", "working", "document", "connection stopped", "family", "streaming", "calling", "provider"]
+    target_spans: ["was working on", "when the connection stopped", "was streaming", "was calling", "were also affected", "was frustrated"]
+    summary_ru: "Перебой интернета: работал над документом, семья смотрела видео, два часа без сети."
+    transformations: [authored]

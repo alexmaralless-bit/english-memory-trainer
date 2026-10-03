@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.modals-requirements.project-setup
+    title: "Project setup requirements"
+    cefr: A2
+    topic: grammar.modals.requirements
+    carries: [structure:modal, tense:present-simple]
+    domain: work
+    context: option-review
+    text: "We must configure the build server before the launch. The team should review all the requirements carefully. We need to test the database connection thoroughly, and we must verify the SSL certificate. You should notify the client about any delays immediately. Everyone must follow the process without exceptions. We can deploy only after the documentation is complete. The system must pass all security tests successfully. You should document every step for future reference."
+    word_count: 73
+    keywords: ["must configure", "build server", "before launch", "team should review", "requirements", "must test - database", "must verify - SSL", "should notify - client", "must follow", "can deploy", "documentation", "must pass - tests"]
+    target_spans: ["We must configure", "should review", "must verify", "should notify", "must follow", "can deploy", "must pass"]
+    summary_ru: "Перечисление требований для настройки проекта: необходимые проверки, обязательные уведомления, процесс развёртывания."
+    transformations: [authored]
+  - id: text.recon.modals-requirements.apartment-rental
+    title: "Apartment rental rules"
+    cefr: A2
+    topic: grammar.modals.requirements
+    carries: [structure:modal, tense:present-simple]
+    domain: everyday
+    context: option-review
+    text: "Tenants must pay the rent on time every month without delay. You should always maintain the apartment in good condition. We must not hang heavy pictures on the walls without permission from management. Residents can use the parking lot only after six in the evening. You should ask the landlord before making any repairs or modifications. Everyone must respect the quiet hours after ten at night. This applies to all residents without exception."
+    word_count: 73
+    keywords: ["must pay", "rent - on time", "should always maintain", "good condition", "must not hang", "pictures - walls", "can use - parking", "should ask", "landlord - repairs", "must respect", "quiet hours"]
+    target_spans: ["must pay", "should always maintain", "must not hang", "can use", "should ask", "must respect"]
+    summary_ru: "Правила проживания в квартире: обязательные платежи, ограничения, требования к жильцам."
+    transformations: [authored]

@@ -1,0 +1,31 @@
+schema_version: 1
+texts:
+  - id: text.recon.modals-deduction-obligation.requirements-meeting
+    title: "Requirements meeting"
+    cefr: B1
+    topic: grammar.modals.deduction-obligation
+    also_targets: []
+    carries: [structure:modal, article:definite-second-mention]
+    domain: work
+    context: requirements-review
+    text: "The client must receive the report by Thursday. We should consider adding a cache layer for performance. The system might fail if we do not implement error handling. The QA team may need more time to test the new features. You should document the workaround for future support. The vendor cannot deliver before next month. We have to meet the regulatory requirements. The architect should review the design first. This change might cause delays. The team must follow the coding standards."
+    word_count: 81
+    keywords: ["client must receive Thursday", "should consider cache", "system might fail", "QA may need time", "document workaround support", "vendor cannot deliver", "have to meet regulatory", "architect should review"]
+    target_spans: ["must receive the report", "should consider adding", "might fail if", "may need more time", "should document the", "cannot deliver", "have to meet", "should review the design"]
+    summary_ru: "Планирование требований: клиент должен получить отчет, надо добавить кэш, система может сломаться, нужно документировать."
+    transformations: [authored]
+
+  - id: text.recon.modals-deduction-obligation.diagnosis-evidence
+    title: "Diagnosis evidence"
+    cefr: B1
+    topic: grammar.modals.deduction-obligation
+    also_targets: []
+    carries: [structure:modal, article:zero-uncountable]
+    domain: everyday
+    context: evidence-based-diagnosis
+    text: "The error logs must show what went wrong. The server could be running out of memory. The issue may have started after the latest update. We should run more tests to confirm the problem. The database connection might be slow. You may need to increase the timeout value. The application must handle this scenario correctly. The performance might improve after optimization work. The developer should check the error messages carefully before concluding anything. This behavior cannot be normal at all."
+    word_count: 80
+    keywords: ["error logs must show", "server could be running", "issue may have started", "should run more tests", "database connection might", "need increase timeout", "application must handle", "performance might improve"]
+    target_spans: ["must show what went", "could be running out", "may have started after", "should run more tests", "might be slow", "may need to increase", "must handle this", "might improve after"]
+    summary_ru: "Диагностика: логи должны показать ошибку, серверу может не хватать памяти, проблема, возможно, началась после обновления."
+    transformations: [authored]

@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.articles-fixed-time-expressions.daily-schedule
+    title: "My daily work schedule"
+    cefr: A1
+    topic: grammar.articles.fixed-time-expressions
+    carries: [article:fixed-expression]
+    domain: work
+    context: status-update
+    text: "I check emails in the morning at eight. At the moment I am in a meeting. We have a standup on the weekend sometimes. I do focused work once a week on Tuesday. At the end of the day I review my progress. At night I usually rest. On Monday we plan the week ahead. This weekend we need to finish testing."
+    word_count: 62
+    keywords: ["in the morning", "at eight", "At the moment", "on the weekend", "once a week on Tuesday", "At the end of the day", "At night", "On Monday", "This weekend"]
+    target_spans: ["in the morning at eight", "At the moment", "on the weekend", "once a week on Tuesday", "At the end of the day", "At night I usually", "On Monday", "This weekend"]
+    summary_ru: "День: почта с утра в восемь, сейчас встреча, стендап по выходным, фокусная работа по вторникам, конец дня прогресс, ночью отдыхаю."
+    transformations: [authored]
+  - id: text.recon.articles-fixed-time-expressions.weekly-routine
+    title: "My weekly activities"
+    cefr: A1
+    topic: grammar.articles.fixed-time-expressions
+    carries: [article:fixed-expression]
+    domain: everyday
+    context: status-update
+    text: "I go to the gym in the morning three times a week. On Monday I have dinner with my family. I call my mother once a week on the weekend. At night I read books before bed. On Thursday I meet friends for coffee in the afternoon. At the end of the week I relax at home. On the weekend I usually sleep longer. At the moment I feel tired."
+    word_count: 70
+    keywords: ["in the morning three times", "On Monday dinner", "once a week on the weekend", "At night read", "On Thursday coffee", "At the end week", "On the weekend sleep", "At the moment tired"]
+    target_spans: ["in the morning three times a week", "On Monday I have", "once a week on the weekend", "At night I read", "On Thursday I meet", "in the afternoon", "At the end of the week", "On the weekend I usually", "At the moment I feel"]
+    summary_ru: "Неделя: спортзал с утра трижды, понедельник ужин, мама раз в неделю, ночью читаю, четверг кофе, конец недели отдых, по выходным сплю дольше."
+    transformations: [authored]

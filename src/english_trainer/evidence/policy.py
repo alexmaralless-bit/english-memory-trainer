@@ -1,4 +1,14 @@
-"""Pinned evidence-policy decisions shared by objective and rubric attempts."""
+"""Pinned evidence-policy decisions shared by objective, rubric and tutor-verdict attempts.
+
+Two schema versions validate side by side (a session pins one and replays by
+it forever):
+
+- ``evidence@1`` -- multi-target credit allocation only;
+- ``evidence@2`` -- the same allocation plus the tutor-verdict leaves of the
+  lesson report [PD-2026-09-23]: ``verdict_scale`` (verdict -> ``score_ppm``),
+  ``review_outcome_by_verdict`` (verdict -> ReviewOutcome), ``report_limits``
+  and the policy-owned severity of tutor-reported errors.
+"""
 
 from __future__ import annotations
 
@@ -10,6 +20,20 @@ from english_trainer.kernel.policy import PolicyRegistry
 
 EVIDENCE_KIND = "evidence"
 EVIDENCE_VERSION = "evidence@1"
+EVIDENCE_VERSION_V2 = "evidence@2"
+# policy_id -> schema_version: the versions ``require_valid`` knows how to check.
+EVIDENCE_SCHEMAS: dict[str, int] = {EVIDENCE_VERSION: 1, EVIDENCE_VERSION_V2: 2}
+
+# The tutor's verdict vocabulary (lesson_report@1), in canonical order.
+VERDICTS: tuple[str, ...] = ("correct", "partial", "incorrect")
+# Outcomes a verdict may map to. RECOVERED is never emitted directly: the
+# scoring transition table restores the steady state when CONFIRMED lands on
+# AT_RISK (evidence.reviews).
+VERDICT_REVIEW_OUTCOMES = frozenset({"CONFIRMED", "PROGRESS", "REGRESSION", "INSUFFICIENT_EVIDENCE"})
+# The rubric catalogue's severity vocabulary; tutor errors reuse it.
+ERROR_SEVERITIES = frozenset({"minor", "major", "blocking"})
+REPORT_LIMIT_KEYS: tuple[str, ...] = ("max_items", "max_answer_chars", "max_errors_per_item")
+PPM_SCALE = 1_000_000
 
 
 class EvidencePolicyInvalid(KernelError):
@@ -61,14 +85,103 @@ def require_valid_multi_credit(configured: dict[str, object]) -> dict[str, str]:
     return {key: str(value) for key, value in result.items()}
 
 
+def _positive_int(value: object, path: str) -> int:
+    if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+        raise EvidencePolicyInvalid(f"{path}: must be a positive integer")
+    return value
+
+
+def require_valid_verdict_leaves(payload: dict[str, Any]) -> dict[str, Any]:
+    """Validate and normalize the evidence@2 tutor-verdict leaves.
+
+    Returns ``{verdict_scale, review_outcome_by_verdict, report_limits,
+    tutor_errors}``. The scale is integer ppm, monotone in verdict order
+    (``correct >= partial >= incorrect``) and tops out at the full scale for
+    ``correct``: a fully correct answer that scored less than full quality
+    would silently rescale every tutor-verdict evidence.
+    """
+    scale = payload.get("verdict_scale")
+    if not isinstance(scale, dict) or set(scale) != set(VERDICTS):
+        raise EvidencePolicyInvalid(f"evidence.verdict_scale: must map exactly {list(VERDICTS)}")
+    normalized_scale: dict[str, int] = {}
+    for verdict in VERDICTS:
+        value = scale[verdict]
+        if isinstance(value, bool) or not isinstance(value, int) or not 0 <= value <= PPM_SCALE:
+            raise EvidencePolicyInvalid(
+                f"evidence.verdict_scale.{verdict}: must be an integer in 0..{PPM_SCALE}"
+            )
+        normalized_scale[verdict] = value
+    if normalized_scale["correct"] != PPM_SCALE:
+        raise EvidencePolicyInvalid(f"evidence.verdict_scale.correct: must be {PPM_SCALE}")
+    if not normalized_scale["correct"] >= normalized_scale["partial"] >= normalized_scale["incorrect"]:
+        raise EvidencePolicyInvalid(
+            "evidence.verdict_scale: must be monotone (correct >= partial >= incorrect)"
+        )
+
+    outcomes = payload.get("review_outcome_by_verdict")
+    if not isinstance(outcomes, dict) or set(outcomes) != set(VERDICTS):
+        raise EvidencePolicyInvalid(f"evidence.review_outcome_by_verdict: must map exactly {list(VERDICTS)}")
+    for verdict in VERDICTS:
+        if outcomes[verdict] not in VERDICT_REVIEW_OUTCOMES:
+            raise EvidencePolicyInvalid(
+                f"evidence.review_outcome_by_verdict.{verdict}: "
+                f"must be one of {sorted(VERDICT_REVIEW_OUTCOMES)}"
+            )
+
+    limits = payload.get("report_limits")
+    if not isinstance(limits, dict):
+        raise EvidencePolicyInvalid("evidence.report_limits: must be an object")
+    normalized_limits = {
+        key: _positive_int(limits.get(key), f"evidence.report_limits.{key}") for key in REPORT_LIMIT_KEYS
+    }
+
+    tutor_errors = payload.get("tutor_errors")
+    if not isinstance(tutor_errors, dict) or tutor_errors.get("default_severity") not in ERROR_SEVERITIES:
+        raise EvidencePolicyInvalid(
+            f"evidence.tutor_errors.default_severity: must be one of {sorted(ERROR_SEVERITIES)}"
+        )
+    return {
+        "verdict_scale": normalized_scale,
+        "review_outcome_by_verdict": {verdict: str(outcomes[verdict]) for verdict in VERDICTS},
+        "report_limits": normalized_limits,
+        "tutor_errors": {"default_severity": str(tutor_errors["default_severity"])},
+    }
+
+
 def require_valid(payload: dict[str, Any]) -> dict[str, Any]:
-    if payload.get("policy_id") != EVIDENCE_VERSION:
-        raise EvidencePolicyInvalid(f"evidence.policy_id must be {EVIDENCE_VERSION!r}")
+    """Validate an evidence policy of any known schema version (evidence@1, @2)."""
+    policy_id = payload.get("policy_id")
+    schema = EVIDENCE_SCHEMAS.get(str(policy_id))
+    if schema is None:
+        raise EvidencePolicyInvalid(f"evidence.policy_id must be one of {sorted(EVIDENCE_SCHEMAS)!r}")
+    if payload.get("schema_version") != schema:
+        raise EvidencePolicyInvalid(f"evidence.schema_version must be {schema} for {policy_id}")
     configured = payload.get("multi_credit")
     if not isinstance(configured, dict):
         raise EvidencePolicyInvalid("evidence.multi_credit: must be an object")
     require_valid_multi_credit(configured)
+    if schema >= 2:
+        require_valid_verdict_leaves(payload)
     return payload
+
+
+def verdict_policy(registry: PolicyRegistry, pinned_versions: dict[str, str]) -> dict[str, Any]:
+    """The pinned tutor-verdict leaves, validated (evidence@2 and later).
+
+    A session that pinned no evidence version, or a version without the
+    verdict leaves (evidence@1), cannot accept a tutor-verdict report: the
+    scale that turns a verdict into ``score_ppm`` is a pinned decision, never
+    a code default.
+    """
+    if EVIDENCE_KIND not in pinned_versions:
+        raise EvidencePolicyInvalid("the session pinned no evidence policy; a tutor verdict has no scale")
+    payload = registry.resolve_pinned(EVIDENCE_KIND, pinned_versions[EVIDENCE_KIND])
+    if "verdict_scale" not in payload:
+        raise EvidencePolicyInvalid(
+            f"evidence policy {pinned_versions[EVIDENCE_KIND]} has no verdict_scale; "
+            "a tutor-verdict report needs evidence@2 or later"
+        )
+    return require_valid_verdict_leaves(payload)
 
 
 def allocate_credit(

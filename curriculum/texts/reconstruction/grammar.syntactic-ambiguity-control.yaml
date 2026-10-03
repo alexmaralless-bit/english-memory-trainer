@@ -1,0 +1,29 @@
+schema_version: 1
+texts:
+  - id: text.recon.syntactic-ambiguity-control.contract-revision
+    title: "Contract language clarification"
+    cefr: C2
+    topic: grammar.syntactic-ambiguity-control
+    carries: [structure:reference, structure:relative-clause]
+    domain: work
+    context: contract-edit
+    text: "The original contract contained scope ambiguity. A phrase stating vendors approved by the committee and responsible for compliance left unclear whether vendors and responsibility both needed approval. The revision specified: vendors whom the committee approved, each responsible for compliance. A critical restriction proved dangerously ambiguous: only engineers without security certifications may not access systems. This inverted the intended meaning. Did it permit access except for uncertified engineers, or deny access to all except certified ones? The corrected version read: Only engineers with current security clearances may access systems. Coordination ambiguity arose from a clause stating that the schedule accommodates rework and staff training on weekends and during the week. This construction wrongly suggested weekend training. The final phrasing clarified the intent: The schedule allows rework on weekends and staff training during the week."
+    word_count: 133
+    keywords: ["original contract", "scope ambiguity", "vendors approved", "committee responsibility", "revised version", "critical restriction", "dangerously ambiguous", "certifications access", "coordination ambiguity", "schedule rework", "training weekends", "clarified intent"]
+    target_spans: ["The original contract contained scope ambiguity", "vendors approved by the committee and responsible for compliance", "only engineers without security certifications may not access systems", "The corrected version read: Only engineers with current security clearances may access systems", "Coordination ambiguity arose from a clause stating that the schedule accommodates rework", "The final phrasing clarified the intent"]
+    summary_ru: "Договор имел неясности: согласованность ответственности; одна фраза обратила смысл; координация времени была неправильна; пересмотр уточнил намерение простыми фразами."
+    transformations: [authored]
+
+  - id: text.recon.syntactic-ambiguity-control.technical-specification
+    title: "Technical requirements specification"
+    cefr: C2
+    topic: grammar.syntactic-ambiguity-control
+    carries: [structure:reference, structure:relative-clause]
+    domain: academic
+    context: technical-specification
+    text: "The system specification required careful phrasing. An early draft stated the system must process requests from users with high priority, creating reference ambiguity. Revision clarified: the system must prioritize requests marked as high-priority. Scope ambiguity appeared in logging rules. The claim that only transactions that exceed a threshold are not logged inverted the meaning. Corrected: transactions exceeding the threshold receive detailed logging. Coordination problems arose from a rule stating that the system prevents access by users without licenses and organizations in restricted regions. This left unclear whether licensing applied to both. Clarification separated them: the system prevents access by unlicensed users and by organizations in restricted regions. Complex references required care. Stating the database engine processes the index, optimizing it assumed readers tracked which entity needed it. Direct naming prevented misreading: the database engine processes the index, optimizing that structure."
+    word_count: 140
+    keywords: ["system specification", "careful phrasing", "reference ambiguity", "priority held", "revision clarified", "prioritize requests", "scope ambiguity", "logging rules", "exceed threshold", "coordination problems", "licensing applied", "direct naming"]
+    target_spans: ["creating reference ambiguity", "Revision clarified: the system must prioritize requests marked as high-priority", "only transactions that exceed a threshold are not logged inverted", "Corrected: transactions exceeding the threshold receive detailed logging", "left unclear whether licensing applied to both", "Stating the database engine processes the index, optimizing it assumed", "the database engine processes the index, optimizing that structure"]
+    summary_ru: "Спецификация требовала точности; 'высокий приоритет' двусмысленен; фраза про логирование инвертировала смысл; координация требует разделения; местоимения нужно заменить на имена существительные для ясности."
+    transformations: [authored]

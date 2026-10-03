@@ -4,6 +4,7 @@ can_do: "State requirements and compare simple options before making a recommend
 tracks: [grammar-engine, written-interaction, written-production-mediation]
 topics:
   - grammar.modals.requirements
+  - grammar.articles.the-unique-superlative-ordinal
   - grammar.comparatives.options
   - grammar.superlatives.selection
   - grammar.quantifiers.requirements

@@ -1,8 +1,8 @@
 # Модуль: lessons
 
 > **Status**: current
-> **Last updated**: 2026-07-22
-> **Sources**: [[../flows/session]] · [[../flows/continuation]] · [[evidence]] · [[../platform/foundation]] (UoW, CAS, outbox) · Concept Gate 0.5 2026-07-20 (3 развилки, [PD-2026-07-20]) · часть контракта 0.5
+> **Last updated**: 2026-09-23
+> **Sources**: [[../flows/session]] · [[../flows/continuation]] · [[evidence]] · [[control]] · [[../platform/foundation]] (UoW, CAS, outbox) · `staging/concepts/2026-09-23-lesson-brief-report-concept.md` (одобрен, [PD-2026-09-23]) · Concept Gate 0.5 2026-07-20 (3 развилки, [PD-2026-07-20]) · часть контракта 0.5
 > **Bounded context**: `src/english_trainer/lessons/`
 
 > Спека — **target**. Одна цель продукта, без фазовых тегов (Принцип 4). Термины — [[../glossary]]. Часть контракта 0.5 (lessons + [[assessments]]).
@@ -11,112 +11,131 @@
 
 ## 1. Назначение
 
-Модуль владеет **жизненным циклом занятия**: сессия, Attempt, терминализация. Он выдаёт Session Manifest, принимает фиксации, решает, когда сессия завершена, и атомарно применяет завершение. Бизнес-правила поверх kernel-механизмов (UoW/CAS/idempotency); scoring и расписание — не здесь.
+Модуль владеет **жизненным циклом занятия**: сессия, LessonBrief, LessonReport, терминализация. Урок целиком ведёт тьютор; движок **предлагает** (brief) и **фиксирует** (report) — он не диктует шаг за шагом [PD-2026-09-23]. Он выдаёт Session Manifest и LessonBrief в начале, принимает единственный атомарный LessonReport в конце и решает, когда сессия завершена. Бизнес-правила поверх kernel-механизмов (UoW, idempotency); scoring и расписание — не здесь.
 
 ## 2. Session lifecycle
 
 ```mermaid
 stateDiagram-v2
     [*] --> STARTED
-    STARTED --> IN_PROGRESS: первая фиксация
+    STARTED --> IN_PROGRESS: подключение тьютора (resume/attach)
+    STARTED --> FINISHED: session report
+    IN_PROGRESS --> FINISHED: session report
     STARTED --> ABANDONED: session abandon / stale
-    IN_PROGRESS --> FINISHED: session finish
     IN_PROGRESS --> ABANDONED: session abandon / stale
 ```
 
+- **MUST — переход в FINISHED выполняет только отчёт** [PD-2026-09-23]: `session report` коммитит весь LessonReport одной транзакцией и **в ней же** переводит сессию в `FINISHED` — доведение каждого Attempt до `assessed`, терминальная диспозиция каждого ReviewAssignment и сам переход состояния происходят атомарно ([[evidence]] §4.3, §4d ниже). Отдельной команды `session finish` и отдельной предпосылки «pending-set пуст», проверяемой заранее, не существует: по построению отчёт не может закоммититься, оставив цель незакрытой.
+- **MUST — отчёт без заданий допускается**: LessonReport с пустым `items[]` принимается **с предупреждением** и всё равно завершает сессию — тьютор мог провести занятие целиком свободным разговором без единого проверяемого задания. Отчёт без items закрывает все pending ReviewAssignment сессии как `INSUFFICIENT_EVIDENCE(reason=not_attempted)`, как и любой не упомянутый в отчёте review.
 - **MUST**: конфликт `start` при активной сессии → `{error_code, allowed_actions: resume | abandon_and_start}`; выбор делает ученик. `abandon_and_start` — две независимые идемпотентные команды ([[../flows/session]], foundation §3.4).
-- **MUST — stale-сессия как replayable факт** [PD-2026-07-20]: сессия без активности дольше `stale_session_days` (*tunable*, дефолт 7) терминализуется как `ABANDONED`. Переход эмитится **append-only событием** `SESSION_STALE_ABANDONED {session_id, boundary_at, last_activity_at, pinned_lessons_policy}`, где `boundary_at` — детерминированный момент пересечения (из `last_activity_at` + порог), **не** wall-clock запуска sweep. Replay применяет событие, а не текущее время. Sweep идемпотентен по `session_id` (сессия терминальна ровно один раз).
-- **MUST**: терминальные состояния окончательны: `finish`/`resume`/`abandon` на терминальной сессии — стабильная ошибка; identical retry возвращает cached result (foundation §3.4).
-- **MUST — coarse session fence [PD-2026-07-22]**: каждая публичная мутация живой сессии (`next`, `replan`, render, attempt record/finalize, observed record, review close, finish, abandon и adapter ingress) принимает обязательный `expected_session_revision`, сверяет и увеличивает единый `session_revision` в той же UoW, что и собственный эффект. Промах даёт стабильный `SESSION_REVISION_CONFLICT` (`expected`, `current`) и не оставляет событий или aggregate-write. `next`/`replan` дополнительно сверяют узкий `plan_version`; один токен не заменяет другой. `start`, `resume`, `peek` и mutating-response возвращают актуальную ревизию. `resume` — cold-start исключение: читает текущую ревизию и атомарно увеличивает её вместе с `AGENT_ATTACHED`. Same-key/same-payload cached retry возвращается до stale-проверки.
-- **MUST — stale threshold versioned**: `stale_session_days` берётся из закреплённой `lessons@1`; принятый дефолт — `7`. Sweep закрывает pending attempts/review assignments, очищает active pointer и пишет терминализацию одной UoW; повтор — no-op.
+- **MUST — stale-сессия как replayable факт** [PD-2026-07-20]: сессия без активности дольше `stale_session_days` (*tunable*, дефолт 7, теперь закреплён `lessons@2`) терминализуется как `ABANDONED`. Переход эмитится **append-only событием** `SESSION_STALE_ABANDONED {session_id, boundary_at, last_activity_at, pinned_lessons_policy}`, где `boundary_at` — детерминированный момент пересечения, **не** wall-clock запуска sweep. Replay применяет событие, а не текущее время. Sweep идемпотентен по `session_id`.
+- **MUST**: терминальные состояния окончательны: `report`/`resume`/`abandon` на терминальной сессии — стабильная ошибка; identical retry возвращает cached result (foundation §3.4).
+- **MUST — session fence сужен до двух команд** [PD-2026-09-23]: `expected_session_revision` требуют только `resume` и `abandon`. `report` его **не принимает и не требует**: единственность коммита обеспечивают `idempotency-key` вместе с бизнес-правилом «сессия переходит в FINISHED ровно один раз» — второй `report` на уже терминальную сессию получает стабильную ошибку терминальности, а не проверку ревизии. Узкого `plan_version` не существует: план advisory и не CAS-версионируется ([[control]] §3b). `resume` — cold-start исключение: читает текущую ревизию и атомарно увеличивает её вместе с `AGENT_ATTACHED`.
+- **MUST — stale threshold versioned**: `stale_session_days` берётся из закреплённой `lessons@2`; принятый дефолт — `7`. Sweep закрывает pending ReviewAssignment и очищает active pointer одной UoW; повтор — no-op.
 
-## 3. Attempt lifecycle [PD-2026-07-20]
+## 3. Attempt lifecycle [PD-2026-09-23]
 
 ```mermaid
 stateDiagram-v2
-    [*] --> draft
-    draft --> recorded: ответ + наблюдения зафиксированы
-    recorded --> assessed: движок посчитал AttemptAssessment
+    [*] --> assessed: отчёт коммитит вердикт тьютора
 ```
 
-- **MUST**: три состояния — `draft` (начат, не доведён), `recorded` (raw answer + observations сохранены), `assessed` (движок вычислил AttemptAssessment, [[evidence]]). Разделение `recorded`/`assessed` нужно для recovery: крэш между фиксацией и оценкой различим.
-- **MUST**: в scoring участвует только `assessed`; `draft` и `recorded` — нет.
-- **MUST — finalize/recover**: `finalize_attempt` идемпотентен; при resume сессия отдаёт незавершённые attempts с их состоянием, и `recover` доводит `draft`→`recorded`→`assessed` без дублей (global kernel idempotency; OPEN-11 закрыт [PD-2026-07-22]).
+- **MUST — единственное состояние**: LessonReport создаёт каждый Attempt сразу `assessed` (`status: assessed`, `assessment.basis: tutor_verdict`) внутри атомарного коммита отчёта — либо весь набор фактов записан, либо ничего (крэш до commit не оставляет черновика). Промежуточные `draft`/`recorded` — команды, которые их производили (`attempt record`, `attempt finalize`), удалены вместе с пошаговой доставкой [PD-2026-09-23]; состояния остаются валидными только для replay сессий, записанных до этого перехода ([[evidence]] §4.2).
+- **MUST**: в scoring участвует только `assessed`; отчёт других состояний не производит.
 
-## 4. Терминализация (finish / abandon)
+## 4. Терминализация (report / abandon)
 
-- **MUST — FINISHED требует пустой pending-set**: все attempts `assessed`, каждый ReviewAssignment имеет терминальную диспозицию: ровно один ReviewOutcome **либо** `CANCELLED`. Иначе finish отклоняется бизнес-ошибкой (это **не** авто-закрытие).
-- **MUST — ABANDONED преобразует pending**: недостигнутые ReviewAssignment закрываются как `INSUFFICIENT_EVIDENCE(reason=abandoned)`, re-entry-блок получает свой outcome, `draft`/`recorded` attempts закрываются без вклада в scoring.
-- **MUST — closure trigger** [OPEN-10, rereview R-5, P0-2/R-4]: второй триггер закрытия ReviewAssignment (наряду с явным `close_review`) — **`abandon`**, а не терминализация вообще. `finish` целей не закрывает: он требует уже пустой pending-set. Правило закрытия — [[evidence]] §4.3, триггер — здесь.
-- **MUST — уникальность терминальной диспозиции** [OPEN-11 закрыт, PD-2026-07-22]: на один ReviewAssignment допускается ровно одна терминальная ветка: ReviewOutcome либо `CANCELLED`. Для ветки outcome существует ровно один ReviewOutcome. Все публичные пути закрытия требуют coarse `expected_session_revision`; проверка fence, outcome/cancellation, causal scoring transition и увеличение ревизии коммитятся одной UoW. Два агента не могут записать конфликтующие диспозиции. Коррекция — только correction-событием, не вторым outcome.
-- **MUST — атомарность**: одной SQLite-транзакцией коммитятся authoritative state + events + outbox; `summary` — engine-generated в той же UoW (агент может передать `--summary-draft`); **Obsidian-проекция post-commit через outbox** (foundation §3.7). Различие FINISHED/ABANDONED — только полнота summary и способ закрытия pending.
+- **MUST — отчёт закрывает всё атомарно** [PD-2026-09-23]: в транзакции `session report` каждый Attempt из `items[]`/`blocks[]` фиксируется как `assessed`, каждый ReviewAssignment, на который ссылается отчёт, получает терминальную диспозицию по вердикту (`evidence@2` `review_outcome_by_verdict`, [[evidence]] §4.3), каждый упомянутый в `reviews_skipped` — `INSUFFICIENT_EVIDENCE` с названной причиной, а любой оставшийся pending — `INSUFFICIENT_EVIDENCE(reason=not_attempted)`. Отдельного pending-set-гейта, проверяемого **до** commit, не существует.
+- **MUST — ABANDONED преобразует pending**: недостигнутые ReviewAssignment закрываются как `INSUFFICIENT_EVIDENCE(reason=abandoned)`; без отчёта Attempt в сессии не было — закрывать, кроме review-целей, нечего.
+- **MUST — closure trigger** [PD-2026-09-23]: терминальная диспозиция ReviewAssignment закрывается ровно одним из триггеров — (1) вердикт отчёта по evidence@2-карте, (2) явный `reviews_skipped` отчёта с причиной, (3) `abandon`. Триггер `replan` (`CANCELLED`) в текущем протоколе недостижим: мид-сессионного перепланирования не существует ([[control]] §4.2). `CANCELLED` остаётся валидной веткой только для replay сессий, записанных под прежним протоколом.
+- **MUST — уникальность терминальной диспозиции**: на один ReviewAssignment — ровно одна терминальная ветка (ReviewOutcome либо, исторически, `CANCELLED`). Коррекция — только correction-событием, не вторым outcome.
+- **MUST — атомарность**: одной SQLite-транзакцией коммитятся `lesson.reported`, все производные факты отчёта, authoritative state + outbox; `summary` берётся из поля `LessonReport.summary` в той же UoW. **Obsidian-проекция post-commit через outbox** (foundation §3.7).
 - **MUST**: терминализация FINISHED и ABANDONED одинаково пересчитывает производные (scores, расписание, XP, проекция) — рассогласованных производных не остаётся.
 
-## 4b. Session Manifest [0.7]
+## 4b. Session Manifest
 
 Манифест — то, что сессия закрепила в момент старта; он делает поведение внутри сессии воспроизводимым, даже если между стартом и завершением активная конфигурация изменилась.
 
-- **MUST — содержимое**: `session_id`, `provider`, `mode`, `pinned_versions` (curriculum, scoring, scheduler, **control**, generation, rubric), **`required_skills[]`** — пары `{skill_name, version}` — и `session_plan_id` со стартовым снимком `{composition_revision: 1, plan_version: 1}`. Manifest неизменяем; живые `SessionPlan`/`DeliveryLedger` хранятся в session aggregate по этой ссылке ([[control]] §4.2). Rendered exercise text не входит в Manifest: он фиксируется отдельным `EXERCISE_RENDERED` перед предъявлением learner prompt.
-- **MUST — композиция в UoW старта** [CTRL-2]: `start` синхронно вызывает `control.compose_session` **до** commit и сохраняет план в той же транзакции. Отдельного шага композиции после старта не существует. `session peek` read-only возвращает следующий шаг и `plan_version`; `session next` при совпавшем `expected_plan_version` атомарно помечает шаг выданным, обновляет ledger, увеличивает версию и публикует `STEP_PRESENTED`; `session replan` использует тот же CAS-токен и увеличивает также `composition_revision` ([[control]] §4.2).
-- **MUST — replan не оставляет pending-сирот** [R-3, RR2-4]: непредъявленный review-шаг, выпавший из новой ревизии, получает `CANCELLED(reason=replanned)` для своего ReviewAssignment **в той же UoW**. Это терминальная отмена, не ReviewOutcome: scoring и scheduler её игнорируют ([[evidence]] §4.3).
-- **MUST — режим занятия** [CTRL-11]: `start` принимает `mode` (`balanced` по умолчанию). Режимы `maintenance`/`re_entry` — единственный путь к занятию без нового материала ([[control]] §4.1), и без параметра это нормативное исключение было недостижимо.
-- **MUST — `required_skills` явные** [0.7, бриф §11]: требуемые навыки перечисляются в манифесте, а не подбираются средой по описанию. Implicit invocation делает поведение невоспроизводимым между Codex и Claude Code и лишает [[scoring]] §5 базы для Tutor Compliance: обязательство «вызван нужный skill нужной версии» проверяемо только против явного списка.
-- **MUST — разрешимость при старте, синхронно до commit** [P0-Q1]: порядок строгий — `resolve` всех `required_skills` → открытие UoW → commit → `SESSION_STARTED`. `start` падает **до** создания сессии, если хоть одна затребованная версия неразрешима ([[adapters]] §4.2). Post-commit consumer `SESSION_STARTED` в [[adapters]] — только аудит уже обеспеченного инварианта, а не сама проверка: проверка по событию произошла бы после создания сессии и нарушила бы это MUST.
-- **MUST — safety не пинится** [П.3]: манифест закрепляет структуру, pinned policies и generation policy, но не safety; `production_eligible` проверяется по active policy при `session next`, bank reuse и `EXERCISE_RENDERED`. `STEP_PRESENTED` без `EXERCISE_RENDERED` восстановим на `resume`: тот же шаг возвращается с той же generation directive. `EXERCISE_RENDERED` без попытки ученика — не evidence и становится reusable только после приёма в банк.
-- **MUST — rubric resolution [П.5, PD-5 A/PD-6 B]**: до сохранения open exercise движок разрешает explicit `rubric:<profile_id>` либо exact default по `(step_type, dimension)` только против rubric-версии из Session Manifest. Конкретный versionless ref, `pinned_rubric_version`, `exercise_form`, applicable criteria, machine-check instances/target surfaces/requirements и `rubric_input_hash` входят в immutable `EXERCISE_RENDERED`/content hash. Unknown/incompatible ref или `PinnedPolicyUnavailable` отклоняет render без active/alias fallback. Specialized writing/source-integration требует explicit profile. Для unrendered targeted `free_conversation` exact default разрешается при assessment и материализуется в assessment event; broad fallback запрещён.
+- **MUST — содержимое**: `session_id`, `provider`, `mode`, `pinned_versions` (curriculum, evidence, lessons, scoring, scheduler, control, generation, obligations) — [PD-2026-09-23] **`rubric@1` больше не пинится сессией**: rubric-конвейер применяется только к placement ([[assessments]]), не к обычным занятиям — и **`required_skills[]`** — `{skill_name, version, content_hash, cli_calls[]}`. Manifest дополнительно закрепляет learner-facing `lesson_profile` и central topic. Manifest неизменяем; advisory-план **не** хранится по ссылке как живой CAS-aggregate — он собирается заново при каждом `LessonBrief` (§4c).
+- **MUST — композиция в UoW старта**: `start` синхронно вызывает `control.compose_plan` **до** commit и вкладывает результат прямо в возвращаемый `LessonBrief.plan` ([PD-2026-09-23] заменяет прежнюю запись отдельного `SessionPlan`-агрегата). Отдельного шага композиции после старта не существует; `resume` пересобирает план тем же вызовом из текущего состояния.
+- **MUST — режим занятия** [CTRL-11]: `start` принимает `mode` (`balanced` по умолчанию). Режимы `maintenance`/`re_entry` — единственный путь к занятию без нового материала ([[control]] §4.1).
+- **MUST — `required_skills` явные** [0.7, бриф §11]: требуемые навыки перечисляются в манифесте, а не подбираются средой по описанию.
+- **MUST — разрешимость при старте, синхронно до commit** [P0-Q1]: порядок строгий — `resolve` всех `required_skills` → открытие UoW → commit → `SESSION_STARTED`. `start` падает **до** создания сессии, если хоть одна затребованная версия неразрешима ([[adapters]] §4.2).
+- **MUST — safety на композиции, не на доставке** [PD-2026-09-23]: `production_eligible` исключает единицы из advisory-плана в момент `compose_plan` — так же, как исключало из прежнего `SessionPlan` ([[control]] §4.1). Отдельной live-проверки перед показом задания больше нет: тьютор ведёт задание в чате свободно, и содержимое, которое он фактически использует, движку видно только постфактум, из `LessonReport.items[].prompt`/`raw_answer`. Это не ослабляет safety-каталог программы — он по-прежнему решает, что войдёт в план и в рекомендации; это честно называет то, что доставку контента вживую движок больше не гейтит, и полагается на постфактум-аудит (`audit-english-tutor`, [[evidence]] §4.2, PD-F).
+
+## 4c. LessonBrief [PD-2026-09-23]
+
+`LessonBrief` (`lesson_brief@1`, `lessons/brief.py::build_brief`) — единственный документ, которым движок открывает занятие. Его возвращают `session start` и `session resume`; `resume` пересобирает **тот же** brief из текущего состояния, а не читает сохранённый черновик — восстановление обрыва чата идёт через контекст Claude Code (`resume`), без локального чекпойнта (PD-B).
+
+- **MUST — состав**: `lesson` (`profile`, `title`, `reason`, `agenda`, `language_envelope`, `duration`) · `central_topic` (`target_ref`, can-do, newness + факты программы для объяснения: `explanation`, `typical_errors`, фреймы с `frame_of`/`carries`, reconstruction text для профиля `drill`) · `reviews_due[]` (`review_id`, `target_ref`, `dimension`, `urgency`, RU-подсказка смысла) · `plan` (advisory шаги `compose_plan`, включая drill-поля) · `learner` (уровни, `known_language`, личный словарь, **реальные** недавние ошибки из `evidence.error_observed`, re-entry статус, сводка последней сессии, предпочтения — поглощает прежний Tutor briefing) · `requirements` (advisory, §4d) · `report_contract` (`report_schema: lesson_report@1`, лимиты из `lessons@2`, `brief_hash`).
+- **MUST — `resume` не теряет обязательств**: незакрытые ReviewAssignment брошенной/не отчитанной сессии остаются в `reviews_due` пересобранного brief; они по-прежнему обязаны получить терминальную диспозицию через отчёт или `abandon`.
+- **MUST — прямой запрос есть согласие**: явные `--profile`/`--topic`/`--theme` на `start` заменяют системную рекомендацию. [PD-2026-09-23] Проверка `--expected-proposal-hash` удалена вместе со стартом-под-CAS: прямой запрос принимается как согласие без сверки хеша устаревшего предложения, автоматическая рекомендация — как и раньше, объявляется тьютором ученику до старта через `session propose`.
+
+## 4d. LessonReport и его приём [PD-2026-09-23]
+
+`LessonReport` (`lesson_report@1`) — единственный документ, которым тьютор атомарно фиксирует весь урок в конце занятия. Полная схема item'ов, кодов отклонения и builders, которые превращают отчёт в события, — [[evidence]] §4.2; здесь — только session-уровневая оркестрация.
+
+- **MUST — два вызова, не поток**: `session check-report` — read-only прогон ещё не записанного отчёта через тот же протокол приёма без побочных эффектов: по каждому item — `accepted`/`rejected` + причина, проекция эффектов (score, contributing, review outcome) и предупреждения (повторный span, неадресованные advisory-требования). `session report` — тот же протокол приёма, но с записью: атомарный коммит всего отчёта + переход сессии в `FINISHED` (§2, §4). Любой отклонённый item **отклоняет отчёт целиком** — ничего не пишется, `check-report` перед записью не обязателен, но рекомендован скиллом.
+- **MUST — commit-последовательность одной UoW** ([[evidence]] §4.2 — точный порядок builders): `lesson.reported` (весь отчёт + `report_hash` + результат валидации — заменяет прежние teaching-снапшоты и session notes как provenance/аудит) → по каждому item в порядке отчёта: `session.step_presented` (`source: lesson_report`) → Attempt-агрегат + `attempt.recorded` (`status: assessed`, `assessment.basis: tutor_verdict`) → `evidence.added` (если contributing) → факты оси `automaticity` → `evidence.error_observed` на каждую ошибку item'а → по referenced review — `review.outcome` (либо явный skip → `INSUFFICIENT_EVIDENCE`) → по блокам — один `attempt.recorded`+`evidence.added` с `form: drill_block` → по `lexicon[]` — `learner.lexicon_entry_added` → `session.finished`.
+- **MUST — requirements advisory, не блокирующие** [PD-2026-09-23, PD-G]: `lessons@2.requirements` (адресована ли центральная тема brief'а, адресованы ли назначенные повторения) — **только предупреждения** в ответе `check-report`/`report`. Ни `check-report`, ни `report` не отклоняют отчёт за то, что тема или повторение не были адресованы; единственная причина полного отказа — хотя бы один `rejected` item ([[evidence]] §4.2 — коды отклонения).
+- **MUST — без session-revision токена**: `report` не принимает `--expected-session-revision` (§2). Повторный вызов с тем же `--idempotency-key` возвращает кэшированный результат; вызов на уже терминальную сессию — стабильная ошибка терминальности.
 
 ## 5. Публичный API и события
 
 | Операция / Событие | Тип | Что делает |
 |---|---|---|
-| `start(duration?, provider, mode?)` | API | создаёт сессию + Session Manifest (pinned versions + `required_skills` + план композиции) |
-| `resume(session_id)` | API | полное состояние сессии + tutor briefing ([[../flows/continuation]]) |
+| `propose(duration?, profile?, topic?, theme?)` | API (read-only) | возвращает LessonProposal; ничего не резервирует и не меняет |
+| `start(duration?, provider, mode?, profile?, topic?, theme?)` | API | создаёт сессию + Session Manifest (pinned versions + `required_skills` + central topic + advisory-план); возвращает `{session_id, brief}` |
+| `resume(session_id)` | API | до attach разрешает точные `(skill_name, version, content_hash)`, затем возвращает полное состояние + пересобранный **тот же** LessonBrief ([[../flows/continuation]]) |
+| `check_report(session_id, report)` | API (read-only) | прогоняет LessonReport через протокол приёма без записи; per-item accepted/rejected + эффекты + предупреждения (§4d) |
+| `report(session_id, report, idempotency_key)` | API (mutating) | атомарный коммит всего LessonReport + `session.finished` (§4d) |
 | `abandon(session_id, expected_session_revision)` | API | идемпотентная терминализация без summary |
-| `finish(session_id, expected_session_revision, summary_draft?)` | API | проверка postconditions → атомарная терминализация |
-| `peek_next_step(session_id)` | API (read-only) | следующий шаг + текущий `plan_version`, без факта выдачи |
-| `claim_next_step(session_id, expected_session_revision, expected_plan_version, idempotency_key)` | API (mutating, CAS) | выдача шага по протоколу [[control]] §4.2; возвращает bank item или generation directive |
-| `record_rendered_exercise(session_id, expected_session_revision, step_id, exercise_instance, idempotency_key)` | API (mutating) | фиксирует иммутабельный rendered-exercise снапшот до предъявления ученику [П.3] |
-| `replan(session_id, expected_session_revision, expected_plan_version, idempotency_key)` | API (mutating, CAS) | новая композиционная ревизия остатка бюджета |
 | `SESSION_STARTED` / `FINISHED` / `ABANDONED` / `SESSION_STALE_ABANDONED` | publishes | lifecycle-факты |
-| `EXERCISE_RENDERED` | publishes | rendered-exercise снапшот, привязанный к `step_id`; источник для исторических попыток/replay [П.3, PD-1 A] |
-| `EXERCISE_ACCEPTED` / `EXERCISE_REJECTED` / `EXERCISE_RETIRED` | publishes | lifecycle банка упражнений; приём только после оценённой попытки или maintainer fast-path [П.3, PD-2 A] |
-| `ATTEMPT_STATE_CHANGED` | publishes | draft/recorded/assessed |
+| `lesson.reported` (`LESSON_REPORTED`) | publishes | весь отчёт + `report_hash` + результат валидации; provenance/аудит; заменяет teaching-снапшоты и session notes [PD-2026-09-23] |
+| `session.step_presented` (`STEP_PRESENTED`) | publishes | по каждому item'у отчёта, `source: lesson_report`; факт того, что задание дошло до тьютора, зафиксированный постфактум ([[../glossary]]) |
 | `attach_agent(session_id, provider, skills)` | API | фиксирует подключение агента к сессии |
 | `AGENT_ATTACHED` | publishes | к сессии подключился агент: провайдер, версии skills, момент ([[../flows/continuation]]) |
 
-- **MUST — session facade не второй владелец алгоритма**: `peek_next_step`, `claim_next_step` и `replan` здесь — транзакционная CLI-фасада lessons; она без собственной сортировки и бюджетных правил делегирует одноимённым операциям [[control]] §3b. Нормативное поведение композиции и CAS живёт только в control.
-- **MUST — владелец `AGENT_ATTACHED` — lessons** [P0-5]: событие сессионное, поэтому живёт здесь, а не в audit; audit его только читает. Flow [[../flows/continuation]] требовал события, но ни один owner его не публиковал — обязательство flow без владельца не исполнимо.
-- **MUST — подключение фиксируется теми же командами, что и вход в сессию** [R-3]: `--provider` обязателен у `session start` и `session resume`, и `attach_agent` вызывается **в той же UoW**, что и сама операция — **оба** пути публикуют `AGENT_ATTACHED` для своего провайдера (`start` — стартового, `resume` — возобновляющего). Отдельной CLI-команды `session attach` **нет** намеренно: она позволила бы объявить агента подключённым к сессии, которую он не загрузил, и создать состояние, где `AGENT_ATTACHED` есть, а briefing агент не получал. Смена агента на холодную — это `resume` с новым `--provider`.
-- **MUST — session notes untrusted** [P0-5]: заметка агента (`--note` при любой фиксации) — свободный текст с автором и меткой времени; она **не evidence**, не влияет на scoring и не участвует в mastery. Схему и хранение владеет [[evidence]] §3 вместе с attempt; здесь — только факт, что фиксация может её нести.
+- **MUST — session facade не второй владелец алгоритма композиции**: `start`/`resume` вызывают `control.compose_plan` за готовым advisory-планом; нормативное поведение композиции (буксеты, классификация, saturation, diversity, availability) живёт только в [[control]].
+- **MUST — владелец `AGENT_ATTACHED` — lessons** [P0-5]: событие сессионное, поэтому живёт здесь, а не в audit; audit его только читает.
+- **MUST — подключение фиксируется теми же командами, что и вход в сессию** [R-3]: `--provider` обязателен у `session start` и `session resume`, и `attach_agent` вызывается **в той же UoW**, что и сама операция. Отдельной CLI-команды `session attach` **нет** намеренно.
+- **MUST — exact skill preflight на resume [PD-2026-07-23]**: до `AGENT_ATTACHED` каждая тройка `(skill_name, version, content_hash)` из Manifest должна разрешиться в active package или immutable archive. Промах не мутирует сессию и направляет к `skills sync`.
+- **MUST — предпочтения в brief** [PD-2026-09-22, синхронизировано PD-2026-09-23]: `start` и `resume` включают действующий снимок `LearnerPreferences` как `brief.learner.preferences` ([[learner]] §4a) в том же документе.
 
 ## 6. CLI-поверхность
 
 | Команда | Что делает |
 |---|---|
-| `trainer session start [--duration N] --provider X [--mode balanced\|maintenance\|re_entry] --format json` | старт или конфликт с `allowed_actions`; фиксирует `AGENT_ATTACHED` для стартового провайдера |
-| `trainer session next --session ID --expected-session-revision R --expected-plan-version V --idempotency-key K --format json` | **выдаёт** следующий шаг, фиксирует `STEP_PRESENTED`, возвращает новые `session_revision` и `plan_version`; идемпотентна |
-| `trainer session peek --session ID --format json` | показывает следующий шаг и текущие `session_revision`/`plan_version`, ничего не меняя |
-| `trainer session replan --session ID --expected-session-revision R --expected-plan-version V --idempotency-key K --format json` | пересборка остатка: `composition_revision + 1`, `plan_version + 1`; выпавшие непредъявленные review-цели получают `CANCELLED` в той же UoW ([[control]] §4.2) |
-| `trainer session resume --session ID --provider X --format json` | состояние + briefing + notes; фиксирует `AGENT_ATTACHED` |
+| `trainer session propose [--duration-minutes N] [--profile P] [--topic ID] [--theme TEXT] --format json` | read-only название, причина, agenda, language envelope и `proposal_hash` |
+| `trainer session start [--duration-minutes N] --provider X [--mode balanced\|maintenance\|re_entry] [--profile P] [--topic ID] [--theme TEXT] --format json` | старт; возвращает `{session_id, brief}`. [PD-2026-09-23] `--expected-proposal-hash` удалён |
+| `trainer session resume --session ID --provider X --format json` | состояние + пересобранный LessonBrief; фиксирует `AGENT_ATTACHED` |
+| `trainer session check-report --session ID --file report.json --format json` | read-only проверка LessonReport до записи: per-item accepted/rejected + причины + эффекты + предупреждения |
+| `trainer session report --session ID --file report.json --idempotency-key K --format json` | атомарная запись всего отчёта + `session.finished`; отклонённый хотя бы один item → отказ целиком, без `--expected-session-revision` |
 | `trainer session abandon --session ID --expected-session-revision R` | идемпотентная терминализация |
-| `trainer session finish --session ID --expected-session-revision R [--summary-draft FILE]` | завершение с postconditions |
-| `trainer exercise rendered --session ID --expected-session-revision R --step STEP_ID --input FILE --idempotency-key K --format json` | фиксация rendered-exercise снапшота до предъявления ученику; возвращает `exercise_instance_id` |
-| `trainer attempt record --session ID --expected-session-revision R --step STEP_ID [--exercise-instance EXERCISE_ID] --input FILE [--note "..."]` | фиксация attempt по выданному шагу; structured-задачи ссылаются на сохранённый exercise-снапшот; `--note` — untrusted-заметка ([[evidence]] §3) |
+| `trainer session status --session ID --format json` | read-only снимок активной сессии (`cli/app.py::session_status`) |
+
+[PD-2026-09-23] Удалены (пошаговая доставка): `session next/peek/replan/finish`, `teaching rendered`, `exercise rendered/prepare/render-prepared`, `attempt record/record-block/finalize`, `observed record`, `review close`.
 
 Ошибки: `error_code` + причины + `allowed_actions` + `next_action`; отдельно бизнес-postconditions и lifecycle/concurrency/idempotency ([[../flows/session]]).
 
 ## 7. Границы
 
-- **depends on**: kernel (UoW, CAS, idempotency, outbox), evidence (attempt/outcome), scheduler (манифест, перепланирование), scoring (пересчёт), curriculum (рекомендации, pinned versions), learner (briefing, XP).
+- **depends on**: kernel (UoW, CAS, idempotency, outbox), evidence (attempt/evidence/review builders отчёта), control (advisory `compose_plan`), scheduler (due-повторения в brief), scoring (пересчёт), curriculum (рекомендации, pinned versions), learner (brief, XP, lexicon).
 - **events published**: см. §5.
 - **consumed by**: cli, adapters/skills, memory (проекция на терминализации), audit.
 
 ## 8. Открытые вопросы
 
-Закрывает **OPEN-10** и **OPEN-11**: Attempt/session lifecycle, терминализация, uniqueness и coarse optimistic session fence реализованы. Числовой порог stale остаётся versioned tunable и калибруется по эксплуатации, но контракт не открыт.
+Закрывает **OPEN-10** и **OPEN-11**: Attempt/session lifecycle, терминализация, uniqueness и session fence реализованы под brief/report протоколом. Точный триггер `STARTED → IN_PROGRESS` (подключение тьютора против первого отчёта) и это разбиение реконструируются в ходе реализации (W2) — здесь описана целевая форма перехода, владелец сверит её с кодом после сдачи волны.
 
 ## История изменений
 
+- **2026-09-23**: [PD-2026-09-23] переход на протокол «задание → отчёт»: §2–§6 переписаны — жизненный цикл сессии переводит в FINISHED только `LessonReport`; Attempt рождается сразу `assessed`; пошаговая доставка (`next/peek/replan`, teaching/exercise rendering, `attempt record[-block]/finalize`, `observed record`, `review close`) удалена; session fence сужен до `resume`/`abandon`; добавлены §4c LessonBrief и §4d LessonReport; CLI-поверхность заменена на `propose/start/resume/check-report/report/abandon/status`. Requirements объявлены advisory (PD-G). Safety проверяется на композиции плана, не на доставке контента — постфактум-аудит вместо live-гейта.
+- **2026-09-22 (3)**: [PD-2026-09-22] §4b дополнен: rubric-facing `step_type` формы, которой нет в `allowed_step_types` закреплённой rubric, разрешается при рендере и сохраняется в `EXERCISE_RENDERED` полем `rubric_step_type` (входит в content hash; отсутствует у форм, которые rubric перечисляет сама). Без него `timed_writing`/`reconstruction` рендерились, но не могли быть оценены. *(Историческое: `EXERCISE_RENDERED` и rubric-resolution занятий ретайрены [PD-2026-09-23].)*
+- **2026-09-22 (2)**: [PD-2026-09-22] нормативный порядок шага сокращён до `session next → exercise rendered → показ → attempt record [observations] [--close-review]`: `session peek` обязателен только после `resume`/конфликта, `exercise prepare`/`render-prepared` объявлены MAY, `attempt finalize`/`review close` — fallback. Ответ `session next` дополнен `composition_revision` и `steps_remaining`. *(Историческое: весь пошаговый протокол ретайрен [PD-2026-09-23].)*
+- **2026-09-22**: [PD-2026-09-22] добавлены `attempt record --latency-ms`, `attempt record-block` (один Attempt на дрилл-блок по тому же порядку `peek → next → exercise rendered → показ → фиксация`), `briefing.preferences` на start/resume и требование хранить `declared_limit_seconds` timed-формы внутри immutable `EXERCISE_RENDERED`. Профиль `drill` доступен через существующий `session start --profile`.
+- **2026-07-24**: [PD-2026-07-24] добавлены private exercise preparation и learner-bridge `turn submit`; draft не меняет learner state и материализуется только после совпавшего delivered candidate. *(Историческое: private preparation ретайрена вместе с рендерингом [PD-2026-09-23].)*
+- **2026-07-23**: [PD-2026-07-23] добавлены LessonProposal/LessonArc, `teaching rendered`, возврат актуальной дуги/teaching/known-language в status/resume и нормативный порядок `peek → next → render → display → attempt`.
 - **2026-07-22 (3)**: [PD-2026-07-22] принят coarse session fence: все публичные мутации требуют `expected_session_revision`, `next/replan` сохраняют второй `plan_version`; stale threshold вынесен в `lessons@1`.
 - **2026-07-22 (2)**: П.5 применена [PD-2026-07-22] — rubric resolution при рендере: explicit/exact-default ref против pinned rubric-версии манифеста, rubric_input_hash в EXERCISE_RENDERED, без active/alias fallback; unrendered conversation — default при assessment.
 - **2026-07-22**: фазовые теги `[mvp]`/`[post-mvp]` сняты [PD-2026-07-22]: спека описывает одну цель продукта, порядок и статус — только в roadmap (Принцип 4).

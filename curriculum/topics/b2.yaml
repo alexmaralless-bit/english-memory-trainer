@@ -9,7 +9,7 @@ topics:
       soft: [written-production.cause-effect-explanation]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: tail
-    lexicon: [word.if, word.result, word.because]
+    lexicon: [word.if, word.result, word.because, chunk.third-conditional-retrospective.but-for-would-have, chunk.third-conditional-retrospective.could-have-if, chunk.third-conditional-retrospective.could-not-have, chunk.third-conditional-retrospective.had-not-inversion, chunk.third-conditional-retrospective.had-we-inversion, chunk.third-conditional-retrospective.if-had-would-have, chunk.third-conditional-retrospective.if-not-past-perfect, chunk.third-conditional-retrospective.if-only-had, chunk.third-conditional-retrospective.it-would-have-if, chunk.third-conditional-retrospective.might-have-if, chunk.third-conditional-retrospective.might-not-have-if, chunk.third-conditional-retrospective.otherwise-would-have, chunk.third-conditional-retrospective.should-have-if, chunk.third-conditional-retrospective.would-have-been-if, chunk.third-conditional-retrospective.would-have-done-if, chunk.third-conditional-retrospective.would-not-have]
     contexts: [incident-retrospective, missed-deadline-review]
     typical_errors:
       - "Using would in the if-clause (If we would have tested), mirroring Russian conditional symmetry."
@@ -31,7 +31,7 @@ topics:
       soft: [grammar.present-perfect.duration]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: tail
-    lexicon: [word.if, word.result, word.cause]
+    lexicon: [word.if, word.result, word.cause, chunk.mixed-conditionals-consequences.had-not-would, chunk.mixed-conditionals-consequences.if-had-been-would, chunk.mixed-conditionals-consequences.if-not-did-would, chunk.mixed-conditionals-consequences.if-were-would-have, chunk.mixed-conditionals-consequences.might-not-have-if-had, chunk.mixed-conditionals-consequences.past-present-would, chunk.mixed-conditionals-consequences.present-past-would-have, chunk.mixed-conditionals-consequences.would-apply-if-was, chunk.mixed-conditionals-consequences.would-be-different-if-had, chunk.mixed-conditionals-consequences.would-know-if-had-told, chunk.mixed-conditionals-consequences.would-not-have-if-had-not, chunk.mixed-conditionals-consequences.would-still-need-if-had-not, chunk.mixed-conditionals-consequences.would-still-use-if-not-were, chunk.mixed-conditionals-consequences.would-understand-if-had]
     contexts: [current-system-consequence, career-decision-reflection]
     typical_errors:
       - "Using the same time reference in both clauses when the condition is past but the consequence is present."
@@ -158,7 +158,7 @@ topics:
       soft: [grammar.modals.deduction-obligation]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: tail
-    lexicon: [chunk.according-to, word.result, word.reason]
+    lexicon: [chunk.according-to, word.result, word.reason, chunk.passive-reporting-structures.appears-to, chunk.passive-reporting-structures.appears-to-have, chunk.passive-reporting-structures.are-thought-to, chunk.passive-reporting-structures.is-assumed-to, chunk.passive-reporting-structures.is-believed-to-have, chunk.passive-reporting-structures.is-claimed-to-have, chunk.passive-reporting-structures.is-documented-to, chunk.passive-reporting-structures.is-known-to-have, chunk.passive-reporting-structures.is-reported-to, chunk.passive-reporting-structures.is-said-to, chunk.passive-reporting-structures.it-has-been-reported-that, chunk.passive-reporting-structures.it-is-expected-that, chunk.passive-reporting-structures.it-is-understood-that, chunk.passive-reporting-structures.it-was-reported-that]
     contexts: [research-summary, incident-communication]
     typical_errors:
       - "Using It is said that without a real source, copying an impersonal Russian reporting pattern."
@@ -180,7 +180,7 @@ topics:
       soft: [grammar.past-perfect.sequence]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: tail
-    lexicon: []
+    lexicon: [chunk.inversion-emphasis.at-no-point-should, chunk.inversion-emphasis.hardly-had-the-team, chunk.inversion-emphasis.little-did-we-know, chunk.inversion-emphasis.never-have-i-seen, chunk.inversion-emphasis.no-sooner-had-we, chunk.inversion-emphasis.not-only-did-we, chunk.inversion-emphasis.only-after-did-we, chunk.inversion-emphasis.only-by-testing-did-we, chunk.inversion-emphasis.only-then-did-they, chunk.inversion-emphasis.rarely-have-we, chunk.inversion-emphasis.scarcely-had-i-finished, chunk.inversion-emphasis.so-critical-was-the-issue, chunk.inversion-emphasis.under-no-circumstances-should]
     contexts: [formal-recommendation, incident-emphasis]
     typical_errors:
       - "Keeping normal statement order after Never or Only then because Russian does not require auxiliary inversion."
@@ -202,7 +202,7 @@ topics:
       soft: [us-tech.incident-root-cause]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: tail
-    lexicon: [word.reason, word.cause, word.result]
+    lexicon: [word.reason, word.cause, word.result, chunk.modal-perfect-speculation.cannot-have-received, chunk.modal-perfect-speculation.cant-you-have-checked, chunk.modal-perfect-speculation.could-have-been, chunk.modal-perfect-speculation.could-not-have-known, chunk.modal-perfect-speculation.it-cant-have-been, chunk.modal-perfect-speculation.may-have-retried, chunk.modal-perfect-speculation.might-have-been, chunk.modal-perfect-speculation.might-have-failed, chunk.modal-perfect-speculation.might-not-have-noticed, chunk.modal-perfect-speculation.must-have-sent, chunk.modal-perfect-speculation.should-not-have-relied, chunk.modal-perfect-speculation.would-have-worked, chunk.modal-perfect-speculation.you-should-have-checked]
     contexts: [fault-investigation, missed-appointment-explanation]
     typical_errors:
       - "Using must have for an obligation in the past instead of a strong inference."
@@ -224,7 +224,7 @@ topics:
       soft: [grammar.passive.expanded-process]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: tail
-    lexicon: [word.because, word.result]
+    lexicon: [word.because, word.result, chunk.participle-clauses-compression.after-fixing-the-cache, chunk.participle-clauses-compression.considering-the-budget, chunk.participle-clauses-compression.excluding-empty-records, chunk.participle-clauses-compression.given-the-constraints, chunk.participle-clauses-compression.having-identified-the-issue, chunk.participle-clauses-compression.having-run-the-load-test, chunk.participle-clauses-compression.having-verified, chunk.participle-clauses-compression.once-deployed, chunk.participle-clauses-compression.running-on-smaller, chunk.participle-clauses-compression.the-file-saved, chunk.participle-clauses-compression.the-function-added, chunk.participle-clauses-compression.the-report-released]
     contexts: [technical-report, formal-process-description]
     typical_errors:
       - "Creating a dangling participle whose understood actor differs from the main-clause subject."
@@ -246,7 +246,7 @@ topics:
       soft: [grammar.inversion.emphasis]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: tail
-    lexicon: [word.reason, word.result]
+    lexicon: [word.reason, word.result, chunk.cleft-sentences-focus.all-we-did-was, chunk.cleft-sentences-focus.it-is-the-design-who, chunk.cleft-sentences-focus.it-is-the-logging, chunk.cleft-sentences-focus.it-was-the-timeout, chunk.cleft-sentences-focus.it-was-the-token, chunk.cleft-sentences-focus.the-issue-was-that, chunk.cleft-sentences-focus.the-reason-failure-is, chunk.cleft-sentences-focus.the-reason-people-left, chunk.cleft-sentences-focus.what-matters-most-is, chunk.cleft-sentences-focus.what-users-need, chunk.cleft-sentences-focus.what-we-changed-was, chunk.cleft-sentences-focus.what-we-need-is]
     contexts: [root-cause-emphasis, decision-clarification]
     typical_errors:
       - "Copying Russian free word order instead of building the full It was ... that structure."
@@ -299,6 +299,54 @@ topics:
       - "A semi-automated review combines scripted checks with human judgment."
     explanation_language: ru-allowed
     mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 80, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 45, retention_confirmations: 2}}
+
+  - id: grammar.articles.abstract-and-of-phrases
+    title: "Abstract nouns and the N of N: when the makes an idea specific"
+    cefr: B2
+    track: grammar-engine
+    module: b2.2-advanced-grammar-and-style
+    can_do: "Choose zero article or the with abstract nouns and control the pattern the N of N in formal and academic writing."
+    advisory_prerequisites:
+      strong: [grammar.articles.generic-statements]
+      soft: [word-formation.academic-nominalization]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: core
+    lexicon: [word.accuracy, word.experience, chunk.according-to, chunk.articles-abstract-and-of-phrases.as-a-result-of-x, chunk.articles-abstract-and-of-phrases.education-is-the-key-to-a-better-job, chunk.articles-abstract-and-of-phrases.in-terms-of-x, chunk.articles-abstract-and-of-phrases.on-the-other-hand, chunk.articles-abstract-and-of-phrases.poverty-remains-a-serious-problem, chunk.articles-abstract-and-of-phrases.technology-has-changed-the-way-we-work, chunk.articles-abstract-and-of-phrases.the-development-of-x, chunk.articles-abstract-and-of-phrases.the-impact-of-x-on-x, chunk.articles-abstract-and-of-phrases.the-importance-of-x, chunk.articles-abstract-and-of-phrases.the-majority-of-x, chunk.articles-abstract-and-of-phrases.the-number-of-x, chunk.articles-abstract-and-of-phrases.the-rise-of-x, chunk.articles-abstract-and-of-phrases.the-role-of-x-in-x, chunk.articles-abstract-and-of-phrases.the-technology-behind-x]
+    contexts: [formal-report, research-summary]
+    typical_errors:
+      - "Adding the before an abstract noun used generically (The knowledge is important) when the general concept needs zero article."
+      - "Dropping the before an abstract noun that has been narrowed by an of-phrase (Importance of the result is clear) instead of marking the whole noun phrase with the."
+      - "Treating research, information, and evidence as countable in academic writing (a research, an evidence) instead of using the fixed uncountable form."
+    examples:
+      - "Accuracy matters more than speed in this pipeline."
+      - "The accuracy of the second model was significantly higher."
+    core_points:
+      - "An abstract noun used generically, as a concept in itself, takes zero article: accuracy matters, experience helps, knowledge grows."
+      - "The same abstract noun becomes specific and takes the once it is narrowed by an of-phrase or another modifier: the accuracy of the model, the experience of the team."
+      - "The N of N pattern is the standard academic way to attach one abstract or technical noun to another without a chain of modifiers before the noun."
+    contrasts:
+      - "Accuracy matters. / The accuracy of the model matters.: accuracy alone is the general concept; the accuracy of the model narrows it to one measured value."
+      - "Experience helps here. / The experience of the senior engineer helped here.: experience in general contrasts with one specific person's experience."
+      - "Knowledge is not static. / The knowledge gained from this project informed the next release.: the abstract concept contrasts with one particular, described body of knowledge."
+      - "Research shows a clear trend. / The research conducted last year shows a clear trend.: research as an activity in general contrasts with one specific, identified study."
+      - "Importance is often overstated. / The importance of the result became clear later.: importance alone contrasts with importance narrowed by the of-phrase."
+      - "Complexity increases with scale. / The complexity of the new architecture increases with scale.: complexity as a general property contrasts with one specific system's complexity."
+      - "Evidence supports the claim. / The evidence from the second trial supports the claim.: evidence in general contrasts with one identified, source-narrowed body of evidence."
+    scope_limits:
+      - "This topic focuses on abstract nouns typical of formal and academic writing; concrete generic nouns are covered under grammar.articles.generic-statements."
+      - "It does not attempt to list every abstract noun in English, only the productive zero-article-to-the-plus-of-phrase pattern."
+    error_patterns:
+      - learner_form: "The accuracy is more important than speed, in general."
+        correction: "Accuracy is more important than speed, in general."
+        explanation: "A general statement about accuracy as a concept takes zero article; the appears only once the noun is narrowed."
+      - learner_form: "Importance of the result is clear from the data."
+        correction: "The importance of the result is clear from the data."
+        explanation: "Once an of-phrase narrows an abstract noun to one specific instance, the whole noun phrase needs the."
+      - learner_form: "We collected an evidence from three trials."
+        correction: "We collected evidence from three trials."
+        explanation: "Evidence is uncountable in English; it never takes a, whether the statement is general or narrowed by an of-phrase."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 75, independent_attempts: 2}, controlled_production: {active_threshold: 78, independent_attempts: 2}, spontaneous_production: {active_threshold: 78, independent_attempts: 2}, transfer: {active_threshold: 80, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 45, retention_confirmations: 2}}
 
   - id: reading.argument-structure
     cefr: B2

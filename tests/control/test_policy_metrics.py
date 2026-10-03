@@ -8,7 +8,7 @@ from typing import Any
 
 import yaml
 
-from english_trainer.control.metrics import metrics
+from english_trainer.control.metrics import _terminal_session_shares, metrics
 from english_trainer.kernel.clock import FixedClock, SeededRandomSource
 from english_trainer.kernel.envelopes import make_event
 from english_trainer.kernel.ids import new_ulid
@@ -144,6 +144,114 @@ def add_terminal_plan(
             expected_revision=0,
         )
         uow.append([event(clock, random_source, "session.finished", {}, session_id)])
+
+
+def add_report_session(
+    store: EventStore,
+    clock: FixedClock,
+    random_source: SeededRandomSource,
+    session_id: str,
+    *,
+    mode: str,
+    units: list[dict[str, Any]],
+) -> None:
+    """A terminal report-protocol session (control 4.10 [PD-2026-09-23]): a
+    ``lesson.reported`` event plus its own ``session.step_presented`` facts
+    (``source: lesson_report``), never a filled ledger -- exactly what
+    ``lessons.report.commit_report`` writes. Each ``units`` entry is either a
+    single item (``target_ref``, ``dimension``, optional ``review_id``) or a
+    drill block (adds ``item_ids``, a list of member ids; ``review_id`` then
+    addresses the whole block)."""
+    events = []
+    for index, unit in enumerate(units):
+        payload: dict[str, Any] = {
+            "session_id": session_id,
+            "source": "lesson_report",
+            "targets": [{"target_ref": unit["target_ref"], "dimension": unit["dimension"], "role": "target"}],
+        }
+        if unit.get("review_id") is not None:
+            payload["review_assignment_id"] = unit["review_id"]
+        item_ids = unit.get("item_ids")
+        if item_ids is not None:
+            payload["block_id"] = unit.get("block_id", f"block-{index}")
+            payload["item_ids"] = item_ids
+        else:
+            payload["item_id"] = unit.get("item_id", f"item-{index}")
+        events.append(event(clock, random_source, "session.step_presented", payload, session_id))
+    events.append(event(clock, random_source, "lesson.reported", {"session_id": session_id}, session_id))
+    events.append(event(clock, random_source, "session.finished", {}, session_id))
+    with UnitOfWork(store, clock) as uow:
+        uow.save_aggregate(
+            "session_plan",
+            f"p-{session_id}",
+            {"session_id": session_id, "mode": mode, "ledger": {}},
+            expected_revision=0,
+        )
+        uow.append(events)
+
+
+def test_report_protocol_sessions_compute_shares_from_reported_items(tmp_path: Path) -> None:
+    store = make_store(tmp_path)
+    clock = FixedClock(NOW)
+    random_source = SeededRandomSource(5)
+    be = ("grammar.be.identity", "controlled_production")
+    poss = ("grammar.pronouns.possessives", "controlled_production")
+
+    # Lesson 1 (seed): the only reported unit is a first-ever presentation of
+    # `be` -- no evidence.added/step_presented for it exists yet, so it is
+    # growth. No review is addressed.
+    add_report_session(
+        store,
+        clock,
+        random_source,
+        "seed",
+        mode="balanced",
+        units=[{"target_ref": be[0], "dimension": be[1]}],
+    )
+
+    # Lesson 2 (main): one review item on `be` (already presented by "seed",
+    # so NOT growth, but IS review) plus a 3-member drill block on `poss`
+    # (never presented before -- growth -- and addresses no review). Total
+    # reported units = 1 + 3 = 4 (a block counts once PER MEMBER, not once
+    # for the whole block).
+    add_report_session(
+        store,
+        clock,
+        random_source,
+        "main",
+        mode="balanced",
+        units=[
+            {"target_ref": be[0], "dimension": be[1], "review_id": "rv-1", "item_id": "rv-item"},
+            {
+                "target_ref": poss[0],
+                "dimension": poss[1],
+                "item_ids": ["b1", "b2", "b3"],
+                "block_id": "blk-1",
+            },
+        ],
+    )
+
+    # An empty report (no session.step_presented facts) contributes no sample.
+    add_report_session(store, clock, random_source, "empty", mode="balanced", units=[])
+
+    # A historic (pre-report) ledger session in the SAME store: it carries no
+    # lesson.reported event, so it must still be read from its filled ledger,
+    # entirely unaffected by the new report-derived branch.
+    add_terminal_plan(store, clock, random_source, "ledger-1", mode="balanced", review=300, growth=700)
+
+    samples = {str(sample["session_id"]): sample for sample in _terminal_session_shares(store)}
+
+    assert set(samples) == {"seed", "main", "ledger-1"}  # "empty" contributes no sample
+
+    assert samples["seed"]["review_bp"] == 0
+    assert samples["seed"]["growth_bp"] == 10000  # its one unit is a first exposure
+
+    assert samples["main"]["review_bp"] == 2500  # 1 review unit / 4 total
+    assert samples["main"]["growth_bp"] == 7500  # 3 growth block-members / 4 total
+
+    assert samples["ledger-1"]["review_bp"] == 3000  # unchanged ledger formula: 300/1000
+    assert samples["ledger-1"]["growth_bp"] == 7000  # 700/1000
+    store._conn.close()
 
 
 def test_presented_metrics_and_alerts_use_fact_with_hysteresis(tmp_path: Path) -> None:

@@ -1,7 +1,14 @@
-"""Deterministic tutor-swap integration scenario (roadmap 2.7).
+"""Deterministic tutor-swap integration scenario (roadmap 2.7) on the
+brief/report protocol [PD-2026-09-23].
 
-The passing test proves every continuation property exposed by the public
-APIs, including complete briefings and optimistic session revision fencing.
+Tutor A starts a lesson that owns a due review and runs it in chat -- nothing
+is written between items, so a lost chat leaves an active session whose
+lesson brief is rebuilt from engine state alone. Tutor B resolves the pinned
+skill without any chat context, resumes, receives the SAME brief (same
+``brief_hash``), and files the one report that settles the review and
+finishes the session. A stale tutor that tries to write afterwards is refused
+by the session fence / lifecycle, and untrusted report text never moves a
+score.
 """
 
 from __future__ import annotations
@@ -15,27 +22,24 @@ import pytest
 import yaml
 
 from english_trainer.adapters.skills import resolve
-from english_trainer.control.errors import PlanVersionConflict
 from english_trainer.curriculum.service import activate_version, register_version
-from english_trainer.evidence.attempts import record_attempt
-from english_trainer.evidence.reviews import close_review, pending_assignments
+from english_trainer.evidence.reviews import pending_assignments
 from english_trainer.kernel.clock import FixedClock, SeededRandomSource
 from english_trainer.kernel.encoding import canonical_json
+from english_trainer.kernel.errors import SessionRevisionConflict
 from english_trainer.kernel.policy import PolicyRegistry
-from english_trainer.kernel.session_fence import current_session_revision
 from english_trainer.kernel.store import EventStore, connect, migrate
-from english_trainer.lessons.delivery import next_step, peek_step
-from english_trainer.lessons.rendering import record_rendered_exercise
-from english_trainer.lessons.resume import resume_session
+from english_trainer.lessons.report import commit_report
+from english_trainer.lessons.resume import attach_agent, resume_session
 from english_trainer.lessons.sessions import (
     EVENT_AGENT_ATTACHED,
     SessionPrecondition,
-    finish_session,
-    get_plan,
+    abandon_session,
     get_session,
     start_session,
 )
 from english_trainer.scoring.engine import fold_scores
+from tests.lessons.report_support import enable_reports, item, lexicon_ports, report, reported_session
 
 REPO = Path(__file__).resolve().parents[2]
 EPOCH = datetime(2026, 7, 22, 9, 30, tzinfo=UTC)
@@ -89,27 +93,52 @@ PROGRAM: dict[str, Any] = {
     ],
 }
 
-EXERCISE = {
-    "prompt": "Choose the form of be: I ___ an engineer.",
-    "answer_key": ["am"],
-    "provenance": {"origin": "authored"},
+REQUIRED_LEARNER_FIELDS = {
+    "active_topics",
+    "recent_errors",
+    "known_language",
+    "personal_lexicon",
+    "re_entry",
+    "due_backlog",
+    "preferences",
 }
 
-REQUIRED_BRIEFING_FIELDS = {
-    "active_topics",
-    "top_errors",
-    "recent_vocabulary",
-    "recent_chunks",
-    "re_entry",
-    "recommendations",
-    "last_session_summary",
-}
+_SKILL_TEXT = """---
+name: run-english-session
+version: "1"
+description: "Run a lesson from the brief and file one report."
+required_inputs:
+  - "--provider"
+forbidden_actions:
+  - "не выставлять score самому"
+cli_calls:
+  - session.start
+  - session.report
+outputs:
+  - "lesson report"
+postconditions:
+  - "session FINISHED or ABANDONED"
+---
+
+## Steps
+
+1. `trainer session start --provider <id>`
+"""
 
 
 def _policy(name: str) -> dict[str, Any]:
     loaded = yaml.safe_load((REPO / "curriculum" / "policies" / name).read_text(encoding="utf-8"))
     assert isinstance(loaded, dict)
     return loaded
+
+
+def _agent_skills(root: Path) -> Path:
+    """A pinned skill snapshot of our own -- the scenario must not depend on the
+    live canon, which evolves independently."""
+    skill_dir = root / "agent-skills" / "run-english-session"
+    skill_dir.mkdir(parents=True, exist_ok=True)
+    (skill_dir / "SKILL.md").write_text(_SKILL_TEXT, encoding="utf-8")
+    return root / "agent-skills"
 
 
 def _activate_test_program(
@@ -133,112 +162,7 @@ def _activate_test_program(
     ):
         registry.register(kind, policy_version, _policy(filename))
         registry.activate(kind, policy_version)
-
-
-def _render_and_answer(
-    store: EventStore,
-    registry: PolicyRegistry,
-    clock: FixedClock,
-    random_source: SeededRandomSource,
-    session_id: str,
-    step_id: str,
-    answer: str,
-    *,
-    note: str | None = None,
-    provider: str,
-) -> dict[str, Any]:
-    rendered = record_rendered_exercise(
-        store,
-        registry,
-        clock,
-        random_source,
-        session_id,
-        expected_session_revision=current_session_revision(store, session_id),
-        step_id=step_id,
-        exercise=dict(EXERCISE),
-    )
-    return record_attempt(
-        store,
-        clock,
-        random_source,
-        session_id,
-        expected_session_revision=current_session_revision(store, session_id),
-        step_id=step_id,
-        raw_answer=answer,
-        exercise_instance_id=str(rendered["exercise_instance_id"]),
-        note=note,
-        provider=provider,
-    )
-
-
-def _seed_due_review(
-    store: EventStore,
-    registry: PolicyRegistry,
-    clock: FixedClock,
-    random_source: SeededRandomSource,
-) -> None:
-    """Create honest prior evidence so the tutor-swap session owns a review."""
-    manifest = start_session(
-        store,
-        registry,
-        clock,
-        random_source,
-        provider="seed-tutor",
-        agent_skills_dir=REPO / "agent-skills",
-    )
-    session_id = str(manifest["session_id"])
-    claimed = next_step(
-        store,
-        registry,
-        clock,
-        random_source,
-        session_id,
-        expected_session_revision=current_session_revision(store, session_id),
-        expected_plan_version=1,
-    )
-    attempt = _render_and_answer(
-        store,
-        registry,
-        clock,
-        random_source,
-        session_id,
-        str(claimed["step"]["step_id"]),
-        "am",
-        provider="seed-tutor",
-    )
-    assert attempt["assessment"]["correct"] is True
-    finish_session(
-        store,
-        clock,
-        random_source,
-        session_id,
-        expected_session_revision=current_session_revision(store, session_id),
-    )
-
-
-def _claim_review_step(
-    store: EventStore,
-    registry: PolicyRegistry,
-    clock: FixedClock,
-    random_source: SeededRandomSource,
-    session_id: str,
-) -> tuple[dict[str, Any], int]:
-    version = 1
-    presented = 0
-    while True:
-        claimed = next_step(
-            store,
-            registry,
-            clock,
-            random_source,
-            session_id,
-            expected_session_revision=current_session_revision(store, session_id),
-            expected_plan_version=version,
-        )
-        version = int(claimed["plan_version"])
-        presented += 1
-        if claimed["step"]["kind"] == "review":
-            return dict(claimed["step"]), presented
+    enable_reports(registry)
 
 
 def _score_state(store: EventStore, registry: PolicyRegistry) -> dict[str, Any]:
@@ -253,6 +177,7 @@ def _score_state(store: EventStore, registry: PolicyRegistry) -> dict[str, Any]:
 
 def _run_scenario(root: Path, *, note: str | None) -> dict[str, Any]:
     root.mkdir(parents=True, exist_ok=True)
+    skills_dir = _agent_skills(root)
     connection = connect(root / "tutor-swap.db")
     migrate(connection)
     store = EventStore(connection)
@@ -261,54 +186,49 @@ def _run_scenario(root: Path, *, note: str | None) -> dict[str, Any]:
     registry = PolicyRegistry(connection, clock_a)
     try:
         _activate_test_program(store, registry, clock_a, random_source)
-        _seed_due_review(store, registry, clock_a, random_source)
+        # Honest prior evidence (a reported lesson), so the next lesson owns a review.
+        reported_session(
+            store,
+            registry,
+            clock_a,
+            random_source,
+            [item("seed", "am", target_ref=TARGET, dimension="recognition", kind="recognition")],
+            provider="seed-tutor",
+        )
 
         clock = FixedClock(EPOCH + timedelta(days=2))
-        skill_a = resolve("run-english-session", "1", REPO / "agent-skills")
+        skill_a = resolve("run-english-session", "1", skills_dir)
         start_response = start_session(
             store,
             registry,
             clock,
             random_source,
             provider="claude-code",
-            agent_skills_dir=REPO / "agent-skills",
+            agent_skills_dir=skills_dir,
+            # Pin the skill explicitly: this scenario snapshots its own v1
+            # skill text and must not depend on `start_session`'s default
+            # skill version, which now tracks the live canon for
+            # report-protocol sessions [PD-2026-09-23].
+            required_skills=[("run-english-session", "1")],
         )
         session_id = str(start_response["session_id"])
-        _, plan, _ = get_plan(store, session_id)
-        reviews = [step for step in plan["steps"] if step["kind"] == "review"]
+        brief = start_response["brief"]
+        reviews = brief["reviews_due"]
         assert len(reviews) == 1
-        review_id = str(reviews[0]["review_assignment_id"])
-
-        review_step, presented_before_swap = _claim_review_step(
-            store, registry, clock, random_source, session_id
-        )
-        attempt = _render_and_answer(
-            store,
-            registry,
-            clock,
-            random_source,
-            session_id,
-            str(review_step["step_id"]),
-            "is",
-            note=note,
-            provider="claude-code",
-        )
-        assert attempt["status"] == "assessed"
-        assert attempt["assessment"] == {
-            "basis": "objective_check",
-            "correct": False,
-            "score_ppm": 0,
-            "checked_against_content_hash": attempt["assessment"]["checked_against_content_hash"],
-        }
+        review = reviews[0]
+        review_id = str(review["review_id"])
         assert len(pending_assignments(store, session_id)) == 1
+        revision_seen_by_a = int(start_response["session_revision"])
 
+        # Tutor A runs the lesson in chat and loses it: nothing was written.
         # A new provider resolves the pinned skill without any chat context,
         # then resumes through the public lessons facade.
         pinned_skill = start_response["required_skills"][0]
         skill_b = resolve(
             str(pinned_skill["skill_name"]),
             str(pinned_skill["version"]),
-            REPO / "agent-skills",
+            skills_dir,
+            content_hash=str(pinned_skill["content_hash"]),
         )
         resume_response = resume_session(
             store,
@@ -317,73 +237,73 @@ def _run_scenario(root: Path, *, note: str | None) -> dict[str, Any]:
             random_source,
             session_id,
             provider="codex",
+            agent_skills_dir=skills_dir,
         )
-        assert resume_response["status"] == "IN_PROGRESS"
-        assert resume_response["briefing"]["pending_reviews"] == 1
+        assert resume_response["status"] == "STARTED"
+        # The brief is a pure function of engine state: B gets exactly A's brief.
+        assert resume_response["brief"] == brief
 
-        finish_refusal: dict[str, str]
-        with pytest.raises(SessionPrecondition) as blocked:
-            finish_session(
-                store,
-                clock,
-                random_source,
-                session_id,
-                expected_session_revision=current_session_revision(store, session_id),
+        # The session fence: A's view is stale once B attached.
+        with pytest.raises(SessionRevisionConflict) as stale:
+            abandon_session(
+                store, clock, random_source, session_id, expected_session_revision=revision_seen_by_a
             )
-        finish_refusal = {"code": blocked.value.code, "message": str(blocked.value)}
-        state_after_refusal = get_session(store, session_id)
-        assert state_after_refusal is not None and state_after_refusal[0]["status"] == "IN_PROGRESS"
+        stale_result = {"code": stale.value.code, "current": stale.value.current_session_revision}
 
-        # The currently exposed optimistic token is plan_version. Two tutors
-        # read the same value; the second write loses with a stable error.
-        shared_view = peek_step(store, session_id)
-        assert shared_view["step"] is not None
-        winner = next_step(
+        score_before_report = _score_state(store, registry)
+        assert score_before_report["knowledge_state"] != "MASTERED"
+        body = report(
+            session_id,
+            resume_response["brief"],
+            [
+                item(
+                    "rv",
+                    "I is an engineer.",
+                    target_ref=TARGET,
+                    dimension=str(review["dimension"]),
+                    kind="review",
+                    verdict="incorrect",
+                    review_id=review_id,
+                    errors=[{"learner_form": "I is", "correction": "I am", "cause": "agreement"}],
+                )
+            ],
+            summary={"text": note or "Повторили be.", "next_focus": TARGET},
+        )
+        committed = commit_report(
             store,
             registry,
             clock,
             random_source,
             session_id,
-            expected_session_revision=current_session_revision(store, session_id),
-            expected_plan_version=int(shared_view["plan_version"]),
+            body,
+            provider="codex",
+            idempotency_key="swap-report",
+            **lexicon_ports(),
         )
-        with pytest.raises(PlanVersionConflict) as stale:
-            next_step(
+        assert committed["cached"] is False
+        (closed,) = [
+            e.payload
+            for e in store.read()
+            if e.type == "review.outcome" and e.payload["review_id"] == review_id
+        ]
+        final_state = get_session(store, session_id)
+        assert final_state is not None and final_state[0]["status"] == "FINISHED"
+
+        # Tutor A comes back with its own report: the lesson is already closed.
+        late_refusal: dict[str, str]
+        with pytest.raises(SessionPrecondition) as late:
+            commit_report(
                 store,
                 registry,
                 clock,
                 random_source,
                 session_id,
-                expected_session_revision=current_session_revision(store, session_id),
-                expected_plan_version=int(shared_view["plan_version"]),
+                report(session_id, brief, [item("a1", "I am an engineer.", target_ref=TARGET)]),
+                provider="claude-code",
+                idempotency_key="stale-tutor-report",
+                **lexicon_ports(),
             )
-        stale_result = {
-            "code": stale.value.code,
-            "current_plan_version": stale.value.current_plan_version,
-            "message": str(stale.value),
-        }
-        assert stale_result["current_plan_version"] == winner["plan_version"]
-
-        score_before_close = _score_state(store, registry)
-        assert score_before_close["knowledge_state"] != "MASTERED"
-        closed = close_review(
-            store,
-            clock,
-            random_source,
-            session_id,
-            review_id,
-            expected_session_revision=current_session_revision(store, session_id),
-        )
-        assert closed["outcome"] == "REGRESSION"
-        finished = finish_session(
-            store,
-            clock,
-            random_source,
-            session_id,
-            expected_session_revision=current_session_revision(store, session_id),
-        )
-        final_state = get_session(store, session_id)
-        assert final_state is not None and final_state[0]["status"] == "FINISHED"
+        late_refusal = {"code": late.value.code, "message": str(late.value)}
 
         session_events = [event for event in store.read() if event.correlation_id == session_id]
         attached = [event for event in session_events if event.type == EVENT_AGENT_ATTACHED]
@@ -392,35 +312,22 @@ def _run_scenario(root: Path, *, note: str | None) -> dict[str, Any]:
         outboxed = {event.id for event in store.read_outboxed_since(0)}
         assert all(event.id in outboxed for event in attached)
 
-        notes = list(resume_response["notes"])
-        assert notes == ([] if note is None else [notes[0]])
-        if note is not None:
-            assert notes[0]["text"] == note
-            assert notes[0]["author_provider"] == "claude-code"
-            assert note not in canonical_json(resume_response["briefing"]).decode("utf-8")
-        assert "notes" not in resume_response["briefing"]
-
-        missing = sorted(REQUIRED_BRIEFING_FIELDS - set(resume_response["briefing"]))
+        missing = sorted(REQUIRED_LEARNER_FIELDS - set(resume_response["brief"]["learner"]))
         return {
             "fixed_clock": clock.now().isoformat(),
             "seed": SEED,
             "session_id": session_id,
             "start_response": start_response,
-            "start_has_briefing": "briefing" in start_response,
             "resolved_skill_hashes": [skill_a.content_hash, skill_b.content_hash],
-            "review": {
-                "review_id": review_id,
-                "step_id": review_step["step_id"],
-                "presented_before_swap": presented_before_swap,
-                "incorrect_score_ppm": attempt["assessment"]["score_ppm"],
-            },
+            "review": {"review_id": review_id, "dimension": review["dimension"]},
             "resume_response": resume_response,
-            "missing_briefing_fields": missing,
-            "score_before_close": score_before_close,
-            "finish_refusal": finish_refusal,
+            "missing_learner_fields": missing,
+            "score_before_report": score_before_report,
+            "score_after_report": _score_state(store, registry),
             "stale_write": stale_result,
-            "review_outcome": closed,
-            "finish_event": {"type": finished.type, "payload": finished.payload},
+            "late_report": late_refusal,
+            "review_outcome": {"outcome": closed["outcome"], "reason": closed["reason"]},
+            "report_result": committed,
             "final_status": final_state[0]["status"],
             "agent_attached": [
                 {"id": event.id, "provider": event.provider, "sequence": event.sequence} for event in attached
@@ -435,27 +342,28 @@ def test_tutor_swap_persists_state_obligations_and_trust_boundary(tmp_path: Path
     second = _run_scenario(tmp_path / "second", note=NOTE)
     without_note = _run_scenario(tmp_path / "without-note", note=None)
 
-    # Same clock and seed produce the same ids, events, briefing and outcome.
+    # Same clock and seed produce the same ids, events, brief and outcome.
     assert canonical_json(first) == canonical_json(second)
 
     resume = first["resume_response"]
     assert resume["session_id"] == first["session_id"]
-    assert resume["status"] == "IN_PROGRESS"
     assert resume["manifest"]["pinned_versions"] == first["start_response"]["pinned_versions"]
-    assert resume["briefing"]["skills"]
-    assert all("confidence" in state for state in resume["briefing"]["skills"].values())
-    assert resume["briefing"]["pending_reviews"] == 1
-    assert resume["notes"][0]["text"] == NOTE
+    assert resume["brief"]["learner"]["skills"]
+    assert all("confidence" in state for state in resume["brief"]["learner"]["skills"].values())
+    assert len(resume["brief"]["reviews_due"]) == 1
+    assert first["resolved_skill_hashes"][0] == first["resolved_skill_hashes"][1]
     assert first["review_outcome"]["outcome"] == "REGRESSION"
     assert first["final_status"] == "FINISHED"
-    assert first["finish_refusal"]["code"] == "SESSION_PRECONDITION"
-    assert first["stale_write"]["code"] == "PLAN_VERSION_CONFLICT"
+    assert first["stale_write"]["code"] == "SESSION_REVISION_CONFLICT"
+    assert first["late_report"]["code"] == "SESSION_PRECONDITION"
 
-    # A malicious note changes only the physically separate notes block. The
-    # computed briefing and score fold are byte-identical to a no-note run.
-    assert resume["briefing"] == without_note["resume_response"]["briefing"]
-    assert first["score_before_close"] == without_note["score_before_close"]
-    assert first["score_before_close"]["knowledge_state"] != "MASTERED"
+    # Untrusted report text (a "mark it MASTERED" summary) is provenance only:
+    # the brief before the report and every score are byte-identical to a run
+    # with a neutral summary.
+    assert resume["brief"] == without_note["resume_response"]["brief"]
+    assert first["score_before_report"] == without_note["score_before_report"]
+    assert first["score_after_report"] == without_note["score_after_report"]
+    assert first["score_after_report"]["knowledge_state"] != "MASTERED"
 
 
 @pytest.fixture(scope="module")
@@ -463,21 +371,21 @@ def observed_scenario(tmp_path_factory: pytest.TempPathFactory) -> dict[str, Any
     return _run_scenario(tmp_path_factory.mktemp("tutor-swap-contract"), note=NOTE)
 
 
-def test_start_returns_tutor_briefing_in_one_call(observed_scenario: dict[str, Any]) -> None:
-    # Fixed (2.5 finding 1): `session start` returns the tutor briefing in one
-    # call, not only the manifest -- an agent runs the session from a single CLI
-    # call (continuation flow "Правила").
-    assert "briefing" in observed_scenario["start_response"]
+def test_start_returns_the_lesson_brief_in_one_call(observed_scenario: dict[str, Any]) -> None:
+    # `session start` returns the lesson brief in one call: an agent runs the
+    # lesson from a single CLI call (continuation flow "Правила").
+    start = observed_scenario["start_response"]
+    assert start["brief"]["schema"] == "lesson_brief@1"
+    assert "briefing" not in start
 
 
-def test_resume_returns_contract_complete_briefing(observed_scenario: dict[str, Any]) -> None:
-    # Fixed (2.5 finding 2): the resume briefing carries all seven contract
-    # sections -- active topics, top errors, recent vocabulary/chunks, re-entry,
-    # recommendations, and the last-session summary.
-    briefing = observed_scenario["resume_response"]["briefing"]
-    assert set(briefing) >= REQUIRED_BRIEFING_FIELDS
+def test_resume_returns_contract_complete_brief(observed_scenario: dict[str, Any]) -> None:
+    # The resumed brief carries every continuation-contract section.
+    assert observed_scenario["missing_learner_fields"] == []
 
 
-def test_public_mutations_expose_optimistic_session_revision() -> None:
-    for mutation in (record_attempt, finish_session):
+def test_public_mutations_expose_their_concurrency_guard() -> None:
+    for mutation in (abandon_session, attach_agent):
         assert "expected_session_revision" in inspect.signature(mutation).parameters
+    # The report is guarded by its idempotency key and the session lifecycle.
+    assert "idempotency_key" in inspect.signature(commit_report).parameters

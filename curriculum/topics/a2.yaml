@@ -9,7 +9,7 @@ topics:
       strong: [grammar.past-simple.events]
     dimensions: [recognition, transfer]
     frequency_tier: tail
-    lexicon: [word.at-the-time, word.incident, word.error]
+    lexicon: [word.at-the-time, word.incident, word.error, chunk.past-continuous-incident-context.at-that-time-were, chunk.past-continuous-incident-context.i-was-ing-when, chunk.past-continuous-incident-context.it-was-ing-when, chunk.past-continuous-incident-context.not-were-ing, chunk.past-continuous-incident-context.reason-were-ing, chunk.past-continuous-incident-context.she-was-ing-at, chunk.past-continuous-incident-context.the-server-was, chunk.past-continuous-incident-context.the-was-ing, chunk.past-continuous-incident-context.they-were-ing, chunk.past-continuous-incident-context.was-about-to-when, chunk.past-continuous-incident-context.we-were-ing-when, chunk.past-continuous-incident-context.were-you-ing-when, chunk.past-continuous-incident-context.what-was-ing, chunk.past-continuous-incident-context.when-error-occurred-were, chunk.past-continuous-incident-context.while-were-ing, chunk.past-continuous-incident-context.you-were-ing-when]
     contexts: [incident-update]
     typical_errors:
       - "Using Past Simple for the background action (We tested when it failed)."
@@ -18,6 +18,14 @@ topics:
     examples:
       - "We were testing the form when it failed."
       - "The server was running slowly at noon."
+    contrasts:
+      - "We were testing the form when it failed. / We tested the form after it failed.: the background action in progress contrasts with a separate completed action afterward."
+      - "The server was running slowly at noon. / The server ran slowly for two hours.: an ongoing state at one moment contrasts with a completed stretch of time reported as a single fact."
+      - "I was writing the report when the call started. / I wrote the report before the call started.: an interrupted background action contrasts with a finished action that happened first."
+      - "They were deploying the update at 9:00. / They deployed the update at 9:00.: the process still in progress at that exact moment contrasts with the whole action presented as a single completed event."
+      - "We were waiting for approval all morning. / We waited for approval and then started.: a long background state contrasts with one completed episode reported as a fact."
+      - "The alert was firing repeatedly when we checked. / The alert fired once and stopped.: a repeated background pattern contrasts with a single completed occurrence."
+      - "We deployed the fix yesterday. / We were deploying the fix when the outage started.: a finished-time marker such as yesterday forces the simple completed report; the background frame before another event needs Past Continuous, a distinction Russian aspect does not mark the same way."
     explanation_language: ru-allowed
     mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.when-while.sequence
@@ -29,7 +37,7 @@ topics:
       strong: [grammar.past-continuous.incident-context, grammar.past-time-sequencing]
     dimensions: [recognition, transfer]
     frequency_tier: tail
-    lexicon: [chunk.it-only-happens-when, word.during, word.while]
+    lexicon: [chunk.it-only-happens-when, word.during, word.while, chunk.when-while-sequence.by-the-time-we, chunk.when-while-sequence.during-the-incident, chunk.when-while-sequence.it-happened-while-were, chunk.when-while-sequence.right-when-the, chunk.when-while-sequence.the-error-began-while, chunk.when-while-sequence.the-next-thing, chunk.when-while-sequence.we-discovered-when, chunk.when-while-sequence.what-happened-when, chunk.when-while-sequence.when-alert-came-we, chunk.when-while-sequence.when-happened-we, chunk.when-while-sequence.when-i-checked, chunk.when-while-sequence.while-running-deployment, chunk.when-while-sequence.while-we-were-ing]
     contexts: [incident-update]
     typical_errors:
       - "Using while with a short completed event when when is clearer."
@@ -49,7 +57,7 @@ topics:
       strong: [grammar.past-irregular-basics]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: big-five
-    lexicon: [chunk.we-ran-into, lexeme.begin, lexeme.run]
+    lexicon: [chunk.we-ran-into, lexeme.begin, lexeme.run, chunk.past-irregular-events.he-brought-the, chunk.past-irregular-events.he-caught, chunk.past-irregular-events.i-had-to, chunk.past-irregular-events.i-understood-that, chunk.past-irregular-events.it-took-hours, chunk.past-irregular-events.she-sent-the, chunk.past-irregular-events.the-backup-gave, chunk.past-irregular-events.the-error-began, chunk.past-irregular-events.the-issue-came-from, chunk.past-irregular-events.the-screen-went, chunk.past-irregular-events.the-system-broke, chunk.past-irregular-events.they-chose, chunk.past-irregular-events.they-made, chunk.past-irregular-events.they-saw, chunk.past-irregular-events.we-built, chunk.past-irregular-events.we-drew-a, chunk.past-irregular-events.we-fell-behind, chunk.past-irregular-events.we-found, chunk.past-irregular-events.we-got-an, chunk.past-irregular-events.we-had-built, chunk.past-irregular-events.we-lost, chunk.past-irregular-events.we-ran-into, chunk.past-irregular-events.we-spent-time, chunk.past-irregular-events.we-went-to]
     contexts: [incident-update]
     typical_errors:
       - "Using the base verb after a past-time marker (Yesterday I go)."
@@ -108,7 +116,7 @@ topics:
       soft: [grammar.past-simple.events]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: big-five
-    lexicon: [chunk.we-have-completed, chunk.i-have-already-checked, chunk.i-have-experience-with]
+    lexicon: [chunk.we-have-completed, chunk.i-have-already-checked, chunk.i-have-experience-with, chunk.present-perfect-result.client-hasnt-responded, chunk.present-perfect-result.has-anyone, chunk.present-perfect-result.have-you-ever, chunk.present-perfect-result.have-you-yet, chunk.present-perfect-result.havent-yet, chunk.present-perfect-result.i-have-learned, chunk.present-perfect-result.its-been-since, chunk.present-perfect-result.ive-already, chunk.present-perfect-result.ive-asked, chunk.present-perfect-result.ive-never, chunk.present-perfect-result.no-one-has, chunk.present-perfect-result.report-has-shown, chunk.present-perfect-result.so-far-weve, chunk.present-perfect-result.thats-the-first-time, chunk.present-perfect-result.the-code-has-passed, chunk.present-perfect-result.the-has-been, chunk.present-perfect-result.the-team-has-completed, chunk.present-perfect-result.we-have-just-started, chunk.present-perfect-result.we-havent-had, chunk.present-perfect-result.we-havent-seen, chunk.present-perfect-result.weve-discovered, chunk.present-perfect-result.weve-just]
     contexts: [deployment-update]
     typical_errors:
       - "Omitting have/has before the participle (We completed the test already) when the result matters now."
@@ -117,6 +125,14 @@ topics:
     examples:
       - "We have completed the migration."
       - "I have already checked the data."
+    contrasts:
+      - "We have completed the migration. / We completed the migration yesterday.: an unmarked current result contrasts with the same action anchored to a finished past time."
+      - "I have already checked the data. / I checked the data this morning.: already signals a present-relevant result; this morning anchors it as a finished past event."
+      - "The team has fixed the bug. / The team fixed the bug on Monday.: the result still matters now, unlike the same fact reported with a specific finished date."
+      - "We have not had any issues since the update. / We did not have any issues yesterday.: an unbroken period up to now contrasts with one specific past day."
+      - "She has deployed three releases this month. / She deployed a release last month.: this month is still open, so Present Perfect fits; last month is closed, so Past Simple fits."
+      - "Have you seen the new dashboard? / Did you see the new dashboard on Friday?: an open, unspecified-time question contrasts with a question anchored to one finished day."
+      - "We deployed the fix yesterday. / We've deployed the fix.: yesterday is a finished-time marker that forces Past Simple, even though both sentences could translate with a similar Russian perfective verb."
     explanation_language: ru-allowed
     mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.past-participle.forms
@@ -128,7 +144,7 @@ topics:
       strong: [grammar.past-irregular-basics]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: big-five
-    lexicon: [chunk.we-have-deployed, chunk.it-has-been-fixed, lexeme.build]
+    lexicon: [chunk.we-have-deployed, chunk.it-has-been-fixed, lexeme.build, chunk.past-participle-forms.documentation-has-been-written, chunk.past-participle-forms.feature-has-been-tested, chunk.past-participle-forms.has-been-broken, chunk.past-participle-forms.has-been-found, chunk.past-participle-forms.has-been-made, chunk.past-participle-forms.has-been-seen, chunk.past-participle-forms.has-been-sent, chunk.past-participle-forms.has-been-taken, chunk.past-participle-forms.i-have-found, chunk.past-participle-forms.i-have-seen, chunk.past-participle-forms.i-have-sent, chunk.past-participle-forms.issue-has-been-resolved, chunk.past-participle-forms.it-was-written, chunk.past-participle-forms.its-done, chunk.past-participle-forms.ive-done-it, chunk.past-participle-forms.option-has-been-chosen, chunk.past-participle-forms.pages-have-been-created, chunk.past-participle-forms.task-has-been-assigned, chunk.past-participle-forms.the-system-has-been-built, chunk.past-participle-forms.they-have-gone, chunk.past-participle-forms.we-have-built, chunk.past-participle-forms.we-have-made, chunk.past-participle-forms.we-have-taken, chunk.past-participle-forms.we-have-tested, chunk.past-participle-forms.what-has-been-done]
     contexts: [deployment-update]
     typical_errors:
       - "Using the Past Simple form as the participle (has went, has saw)."
@@ -148,7 +164,7 @@ topics:
       strong: [grammar.present-perfect.result, grammar.past-simple.events]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: big-five
-    lexicon: [chunk.we-have-not-had-any-issues-since, word.yet, word.since]
+    lexicon: [chunk.we-have-not-had-any-issues-since, word.yet, word.since, chunk.present-perfect-past-simple-choice.has-anyone-tested-vs-did-anyone-test, chunk.present-perfect-past-simple-choice.hasnt-anyone-vs-didnt-anyone, chunk.present-perfect-past-simple-choice.have-you-asked-vs-did-you-ask, chunk.present-perfect-past-simple-choice.have-you-found-vs-did-you-find, chunk.present-perfect-past-simple-choice.i-have-checked-vs-checked, chunk.present-perfect-past-simple-choice.i-havent-seen-vs-i-didnt-see, chunk.present-perfect-past-simple-choice.ive-done-vs-i-did, chunk.present-perfect-past-simple-choice.ive-sent-i-sent, chunk.present-perfect-past-simple-choice.no-one-has-seen-vs-no-one-saw, chunk.present-perfect-past-simple-choice.the-code-has-passed-vs-passed, chunk.present-perfect-past-simple-choice.the-issue-has-been-fixed-vs-was-fixed, chunk.present-perfect-past-simple-choice.the-system-has-been-down-vs-was-down, chunk.present-perfect-past-simple-choice.they-have-gone-vs-they-went, chunk.present-perfect-past-simple-choice.they-havent-vs-they-didnt, chunk.present-perfect-past-simple-choice.we-fixed-vs-we-have-fixed, chunk.present-perfect-past-simple-choice.we-havent-finished-vs-we-didnt-finish, chunk.present-perfect-past-simple-choice.weve-discovered-vs-discovered, chunk.present-perfect-past-simple-choice.weve-learned-vs-learned, chunk.present-perfect-past-simple-choice.what-have-you-done-vs-what-did-you-do]
     contexts: [deployment-update]
     typical_errors:
       - "Using Present Perfect with a finished past time (I have sent it yesterday)."
@@ -157,6 +173,14 @@ topics:
     examples:
       - "We have fixed the issue."
       - "We fixed it yesterday."
+    contrasts:
+      - "We have fixed the issue. / We fixed it yesterday.: no time marker keeps the current result in Present Perfect; yesterday moves the same fact into Past Simple."
+      - "I have already sent the invoice. / I sent the invoice on Monday.: already keeps the focus on the present result; on Monday anchors it to a finished day."
+      - "They have not replied yet. / They did not reply during the call.: yet leaves the window open; during the call closes it to one finished past episode."
+      - "The service has been down since 9:00. / The service went down at 9:00 and came back at 9:15.: an unfinished period up to now contrasts with a fully closed past episode."
+      - "We have never seen this error before. / We saw this error once last year.: an experience with no specific time contrasts with one dated occurrence."
+      - "Has the client approved the design? / Did the client approve the design at the review?: an open question about the current state contrasts with one tied to a specific past event."
+      - "We deployed the fix yesterday. / We've deployed the fix.: a finished-time marker such as yesterday forces Past Simple, even though the Russian perfective verb does not itself signal which English tense to choose."
     explanation_language: ru-allowed
     mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: written-interaction.result-update
@@ -206,7 +230,7 @@ topics:
       strong: [grammar.going-to.plans, grammar.will.basic-decisions, grammar.present-continuous.status]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: big-five
-    lexicon: [chunk.were-aiming-for, chunk.we-may-need-more-time, word.delivery]
+    lexicon: [chunk.were-aiming-for, chunk.we-may-need-more-time, word.delivery, chunk.future-forms-planning.are-you-planning-to, chunk.future-forms-planning.do-you-want-me-to-start-now, chunk.future-forms-planning.hes-probably-going-to-refuse, chunk.future-forms-planning.if-it-fails-we-will-call, chunk.future-forms-planning.ill-answer-the-client, chunk.future-forms-planning.ill-call-you-back, chunk.future-forms-planning.ill-handle-this-now, chunk.future-forms-planning.ill-let-you-know-once, chunk.future-forms-planning.ill-sort-it-out, chunk.future-forms-planning.im-going-to-review, chunk.future-forms-planning.im-going-to-send, chunk.future-forms-planning.its-not-happening-until-next-month, chunk.future-forms-planning.maybe-ill-skip-this-meeting, chunk.future-forms-planning.thats-the-plan-for-now, chunk.future-forms-planning.the-meeting-is-tomorrow, chunk.future-forms-planning.theyre-aiming-to-launch, chunk.future-forms-planning.we-are-going-to-test, chunk.future-forms-planning.we-might-need-more-resources, chunk.future-forms-planning.we-should-test-first, chunk.future-forms-planning.well-get-it-done-by-friday, chunk.future-forms-planning.well-need-to-extend-the-timeline, chunk.future-forms-planning.well-release-by-friday, chunk.future-forms-planning.were-meeting-on-friday, chunk.future-forms-planning.when-does-the-feature-launch, chunk.future-forms-planning.when-will-you-finish]
     contexts: [delivery-planning]
     typical_errors:
       - "Using will after if or when in a time clause (If it will fail...)."
@@ -215,6 +239,14 @@ topics:
     examples:
       - "I am going to review the plan."
       - "I will answer the client now."
+    contrasts:
+      - "I will answer the client now. / I am going to answer the client after this call.: a decision made at the moment of speaking contrasts with a plan already decided before now."
+      - "We are going to test the API tomorrow. / We are testing the API tomorrow.: an intention formed earlier contrasts with an arrangement already fixed with a time and confirmed steps."
+      - "I think we will finish by Friday. / We are finishing the report on Friday.: a prediction based on opinion contrasts with a scheduled arrangement already confirmed."
+      - "If the build fails, we will roll back. / We are going to roll back because the build failed.: a future decision conditional on an unknown outcome contrasts with an intention already formed after a known cause."
+      - "The team will probably need more time. / The team is going to need more time.: a less certain prediction with will contrasts with a prediction based on visible present evidence."
+      - "We'll call you back in five minutes. / We're calling the client in five minutes.: an instant decision contrasts with an already-arranged call with a fixed time."
+      - "We deployed the fix yesterday. / We will deploy the fix tomorrow.: a Russian perfective verb can describe both a finished past action and a planned future one; English marks the difference only through the tense form, not the verb itself."
     explanation_language: ru-allowed
     mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.future-expressions.deadlines
@@ -226,7 +258,7 @@ topics:
       strong: [grammar.future-time-expressions]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: big-five
-    lexicon: [chunk.the-delivery-date-is, word.delivery, word.deadline]
+    lexicon: [chunk.the-delivery-date-is, word.delivery, word.deadline, chunk.future-expressions-deadlines.before-the-meeting, chunk.future-expressions-deadlines.by-end-of-business, chunk.future-expressions-deadlines.by-friday, chunk.future-expressions-deadlines.by-friday-at-the-latest, chunk.future-expressions-deadlines.by-next-month, chunk.future-expressions-deadlines.by-the-end-of-today, chunk.future-expressions-deadlines.by-tomorrow-morning, chunk.future-expressions-deadlines.due-on-monday, chunk.future-expressions-deadlines.in-approximately-two-weeks, chunk.future-expressions-deadlines.in-the-next-week, chunk.future-expressions-deadlines.in-three-weeks, chunk.future-expressions-deadlines.in-two-weeks-from-now, chunk.future-expressions-deadlines.its-due-next-monday, chunk.future-expressions-deadlines.no-later-than-friday, chunk.future-expressions-deadlines.starting-next-week, chunk.future-expressions-deadlines.the-deadline-is-tuesday, chunk.future-expressions-deadlines.the-delivery-date-is, chunk.future-expressions-deadlines.this-needs-to-be-done-by-thursday, chunk.future-expressions-deadlines.until-friday, chunk.future-expressions-deadlines.well-deliver-in-two-days, chunk.future-expressions-deadlines.well-finish-by-the-end-of-the-week, chunk.future-expressions-deadlines.when-is-the-deadline, chunk.future-expressions-deadlines.within-the-next-few-hours, chunk.future-expressions-deadlines.within-three-days]
     contexts: [delivery-planning]
     typical_errors:
       - "Confusing by and until in delivery deadlines."
@@ -246,7 +278,7 @@ topics:
       strong: [grammar.future-forms.planning]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: core
-    lexicon: [word.delivery, word.deadline]
+    lexicon: [word.delivery, word.deadline, chunk.sequencing-delivery.after-approval, chunk.sequencing-delivery.as-a-result, chunk.sequencing-delivery.at-each-stage, chunk.sequencing-delivery.before-we-deploy, chunk.sequencing-delivery.during-this-time, chunk.sequencing-delivery.finally, chunk.sequencing-delivery.first-then, chunk.sequencing-delivery.following-that, chunk.sequencing-delivery.in-the-meantime, chunk.sequencing-delivery.initially-we-test, chunk.sequencing-delivery.meanwhile, chunk.sequencing-delivery.on-completion, chunk.sequencing-delivery.once-we-finish, chunk.sequencing-delivery.so-the-order-is, chunk.sequencing-delivery.subsequently, chunk.sequencing-delivery.the-next-step-is, chunk.sequencing-delivery.the-process-starts-with, chunk.sequencing-delivery.we-need-to-sequence-our-steps, chunk.sequencing-delivery.what-happens-next, chunk.sequencing-delivery.when-ready]
     contexts: [delivery-planning]
     typical_errors:
       - "Listing steps without sequence markers, leaving the delivery order unclear."
@@ -304,7 +336,7 @@ topics:
       strong: [grammar.can-cant.ability-requests]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: core
-    lexicon: [chunk.we-should-consider, word.requirement, word.option]
+    lexicon: [chunk.we-should-consider, word.requirement, word.option, chunk.modals-requirements.can-negative, chunk.modals-requirements.can-permission, chunk.modals-requirements.can-question, chunk.modals-requirements.dont-have-to, chunk.modals-requirements.have-affirmative, chunk.modals-requirements.have-to, chunk.modals-requirements.have-to-emphasis, chunk.modals-requirements.have-to-question, chunk.modals-requirements.may, chunk.modals-requirements.may-negative, chunk.modals-requirements.might, chunk.modals-requirements.might-negative, chunk.modals-requirements.must-affirmative, chunk.modals-requirements.must-be, chunk.modals-requirements.must-do, chunk.modals-requirements.must-negative, chunk.modals-requirements.must-question, chunk.modals-requirements.need-negative, chunk.modals-requirements.need-to, chunk.modals-requirements.need-to-question, chunk.modals-requirements.negative-must, chunk.modals-requirements.should, chunk.modals-requirements.should-formal, chunk.modals-requirements.should-not, chunk.modals-requirements.should-not-question, chunk.modals-requirements.should-question]
     contexts: [option-review]
     typical_errors:
       - "Adding to after must/should/can (We must to check it)."
@@ -324,7 +356,7 @@ topics:
       strong: [grammar.articles.identity]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: core
-    lexicon: [chunk.in-terms-of, word.compare, word.requirement]
+    lexicon: [chunk.in-terms-of, word.compare, word.requirement, chunk.comparatives-options.as-as, chunk.comparatives-options.better-for, chunk.comparatives-options.better-than, chunk.comparatives-options.bigger-than, chunk.comparatives-options.cheaper-than, chunk.comparatives-options.different-from, chunk.comparatives-options.easier-than, chunk.comparatives-options.er-than, chunk.comparatives-options.far-more-than, chunk.comparatives-options.faster-than, chunk.comparatives-options.less-than, chunk.comparatives-options.more-complex-than, chunk.comparatives-options.more-efficient-than, chunk.comparatives-options.more-expensive-than, chunk.comparatives-options.more-reliable-than, chunk.comparatives-options.more-suitable-for, chunk.comparatives-options.more-than, chunk.comparatives-options.much-more-than, chunk.comparatives-options.not-as-good-as, chunk.comparatives-options.slightly-more-than, chunk.comparatives-options.slower-than, chunk.comparatives-options.smaller-than, chunk.comparatives-options.than-required, chunk.comparatives-options.the-same-as, chunk.comparatives-options.worse-than]
     contexts: [option-review]
     typical_errors:
       - "Using more plus -er together (more cheaper)."
@@ -344,7 +376,7 @@ topics:
       strong: [grammar.comparatives.options]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: core
-    lexicon: [chunk.the-main-advantage-is, chunk.the-main-requirement-is, word.priority]
+    lexicon: [chunk.the-main-advantage-is, chunk.the-main-requirement-is, word.priority, chunk.superlatives-selection.one-of-the-best, chunk.superlatives-selection.one-of-the-most, chunk.superlatives-selection.the-best, chunk.superlatives-selection.the-best-for, chunk.superlatives-selection.the-best-option, chunk.superlatives-selection.the-biggest, chunk.superlatives-selection.the-busiest, chunk.superlatives-selection.the-cheapest, chunk.superlatives-selection.the-easiest, chunk.superlatives-selection.the-fastest, chunk.superlatives-selection.the-longest, chunk.superlatives-selection.the-main-advantage, chunk.superlatives-selection.the-main-issue, chunk.superlatives-selection.the-most-common, chunk.superlatives-selection.the-most-complex, chunk.superlatives-selection.the-most-efficient, chunk.superlatives-selection.the-most-expensive, chunk.superlatives-selection.the-most-important, chunk.superlatives-selection.the-most-reliable, chunk.superlatives-selection.the-most-suitable, chunk.superlatives-selection.the-only, chunk.superlatives-selection.the-shortest, chunk.superlatives-selection.the-simplest, chunk.superlatives-selection.the-smallest, chunk.superlatives-selection.the-worst]
     contexts: [option-review]
     typical_errors:
       - "Omitting the before a superlative (best option)."
@@ -364,7 +396,7 @@ topics:
       strong: [grammar.quantifiers.basic]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: core
-    lexicon: [word.requirement, word.option]
+    lexicon: [word.requirement, word.option, chunk.quantifiers-requirements.a-few-more, chunk.quantifiers-requirements.a-lot-of, chunk.quantifiers-requirements.a-number-of, chunk.quantifiers-requirements.all-of-the, chunk.quantifiers-requirements.around, chunk.quantifiers-requirements.barely-any, chunk.quantifiers-requirements.hardly-any, chunk.quantifiers-requirements.less-than, chunk.quantifiers-requirements.more-than, chunk.quantifiers-requirements.most-of-the, chunk.quantifiers-requirements.much-of-the, chunk.quantifiers-requirements.none-of-the, chunk.quantifiers-requirements.not-enough, chunk.quantifiers-requirements.only-a-few, chunk.quantifiers-requirements.plenty-of, chunk.quantifiers-requirements.quite-a-lot, chunk.quantifiers-requirements.relatively-few, chunk.quantifiers-requirements.some-of-the, chunk.quantifiers-requirements.still-not-enough, chunk.quantifiers-requirements.such-limited, chunk.quantifiers-requirements.there-isnt-enough, chunk.quantifiers-requirements.too-many, chunk.quantifiers-requirements.too-much, chunk.quantifiers-requirements.way-too-many, chunk.quantifiers-requirements.we-have-enough, chunk.quantifiers-requirements.we-need-at-least]
     contexts: [option-review]
     typical_errors:
       - "Using many with uncountable nouns such as time or information."
@@ -414,6 +446,53 @@ topics:
       - "I recommend Option B for this project."
     explanation_language: ru-allowed
     mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
+  - id: grammar.articles.the-unique-superlative-ordinal
+    title: "The with superlatives, ordinals, and one-of-a-kind things"
+    cefr: A2
+    track: grammar-engine
+    module: a2.4-requirements-and-options
+    can_do: "Use the correctly with superlatives, ordinals, same/only/next/last, and things that are unique in context."
+    advisory_prerequisites:
+      strong: [grammar.superlatives.selection, grammar.articles.identity]
+      soft: [grammar.comparatives.options]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: core
+    lexicon: [chunk.the-main-advantage-is, word.priority, word.compare, chunk.articles-the-unique-superlative-ordinal.the-best-way-to-x, chunk.articles-the-unique-superlative-ordinal.the-biggest-issue, chunk.articles-the-unique-superlative-ordinal.the-ceo, chunk.articles-the-unique-superlative-ordinal.the-fastest-way-to-x, chunk.articles-the-unique-superlative-ordinal.the-first-time, chunk.articles-the-unique-superlative-ordinal.the-internet, chunk.articles-the-unique-superlative-ordinal.the-last-time, chunk.articles-the-unique-superlative-ordinal.the-most-important-thing, chunk.articles-the-unique-superlative-ordinal.the-next-step, chunk.articles-the-unique-superlative-ordinal.the-only-x, chunk.articles-the-unique-superlative-ordinal.the-same-x, chunk.articles-the-unique-superlative-ordinal.the-second-option, chunk.articles-the-unique-superlative-ordinal.the-sun, chunk.articles-the-unique-superlative-ordinal.the-third-attempt, chunk.articles-the-unique-superlative-ordinal.the-weather, chunk.articles-the-unique-superlative-ordinal.the-whole-team]
+    contexts: [option-review]
+    typical_errors:
+      - "Omitting the before a superlative (best option instead of the best option)."
+      - "Omitting the before same, only, next, or last when they identify one unique item (I chose same plan instead of the same plan)."
+      - "Skipping the before a noun that has only one referent in context, such as the CEO or the internet, treating it like an ordinary countable noun that needs a/an."
+    examples:
+      - "This is the best option for our budget."
+      - "The CEO approved the first version of the plan."
+    core_points:
+      - "A superlative (best, cheapest, most reliable) is followed by the, because it names the one item at the extreme of the set."
+      - "Same, only, next, and last work like superlatives: they point to one unique item, so they take the."
+      - "A noun with only one real-world referent in the shared context, such as the sun or a company's the CEO, takes the without needing a prior mention."
+    contrasts:
+      - "a fast option / the fastest option: a describes any one member of a set; the fastest picks the single extreme."
+      - "an option / the only option: an introduces one of several; the only marks that just one exists."
+      - "a plan / the same plan: a introduces a new plan; the same plan points to one already identified as identical."
+      - "a meeting / the next meeting: a names any meeting; the next singles out the one immediately following."
+      - "a step / the last step: a names one step among several; the last step points to the final, unique one."
+      - "a manager / the CEO: a manager allows for several people; the CEO names the one person who holds that unique role."
+      - "a bright day / the sun: ordinary countable nouns can take a; the sun is treated as unique, so it always takes the."
+    scope_limits:
+      - "This topic does not cover the with generic categories or with geographic proper nouns; those have their own topics."
+      - "Comparative forms without the (cheaper, more reliable) are covered in the comparatives topic, not repeated here."
+    error_patterns:
+      - learner_form: "This is best option for our budget."
+        correction: "This is the best option for our budget."
+        explanation: "A superlative names the one item at the extreme of the set, so it needs the."
+      - learner_form: "Only option left is the paid plan."
+        correction: "The only option left is the paid plan."
+        explanation: "Only, like a superlative, marks a single unique item and needs the before it."
+      - learner_form: "CEO approved the plan yesterday."
+        correction: "The CEO approved the plan yesterday."
+        explanation: "CEO names the one person holding a unique role in the company, so English marks it with the."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: grammar.connectors.cause-contrast
     cefr: A2
     track: grammar-engine
@@ -423,7 +502,7 @@ topics:
       strong: [grammar.basic-word-order]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: core
-    lexicon: [chunk.the-root-cause-was, chunk.the-same-thing-happened-before, word.cause]
+    lexicon: [chunk.the-root-cause-was, chunk.the-same-thing-happened-before, word.cause, chunk.connectors-cause-contrast.accordingly, chunk.connectors-cause-contrast.although, chunk.connectors-cause-contrast.as-a-result, chunk.connectors-cause-contrast.as-such, chunk.connectors-cause-contrast.because, chunk.connectors-cause-contrast.because-of-the, chunk.connectors-cause-contrast.conversely, chunk.connectors-cause-contrast.despite-the, chunk.connectors-cause-contrast.due-to-the, chunk.connectors-cause-contrast.even-if, chunk.connectors-cause-contrast.even-though, chunk.connectors-cause-contrast.however, chunk.connectors-cause-contrast.if-anything, chunk.connectors-cause-contrast.in-spite-of, chunk.connectors-cause-contrast.instead-of, chunk.connectors-cause-contrast.nevertheless, chunk.connectors-cause-contrast.on-the-other-hand, chunk.connectors-cause-contrast.otherwise, chunk.connectors-cause-contrast.prompted-by, chunk.connectors-cause-contrast.so, chunk.connectors-cause-contrast.thats-why, chunk.connectors-cause-contrast.thats-why-clause, chunk.connectors-cause-contrast.therefore, chunk.connectors-cause-contrast.under-these-circumstances, chunk.connectors-cause-contrast.whereas, chunk.connectors-cause-contrast.with-that-said]
     contexts: [support-ticket]
     typical_errors:
       - "Using because and so in the same cause-result sentence."
@@ -443,7 +522,7 @@ topics:
       strong: [grammar.present-simple.routines]
     dimensions: [recognition, transfer]
     frequency_tier: tail
-    lexicon: [chunk.the-usual-process-is-to, word.if, word.process]
+    lexicon: [chunk.the-usual-process-is-to, word.if, word.process, chunk.zero-conditional-processes.as-long-as, chunk.zero-conditional-processes.every-time, chunk.zero-conditional-processes.if-the, chunk.zero-conditional-processes.if-there-is, chunk.zero-conditional-processes.if-you, chunk.zero-conditional-processes.if-you-dont, chunk.zero-conditional-processes.in-case, chunk.zero-conditional-processes.no-matter-if, chunk.zero-conditional-processes.once, chunk.zero-conditional-processes.provided-that, chunk.zero-conditional-processes.providing-that, chunk.zero-conditional-processes.should, chunk.zero-conditional-processes.the-more-the-more, chunk.zero-conditional-processes.unless, chunk.zero-conditional-processes.when-the, chunk.zero-conditional-processes.whenever]
     contexts: [support-ticket]
     typical_errors:
       - "Using will in both halves of a first conditional (If it will fail, we will restart)."
@@ -463,7 +542,7 @@ topics:
       strong: [grammar.future-forms.planning, grammar.connectors.cause-contrast]
     dimensions: [recognition, transfer]
     frequency_tier: tail
-    lexicon: [chunk.if-that-does-not-help, word.if, word.process]
+    lexicon: [chunk.if-that-does-not-help, word.if, word.process, chunk.first-conditional-troubleshooting.if-error-returns, chunk.first-conditional-troubleshooting.if-that-does-not-help, chunk.first-conditional-troubleshooting.if-that-works, chunk.first-conditional-troubleshooting.if-the-deploy-succeeds, chunk.first-conditional-troubleshooting.if-the-request-fails, chunk.first-conditional-troubleshooting.if-the-test-passes, chunk.first-conditional-troubleshooting.if-the-user-reports, chunk.first-conditional-troubleshooting.if-we-apply-the-patch, chunk.first-conditional-troubleshooting.if-we-do-not-act, chunk.first-conditional-troubleshooting.if-we-do-not-check, chunk.first-conditional-troubleshooting.if-you-send-log, chunk.first-conditional-troubleshooting.unless-we-restart, chunk.first-conditional-troubleshooting.what-happens-if]
     contexts: [support-ticket]
     typical_errors:
       - "Using will in both halves of a first conditional (If it will fail, we will restart)."
@@ -483,7 +562,7 @@ topics:
       strong: [grammar.be.identity, grammar.past-participle.forms]
     dimensions: [recognition, transfer]
     frequency_tier: tail
-    lexicon: [word.process, word.solution]
+    lexicon: [word.process, word.solution, chunk.passive-basic-process.access-is-granted, chunk.passive-basic-process.backup-is-created, chunk.passive-basic-process.code-is-reviewed, chunk.passive-basic-process.configuration-is-updated, chunk.passive-basic-process.data-is-processed, chunk.passive-basic-process.error-is-logged, chunk.passive-basic-process.file-is-stored, chunk.passive-basic-process.issue-is-resolved, chunk.passive-basic-process.notification-is-sent, chunk.passive-basic-process.request-is-checked, chunk.passive-basic-process.tests-are-run, chunk.passive-basic-process.ticket-is-assigned, chunk.passive-basic-process.updates-are-applied]
     contexts: [support-ticket]
     typical_errors:
       - "Omitting be before the participle (The file stored here)."
@@ -982,6 +1061,53 @@ topics:
       - "Use this cream twice a day."
     explanation_language: ru-allowed
     mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
+  - id: grammar.articles.institutional-places
+    title: "Institutional places: at home, in the hospital, to the doctor's"
+    cefr: A2
+    track: grammar-engine
+    module: a2.9-health-and-wellbeing
+    can_do: "Talk about going to or being at home, work, school, or a medical institution with the article American English expects."
+    advisory_prerequisites:
+      strong: [grammar.articles.identity, grammar.prepositions.location]
+      soft: [grammar.articles.fixed-time-expressions]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: core
+    lexicon: [word.doctor, word.medicine, word.bed, chunk.articles-institutional-places.at-home, chunk.articles-institutional-places.at-school, chunk.articles-institutional-places.at-the-airport, chunk.articles-institutional-places.at-the-gym, chunk.articles-institutional-places.get-home, chunk.articles-institutional-places.go-to-bed, chunk.articles-institutional-places.go-to-church, chunk.articles-institutional-places.go-to-the-office, chunk.articles-institutional-places.go-to-work, chunk.articles-institutional-places.i-need-to-stop-by-the-x, chunk.articles-institutional-places.in-bed, chunk.articles-institutional-places.in-prison, chunk.articles-institutional-places.in-the-hospital, chunk.articles-institutional-places.to-the-bank, chunk.articles-institutional-places.to-the-dentists, chunk.articles-institutional-places.to-the-doctors]
+    contexts: [pharmacy-visit]
+    typical_errors:
+      - "Adding the before home or bed in fixed institutional phrases (go to the home, stay in the bed) instead of using the zero-article form."
+      - "Using at instead of in for a building you are inside for its normal purpose (at the hospital when in the hospital, as a patient, is meant)."
+      - "Treating go to the doctor's as go to doctor, dropping both the article and the possessive ending."
+    examples:
+      - "She stayed in the hospital for three days after the surgery."
+      - "I need to go to the doctor's this afternoon."
+    core_points:
+      - "A small set of institutional nouns drop the article when you use the place for its normal purpose: at home, in bed, in prison, at school, at work."
+      - "The same nouns take the when you are simply inside the building without that purpose: I was at the school to vote, not at school to study."
+      - "The doctor's, the dentist's is a fixed possessive pattern meaning the doctor's office or clinic."
+    contrasts:
+      - "in bed / in the bed: in bed means resting or sleeping; in the bed points to the physical piece of furniture."
+      - "at home / at the home: at home is the ordinary fixed phrase; at the home only fits a specific named care home."
+      - "at school / at the school: at school means studying there; at the school can mean being in the building for another reason, such as a meeting."
+      - "go to work / go to the office: go to work is the fixed idiom; go to the office names the specific building."
+      - "to the doctor's / to a doctor's office: the doctor's is the natural fixed short form; a doctor's office is the fuller, more formal version."
+      - "in prison / in the prison: in prison means serving a sentence; in the prison describes simply being inside the building, for example as a visitor."
+      - "in hospital / in the hospital: British usage drops the after in; American usage keeps in the hospital even for a patient."
+    scope_limits:
+      - "This topic covers a closed set of common institutional nouns; it does not extend the zero-article pattern to every building."
+      - "Geographic proper nouns such as country and organization names are covered in a separate topic."
+    error_patterns:
+      - learner_form: "He is in the bed because he is sick."
+        correction: "He is in bed because he is sick."
+        explanation: "In bed as a resting or sick state is a fixed zero-article phrase; the article only appears when bed means the physical object."
+      - learner_form: "I have an appointment at the doctor."
+        correction: "I have an appointment at the doctor's."
+        explanation: "The fixed possessive form the doctor's stands for the doctor's office; doctor alone needs a different structure."
+      - learner_form: "She works at home office every day."
+        correction: "She works from home every day."
+        explanation: "The natural fixed phrase for working remotely is from home, not at home office."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
   - id: everyday-life.understanding-a-bill
     cefr: A2
     track: everyday-life

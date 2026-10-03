@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.present-perfect-past-simple-choice.project-status
+    title: "Project status"
+    cefr: A2
+    topic: grammar.present-perfect-past-simple.choice
+    carries: [tense:present-perfect, tense:past-simple]
+    domain: work
+    context: deployment-update
+    text: "We have completed the first phase of the project successfully. We finished the testing last Monday. The team has already reviewed all the code, and we have discovered no major issues so far. We fixed a small bug yesterday afternoon. We have not had any problems since the fix. Our manager approved the plan two days ago. We have just started the second phase. The client will receive the full update next week."
+    word_count: 73
+    keywords: ["completed - first phase", "finished - testing - Monday", "reviewed - code", "discovered - no issues", "fixed - bug - yesterday", "no problems - since fix", "approved - plan - days ago", "started - second phase"]
+    target_spans: ["have completed the first phase", "finished the testing last Monday", "has already reviewed", "have discovered no major issues so far", "fixed a small bug yesterday afternoon", "have not had any problems since the fix", "approved the plan two days ago", "have just started"]
+    summary_ru: "Статус проекта: первый этап завершён и протестирован в понедельник, вчера исправили баг, план одобрили два дня назад, и уже начался второй этап."
+    transformations: [authored]
+  - id: text.recon.present-perfect-past-simple-choice.travel-plans
+    title: "Travel plans"
+    cefr: A2
+    topic: grammar.present-perfect-past-simple.choice
+    carries: [tense:present-perfect, tense:past-simple]
+    domain: everyday
+    context: travel-update
+    text: "I reserved the flights yesterday through the online booking system. We have already booked the hotel for our trip. My sister has completed all her work arrangements. She finished her project last week, right on schedule. We have prepared everything we need for the trip. We have not had any cancellations yet. Our friends confirmed their dates two days ago. Everyone has just received the final itinerary."
+    word_count: 67
+    keywords: ["reserved - flights - yesterday", "booked - hotel - trip", "sister - completed - arrangements", "finished - project - last week", "prepared - everything", "no cancellations - yet", "friends - confirmed - dates", "received - itinerary"]
+    target_spans: ["reserved the flights yesterday", "have already booked", "has completed all her work arrangements", "finished her project last week", "have prepared everything", "have not had any cancellations yet", "confirmed their dates two days ago", "has just received"]
+    summary_ru: "Планы на поездку: рейсы и отель уже забронированы, сестра закончила рабочие дела на прошлой неделе, отмен пока не было, а друзья на днях подтвердили даты."
+    transformations: [authored]

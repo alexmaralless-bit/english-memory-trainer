@@ -1,0 +1,78 @@
+# tunables@2 is metadata, not a second store of active values. `parameter_id`
+# points to the owning policy leaf. Until production evidence exists, an
+# unspecified range is deliberately frozen at the shipped value.
+#
+# [PD-2026-09-22] control@3 added three numeric decision leaves (the
+# expected_seconds of drill_block, timed_writing and reconstruction), so the
+# bidirectional completeness check -- catalogue covers every control leaf AND
+# every catalogued control row resolves to a leaf -- forced this successor
+# version. 63 rows: the 60 of tunables@1 plus the three below, ranges frozen at
+# [default, default] because no empirical data exists to widen them.
+policy_id: "tunables@2"
+schema_version: 2
+status: "accepted"
+change_mode: "propose_confirm"
+parameters:
+  - {parameter_id: control.budget.default_total_minutes, owner: "0.12 control", unit: minutes, allowed_range: [30, 30], change_mode: propose_confirm}
+  - {parameter_id: control.budget.min_total_minutes, owner: "0.12 control", unit: minutes, allowed_range: [10, 10], change_mode: propose_confirm}
+  - {parameter_id: control.budget.expected_seconds_by_step_type.recognition_check, owner: "0.12 control", unit: seconds, allowed_range: [30, 30], change_mode: propose_confirm}
+  - {parameter_id: control.budget.expected_seconds_by_step_type.controlled_production, owner: "0.12 control", unit: seconds, allowed_range: [120, 120], change_mode: propose_confirm}
+  - {parameter_id: control.budget.expected_seconds_by_step_type.spontaneous_production, owner: "0.12 control", unit: seconds, allowed_range: [360, 360], change_mode: propose_confirm}
+  - {parameter_id: control.budget.expected_seconds_by_step_type.transfer_task, owner: "0.12 control", unit: seconds, allowed_range: [480, 480], change_mode: propose_confirm}
+  - {parameter_id: control.budget.expected_seconds_by_step_type.new_material_intro, owner: "0.12 control", unit: seconds, allowed_range: [300, 300], change_mode: propose_confirm}
+  - {parameter_id: control.budget.expected_seconds_by_step_type.integration_task, owner: "0.12 control", unit: seconds, allowed_range: [420, 420], change_mode: propose_confirm}
+  - {parameter_id: control.budget.expected_seconds_by_step_type.gate_item, owner: "0.12 control", unit: seconds, allowed_range: [180, 180], change_mode: propose_confirm}
+  - {parameter_id: control.budget.expected_seconds_by_step_type.free_conversation, owner: "0.12 control", unit: seconds, allowed_range: [300, 300], change_mode: propose_confirm}
+  - {parameter_id: control.budget.expected_seconds_by_step_type.drill_block, owner: "0.12 control", unit: seconds, allowed_range: [300, 300], change_mode: propose_confirm}
+  - {parameter_id: control.budget.expected_seconds_by_step_type.timed_writing, owner: "0.12 control", unit: seconds, allowed_range: [300, 300], change_mode: propose_confirm}
+  - {parameter_id: control.budget.expected_seconds_by_step_type.reconstruction, owner: "0.12 control", unit: seconds, allowed_range: [300, 300], change_mode: propose_confirm}
+  - {parameter_id: control.budget.shares_bp_by_mode.balanced.review_max, owner: "0.12 control", unit: basis_points, allowed_range: [3000, 6000], change_mode: propose_confirm}
+  - {parameter_id: control.budget.shares_bp_by_mode.balanced.growth_min, owner: "0.12 control", unit: basis_points, allowed_range: [2500, 2500], change_mode: propose_confirm}
+  - {parameter_id: control.budget.shares_bp_by_mode.balanced.integration_min, owner: "0.12 control", unit: basis_points, allowed_range: [1500, 1500], change_mode: propose_confirm}
+  - {parameter_id: control.budget.shares_bp_by_mode.balanced.choice_min, owner: "0.12 control", unit: basis_points, allowed_range: [1000, 1000], change_mode: propose_confirm}
+  - {parameter_id: control.budget.shares_bp_by_mode.maintenance.review_max, owner: "0.12 control", unit: basis_points, allowed_range: [10000, 10000], change_mode: propose_confirm}
+  - {parameter_id: control.budget.shares_bp_by_mode.maintenance.growth_min, owner: "0.12 control", unit: basis_points, allowed_range: [0, 0], change_mode: propose_confirm}
+  - {parameter_id: control.budget.shares_bp_by_mode.maintenance.integration_min, owner: "0.12 control", unit: basis_points, allowed_range: [0, 0], change_mode: propose_confirm}
+  - {parameter_id: control.budget.shares_bp_by_mode.maintenance.choice_min, owner: "0.12 control", unit: basis_points, allowed_range: [1000, 1000], change_mode: propose_confirm}
+  - {parameter_id: control.budget.shares_bp_by_mode.re_entry.review_max, owner: "0.12 control", unit: basis_points, allowed_range: [8000, 8000], change_mode: propose_confirm}
+  - {parameter_id: control.budget.shares_bp_by_mode.re_entry.growth_min, owner: "0.12 control", unit: basis_points, allowed_range: [0, 0], change_mode: propose_confirm}
+  - {parameter_id: control.budget.shares_bp_by_mode.re_entry.integration_min, owner: "0.12 control", unit: basis_points, allowed_range: [0, 0], change_mode: propose_confirm}
+  - {parameter_id: control.budget.shares_bp_by_mode.re_entry.choice_min, owner: "0.12 control", unit: basis_points, allowed_range: [2000, 2000], change_mode: propose_confirm}
+  - {parameter_id: control.classification.critical_floor_retrievability_ppm, owner: "0.12 control", unit: ppm, allowed_range: [500000, 500000], change_mode: propose_confirm}
+  - {parameter_id: control.classification.maintenance_floor_retrievability_ppm, owner: "0.12 control", unit: ppm, allowed_range: [850000, 850000], change_mode: propose_confirm}
+  - {parameter_id: control.classification.recurring_error_window_sessions, owner: "0.12 control", unit: sessions, allowed_range: [3, 3], change_mode: propose_confirm}
+  - {parameter_id: control.classification.recurring_error_min_occurrences, owner: "0.12 control", unit: occurrences, allowed_range: [2, 2], change_mode: propose_confirm}
+  - {parameter_id: control.classification.prereq_leverage_min_dependents, owner: "0.12 control", unit: topics, allowed_range: [2, 2], change_mode: propose_confirm}
+  - {parameter_id: control.starvation.reserved_steps_per_session, owner: "0.12 control", unit: steps, allowed_range: [1, 1], change_mode: propose_confirm}
+  - {parameter_id: control.starvation.deferrals_to_qualify, owner: "0.12 control", unit: deferrals, allowed_range: [3, 3], change_mode: propose_confirm}
+  - {parameter_id: control.signals.default_effect_sessions, owner: "0.12 control", unit: sessions, allowed_range: [3, 3], change_mode: propose_confirm}
+  - {parameter_id: control.saturation.exposure_window_sessions, owner: "0.12 control", unit: sessions, allowed_range: [5, 5], change_mode: propose_confirm}
+  - {parameter_id: control.saturation.max_exposures_in_window, owner: "0.12 control", unit: exposures, allowed_range: [3, 3], change_mode: propose_confirm}
+  - {parameter_id: control.saturation.consecutive_success_threshold, owner: "0.12 control", unit: attempts, allowed_range: [3, 3], change_mode: propose_confirm}
+  - {parameter_id: control.saturation.min_distinct_contexts, owner: "0.12 control", unit: contexts, allowed_range: [2, 2], change_mode: propose_confirm}
+  - {parameter_id: control.saturation.transfer_check_staleness_days, owner: "0.12 control", unit: days, allowed_range: [30, 30], change_mode: propose_confirm}
+  - {parameter_id: control.diversity.max_steps_per_topic, owner: "0.12 control", unit: steps, allowed_range: [2, 2], change_mode: propose_confirm}
+  - {parameter_id: control.diversity.max_consecutive_same_mode, owner: "0.12 control", unit: steps, allowed_range: [2, 2], change_mode: propose_confirm}
+  - {parameter_id: control.diversity.max_similar_items, owner: "0.12 control", unit: items, allowed_range: [2, 2], change_mode: propose_confirm}
+  - {parameter_id: control.availability.divergence_tolerance_ppm, owner: "0.12 control", unit: ppm, allowed_range: [300000, 300000], change_mode: propose_confirm}
+  - {parameter_id: control.availability.divergence_window_weeks, owner: "0.12 control", unit: weeks, allowed_range: [6, 6], change_mode: propose_confirm}
+  - {parameter_id: control.availability.min_observed_sessions, owner: "0.12 control", unit: sessions, allowed_range: [3, 3], change_mode: propose_confirm}
+  - {parameter_id: control.availability.reentry_critical_boost_bp, owner: "0.12 control", unit: basis_points, allowed_range: [1000, 1000], change_mode: propose_confirm}
+  - {parameter_id: control.alerts.review_share_enter_bp, owner: "0.12 control", unit: basis_points, allowed_range: [4200, 4200], change_mode: propose_confirm}
+  - {parameter_id: control.alerts.review_share_exit_bp, owner: "0.12 control", unit: basis_points, allowed_range: [3500, 3500], change_mode: propose_confirm}
+  - {parameter_id: control.alerts.review_share_consecutive, owner: "0.12 control", unit: sessions, allowed_range: [3, 3], change_mode: propose_confirm}
+  - {parameter_id: control.alerts.growth_rate_enter_bp, owner: "0.12 control", unit: basis_points, allowed_range: [1000, 1000], change_mode: propose_confirm}
+  - {parameter_id: control.alerts.growth_rate_exit_bp, owner: "0.12 control", unit: basis_points, allowed_range: [1800, 1800], change_mode: propose_confirm}
+  - {parameter_id: control.alerts.growth_rate_consecutive, owner: "0.12 control", unit: sessions, allowed_range: [3, 3], change_mode: propose_confirm}
+  - {parameter_id: lessons.stale_session_days, owner: "0.5 lessons", unit: days, allowed_range: [7, 7], change_mode: propose_confirm}
+  - {parameter_id: evidence.multi_credit.secondary_weight, owner: "0.4 evidence", unit: decimal_weight, allowed_range: ["0.5", "0.5"], change_mode: propose_confirm}
+  - {parameter_id: evidence.multi_credit.total_weight_cap, owner: "0.4 evidence", unit: decimal_weight, allowed_range: ["2.0", "2.0"], change_mode: propose_confirm}
+  - {parameter_id: scoring.mastery.session_cap, owner: "0.4 scoring", unit: mastery_points, allowed_range: [15, 15], change_mode: propose_confirm}
+  - {parameter_id: scoring.mastery.rubric_cap, owner: "0.4 scoring", unit: mastery_points, allowed_range: [40, 40], change_mode: propose_confirm}
+  - {parameter_id: scoring.working_level.min_topics, owner: "0.4 scoring", unit: topics, allowed_range: [5, 5], change_mode: propose_confirm}
+  - {parameter_id: scoring.xp.daily_cap, owner: "0.4 scoring", unit: xp, allowed_range: [200, 200], change_mode: propose_confirm}
+  - {parameter_id: scheduler.retry_days, owner: "0.4 scheduler", unit: days, allowed_range: [1, 1], change_mode: propose_confirm}
+  - {parameter_id: scheduler.re_entry.gap_threshold_days, owner: "0.4 scheduler", unit: days, allowed_range: [14, 14], change_mode: propose_confirm}
+  - {parameter_id: assessments.resume_window_hours, owner: "0.5 assessments", unit: hours, allowed_range: [48, 48], change_mode: propose_confirm}
+  - {parameter_id: assessments.form_cooldown_days, owner: "0.5 assessments", unit: days, allowed_range: [30, 30], change_mode: propose_confirm}
+  - {parameter_id: obligations.measurement_window_terminal_sessions, owner: "0.4 scoring", unit: sessions, allowed_range: [10, 10], change_mode: propose_confirm}

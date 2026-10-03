@@ -4,28 +4,22 @@ idempotent render, rebuild removes orphans, drift is caught, notes/ untouched.""
 from __future__ import annotations
 
 from english_trainer.kernel.policy import PolicyRegistry
-from english_trainer.kernel.session_fence import current_session_revision
 from english_trainer.kernel.store import EventStore
-from english_trainer.lessons.delivery import next_step
-from english_trainer.lessons.sessions import finish_session, start_session
 from english_trainer.memory.engine import check, rebuild, render, render_pages
+from tests.lessons.report_support import enable_reports, item, reported_session
 
 
 def _session_with_state(store: EventStore, registry: PolicyRegistry, clock, rnd) -> str:
-    """Start a session and deliver its first step, so the projection has a
-    session page, a plan page and delivered-step schedules to render."""
-    manifest = start_session(store, registry, clock, rnd, provider="claude-code")
-    session_id = str(manifest["session_id"])
-    next_step(
+    """One reported lesson [PD-2026-09-23], so the projection has a session
+    page, a plan page and evidence-opened schedules to render."""
+    enable_reports(registry)
+    return reported_session(
         store,
         registry,
         clock,
         rnd,
-        session_id,
-        expected_session_revision=current_session_revision(store, session_id),
-        expected_plan_version=1,
+        [item("i1", "I am a developer.", target_ref="grammar.be.identity", dimension="recognition")],
     )
-    return session_id
 
 
 def test_render_is_deterministic_to_the_byte(store, registry, clock, random_source) -> None:
@@ -98,25 +92,8 @@ def test_notes_zone_is_never_touched(tmp_path, store, registry, clock, random_so
 
 
 def test_finished_session_projects_its_status(tmp_path, store, registry, clock, random_source) -> None:
-    manifest = start_session(store, registry, clock, random_source, provider="claude-code")
-    session_id = str(manifest["session_id"])
-    next_step(
-        store,
-        registry,
-        clock,
-        random_source,
-        session_id,
-        expected_session_revision=current_session_revision(store, session_id),
-        expected_plan_version=1,
-    )
-    # next_step already moved the session to IN_PROGRESS; finish it.
-    finish_session(
-        store,
-        clock,
-        random_source,
-        session_id,
-        expected_session_revision=current_session_revision(store, session_id),
-    )
+    # The committed report finished the session in its own transaction.
+    _session_with_state(store, registry, clock, random_source)
     pages = render_pages(store, registry)
     session_pages = [p for p in pages if p.startswith("sessions/")]
     assert len(session_pages) == 1

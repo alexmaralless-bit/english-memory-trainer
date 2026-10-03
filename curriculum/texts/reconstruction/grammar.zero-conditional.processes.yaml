@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.zero-conditional-processes.deployment-workflow
+    title: "Deployment workflow"
+    cefr: A2
+    topic: grammar.zero-conditional.processes
+    carries: [tense:conditional-0, structure:time-marker]
+    domain: work
+    context: support-ticket
+    text: "If the tests pass successfully, we deploy the code to production. When the pipeline finishes completely, the system sends a notification email. If there are any errors, the build stops automatically. When we merge to the main branch, the version increments. If the database migration fails, we roll back immediately. When all checks are complete, the release goes live for users."
+    word_count: 61
+    keywords: ["tests pass", "deploy - code", "pipeline finishes", "sends - notification", "errors", "build stops", "merge - main", "version increments", "database migration", "roll back", "checks - complete", "release - live"]
+    target_spans: ["If the tests pass", "When the pipeline finishes", "If there are any errors", "When we merge", "If the database migration", "When all checks"]
+    summary_ru: "Процесс развёртывания: условия запуска, остановки и критерии для выпуска в продакшен."
+    transformations: [authored]
+  - id: text.recon.zero-conditional-processes.coffee-making
+    title: "Making morning coffee"
+    cefr: A2
+    topic: grammar.zero-conditional.processes
+    carries: [tense:conditional-0]
+    domain: everyday
+    context: support-ticket
+    text: "If I wake up early, I make fresh coffee every day. When I grind the beans, the aroma fills the entire kitchen. If the water boils, I pour it carefully into the filter. When the coffee brews, I wait patiently. If it tastes too strong, I add more water. When I drink it hot, the day starts better. If I skip coffee, I feel tired."
+    word_count: 65
+    keywords: ["wake up - early", "make - coffee", "grind - beans", "aroma - kitchen", "water boils", "pour - filter", "coffee brews", "wait", "tastes - strong", "drink - hot", "day - better", "skip - coffee"]
+    target_spans: ["If I wake up", "When I grind", "If the water boils", "When the coffee brews", "If it tastes", "When I drink", "If I skip"]
+    summary_ru: "Процесс приготовления кофе: условия, результаты каждого шага, личные предпочтения."
+    transformations: [authored]

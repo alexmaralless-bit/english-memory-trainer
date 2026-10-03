@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.frequency-adverbs.work-habits
+    title: "Work habits and frequency"
+    cefr: A1
+    topic: grammar.frequency-adverbs
+    carries: [structure:frequency-adverb, tense:present-simple]
+    domain: work
+    context: daily-standup
+    text: "I usually start work at nine o'clock every morning. My team always checks the logs first thing. We rarely skip the standup meeting. Sarah often reviews the code carefully and thoroughly. The client sometimes sends urgent requests. They always deploy on Friday morning. Everyone usually finishes on time. We never miss the deadline here."
+    word_count: 54
+    keywords: ["I usually start", "work nine", "My team always", "checks logs", "We rarely skip", "standup", "Sarah often reviews", "code", "client sometimes sends", "requests", "always deploy", "Friday", "usually finish", "never miss"]
+    target_spans: ["I usually start", "My team always checks", "We rarely skip", "Sarah often reviews", "client sometimes sends", "They always deploy", "Everyone usually finishes", "We never miss"]
+    summary_ru: "Рабочие привычки: я обычно начинаю, команда всегда проверяет, редко пропускаем, Сара часто проверяет, клиент иногда отправляет."
+    transformations: [authored]
+  - id: text.recon.frequency-adverbs.daily-life
+    title: "Daily life frequency"
+    cefr: A1
+    topic: grammar.frequency-adverbs
+    carries: [structure:frequency-adverb, tense:present-simple]
+    domain: everyday
+    context: daily-standup
+    text: "I usually drink coffee every morning at home. My family rarely goes out in winter. My sister often visits friends on weekends. My brother never eats vegetables. My parents always read the news carefully. I sometimes watch films before bed. We frequently have dinner together. Everyone often sleeps well at night."
+    word_count: 51
+    keywords: ["I usually drink", "coffee morning", "My family rarely", "goes out", "sister often visits", "friends", "brother never eats", "vegetables", "parents always read", "news", "sometimes watch", "films", "frequently have dinner"]
+    target_spans: ["I usually drink", "My family rarely goes", "My sister often visits", "never eats", "always read", "I sometimes watch", "frequently have dinner", "Everyone often sleep"]
+    summary_ru: "Частота в повседневной жизни: я обычно пью кофе, семья редко выходит, сестра часто в гостях, брат не ест овощи."
+    transformations: [authored]

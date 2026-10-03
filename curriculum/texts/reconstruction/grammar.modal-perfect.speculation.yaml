@@ -1,0 +1,29 @@
+schema_version: 1
+texts:
+  - id: text.recon.modal-perfect-speculation.deployment-investigation
+    title: "Deployment investigation"
+    cefr: B2
+    topic: grammar.modal-perfect.speculation
+    carries: [tense:modal-perfect]
+    domain: work
+    context: fault-investigation
+    text: "The deployment must have encountered a network timeout. The service might have retried the request three times before failing. It could have been a transient database lock that caused the issue. The worker may not have received the configuration update in time. The connection could not have persisted longer than thirty seconds. The cache might have returned stale data to the client. It must have been the firewall rule change that blocked the traffic. The process could have exceeded the memory limit during the migration. The request may have timed out waiting for the lock to release."
+    word_count: 97
+    keywords: ["deployment timeout", "service retried", "transient database lock", "worker configuration", "connection timeout", "cache stale data", "firewall rule", "process memory limit", "request lock release"]
+    target_spans: ["must have encountered", "might have retried", "could have been", "may not have received", "could not have persisted", "might have returned", "must have been the firewall", "could have exceeded"]
+    summary_ru: "При расследовании сбоя развертывания выявлено, что критические факторы — возможно, блокировка базы данных, истечение таймаута соединения или изменение правил брандмауэра — привели к прерыванию запросов."
+    transformations: [authored]
+
+  - id: text.recon.modal-perfect-speculation.ancient-civilization
+    title: "Ancient civilization"
+    cefr: B2
+    topic: grammar.modal-perfect.speculation
+    carries: [tense:modal-perfect]
+    domain: academic
+    context: fault-investigation
+    text: "The ancient civilization must have developed sophisticated irrigation systems. The infrastructure might have supported a population of several million people. The collapse could have resulted from a combination of climate and economic factors. The society may not have anticipated the prolonged drought that followed. The trade routes could not have recovered after the invasion disrupted commerce. The knowledge might have been lost through generational discontinuity. It must have been the resource depletion that forced migration. The cultural practices could have influenced neighboring regions for centuries. The transition may have taken longer than the written records suggest."
+    word_count: 96
+    keywords: ["ancient civilization", "irrigation systems", "infrastructure", "population collapse", "climate economic factors", "drought", "trade routes invasion", "knowledge lost", "resource depletion migration", "cultural influence"]
+    target_spans: ["must have developed", "might have supported", "could have resulted", "may not have anticipated", "could not have recovered", "might have been lost", "must have been the resource depletion", "could have influenced"]
+    summary_ru: "Древняя цивилизация, должно быть, создала сложные оросительные системы, однако её коллапс мог произойти из-за климатических, экономических факторов или истощения ресурсов, после чего знания были утрачены."
+    transformations: [authored]

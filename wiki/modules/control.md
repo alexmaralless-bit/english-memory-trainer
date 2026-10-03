@@ -1,8 +1,8 @@
 # Модуль: control
 
 > **Status**: current
-> **Last updated**: 2026-07-22
-> **Sources**: концепт `staging/journal/2026-07-20-concept-0.12-learning-control.md` (Concept Gate, 6 развилок) · red-team ревью 0.12 `staging/reviews/2026-07-20-control-review-codex.md` (5 BLOCKER, триаж) · [[scheduler]], [[scoring]], [[evidence]], [[lessons]], [[learner]], [[gates]] · контракт 0.12
+> **Last updated**: 2026-09-23
+> **Sources**: концепт `staging/journal/2026-07-20-concept-0.12-learning-control.md` (Concept Gate, 6 развилок) · red-team ревью 0.12 `staging/reviews/2026-07-20-control-review-codex.md` (5 BLOCKER, триаж) · `staging/concepts/2026-09-23-lesson-brief-report-concept.md` (одобрен, [PD-2026-09-23]) · [[scheduler]], [[scoring]], [[evidence]], [[lessons]], [[learner]], [[gates]] · контракт 0.12
 > **Bounded context**: `src/english_trainer/control/`
 
 > Спека — **target**. Одна цель продукта, без фазовых тегов (Принцип 4). Термины — по [[../glossary]]. Все численные значения §3 — **конкретные авторские дефолты**, не диапазоны: policy обязана быть исполнимой, калибровка приходит позже.
@@ -17,31 +17,21 @@
 
 | Сущность | Назначение | Ключевые поля |
 |---|---|---|
-| `SessionPlan` | сохранённый состав занятия | `session_id`, `composition_revision`, `plan_version`, `steps[]`, `budget`, `pinned_control_policy`, `created_at` |
-| `PlannedStep` | один шаг занятия — **tagged union по `kind`** (§4.3a) | общие: `step_id`, `decision_id`, `kind`, `bucket`, `step_type`, `expected_seconds`, `order_index`, `presented_at?`, `generation_directive?`, `bank_item_id?`, `lexicon_first?` |
-| `SessionBudget` | session-level бюджет + **непредъявленный остаток** текущей ревизии | immutable `total_seconds`, `mode`; mutable `planned{review, growth, integration, choice}` только по непредъявленным шагам; `sum(planned) ≤ DeliveryLedger.remaining_seconds` |
-| `DeliveryLedger` | **накопительный** факт занятия, один на сессию и единственный источник факта | `presented_seconds`, `presented{review, growth, integration, choice}`, `remaining_seconds = SessionBudget.total_seconds − presented_seconds`; история планов живёт в `SESSION_COMPOSED`, не дублируется здесь |
+| `SessionPlan` (advisory) [PD-2026-09-23] | рекомендованный состав занятия, вкладываемый целиком в `LessonBrief.plan` | `session_id`, `lesson_arc`, `steps[]`, `budget`, `pinned_control_policy`, `created_at` — без `composition_revision`/`plan_version`: не CAS-aggregate |
+| `LessonProposal` | read-only объявление до старта | `profile`, `title`, `duration_class`, `central_topic`, `reason`, `agenda`, `language_envelope`, `proposal_hash` |
+| `PlannedStep` | один рекомендованный шаг — **tagged union по `kind`** (§4.3a) | общие: `step_id`, `decision_id`, `kind`, `bucket`, `step_type`, `expected_seconds`, `order_index`, `generation_directive?`, `lexicon_first?` — без `presented_at?`/`bank_item_id?`: план не отслеживает выдачу и не ссылается на банк упражнений (retired) |
 | `UrgencyClass` | класс review-кандидата | `critical \| important \| normal \| maintenance \| deferrable` |
 | `SaturationState` | признаки перепоказа | ключ **`(target_ref, dimension)`** [RR2-13], `exposures_in_window`, `consecutive_independent_successes`, `distinct_contexts`, `last_transfer_check_at` |
 | `AvailabilityProfile` | ритм занятий | `declared{...}`, `observed{...}`, `divergence`, `updated_at` |
-| `LearnerControlSignal` | сигнал ученика (discriminated union, §4.7) | `signal_id`, `kind`, payload по kind, `expires_at?`, `expires_after_session_seq?`, `superseded_by?` |
 | `DecisionTrace` | основание решения | `decision_id`, `step_id`, `reasons{}`, `pinned_versions{}` |
 | `TunableParameter` | строка каталога настроек | §4.9 |
 | `PolicyMetric` | определение метрики (§4.10) | `id`, `inputs[]`, `cohort`, `formula`, `window`, `missing_data_rule` |
 
-`SessionBudget.mode` — `balanced` (по умолчанию) · `maintenance` · `re_entry`. Только в двух последних допустимо занятие без нового материала.
+`SessionPlan.budget.mode` — `balanced` (по умолчанию) · `maintenance` · `re_entry`. Только в двух последних допустимо занятие без нового материала.
 
-```mermaid
-stateDiagram-v2
-    [*] --> PLANNED: session start (в UoW старта)
-    PLANNED --> PLANNED: session replan (revision+1)
-    PLANNED --> CONSUMED: все шаги выданы
-    CONSUMED --> PLANNED: session replan (остаток бюджета > 0)
-    PLANNED --> DISCARDED: session finish / abandon
-    CONSUMED --> DISCARDED: session finish / abandon
-```
+[PD-2026-09-23] `LessonArc` и `LearnerControlSignal` ретайрены ([[../glossary]]): связную дугу занятия теперь несёт `LessonBrief.lesson`/`central_topic` напрямую, а сигналам ученика (`too_easy`, `snooze`, …) больше некуда применяться — мид-сессионного `replan`, которому они были адресованы, не существует (§4.7).
 
-Переход `CONSUMED → PLANNED` нужен, потому что план может кончиться раньше бюджета; без него исчерпанное занятие нельзя было бы продолжить. Терминализация допустима из обоих состояний.
+`SessionPlan` не lifecycle-aggregate: у него нет состояний PLANNED/CONSUMED/DISCARDED. `compose_plan` — чистая функция текущего состояния ученика и pinned `control_policy`; она вызывается заново при каждом `LessonBrief` (`start` или `resume`, §4.2) и между вызовами не хранится как CAS-версионируемая сущность.
 
 ## 3. `control_policy` — versioned и исполнимая
 
@@ -49,7 +39,7 @@ stateDiagram-v2
 
 ```yaml
 control_policy:
-  version: 1
+  version: 3                             # [PD-2026-09-22]: + step_types контура автоматизации
   budget:
     default_total_minutes: 30
     min_total_minutes: 10
@@ -62,6 +52,9 @@ control_policy:
       integration_task: 420
       gate_item: 180
       free_conversation: 300
+      drill_block: 300          # [PD-2026-09-22]
+      timed_writing: 300        # [PD-2026-09-22]
+      reconstruction: 300       # [PD-2026-09-22]
     # Доли — целые basis points (1 bp = 1/10000). Двоичный float запрещён
     # на всём пути: allocation = floor(total_seconds * bp / 10000) [R-12].
     shares_bp_by_mode:
@@ -106,28 +99,24 @@ control_policy:
 - **MUST — policy тотальна и исполнима**: каждая ветка §4 имеет конкретное значение здесь. Диапазонов нет; `allowed_range` живёт в каталоге (§4.9) и ограничивает будущие версии, а не заменяет значение.
 - **MUST — выполнимость долей проверяется на каждый mode**: для любого режима `growth_min + integration_min + choice_min ≤ 10000` и `review_max + growth_min ≤ 10000`. Версия, нарушающая это хотя бы в одном режиме, не активируется.
 - **MUST — дискретная достижимость полов** [RR2-5]: алгебра долей не доказывает, что план собирается. Для каждого режима, каждого ненулевого пола и каждого значения `total_seconds` от `min_total_minutes` до `default_total_minutes` валидатор проверяет, что существует хотя бы один допустимый для корзины `step_type` с `expected_seconds ≤ total_seconds`. Размер самого пола **не** обязан покрывать шаг: это противоречило бы следующему правилу и делало бы дефолт `integration_min = 1500 bp` невалидным при 30 минутах.
-- **MUST — неделимый шаг разрешено превысить резерв** [RR2-5]: следующий шаг, которым корзина впервые достигает или пересекает ненулевой остаточный пол, допускается целиком, даже если его стоимость больше оставшейся ёмкости пола, при условии что он помещается в общий `DeliveryLedger.remaining_seconds`. После него пол считается закрытым; последующие шаги подчиняются обычному first-fit. Пол — гарантия **попытки**, а не потолок.
+- **MUST — неделимый шаг разрешено превысить резерв** [RR2-5]: следующий шаг, которым корзина впервые достигает или пересекает ненулевой остаточный пол, допускается целиком, даже если его стоимость больше оставшейся ёмкости пола, при условии что он помещается в общий остаток бюджета текущей сборки (`total_seconds` минус уже допущенные в этом же вызове `compose_plan` шаги). После него пол считается закрытым; последующие шаги подчиняются обычному first-fit. Пол — гарантия **попытки**, а не потолок.
 - **MUST — целочисленная арифметика на всём decision-пути** [R-12, RR2-12]: **каждое** поле policy, влияющее на решение, хранится целым: доли — basis points, вероятности и допуски — ppm (1e-6), время — секунды. Аллокация — `floor(total_seconds * share_bp // 10000)`; сравнение с порогом — над Retrievability, приведённой к ppm тем же правилом округления, что и [[scoring]] §2.1. Валидатор **отвергает YAML-float в любом decision-bearing поле**, а не только в долях: на граничной Retrievability разные преобразования float меняли бы класс, и replay переставал бы быть побитовым.
 
 ## 3b. Публичный API и события
 
 | Операция / Событие | Тип | Что делает |
 |---|---|---|
-| `compose_session(session_id, mode, total_seconds)` | API (sync, в UoW старта) | собирает `SessionPlan` с `composition_revision = 1`, `plan_version = 1`; ошибки `BUDGET_TOO_SMALL`, `NO_CANDIDATES` |
-| `replan(session_id, expected_plan_version, idempotency_key)` | API (mutating, CAS) | новая композиционная ревизия и версия плана; закрывает или переносит assignments (§4.2) |
-| `claim_next_step(session_id, expected_plan_version, idempotency_key)` | API (mutating, CAS) | атомарно помечает следующий шаг предъявленным, обновляет ledger и публикует `STEP_PRESENTED` |
-| `peek_next_step(session_id)` | API (read-only) | возвращает следующий шаг и текущий `plan_version`, ничего не предъявляет |
+| `compose_plan(...)` (`control/compose.py::compose_plan`) | API (pure, вызывается синхронно внутри `start`/`resume`) | строит advisory `SessionPlan`, вкладываемый в `LessonBrief.plan`; ошибки `BUDGET_TOO_SMALL`, `NO_CANDIDATES` |
+| `propose_lesson(duration?, profile?, topic?, theme?)` | API (read-only) | предлагает название, причину, один central target, agenda и language envelope; возвращает `proposal_hash` |
 | `classify(candidates)` | API (pure) | `UrgencyClass` по §4.5; детерминирована, без побочных эффектов |
-| `record_signal(signal, session_id?, idempotency_key)` | API | только записывает сигнал; для активной сессии возвращает требуемое действие §4.7 |
 | `explain(step_id)` | API | `DecisionTrace` |
 | `availability_get()` / `availability_set(declared)` | API | §4.7a |
 | `metrics()` / `catalogue()` | API | §4.10, §4.9 |
 | `propose_calibration()` / `confirm_calibration(id)` | API | §4.9; активацию делает владелец параметра |
-| `SESSION_COMPOSED {session_id, composition_revision, plan_version, steps[], budget, pinned_versions, active_safety_version}` | publishes | план создан или пересобран |
-| `STEP_PRESENTED {step_id, session_id, composition_revision, plan_version, review_assignment_id?, targets[]:{target_ref, dimension}, context_id, step_type, generation_directive_hash?, bank_item_id?, predicted_retrievability?, presented_at, active_safety_version}` | publishes | шаг **фактически выдан тьютору**; `targets[]` пуст только у target-less choice; текст упражнения всё ещё требует `EXERCISE_RENDERED` до предъявления ученику |
-| `LEARNER_SIGNAL_RECORDED`, `SIGNAL_CONSUMED` | publishes | сигнал зафиксирован / израсходован |
-| `PROBE_REQUESTED {probe_id, target_ref, dimension, requested_difficulty, avoid_context}` | publishes | запрошена проба; `probe_id` выдаёт **движок** |
+| `SESSION_COMPOSED {session_id, steps[], budget, pinned_versions, active_safety_version}` | publishes | advisory-план собран для очередного `LessonBrief` (start либо resume); без `composition_revision`/`plan_version` |
 | `AVAILABILITY_UPDATED`, `CALIBRATION_PROPOSED`, `CALIBRATION_APPLIED` | publishes | — |
+
+[PD-2026-09-23] **Retired**: `replan`, `claim_next_step`, `peek_next_step`, `record_signal` и события `LEARNER_SIGNAL_RECORDED`, `SIGNAL_CONSUMED`, `PROBE_REQUESTED`. `STEP_PRESENTED` остаётся типом события, но control им больше не владеет: его публикует отчёт постфактум, по каждому item'у ([[lessons]] §4d, [[../glossary]]). Мид-сессионной мутации плана не существует — `compose_plan` пересобирается целиком на каждый `LessonBrief`.
 
 ## 4. Поведение
 
@@ -136,39 +125,31 @@ control_policy:
 - **MUST — `due` это кандидат, а не право**: наступление срока не даёт цели места в занятии. Невзятое остаётся в backlog и ошибкой не является.
 - **MUST — защищённый минимум роста**: в режиме `balanced` корзина `growth` заполняется **первой** (§4.4) и не может быть занята повторениями. Занятие целиком из повторений возможно только в режимах `maintenance`/`re_entry`, выбранных явно.
 - **MUST — доступность влияет на нагрузку, никогда на знание**: `AvailabilityProfile` не входит ни в одну формулу [[scoring]]. Реальное время забывания не подделывается.
-- **MUST — self-report запускает проверку, а не пишет оценку**: см. §4.7.
 - **MUST — каждое решение несёт trace**: §4.8.
 - **MUST — подчинение safety-overlay**: единица, ставшая `avoid`/`obsolete` по **active** policy, исключается из плана независимо от класса. `SESSION_COMPOSED` фиксирует `active_safety_version`, использованную при исключении, — safety при этом **не** становится pinned policy ([[../OPEN]] OPEN-14).
 - **MUST — калибровка не ретроактивна**: §4.9.
 
-### 4.2 Жизненный цикл композиции [CTRL-2]
+### 4.2 Жизненный цикл композиции [CTRL-2, PD-2026-09-23]
 
-- **MUST — композиция происходит в UoW старта**: `lessons.start` синхронно вызывает `compose_session` **до** commit, в той же транзакции сохраняет `SessionPlan` с `composition_revision = 1`, `plan_version = 1`; неизменяемый Session Manifest получает `session_plan_id` и стартовый снимок версии. Живой plan/ledger не встраивается как изменяемая часть Manifest. `SESSION_COMPOSED` публикуется через outbox той же UoW.
-- **MUST — две версии имеют разные назначения**: `composition_revision` увеличивается только при успешном `replan` и идентифицирует состав; `plan_version` увеличивается на 1 при **каждой** успешной мутации плана — `next` или `replan` — и служит CAS-токеном. Ни одна успешная мутация не сохраняет прежний `plan_version`.
-- **MUST — выдача шага это мутация** [R-1]: `trainer session next` **мутирующая** и идемпотентная. В одной UoW она при совпавшем `expected_plan_version` помечает следующий непредъявленный шаг выданным, **вычитает** его `expected_seconds` из `SessionBudget.planned[bucket]`, прибавляет ту же величину в `DeliveryLedger.presented[bucket]`, пересчитывает totals/remaining, увеличивает `plan_version`, публикует `STEP_PRESENTED` и возвращает шаг с новой версией. Так `effective = presented + planned` не удваивает выданный шаг. Повтор с тем же `--idempotency-key` отдаёт сохранённый ответ до проверки CAS.
-- **MUST — просмотр без выдачи**: `trainer session peek` — read-only, показывает следующий шаг и текущий `plan_version`, ничего не помечая и ничего не публикуя. Полученный токен передаётся в следующий `next` либо `replan`.
-- **MUST — live safety перед выдачей** [П.3]: в UoW `next` сначала читает active safety-policy, затем выполняет единый условный commit с предикатом `plan_version = expected_plan_version ∧ production_eligible`. `production_eligible` учитывает active usage_policy, currency, allowed_contexts, `dated` recognition-only default и запрет production для opaque/recognition-only. Недопустимый шаг не предъявляется, версия и ledger не меняются; ответ — `PRECONDITION_FAILED {reason: safety_changed, current_plan_version, next_action: session.replan}`, и при изменении состояния эмитится доменное событие `LIVE_STEP_SAFETY_REJECTED`. Replan затем закрывает выпавший непредъявленный review-assignment как `CANCELLED`, а не outcome.
-- **MUST — выдача под CAS, наблюдаемый исход гонок** [RR2-7]: `claim_next_step` принимает `expected_plan_version`; CAS берётся по `(session_id, plan_version)`, а `step_id` может быть заклеймён ровно один раз. Область уникальности идемпотентного ключа — `(session_id, operation, idempotency_key)`; сохранённый ответ включает версию, на которой команда была применена. Исходы гонок заданы, а не оставлены реализации:
+- **MUST — композиция синхронна с каждым brief'ом**: `lessons.start` и `lessons.resume` синхронно вызывают `compose_plan` **до** возврата ответа, в той же UoW, что создаёт/читает сессию, и вкладывают результат прямо в `LessonBrief.plan` ([[lessons]] §4c). Композиция — чистая функция текущего состояния ученика и pinned `control_policy`; отдельного персистентного `SessionPlan`-агрегата, версionируемого CAS-командами, не существует. `SESSION_COMPOSED` публикуется через outbox той же UoW.
+- **MUST — план не мутируется между brief'ами**: нет `claim_next_step`, `peek_next_step`, `replan`, `plan_version`. Тьютор ведёт занятие свободно в пределах budget'а, который brief предложил; если он выходит за пределы предложенного плана (другая тема, больше повторений), движок этого не гейтит — он узнаёт об этом постфактум из `LessonReport.items[]`.
+- **MUST — safety на композиции, не на доставке** [PD-2026-09-23]: `production_eligible` исключает единицы из плана в момент `compose_plan` (§4.1, safety-overlay) — так же, как исключало раньше из `SessionPlan`. Отдельной live-проверки перед показом задания, которая раньше отклоняла `session next` с `PRECONDITION_FAILED {reason: safety_changed}`, больше нет: контент, который тьютор фактически использует в чате, движку виден только постфактум, из отчёта. Программный safety-каталог по-прежнему решает состав плана и рекомендаций; добросовестность фактически проведённого содержимого проверяет постфактум `audit-english-tutor` ([[lessons]] §4b).
+- **MUST — `resume` пересобирает план заново**: у `resume` нет сохранённого «остатка бюджета» — он вызывает `compose_plan` с текущим состоянием ученика и возвращает пересобранный `LessonBrief` ([[lessons]] §4c). Незакрытые ReviewAssignment брошенной/не отчитанной сессии остаются кандидатами `review`-корзины при пересборке.
+- **MUST — `step_id` не требует межвызовной стабильности**: план собирается заново на каждый brief, поэтому понятия «тот же шаг между ревизиями», которое раньше защищал `replan`, больше нет; `decision_id` по-прежнему ссылается на trace, породивший шаг текущего вызова.
 
-| Гонка | Результат |
-|---|---|
-| один ключ дважды | тот же шаг из кэша, второго `STEP_PRESENTED` нет |
-| два **разных** ключа с одним `expected_plan_version` одновременно | один успешен; второй получает `CONFLICT {current_plan_version}`; после `peek` и повтора с **новым** ключом он может получить следующий шаг |
-| после успешной выдачи план кончился | следующий вызов с актуальной версией получает `PRECONDITION_FAILED` + `next_action: session.replan` |
-| `next` против `replan` с одной ожидаемой версией | побеждает первый закоммитившийся; проигравший получает `CONFLICT {current_plan_version}` и заново читает план |
+### 4.2a Learner-facing профиль и связная дуга [PD-2026-07-23]
 
-  Два одновременных агента маловероятны (ученик один, [[../flows/session]]), но слово «атомарно» без наблюдаемого исхода гонки контрактом не является.
-- **MUST — переплан только явной командой**: `trainer session replan` — мутирующая идемпотентная команда с CAS по `expected_plan_version`. В одной UoW создаёт `composition_revision + 1`, увеличивает `plan_version`, публикует новый `SESSION_COMPOSED`, применяет активные сигналы §4.7 и не отменяет уже предъявленные шаги. Идемпотентный повтор возвращает сохранённый ответ до проверки CAS.
-- **MUST — replan не оставляет сирот и не порождает долга** [R-3, RR2-4]: непредъявленный review-шаг, выпавший из новой ревизии, **в той же UoW** закрывается через `evidence.cancel_review(review_id, replanned)` и событие `REVIEW_ASSIGNMENT_CANCELLED` ([[evidence]] §4.3). Это терминальная отмена, а **не** ReviewOutcome: scheduler не назначает retry, scoring не меняет состояние, метрика исходов не загрязняется. Предъявленные шаги сохраняются со своими assignments.
-- **MUST — ровно один действующий план**: действует последняя композиционная ревизия; `(session_id, composition_revision)` уникален. Конкурирующие мутации сериализуются `plan_version`, идемпотентность каждой команды — отдельным ключом операции.
-- **MUST — новая ревизия получает только остаток** [RR2-6]: `remaining_seconds = total_seconds − presented_seconds`. Выданные шаги в новую ревизию не переносятся и в её `planned` не входят — они уже учтены в `DeliveryLedger`. Полный бюджет на каждой ревизии позволил бы занятию превысить свою длительность во столько раз, сколько было пересборок.
-- **MUST — доли режима применяются к накопительному итогу** [RR2-6]: для корзины `b` величина `effective[b] = DeliveryLedger.presented[b] + SessionBudget.planned[b]` текущей ревизии. `review_max` и полы проверяются только по `effective`, а не по одной ревизии. Остаточный пол при replan равен `max(0, floor(total_seconds × min_bp / 10000) − presented[b])`; остаточная ёмкость review равна `max(0, floor(total_seconds × review_max_bp / 10000) − presented.review)`. `sum(effective) ≤ total_seconds`, а `sum(SessionBudget.planned) ≤ DeliveryLedger.remaining_seconds`.
-- **MUST — один источник для метрик занятия** [RR2-6]: метрика занятия читается из `DeliveryLedger`, а не из какого-то `SESSION_COMPOSED`. При нескольких ревизиях вопрос «какую брать» не возникает.
-- **MUST — `step_id` стабилен**: `step_id` не меняется между ревизиями для сохранённых шагов; `decision_id` ссылается на trace, породивший шаг.
+- **MUST — профиль отделён от механики**: `LessonProfile` объясняет ученику вид занятия; внутренние `mode` и `step_type` продолжают управлять бюджетом и отдельными шагами и не используются как название урока.
+- **MUST — preflight**: до старта система строит `LessonProposal` с названием, профилем, длительностью (`micro` 10–19 минут, `full` от 20), центральной темой, причиной, agenda и language envelope. Прямой запрос `--profile`/`--topic`/`--theme` является согласием. Автоматическая рекомендация требует объявления и подтверждения. [PD-2026-09-23] Сверка `--expected-proposal-hash` на `start` удалена вместе с CAS-протоколом доставки: прямой запрос принимается как согласие без сверки хеша устаревшего предложения.
+- **MUST — выбор ученика главнее рекомендации**: явный topic/theme/profile заменяет системный выбор, но не меняет scoring и не обходит safety. [PD-2026-09-23] Мид-сессионного `lesson_request`/`replan` не существует: новый выбор темы в уже начатой, но ещё не отчитанной сессии достижим только новым `start` (после `abandon` прежней) либо естественно — план advisory, и тьютор просто ведёт занятие по-своему, не будучи им ограничен.
+- **MUST — одна центральная новая тема**: `program_lesson` имеет не более одного central new target. Допустимы короткий warm-up и один связанный уже известный target. Несколько несвязанных `new_material_intro` не образуют полный урок.
+- **MUST — динамическая генерация**: профили задают структуру, а не матрицу заранее написанных уроков. План строится из curriculum, состояния ученика и прямого запроса. Full lesson проходит orientation → connection → explanation → guided retrieval → independent use → recap; micro lesson сохраняет ту же причинную дугу в меньшем объёме.
+- **MUST — разговор ограничен понятностью**: `free_conversation` получает известные target'ы из briefing и допускает 1–3 новые полезные единицы; каждая незнакомая единица проходит `lexicon encounter`, который остаётся enrollment, не evidence.
+- **MUST — профиль `drill`** [PD-2026-09-22]: одиннадцатый learner-facing профиль ([[../glossary]] LessonProfile) — занятие процедурализации. Каноническая agenda: **retrieval-разминка по due-материалу → ввод набора фреймов (правило одной строкой) → раунд 1 дрилла blocked → раунд 2 interleaved → реконструкция текста → timed writing → дебриф**. Профиль подчиняется общим правилам: он не меняет evidence-модель, не обходит safety и не отменяет ни `review_max`, ни полы корзин. Правило «объём практики превышает объём объяснения» ([[../product/learning-model]] §9.1) для него нормативно: полное «почему» живёт в финальном дебрифе, а не в ходе раундов.
 
 ### 4.3 Корзины образуют разбиение [CTRL-1]
 
-- **MUST — каждый шаг ровно в одной корзине**: `bucket ∈ {review, growth, integration, choice}`, взаимоисключающе и исчерпывающе. Для действующего плана `sum(DeliveryLedger.presented) + sum(SessionBudget.planned) ≤ total_seconds`.
+- **MUST — каждый шаг ровно в одной корзине**: `bucket ∈ {review, growth, integration, choice}`, взаимоисключающе и исчерпывающе. [PD-2026-09-23] Для собранного плана `sum(steps[].expected_seconds) ≤ total_seconds` — проверяется один раз, при сборке; накопительного учёта между вызовами (`presented`/`planned`) больше нет.
 - **MUST — определения корзин**:
 
   | Корзина | Что попадает |
@@ -183,10 +164,10 @@ control_policy:
 
 ### 4.3a Схема `PlannedStep` — tagged union [R-3]
 
-Общие поля: `step_id`, `decision_id`, `kind`, `bucket`, `step_type`, `expected_seconds`, `order_index`, `presented_at?`, `generation_directive?`, `bank_item_id?`, `lexicon_first?`.
+Общие поля: `step_id`, `decision_id`, `kind`, `bucket`, `step_type`, `expected_seconds`, `order_index`, `generation_directive?`, `lexicon_first?`.
 
-- **MUST — источник упражнения явный** [П.3]: у выданного шага ровно одно из `bank_item_id` или `generation_directive`. `bank_item_id` означает reuse принятого, ре-валидированного по active safety банк-item'а. `generation_directive` — каноничные данные для тьютора, рендерящего упражнение под pinned `generation@1`; сам текст фиксируется отдельно как `EXERCISE_RENDERED`.
-- **MUST — банк-item не evidence** [П.3]: выбор или рендер банк-item'а не создаёт evidence. Evidence по-прежнему требует сохранённого ответа ученика через [[evidence]].
+- **MUST — `generation_directive` advisory, не обязателен к использованию** [PD-2026-09-23]: шаг **может** нести `generation_directive` — каноничную подсказку для тьютора под pinned `generation@1`. Это ориентир, а не источник, который движок потом сверяет: тьютор волен вести задание иначе, и содержимое, которое он фактически использовал, движку видно только постфактум из отчёта ([[lessons]] §4b). Банк упражнений (`bank_item_id`, reuse принятых сгенерированных упражнений) ретайрен вместе с пошаговой доставкой ([[../glossary]] ExerciseBankItem).
+- **MUST — план не создаёт evidence**: выбор шага или его `generation_directive` не создаёт evidence. Evidence по-прежнему требует сохранённого ответа ученика через отчёт ([[evidence]]).
 
 | `kind` | Обязательные поля |
 |---|---|
@@ -195,23 +176,26 @@ control_policy:
 | `integration` | `targets[]` из `{target_ref, dimension, role: new \| learned}`, минимум по одному каждой роли |
 | `choice` | `target_ref?` либо `topic_hint` |
 | `gate` | `gate_scope`, `scope_ref` |
-| `probe` | `probe_id` (выдан движком), `target_ref`, `dimension`, `requested_difficulty`, `avoid_context?` |
 
-- **MUST — `kind → bucket` тотален**: `review → review`, `growth → growth`, `integration → integration`, а `choice | gate | probe → choice`. Иных пар нет.
+[PD-2026-09-23] `probe` (кандидат `too_easy`-сигнала) ретайрен вместе с сигналами (§4.7) — движку больше некуда его вставить мид-сессионно.
+
+- **MUST — `kind → bucket` тотален**: `review → review`, `growth → growth`, `integration → integration`, а `choice | gate → choice`. Иных пар нет.
+- **MUST — дополнительные поля `drill_block`** [PD-2026-09-22]: шаг с `step_type: drill_block` сверх полей своего `kind` несёт `rounds` (2–3), `round_size` (из `LearnerPreferences.round_size`, [[learner]] §2) и `targets[]` из `{target_ref, dimension, role: target | contrast}` — ровно одна запись с `role: target` и 0 либо 2–4 записи с `role: contrast` по правилу §4.6. Шаг с `step_type: timed_writing` несёт `declared_limit_seconds`, которое тьютор обязан объявить ученику до начала ([[lessons]] §5); шаг `reconstruction` несёт `text_ref` на текст из [[curriculum]] §2d.
 - **MUST — допустимые `step_type` по `kind`** [RR2-5]: без этой матрицы одна реализация назвала бы integration заданием на 420 секунд, другая — на 120, и планы разошлись бы при одинаковом входе.
 
 | `kind` | Допустимые `step_type` |
 |---|---|
-| `review` | `recognition_check`, `controlled_production`, `spontaneous_production`, `transfer_task` |
-| `growth` | `new_material_intro`, `controlled_production` |
-| `integration` | `integration_task`, `transfer_task` |
-| `choice` | `free_conversation`, `spontaneous_production` |
+| `review` | `recognition_check`, `controlled_production`, `spontaneous_production`, `transfer_task`, **`drill_block`** |
+| `growth` | `new_material_intro`, `controlled_production`, **`drill_block`** |
+| `integration` | `integration_task`, `transfer_task`, **`reconstruction`**, **`timed_writing`** |
+| `choice` | `free_conversation`, `spontaneous_production`, **`timed_writing`** |
 | `gate` | `gate_item` |
-| `probe` | `transfer_task`, `spontaneous_production` |
 
-- **MUST — review-шаг несёт `review_assignment_id`**: без него выданное задание невозможно корректно закрыть через `trainer review close`, а `finish` не может проверить пустоту pending-set.
+- **MUST — три `step_type` контура автоматизации** [PD-2026-09-22]: `drill_block` (серия раундов по одному паттерну, [[../glossary]] Drill block), `timed_writing` (письмо под объявленным лимитом) и `reconstruction` (восстановление авторского текста по ключевым словам, [[curriculum]] §2d). Стоимость каждого — 300 секунд (§3), корзина выводится из `kind` обычным тотальным правилом `kind → bucket`. Пары, отсутствующие в таблице выше, запрещены: `drill_block` не бывает `integration`-шагом (он работает с одним паттерном, а не с парой ролей), а `reconstruction` не бывает `growth`-шагом (восстанавливать можно только то, что уже введено).
+
+- **MUST — review-шаг несёт `review_assignment_id`** [PD-2026-09-23]: без него отчёт не может сослаться на конкретный ReviewAssignment, чтобы закрыть его по вердикту ([[evidence]] §4.3); движком по-прежнему проверяется, что каждый ReviewAssignment сессии получает терминальную диспозицию — теперь не как предпосылка `finish`, а как часть атомарного коммита отчёта ([[lessons]] §4).
 - **MUST — integration выражает пару**: одиночный `target_ref` не способен описать задание «новая цель поверх освоенной», ради которого корзина и введена.
-- **MUST — три раздельные величины: ревизия, эффективный состав и факт** [RR2-6, RR2-11]: `revision_planned_review_share` — диагностическая доля текущей ревизии; `effective_review_share = (ledger.presented.review + budget.planned.review) / total_seconds` — единственная величина для проверки `review_max` и полов; `presented_review_share` — факт из `DeliveryLedger` для метрик и аварий (§4.10). `integration` и `choice` не входят в review ни в одной величине.
+- **MUST — `review_share` считается один раз, при сборке** [PD-2026-09-23]: `review_share = sum(review-шагов.expected_seconds) / total_seconds` собранного плана — единственная величина, которую проверяют `review_max` и полы. Прежнее различение «ревизия / эффективный состав / факт доставки» (RR2-6/RR2-11) относилось к накопительному учёту через `replan`, которого больше нет. `integration` и `choice` не входят в review.
 - **MUST — вклад integration в цели**: шаг `integration` может дать evidence нескольким целям, но с dedup и cap по [[evidence]] §4.1. На бюджет он относится целиком к своей корзине.
 
 ### 4.4 Канонический конвейер сборки [CTRL-12]
@@ -223,11 +207,10 @@ control_policy:
 3. **Классификация** review-кандидатов — §4.5.
 3a. **Активные сигналы** — фильтры и сдвиги §4.7 применяются после базовой классификации.
 3b. **Свободный разговор — безусловный кандидат** `choice` [RR2-14]: он не требует цели, поэтому доступен всегда и `NO_CHOICE_CANDIDATE` при `choice_min > 0` возникнуть не может. `topic_hint` берётся из активной `goal`, иначе пуст.
-4. **Каноническая сортировка.** Review внутри класса: `(retrievability asc, stake_rank asc, deferral_count desc, expected_seconds asc, target_id asc, dimension_id asc, candidate_id asc)`. Growth: `(curriculum_priority_rank asc, learner_relevance desc, target_id asc, dimension_id asc, step_type_rank asc, candidate_id asc)`. Integration: `(new_target growth-key, learned_target_id asc, learned_dimension_id asc, step_type_rank asc, candidate_id asc)`. Choice: `(source_rank asc, target_id_or_empty asc, step_type_rank asc, candidate_id asc)`, где `source_rank`: probe `0`, явный выбор ученика `1`, active goal `2`, личный словарь `3`, gate `4`, free conversation `5`. `step_type_rank`: `new_material_intro 0`, `recognition_check 1`, `controlled_production 2`, `spontaneous_production 3`, `transfer_task 4`, `integration_task 5`, `gate_item 6`, `free_conversation 7`. `candidate_id` обязателен и стабилен в нормализованном входе.
+4. **Каноническая сортировка.** Review внутри класса: `(retrievability asc, stake_rank asc, deferral_count desc, expected_seconds asc, target_id asc, dimension_id asc, candidate_id asc)`. Growth: `(curriculum_priority_rank asc, learner_relevance desc, target_id asc, dimension_id asc, step_type_rank asc, candidate_id asc)`. Integration: `(new_target growth-key, learned_target_id asc, learned_dimension_id asc, step_type_rank asc, candidate_id asc)`. Choice: `(source_rank asc, target_id_or_empty asc, step_type_rank asc, candidate_id asc)`, где `source_rank`: явный выбор ученика `1`, active goal `2`, личный словарь `3`, gate `4`, free conversation `5` (ранг `0`, прежде отданный probe, ретайрен вместе с сигналами [PD-2026-09-23] и не переиспользуется). `step_type_rank`: `new_material_intro 0`, `recognition_check 1`, `controlled_production 2`, `spontaneous_production 3`, `transfer_task 4`, `integration_task 5`, `gate_item 6`, `free_conversation 7`, `drill_block 8`, `reconstruction 9`, `timed_writing 10` [PD-2026-09-22]. `candidate_id` обязателен и стабилен в нормализованном входе. Новые ранги **дописаны в конец**, а не вставлены по смыслу: перенумерация изменила бы порядок уже существующих планов при одинаковом входе.
 5. **Резервирование остаточных полов** в фиксированном порядке `growth → integration → choice` до величин из §4.2. Пол — **резервируемая ёмкость, а не обязательная загрузка** [R-2]: пересекающий пол шаг может превысить остаточную ёмкость по §3. Если кандидатов нет, фиксируется `NO_<BUCKET>_CANDIDATE`; если после добавлений кандидаты закончились ниже пола — `<BUCKET>_CANDIDATES_EXHAUSTED`; если кандидаты есть, но ни один не помещается в общий остаток после предыдущих корзин, — `NO_<BUCKET>_STEP_FITS`. Во всех трёх случаях незанятый резерв переходит следующей корзине. Это делает исполнимыми первое занятие (нет integration-пар), короткие бюджеты с неделимыми шагами и режимы `maintenance`/`re_entry`, где `growth_min = 0`.
 6. **Резерв против голодания** — §4.5.
-6a. **Pending probe** — если probe не был выбран при заполнении choice-пола, он first-fit пытается занять общий остаток теперь; при успехе сигнал атомарно расходуется, при неуспехе применяется `PROBE_BUDGET_UNAVAILABLE` §4.7.
-6b. **Availability-boost** — §4.7a; только после starvation-reserve, чтобы не отменить его гарантию.
+6b. **Availability-boost** — §4.7a; только после starvation-reserve, чтобы не отменить его гарантию. [PD-2026-09-23] Шаг 6a (pending probe) ретайрен вместе с сигналами (§4.7); номерация сохранена как есть — «6b» не переименован, чтобы не путать историю пайплайна с текущим составом шагов.
 7. **Review** по классам `critical → important → normal → maintenance`, пока не достигнут `review_max` или бюджет.
 8. **Добор остатка** после review — фиксированными проходами `growth → integration → choice`; каждая корзина исчерпывает свой канонически отсортированный список first-fit, затем управление переходит следующей. Второго цикла нет. Ни один потолок или правило «не более одного growth на цель» не нарушается.
 9. **Квоты разнообразия** — §4.6, применяются как **фильтр при добавлении**, а не постобработкой: шаг, нарушающий квоту, пропускается, берётся следующий по порядку.
@@ -271,53 +254,33 @@ control_policy:
 
 ### 4.6 Доставка, насыщение, разнообразие [CTRL-6]
 
-- **MUST — факт выдачи это граница до тьютора, а не до ученика** [RR2-2]: `STEP_PRESENTED` фиксирует, что шаг **выдан тьютору** и стал его обязательством. Экран ученика движок не наблюдает. Утверждать «показан ученику» значило бы приписать движку ненаблюдаемый факт: между commit и репликой в чате возможны крэш, обрыв и смена агента.
-- **MUST — что из этого следует**: exposure, saturation и сброс `deferral_count` считаются от выдачи тьютору; идемпотентный повтор с тем же ключом возвращает тот же шаг и **не** создаёт второй факт. Если сессия брошена сразу после выдачи, факт остаётся — это честная плата за то, что доставку подтвердить нечем, и она названа здесь, а не замаскирована.
-- **MUST — план не равен выдаче**: `SESSION_COMPOSED` — намерение; в брошенной или перепланированной сессии шаг мог не выдаваться вовсе.
-- **MUST — `SaturationState` строится из существующих событий** [R-5]: входы — `STEP_PRESENTED` (число показов и `context_id`), `EVIDENCE_ADDED` и `REVIEW_OUTCOME` из [[evidence]] §3 (успех, independence), `ERROR_OBSERVED` (повторяющаяся живая ошибка для предиката `risk`). Событие с именем `ATTEMPT_ASSESSED` в каноне отсутствует и здесь не используется. Reducer применяет события в порядке канонического `sequence`, дедуп — по `event_id`.
-- **MUST — цели, `context_id` и источник упражнения в факте доставки** [R-5; П.3]: `STEP_PRESENTED.targets[]` перечисляет все пары `(target_ref, dimension)` шага, включая обе роли integration, а `context_id` идентифицирует смысловой контекст (домен + тип задания). Событие также несёт `step_type`, `active_safety_version` и ровно одно из `bank_item_id` / `generation_directive_hash`. Reducer обновляет saturation для каждой пары; `review_assignment_id` обязателен для kind=review и делает разрешимой корреляцию §4.10.
+- **MUST — факт выдачи фиксируется постфактум, отчётом** [RR2-2, уточнено PD-2026-09-23]: `STEP_PRESENTED` фиксирует, что тьютор провёл это задание с учеником, но публикует его теперь `lessons.report` — в момент коммита отчёта, по каждому item'у, `source: lesson_report` ([[lessons]] §4d). Смысл факта не изменился (движок не наблюдает экран ученика напрямую, тьютор остаётся trusted reporter, [[evidence]] §4.2), изменился только момент: раньше событие фиксировало обязательство «шаг выдан, что бы дальше ни случилось», теперь — свершившийся факт «это было проведено», сообщённый после занятия.
+- **MUST — что из этого следует**: exposure, saturation и сброс `deferral_count` считаются от `STEP_PRESENTED`-фактов отчёта — то есть только у сессий, по которым отчёт действительно дошёл до коммита. Сессия, брошенная без отчёта (`abandon`), не оставляет ни одного факта выдачи: exposure по её содержимому не засчитывается, потому что подтвердить его нечем.
+- **MUST — план не равен выдаче**: `SESSION_COMPOSED` — намерение; тьютор мог провести занятие не по предложенному плану вовсе, и тогда его `STEP_PRESENTED`-факты этому плану не соответствуют.
+- **MUST — `SaturationState` строится из существующих событий** [R-5]: входы — `STEP_PRESENTED` (число показов и `context_id`), `EVIDENCE_ADDED` и `REVIEW_OUTCOME` из [[evidence]] §3 (успех, independence), `ERROR_OBSERVED` (повторяющаяся живая ошибка для предиката `risk`). Reducer применяет события в порядке канонического `sequence`, дедуп — по `event_id`; форма и источник входных фактов не изменились с переходом на brief/report — изменился только их производитель (§3b).
+- **MUST — цели и `context_id` в факте доставки** [R-5; П.3]: `STEP_PRESENTED.targets[]` перечисляет все пары `(target_ref, dimension)` item'а, а `context_id` идентифицирует смысловой контекст. Событие также несёт `step_type` и `active_safety_version`. [PD-2026-09-23] Полей `bank_item_id`/`generation_directive_hash` больше нет: контент задания не проходит рендер по банку/generation directive — движок видит его только как `prompt`/`raw_answer` отчёта. Reducer обновляет saturation для каждой пары; `review_id`, когда item ссылается на повторение, делает разрешимой корреляцию §4.10.
 - **MUST — предикат `saturated`** [RR2-13]: считается **per-dimension**; `exposures_in_window ≥ max_exposures_in_window` **∨** (`consecutive_independent_successes ≥ consecutive_success_threshold` **∧** `distinct_contexts < min_distinct_contexts` **∧** `last_transfer_check_at != null` **∧** `now − last_transfer_check_at ≤ transfer_check_staleness_days`). При `last_transfer_check_at = null` вторая конъюнкция ложна. Ключ по цели без dimension позволил бы частым проверкам узнавания заглушить слабое производство той же цели. Если transfer давно не проверялся или не проверялся вообще, устойчивый успех в знакомом шаблоне **не** считается насыщением.
 - **MUST — насыщение не равно владению**: понижение класса меняет только план; состояние знания меняет исключительно [[scoring]].
 - **MUST — квоты разнообразия**: `max_steps_per_topic`, `max_consecutive_same_mode`, `max_similar_items`. «Похожие» = единицы, делящие `lemma`/базовый глагол phrasal-verb либо один `topic`.
+- **MUST — дрилл-блок считается как одно предъявление** [PD-2026-09-22]: шаг `drill_block` даёт `exposures_in_window += 1` **независимо** от числа items внутри него, и `max_steps_per_topic` считает его как **один** шаг. Иначе `max_exposures_in_window: 3` исчерпывался бы внутри половины первого блока, и серия массированных повторений — то, ради чего `drill_block` и введён, — была бы неисполнима. Симметрично `consecutive_independent_successes` увеличивается на 1 за успешный блок, не за успешный item.
+- **MUST — interleaving со второго предъявления** [PD-2026-09-22]: если по цели уже есть **хотя бы один** зафиксированный `STEP_PRESENTED`, её `drill_block` **обязан** нести 2–4 контрастные цели в `targets[]` с `role: contrast`, взятые из `contrasts` темы либо из артикльного яруса ([[../product/lexical-system]] §1c). Блок при первом предъявлении цели — и только при нём — идёт **blocked**, без контрастов. Blocked-ввод нужен, чтобы паттерн вообще сложился; дальше именно перемешивание с конкурирующими формами даёт отложенную точность, а чистый blocked-дрилл её не даёт.
+- **MUST — роль `contrast` не создаёт evidence по контрастной цели**: `role: contrast` в `targets[]` объявляет, что цель предъявлена как помеха выбора, а не как проверяемая цель блока. Evidence по ней возникает только обычным путём — из сохранённого ответа с её собственным source-span ([[evidence]] §4.6); дедуп и cap multi-credit применяются без изменений.
+- **MUST — не хватает контрастов**: если для цели не набирается двух допустимых контрастных целей, блок выдаётся как **blocked** (без контрастов), а `NO_CONTRAST_CANDIDATE` фиксируется в waivers плана и в trace шага. Пропуск цели ради недобора контрастов лишил бы практики именно ту цель, которой она нужна; предпочтительнее массированный раунд, чем отсутствие раунда [PD-2026-09-22].
 
-### 4.7 Сигналы ученика и пробы [CTRL-9, CTRL-10]
+### 4.7 Сигналы ученика (retired) [CTRL-9, CTRL-10, PD-2026-09-23]
 
-- **MUST — discriminated union по `kind`**:
+Мид-сессионный `replan` — единственный адресат `LearnerControlSignal`/`PROBE_REQUESTED` — удалён вместе с пошаговой доставкой ([[lessons]] §4d): применить сигнал (`too_easy`, `too_repetitive`, `need_more_practice`, `not_relevant_now`, `snooze`, `prefer_different_context`) стало больше некуда, поскольку план не мутируется после того, как brief его вернул. `trainer signal` удалён из CLI (§5).
 
-  | `kind` | Обязательный payload | Срок |
-  |---|---|---|
-  | `too_easy` | `target_ref` | одноразовый |
-  | `too_repetitive` | `target_ref?` | `expires_after_session_seq = current_session_seq + exposure_window_sessions` |
-  | `need_more_practice` | `target_ref` | `expires_after_session_seq = current_session_seq + default_effect_sessions` |
-  | `not_relevant_now` | `target_ref` \| `domain` | `expires_at` обязателен |
-  | `snooze` | `target_ref`, `until` | `until` |
-  | `prefer_different_context` | `target_ref`, `avoid_context` | `expires_after_session_seq = current_session_seq + default_effect_sessions` |
-
-- **MUST — два раздельных типа истечения** [R-11, RR2-9]: `expires_at` — UTC-метка времени только для `snooze`/`until` и `not_relevant_now`; `expires_after_session_seq` — целый номер сессии для срока в занятиях. `session_seq` монотонно назначается ученику в UoW старта. Сигнал активен для композиции с `session_seq ≤ expires_after_session_seq`; после этого номера не влияет. Если сигнал записан вне активной сессии, `current_session_seq` означает номер последней начатой сессии, либо `0`, если их ещё не было.
-- **MUST — запись сигнала не меняет действующий план**: `record_signal` идемпотентно сохраняет сигнал и публикует `LEARNER_SIGNAL_RECORDED`. Для `too_easy` движок также создаёт стабильный `probe_id` и публикует `PROBE_REQUESTED`, но `PlannedStep` появляется только при следующем `compose_session` либо **явном** `replan`. При активной сессии ответ содержит `next_action: session.replan`, `session_id`, `current_plan_version` и `probe_id`; агент не вправе вставить пробу сам.
-- **MUST — параметры probe выводимы**: для `too_easy` движок берёт `dimension`, `avoid_context` и базовый `step_type` из последнего по `sequence` события `STEP_PRESENTED`, чьи `targets[]` содержат эту цель (сначала в активной сессии, иначе вообще); если в одном событии цель встречается с несколькими dimensions, берётся `dimension_id asc`. Если события нет, команда отклоняется `PRECONDITION_FAILED {reason: no_presented_step}`. `requested_difficulty` — закрытый enum `spontaneous_production | transfer_task`: после `new_material_intro`/`recognition_check`/`controlled_production`/`gate_item` запрашивается `spontaneous_production`; после `spontaneous_production`/`integration_task`/`free_conversation`/`transfer_task` — `transfer_task`. `avoid_context` равен контексту исходного шага.
-- **MUST — одноразовый сигнал расходуется атомарно**: `too_easy` закрывается `SIGNAL_CONSUMED` в той же UoW, в которой композиция действительно добавила `PlannedStep{kind: probe, probe_id}`. Если probe не помещается в `remaining_seconds` или уже достигнут лимит, trace получает `PROBE_BUDGET_UNAVAILABLE`, сигнал не расходуется и остаётся для следующей композиции.
-- **MUST — precedence и точные преобразования** [R-11]: сначала выполняется базовая классификация §4.5, затем активные сигналы применяются от сильного к слабому:
-
-  1. `snooze` / `not_relevant_now` исключают цель;
-  2. `need_more_practice` сдвигает класс на одну ступень `deferrable → maintenance → normal → important`; `important`/`critical` не меняются;
-  3. `prefer_different_context` исключает кандидаты с `context_id = avoid_context`; если вариантов не осталось, фиксируется `NO_ALLOWED_CONTEXT` и цель в этой композиции пропускается;
-  4. `too_repetitive` применяется только при `risk = false` и сдвигает `normal → maintenance → deferrable`; остальные классы не меняются;
-  5. `too_easy` класс не меняет и создаёт probe по предыдущим правилам.
-
-  Более поздний сигнал того же `kind` и scope замещает предыдущий (`superseded_by`). Сигнал на конкретную цель замещает противоречащий сигнал уровня `domain`; непротиворечащие эффекты складываются в указанном порядке. Истёкший сигнал не влияет, но не удаляется.
-- **MUST — сигналы не evidence**: в Mastery, уровень и XP не входят никогда.
-- **MUST — `origin` выводится движком, а не заявляется агентом** [R-7]: Attempt ссылается на `step_id`; если выданный шаг имеет `kind = probe`, движок проставляет `origin = control_probe`, иначе — обычный origin по [[evidence]]. CLI параметра `--origin` не имеет. Агент не может превратить обычный провал в probe.
-- **MUST — no-negative покрывает все отрицательные эффекты** [R-7]: evidence с `origin = control_probe` не может дать `REGRESSION`, не понижает knowledge state, **не уменьшает Mastery и Stability и не сдвигает расписание в сторону сокращения интервала**. Успех засчитывается обычным порядком в пределах общих cap'ов. Прежняя формулировка запрещала только смену состояния и оставляла отрицательную дельту возможной — то есть наказание всё равно наступало, просто тише.
-- **MUST — probe в своей корзине** [R-7]: `too_easy` не требует, чтобы цель была due, поэтому probe-шаг **не** относится к `review` (та определена через due-backlog). Probe занимает `choice`: это шаг, инициированный учеником.
-- **MUST — бюджет проб**: не более одного probe-шага на цель в занятии.
+- Тунабл `signals.default_effect_sessions` пинят только старые сессии `control@3`; новый протокол его не читает — payload пинится неизменным (§3), и это осознанное историческое наследие, а не живая настройка.
+- `origin = control_probe` остаётся закрытым членом enum'а `origin` ([[evidence]] §4.5, [[scoring]] §4b) и его no-negative правило сохраняет силу для исторического evidence — но с retire'ом `probe` (§4.3a) новых producer'ов у этого значения больше нет.
+- Идея пробы (добровольная проверка выше требуемого уровня) не запрещена продукту — просто не имеет больше отдельного мид-сессионного механизма; тьютор волен предложить более сложное задание сам, и оно ляжет в отчёт как обычный item.
 
 ### 4.7a Availability — алгоритм v1 [R-9]
 
 Сущность §2 без правил вычисления не задавала поведения; часть значений policy не использовалась ни одной веткой.
 
 - **MUST — целочисленная схема** [RR2-10, RR2-12]: `declared{sessions_per_week_milli, typical_minutes, next_available_at?, blackout_until?}` и `observed{sessions_per_week_milli, typical_minutes, median_interval_seconds?}`. `1000` milli = одна сессия в неделю; все числовые поля — целые, YAML-float запрещён. Профиль задаётся `trainer availability set`.
-- **MUST — источник `observed`**: окно — `[start_of_week(now) − (divergence_window_weeks − 1) недель, now]`, то есть текущая неполная и предшествующие полные недели, всего ровно `divergence_window_weeks` календарных корзин. `start_of_week` — понедельник 00:00 в `LearnerProfile.timezone`, а использованные `now` и timezone захватываются в trace. Если в окне не менее `min_observed_sessions` терминализованных сессий, `observed.sessions_per_week_milli = floor(count × 1000 / divergence_window_weeks)`, а `typical_minutes` — lower median их `SessionBudget.total_seconds // 60`. Иначе оба поля получают `no-data`. `median_interval_seconds` — lower median разностей соседних `SESSION_STARTED.started_at` при наличии минимум трёх стартов; иначе `null`. Длительность `STARTED→FINISHED` не используется.
+- **MUST — источник `observed`**: окно — `[start_of_week(now) − (divergence_window_weeks − 1) недель, now]`, то есть текущая неполная и предшествующие полные недели, всего ровно `divergence_window_weeks` календарных корзин. `start_of_week` — понедельник 00:00 в `LearnerProfile.timezone`, а использованные `now` и timezone захватываются в trace. Если в окне не менее `min_observed_sessions` терминализованных сессий, `observed.sessions_per_week_milli = floor(count × 1000 / divergence_window_weeks)`, а `typical_minutes` — lower median их `SessionPlan.budget.total_seconds // 60`. Иначе оба поля получают `no-data`. `median_interval_seconds` — lower median разностей соседних `SESSION_STARTED.started_at` при наличии минимум трёх стартов; иначе `null`. Длительность `STARTED→FINISHED` не используется.
 - **MUST — precedence бюджета**: `total_seconds` берётся первым из непустого: `--duration-minutes × 60` → `declared.typical_minutes × 60` → `observed.typical_minutes × 60` → `default_total_minutes × 60`. Порядок фиксирован.
 - **MUST — расхождение**: если `declared.sessions_per_week_milli` отсутствует либо observed = `no-data`, результат `no-data` и предложение не создаётся. Иначе `divergence_ppm = floor(abs(declared_milli − observed_milli) × 1_000_000 / max(declared_milli, 1000))`. При `divergence_ppm > divergence_tolerance_ppm` система предлагает уточнить и не переписывает declared без подтверждения; `AVAILABILITY_UPDATED` публикуется только после принятого изменения.
 - **MUST — предикат длинного перерыва**: он истинен, если `blackout_until > now`, либо одновременно заданы `next_available_at > now` и `median_interval_seconds`, причём `next_available_at − now > median_interval_seconds`. При `median_interval_seconds = null` одно лишь `next_available_at` усиление не включает; blackout включает всегда.
@@ -345,7 +308,7 @@ trace_field: review_max
 ```
 
 - **MUST — реестр, не хранилище**: значения живут в pinned policy у владельца; каталог хранит метаданные. Два хранилища одного числа разъедутся.
-- **MUST — полный versioned catalogue [PD-2026-07-22]**: `tunables@1` содержит 60 строк — все 48 числовых decision-leaf `control@1` и 12 явно объявленных tunables владельцев lessons/evidence/scoring/scheduler/assessments/obligations. Структурные числа generation/rubric не являются tunables и не входят. Валидатор проверяет полноту в обе стороны при активации curriculum. `balanced.review_max` имеет принятый advisory range `[3000, 6000]`; до эмпирических данных все остальные диапазоны заморожены как `[default, default]`, а не выдуманы.
+- **MUST — полный versioned catalogue [PD-2026-07-22]**: `tunables@1` содержит 60 строк — все 48 числовых decision-leaf `control@1` и 12 явно объявленных tunables владельцев lessons/evidence/scoring/scheduler/assessments/obligations. Структурные числа generation/rubric не являются tunables и не входят. Валидатор проверяет полноту в обе стороны при активации curriculum. [PD-2026-09-22] `control@3` добавляет три числовых decision-leaf (`expected_seconds_by_step_type` для `drill_block`, `timed_writing`, `reconstruction`), поэтому каталог обязан вырасти до **63** строк новой версией (`tunables@2`): проверка полноты в обе стороны иначе не пройдёт, и это ровно то, ради чего она заведена. Диапазоны новых строк заморожены как `[default, default]` до эмпирических данных. `balanced.review_max` имеет принятый advisory range `[3000, 6000]`; до эмпирических данных все остальные диапазоны заморожены как `[default, default]`, а не выдуманы.
 - **MUST — потолок автономии: propose_confirm** `[PD-2026-07-20]`: ни один параметр не объявляет режим выше. Автоприменение запрещено: при одном ученике шум неотличим от сигнала.
 - **MUST — применение делегируется владельцу** `[PD-2026-07-20]` [CTRL-Q2]: control владеет **только** workflow «предложил → подтвердили». Активацию новой версии выполняет **API модуля-владельца** параметра, с его CAS и его событием; control не мутирует чужой aggregate и не становится вторым владельцем policy. `CALIBRATION_APPLIED` фиксирует подтверждение и связан `causation_id` с событием активации у владельца.
 - **MUST — confirm атомарен [PD-2026-07-22]**: подтверждение строит новый immutable snapshot policy владельца, валидирует range/catalogue, активирует его CAS-событием `policy.version_activated`, затем пишет причинно связанный `calibration.applied` в той же UoW. Повтор idempotency-key возвращает исходный результат; применённое предложение повторно не активируется.
@@ -357,8 +320,8 @@ trace_field: review_max
 | id | Формула | Окно | Нет данных |
 |---|---|---|---|
 | `calibration_error` | среднее \|прогноз Retrievability на момент выдачи − факт (1 успех / 0 неуспех)\| по всем `REVIEW_OUTCOME` | 200 исходов | `no-data` при < 50 |
-| `presented_review_share` | `ledger.presented.review / ledger.presented_seconds`, среднее по терминализованным сессиям | 10 сессий | `no-data` при < 3 |
-| `presented_growth_rate` | `ledger.presented.growth / ledger.presented_seconds`, среднее | 10 сессий | `no-data` при < 3 |
+| `presented_review_share` | по сессии — **ledger**, если он заполнен (историческая сессия), иначе **счёт по отчёту** (см. ниже); `review_bp = review-единицы / все репортнутые единицы` | 10 сессий | `no-data` при < 3 |
+| `presented_growth_rate` | то же по сессии; `growth_bp = growth-единицы / все репортнутые единицы` | 10 сессий | `no-data` при < 3 |
 | `backlog_age_p90` | 90-й процентиль `now − first_due_at` по незакрытым due; метод — **nearest-rank**, ties разводятся `(target_id, dimension_id)` | текущий срез | `no-data` при пустом backlog |
 | `max_deferrals` | максимум `deferral_count` среди целей backlog | текущий срез | `0` |
 | `lapse_rate_after_mastered` | доля целей, получивших REGRESSION в течение 90 дней после MASTERED | 90 дней | `no-data` при < 10 |
@@ -367,7 +330,12 @@ trace_field: review_max
 - **MUST — связь прогноза с исходом** [RR2-11]: `calibration_error` соотносит `STEP_PRESENTED.predicted_retrievability` **последнего выданного** шага данного `review_assignment_id` с терминальным исходом этого assignment. Один исход агрегирует несколько попыток, поэтому без явного правила пара «прогноз ↔ факт» была бы неоднозначной. Отменённые (`CANCELLED`) assignment в выборку не входят.
 - **MUST — прогноз фиксируется в `STEP_PRESENTED`, а не при композиции** [R-8]: `predicted_retrievability` записывается в момент **фактической выдачи**. Композиция и выдача расходятся во времени (сессию можно возобновить через день), а Retrievability убывает по реальному времени — сравнение с прогнозом из плана приписывало бы политике ошибку, созданную устаревшим планом. Пересчёт задним числом запрещён.
 - **MUST — разметка исходов** [R-8]: в `calibration_error` `CONFIRMED` и `PROGRESS` → `1`; `REGRESSION` → `0`; `RECOVERED` → `1`; `INSUFFICIENT_EVIDENCE` → **исключается** из выборки, а не считается нулём. Исход из пяти значений нельзя молча свести к булеву.
-- **MUST — аварии считаются по факту и только по `balanced`-занятиям** [R-8, RR2-11]: входы аварий — `presented_*` из `DeliveryLedger`; в режимах `maintenance`/`re_entry` нулевой рост законен, и включение их в окно давало бы ложную тревогу после трёх нормальных поддерживающих занятий.
+- **`presented_review_share`/`presented_growth_rate` пересобраны под report-факты** [PD-2026-09-23]: раньше они читались из `DeliveryLedger`, которого больше нет (§4.2); report-протокольная сессия его не заполняет никогда. Источник по сессии выбирается по наличию `LESSON_REPORTED`: **историческая** сессия (заполненный `session_plan.ledger`, без `LESSON_REPORTED`) считается как раньше; **report-протокольная** сессия (с `LESSON_REPORTED`) считается по собственным `STEP_PRESENTED`-фактам отчёта (`source: lesson_report`, [[lessons]] §4d) следующим образом:
+  - **знаменатель** — каждая репортнутая единица весом `1`; drill-блок весит **по числу его members** (`len(item_ids)`), а не `1` за блок целиком, чтобы у отчётного item'а и у члена блока был равный вес, а шестипунктовый блок не схлопывался до веса одного item'а;
+  - **`review_bp`** — доля единиц, чей `STEP_PRESENTED` несёт `review_assignment_id` (у блока это решается на уровне блока: весь блок либо адресует ревью, либо нет — все его members считаются вместе);
+  - **`growth_bp`** — доля единиц, чья первичная цель (`targets[0]`, запись с `role: target`) не имела **ни одного** `STEP_PRESENTED`-факта (любого источника — ledger или report) до первого события этой сессии в журнале. Это то же определение `is_first_exposure`, что и в §4.3 (цель новая, если по ней ещё не было факта доставки), переиспользованное, а не изобретённое заново: `evidence.added` намеренно не используется — §4.6 уже называет именно доставку, а не evidence, фактом экспозиции, и цель может быть показана (и даже не получить evidence) не переставая быть «уже показанной».
+  - Пустой отчёт (без `STEP_PRESENTED`-фактов) не даёт сэмпла — как и историческая сессия с нулевым `presented_seconds`.
+- **MUST — аварии считаются по факту и только по `balanced`-занятиям** [R-8, RR2-11]: входы аварий — `presented_*` (источник — пункт выше); в режимах `maintenance`/`re_entry` нулевой рост законен, и включение их в окно давало бы ложную тревогу после трёх нормальных поддерживающих занятий.
 - **MUST — раздельные пороги входа и выхода**: авария включается при пересечении `*_enter_bp` подряд `*_consecutive` занятий и выключается только при пересечении `*_exit_bp` — гистерезис не даёт метрике мигать у порога. Пороги — параметры каталога, а не прилагательные «устойчиво» и «близок».
 - **MUST — реакция: сообщить, не притормаживать** `[PD-2026-07-20]` [CTRL-Q1]: при аварии система **сообщает** и предлагает выбор (режим `maintenance`, больше времени, отказ от части целей). Автоматическое снижение притока нового материала **не вводится**: скрытое изменение программы без ведома ученика противоречит принципу «движок объясняет, а не решает молча».
 - **MUST — честность о статистике**: при одном ученике большинство метрик долго остаются шумом; `no-data` — легитимный результат, а не ноль.
@@ -377,18 +345,17 @@ trace_field: review_max
 | Команда | Владелец | Мутирует | Что делает |
 |---|---|---|---|
 | `trainer why --step ID` | control | нет | `DecisionTrace` шага (§4.8) |
-| `trainer signal KIND --target ID [payload]` | control | да | сигнал ученика; `too_easy` → `PROBE_REQUESTED` |
 | `trainer availability show` \| `set` | control | `set` — да | ритм: объявленный, наблюдаемый, расхождение |
 | `trainer tunables list [--owner X]` | control | нет | каталог настроек |
 | `trainer metrics` | control | нет | метрики + аварии |
 | `trainer calibration list` \| `confirm ID` | control | `confirm` — да | предложения; применение делегируется владельцу |
 
-`trainer session start --mode`, `trainer session next --expected-session-revision R --expected-plan-version V` (мутирующая, §4.2), `trainer session peek` (read-only, возвращает оба токена) и `trainer session replan --expected-session-revision R --expected-plan-version V` принадлежат [[lessons]]; их поведение определяется здесь.
+[PD-2026-09-23] `trainer signal` удалён — мид-сессионного адресата у сигналов ученика больше нет (§4.7). `trainer session start --mode` принадлежит [[lessons]]; advisory-план, который она возвращает внутри `LessonBrief`, собирает `compose_plan` (здесь, §3b/§4.2). `trainer session next/peek/replan` удалены вместе с CAS-протоколом доставки.
 
 ## 6. Границы
 
 - **depends on**: [[scheduler]] (backlog, retrievability), [[scoring]] (состояния, прогнозы), [[evidence]] (исходы, наблюдённые ошибки, ReviewAssignment), [[curriculum]] (priority band, prerequisites, рекомендации), [[learner]] (`goals`, личный словарь → relevance), [[gates]] (рекомендация гейта как кандидат `choice`), [[lessons]] (UoW старта, терминализация)
-- **events published**: `SESSION_COMPOSED`, `STEP_PRESENTED`, `LEARNER_SIGNAL_RECORDED`, `SIGNAL_CONSUMED`, `PROBE_REQUESTED`, `AVAILABILITY_UPDATED`, `CALIBRATION_PROPOSED`, `CALIBRATION_APPLIED`
+- **events published**: `SESSION_COMPOSED`, `AVAILABILITY_UPDATED`, `CALIBRATION_PROPOSED`, `CALIBRATION_APPLIED`. [PD-2026-09-23] `STEP_PRESENTED` больше не публикуется control'ом — владеет им [[lessons]] §4d (отчёт, постфактум); `LEARNER_SIGNAL_RECORDED`/`SIGNAL_CONSUMED`/`PROBE_REQUESTED` ретайрены вместе с сигналами (§4.7).
 - **events consumed**: `REVIEW_SCHEDULED`, `OVERDUE_AT_RISK_TRIGGERED` (← [[scheduler]]), `STATE_TRANSITION` (← [[scoring]]), `EVIDENCE_ADDED`, `REVIEW_OUTCOME`, `ERROR_OBSERVED` (← [[evidence]] §3 — saturation, recurring-error, метрики), `SESSION_STARTED`/`FINISHED`/`ABANDONED` (← [[lessons]])
 
 Модуль не меняет Mastery, Stability, knowledge state, CEFR и интервалы; содержимое заданий генерирует П.3.
@@ -401,6 +368,11 @@ trace_field: review_max
 
 ## История изменений
 
+- **2026-09-23 (2)**: [PD-2026-09-23] закрыт названный в предыдущей записи пробел: `presented_review_share`/`presented_growth_rate` пересобраны под report-факты. По сессии источник выбирается по наличию `LESSON_REPORTED` — историческая сессия (заполненный ledger, без него) считается как раньше; report-протокольная считается по собственным `STEP_PRESENTED`-фактам отчёта (`source: lesson_report`): знаменатель — каждая репортнутая единица, блок весит по числу members (не `1` за блок); `review_bp` — доля единиц с `review_assignment_id`; `growth_bp` — доля единиц, чья первичная цель не имела ни одного `STEP_PRESENTED`-факта (любого источника) до первого события сессии в журнале — то же `is_first_exposure`, что и в §4.3, не новое определение через `evidence.added`. Реализация: `control/metrics.py::_terminal_session_shares`.
+- **2026-09-23**: [PD-2026-09-23] переход на протокол «задание → отчёт»: `compose_plan` собирает advisory-план заново на каждый `LessonBrief` (`start`/`resume`), а не мутирует CAS-версионируемый `SessionPlan`; `claim_next_step`/`peek_next_step`/`replan` и их события (`STEP_PRESENTED` как control-факт, `LEARNER_SIGNAL_RECORDED`, `SIGNAL_CONSUMED`, `PROBE_REQUESTED`) ретайрены; §4.7 «Сигналы ученика» закрыт — мид-сессионного адресата не осталось; `SessionBudget`/`DeliveryLedger`/`LessonArc`/`LearnerControlSignal`/`probe`-kind retired ([[../glossary]]); safety проверяется на композиции плана, не на доставке контента; `--expected-proposal-hash` удалён из preflight; `trainer signal` удалён из CLI. Метрики `presented_review_share`/`presented_growth_rate` требуют пересборки под report-факты — открыто, не изобретено. `control@3`/`tunables@2` payload не меняются (пинятся).
+- **2026-09-22**: [PD-2026-09-22] `control@3` — добавлены `step_type` `drill_block`/`timed_writing`/`reconstruction` (по 300 секунд) и их клетки в матрице `kind → step_type`; ранги сортировки дописаны в конец, чтобы прежние планы не переупорядочились; дрилл-блок считается **одним** предъявлением и одним шагом темы независимо от числа items; со второго предъявления блок обязан нести 2–4 контрастные цели `role: contrast` (blocked — только при первом); заведён одиннадцатый профиль `drill` с канонической agenda. Целочисленная арифметика §3 не изменена.
+- **2026-07-24**: [PD-2026-07-24] разрешена приватная фоновая подготовка упражнений: draft не learner-facing и не меняет state; публикация остаётся после `STEP_PRESENTED` и сверяет candidate.
+- **2026-07-23**: [PD-2026-07-23] добавлены 10 learner-facing LessonProfile, read-only proposal с hash/consent, связный LessonArc с одной центральной новой темой и `lesson_request`→replan; `control@2` сохраняет прежнюю целочисленную бюджетную схему.
 - **2026-07-22 (7)**: [PD-2026-07-22] §4.4 шаг 1 — явный learner-request (привязанная запись личного словаря) допускает `LexicalItem` в lexicon-first micro-lane даже при привязке к теме; поднимает `learner_relevance`, evidence/schedule не создаёт. Реализация — модуль `learner` (roadmap 99).
 - **2026-07-22 (6)**: [PD-2026-07-22] принят `tunables@1`: 60 параметров (48 control + 12 соседних), balanced review range 3000–6000, остальные ranges честно frozen; confirm атомарно активирует successor policy и причинно связывает `calibration.applied`.
 - **2026-07-22**: фазовые теги `[mvp]`/`[post-mvp]` сняты [PD-2026-07-22]: спека описывает одну цель продукта, порядок и статус — только в roadmap (Принцип 4). calibration-API — часть цели (порядок в roadmap); календарная модель — нерешённое расширение OPEN-29.

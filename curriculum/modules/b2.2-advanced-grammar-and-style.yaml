@@ -4,6 +4,7 @@ can_do: "Control advanced structures and word formation to express attribution, 
 tracks: [grammar-engine, word-formation]
 topics:
   - grammar.passive.reporting-structures
+  - grammar.articles.abstract-and-of-phrases
   - grammar.inversion.emphasis
   - grammar.modal-perfect.speculation
   - grammar.participle-clauses.compression

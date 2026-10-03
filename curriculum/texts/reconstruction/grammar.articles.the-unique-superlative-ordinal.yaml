@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.articles-the-unique-superlative-ordinal.company-hierarchy
+    title: "Company hierarchy"
+    cefr: A2
+    topic: grammar.articles.the-unique-superlative-ordinal
+    carries: [article:superlative-ordinal]
+    domain: work
+    context: task-planning
+    text: "The CEO announced the largest project in company history. The first quarter was the most successful quarter for the team. The same approach won the best results ever. The only solution was to hire more people. The internet is the fastest in the building. The highest salary goes to the senior architect. The last round clearly showed the strongest candidates."
+    word_count: 60
+    keywords: ["CEO", "largest project", "first quarter", "most successful", "same approach", "best results", "only solution", "internet", "fastest", "highest salary", "architect", "strongest candidates"]
+    target_spans: ["The CEO", "the largest project", "The first quarter", "the most successful", "The same approach", "the best results", "The only solution", "The internet", "the fastest", "The highest salary", "The last round"]
+    summary_ru: "Компания: руководитель, крупнейший проект, лучшие результаты, самый быстрый интернет."
+    transformations: [authored]
+  - id: text.recon.articles-the-unique-superlative-ordinal.weekend-plans
+    title: "Weekend plans"
+    cefr: A2
+    topic: grammar.articles.the-unique-superlative-ordinal
+    carries: [article:superlative-ordinal]
+    domain: everyday
+    context: task-planning
+    text: "The sun rises at the same time every single day. The first morning of the weekend is my favorite. The internet speed is the best at night. The only day I sleep late is on Sunday. The last time I went hiking was amazing. The highest mountain nearby is beautiful. The same restaurant serves the best coffee in our town."
+    word_count: 60
+    keywords: ["sun rises", "same time", "first morning", "weekend", "internet", "best at night", "only day", "Sunday", "last time", "highest mountain", "same restaurant", "best coffee"]
+    target_spans: ["The sun", "at the same time", "The first morning", "The internet", "the best at night", "The only day", "The last time", "The highest mountain", "The same restaurant", "the best coffee"]
+    summary_ru: "Выходные: солнце, первый день, лучший интернет ночью, любимое кафе."
+    transformations: [authored]

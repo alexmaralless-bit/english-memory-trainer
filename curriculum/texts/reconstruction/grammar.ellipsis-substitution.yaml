@@ -1,0 +1,29 @@
+schema_version: 1
+texts:
+  - id: text.recon.ellipsis-substitution.technical-comparison
+    title: "Technical system comparison"
+    cefr: C2
+    topic: grammar.ellipsis-substitution
+    carries: [structure:ellipsis]
+    domain: work
+    context: formal-comparison
+    text: "The legacy database platform performs well for routine operational queries; the new architecture does so even for complex analytical operations. The first system requires manual index tuning; the second does not. Both platforms support concurrent access, though the original one does so with higher overhead and resource consumption. Maintenance protocols differ significantly between systems. The older approach demands quarterly restarts; the newer one requires none. Data migration from the source system presents challenges that the target system cannot easily accommodate, whereas integration with external services represents the opposite: capabilities the former system never achieved. Performance under peak loads proves critical for operations. The incumbent platform struggles; its successor does not. Security controls in the legacy installation are comprehensive, though less so than those in the replacement. Both implementations satisfy regulatory requirements, though the recent one more thoroughly addresses emerging standards."
+    word_count: 140
+    keywords: ["legacy database", "routine queries", "new architecture", "complex analytical", "first system requires", "second does not", "concurrent access", "higher overhead", "maintenance protocols", "quarterly restarts", "newer one requires none", "data migration", "performance under peak loads"]
+    target_spans: ["the new architecture does so even for complex analytical operations", "the second does not", "the original one does so with higher overhead", "the newer one requires none", "capabilities the former system never achieved", "its successor does not", "though less so than those in the replacement", "though the recent one more thoroughly addresses"]
+    summary_ru: "Новая архитектура справляется лучше; старая требует перезагрузок, новая нет; обе удовлетворяют требованиям, но новая более полно; управление данными и интеграция сильно отличаются."
+    transformations: [authored]
+
+  - id: text.recon.ellipsis-substitution.editorial-revision
+    title: "Document revision analysis"
+    cefr: C2
+    topic: grammar.ellipsis-substitution
+    carries: [structure:ellipsis]
+    domain: academic
+    context: editorial-revision
+    text: "The original manuscript contained redundant terminology across multiple chapters. The editor removed such instances wherever possible and, where necessary, retained them only if doing so clarified a crucial technical distinction. Word repetition patterns appeared in three contexts: narrative exposition, methodological description, and conclusion sections. The author had employed the same verb construction repeatedly; the reviser replaced it with synonyms where the meaning allowed and left it unchanged only when precision required it. Pronouns presented a second complexity. The original version relied on remote antecedents; the revision moved them closer to their antecedents or substituted pronouns with explicit nouns where ambiguity might arise. Parallel structures in the methodology section differed from those in results; the editor harmonized them only where thematic connection warranted doing so. Nominalization density required attention as well. Three paragraphs exemplified excessive abstraction; two did not."
+    word_count: 138
+    keywords: ["original manuscript", "redundant terminology", "removed such instances", "retained them only", "word repetition patterns", "same verb construction", "replaced it with synonyms", "pronouns presented", "remote antecedents", "parallel structures", "harmonized them only", "nominalization density"]
+    target_spans: ["The editor removed such instances wherever possible", "retained them only if doing so clarified", "The author had employed the same verb construction repeatedly; the reviser replaced it with synonyms", "where ambiguity might arise", "the editor harmonized them only where thematic connection warranted doing so", "Three paragraphs exemplified excessive abstraction; two did not"]
+    summary_ru: "Рукопись имела лишние повторы; редактор удалил их или заменил синонимы; местоимения требовали уточнения; структуры гармонизированы где нужно; три параграфа избыточны, два нет."
+    transformations: [authored]

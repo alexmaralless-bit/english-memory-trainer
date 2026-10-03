@@ -1,10 +1,11 @@
 """Evidence: the only door through which knowledge reaches scoring (0.4).
 
-The module accepts the agent's observations, checks admissibility and semantic
-identity, and persists everything as event-sourced facts. The agent reports;
-**the engine classifies** -- target, dimension, mode and origin are derived
-from the delivered step, never taken from the client. It reads only published
-events and its own aggregates: the event log is the module boundary.
+The module turns the tutor's lesson report into event-sourced facts (the pure
+builders in :mod:`english_trainer.evidence.report`), keeps semantic identity
+(one credited span per target and dimension) and settles review assignments.
+**The engine classifies** -- scores, review outcomes and error spans are
+derived from the pinned policies, never taken from the client. It reads only
+published events and its own aggregates: the event log is the module boundary.
 """
 
 from english_trainer.evidence.attempts import (
@@ -14,15 +15,12 @@ from english_trainer.evidence.attempts import (
     EVENT_ATTEMPT_RECORDED,
     EVENT_ATTEMPT_STATE_CHANGED,
     RECORDED,
-    REQUIRES_EXERCISE_INSTANCE,
     EvidencePrecondition,
     close_pending_attempts,
-    list_notes,
     pending_attempts,
-    record_attempt,
     session_attempts,
 )
-from english_trainer.evidence.observed import EVENT_ERROR_OBSERVED, record_observed
+from english_trainer.evidence.observed import EVENT_ERROR_OBSERVED
 
 __all__ = [
     "ASSESSED",
@@ -32,12 +30,8 @@ __all__ = [
     "EVENT_ATTEMPT_STATE_CHANGED",
     "EVENT_ERROR_OBSERVED",
     "RECORDED",
-    "REQUIRES_EXERCISE_INSTANCE",
     "EvidencePrecondition",
     "close_pending_attempts",
-    "list_notes",
     "pending_attempts",
-    "record_attempt",
-    "record_observed",
     "session_attempts",
 ]

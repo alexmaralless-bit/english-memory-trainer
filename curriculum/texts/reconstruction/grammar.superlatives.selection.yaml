@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.superlatives-selection.priority-tasks
+    title: "Priority selection"
+    cefr: A2
+    topic: grammar.superlatives.selection
+    carries: [structure:superlative, article:superlative-ordinal]
+    domain: work
+    context: option-review
+    text: "The most important task is to fix the critical bug immediately. The second priority is the database migration for next week. The easiest part of the project is the documentation module. The hardest decision was choosing the best approach for the solution. We selected the most experienced developer to lead the entire team. The most urgent request came from our main client this morning."
+    word_count: 64
+    keywords: ["most important", "bug", "second priority", "migration", "easiest part", "documentation", "hardest decision", "best approach", "most experienced", "developer - lead", "most urgent", "client"]
+    target_spans: ["The most important", "The second priority", "The easiest", "The hardest", "the most experienced", "The most urgent"]
+    summary_ru: "Определение приоритетов задач: самое срочное, самое важное, самое лёгкое, самое сложное."
+    transformations: [authored]
+  - id: text.recon.superlatives-selection.best-restaurant
+    title: "Restaurant choice"
+    cefr: A2
+    topic: grammar.superlatives.selection
+    carries: [structure:superlative]
+    domain: everyday
+    context: option-review
+    text: "The best restaurant in our city serves Italian food and wine. The most popular dish is the seafood pasta with sauce. The cheapest option is always the soup of the day special. The friendliest waiter always remembers our regular order perfectly. The most comfortable table is situated by the window. We chose the newest location last week because it has the best service ever."
+    word_count: 64
+    keywords: ["best restaurant", "Italian", "most popular", "seafood pasta", "cheapest", "soup", "friendliest", "waiter", "most comfortable", "table - window", "newest location", "best service"]
+    target_spans: ["The best restaurant", "The most popular", "The cheapest", "The friendliest", "The most comfortable", "the best service"]
+    summary_ru: "Выбор лучшего ресторана: самое популярное блюдо, самое дешёвое, самое удобное место, лучший сервис."
+    transformations: [authored]

@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.future-expressions-deadlines.delivery-schedule
+    title: "Delivery schedule"
+    cefr: A2
+    topic: grammar.future-expressions.deadlines
+    carries: [tense:future-will]
+    domain: work
+    context: delivery-planning
+    text: "The delivery date is next Friday at exactly five in the afternoon. We will finish testing by Wednesday evening without any exceptions. The documentation will be ready by the end of the week as committed. We need to deploy the update by next Tuesday morning sharp. The client requested delivery by the fifteenth of next month. All team members understand the deadlines perfectly. These dates are firm and fixed."
+    word_count: 69
+    keywords: ["delivery - Friday", "finish - testing - Wednesday", "documentation - ready - end", "deploy - Tuesday", "client - delivery - fifteenth", "deadlines"]
+    target_spans: ["delivery date is next Friday", "will finish testing by Wednesday", "will be ready by the end", "by next Tuesday morning", "by the fifteenth"]
+    summary_ru: "График поставок с чёткими сроками: везде дедлайн by — не позднее указанной даты или времени."
+    transformations: [authored]
+  - id: text.recon.future-expressions-deadlines.renovation-timeline
+    title: "Renovation timeline"
+    cefr: A2
+    topic: grammar.future-expressions.deadlines
+    carries: [tense:future-will]
+    domain: everyday
+    context: home-project
+    text: "I will finish painting the kitchen by next Saturday evening without delay. The tiles will definitely arrive by the end of this week. I need to install everything by Sunday night. The electrician will come by Thursday morning to check everything. The entire project will be complete by next month as scheduled. The contractor confirmed all these dates are accurate and reliable. We cannot miss any of these deadlines now."
+    word_count: 70
+    keywords: ["finish - painting - Saturday", "tiles - arrive - end", "install - Sunday", "electrician - Thursday", "project - complete - month", "confirmed"]
+    target_spans: ["will finish painting the kitchen by next Saturday", "will definitely arrive by the end", "will come by Thursday morning", "will be complete by next month"]
+    summary_ru: "График личного проекта ремонта с указанием сроков завершения этапов."
+    transformations: [authored]

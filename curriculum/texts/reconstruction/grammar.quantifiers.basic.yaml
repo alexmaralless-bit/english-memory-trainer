@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.quantifiers-basic.task-status
+    title: "Task status update"
+    cefr: A1
+    topic: grammar.quantifiers.basic
+    carries: [structure:quantifier]
+    domain: work
+    context: interface-walkthrough
+    text: "We have a few open tasks. The database has some errors. There are many users waiting. We need much time for the migration. Some records are missing. A lot of data needs review. We have little information about the issue. A few developers are on the team. We have enough budget for now."
+    word_count: 53
+    keywords: ["few open tasks", "some errors", "many users", "waiting", "much time", "migration", "some records", "missing", "lot of data", "review", "little information", "issue", "few developers", "enough budget"]
+    target_spans: ["a few open tasks", "some errors", "many users", "much time", "Some records", "A lot of data", "little information", "A few developers"]
+    summary_ru: "Описание количества задач, данных и других предметов используя quantifiers few, some, many, much, lot of."
+    transformations: [authored]
+  - id: text.recon.quantifiers-basic.pantry-inventory
+    title: "What is in my pantry"
+    cefr: A1
+    topic: grammar.quantifiers.basic
+    carries: [structure:quantifier]
+    domain: everyday
+    context: interface-walkthrough
+    text: "We have a few eggs in the fridge. There is some milk. I have many books at home. We need a lot of coffee. There is little sugar left. A couple of apples are on the table. We have some cheese. Much time is needed to cook. We have enough food for the week."
+    word_count: 54
+    keywords: ["few eggs", "fridge", "some milk", "many books", "home", "lot of coffee", "little sugar", "left", "couple of apples", "table", "some cheese", "much time", "enough food"]
+    target_spans: ["a few eggs", "some milk", "many books", "a lot of coffee", "little sugar", "A couple of apples", "some cheese", "Much time"]
+    summary_ru: "Описание количества продуктов и вещей дома используя quantifiers a few, some, a lot of и much."
+    transformations: [authored]

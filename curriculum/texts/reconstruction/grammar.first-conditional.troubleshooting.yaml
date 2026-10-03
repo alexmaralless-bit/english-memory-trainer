@@ -1,0 +1,29 @@
+schema_version: 1
+texts:
+  - id: text.recon.first-conditional-troubleshooting.restart-server
+    title: "Restart the server"
+    cefr: A2
+    topic: grammar.first-conditional.troubleshooting
+    carries: [tense:conditional-1]
+    domain: work
+    context: support-ticket
+    text: "If the error occurs again tomorrow, we will restart the service right away. If the restart does not fix the issue, we will check the logs in detail. If the logs show a timeout error, we will increase the limit. If the increase does not help, we will escalate this to the support vendor. If the vendor cannot respond quickly, we will schedule a call for tomorrow morning. The team will document every step for the postmortem."
+    word_count: 77
+    keywords: ["error occurs again", "restart the service", "restart does not fix", "check the logs", "timeout error", "increase the limit", "increase does not help", "escalate - vendor", "vendor cannot respond", "schedule a call", "document - postmortem"]
+    target_spans: ["If the error occurs again", "we will restart the service", "If the restart does not fix the issue", "we will check the logs", "If the logs show a timeout error", "we will increase the limit", "If the increase does not help", "we will escalate this", "If the vendor cannot respond quickly", "we will schedule a call"]
+    summary_ru: "Если ошибка повторится — перезапустим сервис. Если не поможет — проверим логи. Если видна ошибка таймаута — увеличим лимит. Если и это не поможет — эскалируем вендору. Если вендор не ответит быстро — назначим звонок на завтра; каждый шаг фиксируем для постмортема."
+    transformations: [authored]
+
+  - id: text.recon.first-conditional-troubleshooting.wifi-router
+    title: "WiFi router problem"
+    cefr: A2
+    topic: grammar.first-conditional.troubleshooting
+    carries: [tense:conditional-1]
+    domain: everyday
+    context: support-ticket
+    text: "If the internet does not work today, I will restart the router right away. If the restart does not fix the connection, I will check all the cables. If the cables are fine, I will contact the internet provider tomorrow morning. If they do not answer the first call, I will try again later in the day. If the provider cannot send a technician this week, I will ask for a refund on the bill."
+    word_count: 75
+    keywords: ["internet does not work", "restart the router", "restart does not fix", "check the cables", "cables are fine", "contact the provider", "do not answer", "try again", "cannot send a technician", "ask for a refund"]
+    target_spans: ["If the internet does not work", "I will restart the router", "If the restart does not fix the connection", "I will check all the cables", "If the cables are fine", "I will contact the internet provider", "If they do not answer the first call", "I will try again", "If the provider cannot send a technician", "I will ask for a refund"]
+    summary_ru: "Если интернет не работает — перезагружу роутер. Если не поможет — проверю кабели. Если кабели в порядке — позвоню провайдеру. Если не ответят — позвоню позже. Если провайдер не пришлёт мастера на этой неделе — попрошу вернуть деньги."
+    transformations: [authored]

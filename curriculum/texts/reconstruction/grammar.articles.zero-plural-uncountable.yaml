@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.articles-zero-plural-uncountable.project-report
+    title: "Reporting on project resources"
+    cefr: A1
+    topic: grammar.articles.zero-plural-uncountable
+    carries: [article:zero-plural, article:zero-uncountable]
+    domain: work
+    context: deployment-update
+    text: "We received data from five vendors this morning. The project needs feedback from the team. Software requires updates and tests before release. Information about the deadline is in the shared folder. We collected samples and results from our tests. Users submitted feedback yesterday. Hardware is ready but software still needs configuration."
+    word_count: 51
+    keywords: ["received data", "vendors", "feedback", "Software requires", "tests", "Information", "samples", "Users submitted feedback", "configuration"]
+    target_spans: ["received data from", "needs feedback from", "Software requires updates and tests", "Information about the deadline", "feedback yesterday", "Users submitted feedback", "software still needs"]
+    summary_ru: "Отчет: данные от вендоров, нужна обратная связь, софт требует обновлений, информация о сроке, образцы тестов."
+    transformations: [authored]
+  - id: text.recon.articles-zero-plural-uncountable.knowledge-sharing
+    title: "Sharing knowledge and resources"
+    cefr: A1
+    topic: grammar.articles.zero-plural-uncountable
+    carries: [article:zero-plural, article:zero-uncountable]
+    domain: everyday
+    context: deployment-update
+    text: "I found useful information about learning languages online. Books and articles help with vocabulary building. Equipment at the gym is old but functional. Advice from experienced learners is valuable. Examples and exercises improve understanding. Research shows that feedback improves progress. Teachers use resources and materials in classes. Practice makes real progress over time."
+    word_count: 53
+    keywords: ["information", "Books articles", "vocabulary", "Equipment gym", "Advice", "Examples exercises", "feedback improves progress", "Teachers resources", "Practice - progress"]
+    target_spans: ["found useful information", "Books and articles help", "Equipment at the gym", "Advice from experienced learners", "Examples and exercises improve", "feedback improves progress", "Teachers use resources and materials"]
+    summary_ru: "Знания: информация об обучении, книги и статьи, оборудование в спортзале, советы опытных, упражнения улучшают, обратная связь."
+    transformations: [authored]

@@ -18,6 +18,7 @@ from english_trainer.kernel.policy import PolicyRegistry
 from english_trainer.kernel.store import EventStore, connect, migrate
 from english_trainer.scoring.engine import ACTIVE, fold_scores, snapshot
 from tests.assessments.conftest import EPOCH, SEED
+from tests.assessments.fixtures import stub_program
 
 GRAMMAR_ALL = {"g-be-1": "am", "g-be-2": "is", "g-be-3": "are"}
 
@@ -66,6 +67,8 @@ def _run_flow(db_path: Path, scoring_policy: dict[str, Any]) -> str:
         clock = FixedClock(EPOCH)
         random_source = SeededRandomSource(SEED)
         registry = PolicyRegistry(conn, clock)
+        registry.register("curriculum", "placement-stub@1", stub_program())
+        registry.activate("curriculum", "placement-stub@1")
         started = start_placement(store, registry, clock, random_source)
         pid = started["placement_id"]
         answer_placement(store, clock, random_source, pid, section="grammar", answers=GRAMMAR_ALL)

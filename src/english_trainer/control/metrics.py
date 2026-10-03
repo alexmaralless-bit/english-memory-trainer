@@ -16,6 +16,14 @@ _NO_DATA = "no-data"
 _SUCCESS = frozenset({"CONFIRMED", "PROGRESS", "RECOVERED"})
 _FAILURE = "REGRESSION"
 _TERMINAL = frozenset({"session.finished", "session.abandoned"})
+# Event/payload spellings local to control -- the module must not import
+# lessons/evidence (LAYER_ALLOWLIST, tests/architecture/test_boundaries.py),
+# so the brief/report protocol's facts are named here by their event-log
+# spelling, mirroring how audit/views.py names the same facts for the same
+# reason.
+_EVENT_STEP_PRESENTED = "session.step_presented"
+_EVENT_LESSON_REPORTED = "lesson.reported"
+_REPORT_SOURCE = "lesson_report"
 
 
 def _metric(
@@ -82,20 +90,103 @@ def _prediction_error_metrics(store: EventStore) -> tuple[dict[str, Any], list[t
 
 
 def _terminal_session_shares(store: EventStore) -> list[dict[str, int | str]]:
+    """review/growth shares of terminal sessions (control 4.10).
+
+    Two sources, chosen per session:
+
+    - **historic (ledger) sessions** -- a ``session_plan`` aggregate whose
+      delivery ``ledger.presented_seconds`` a step-by-step protocol filled.
+      Unchanged from before the brief/report protocol.
+    - **report-protocol sessions** (carry a ``lesson.reported`` event)
+      [PD-2026-09-23]: the ledger is never filled (lessons owns delivery
+      post-hoc, in the report commit, control 4.6), so shares are counted
+      from the session's own ``session.step_presented`` facts
+      (``source: lesson_report``) instead:
+
+        - denominator: every reported unit, one basis-point weight each -- a
+          drill block counts once **per member** (``len(item_ids)``), not
+          once for the whole block, so a report item and a block member pull
+          equal weight and a six-item block is not flattened to one item's
+          worth of signal.
+        - ``review_bp``: the share of those units whose
+          ``session.step_presented`` carries a ``review_assignment_id`` (a
+          block's members all count as review-addressing together, since a
+          block claims at most one review as a whole).
+        - ``growth_bp``: the share whose primary target (``targets[0]``, the
+          ``role: target`` entry) had **no** ``session.step_presented`` fact
+          of ANY source -- ledger or report -- anywhere in the store before
+          this session's own first event. This reuses control 4.3's
+          ``is_first_exposure`` definition (a target is new iff it has not
+          yet been the subject of a STEP_PRESENTED fact) rather than
+          inventing a second "growth" test against ``evidence.added``: 4.6
+          already treats delivery, not evidence, as the exposure fact, and a
+          target can be presented (and even fail to earn evidence) without
+          ceasing to be "already shown".
+
+    An empty report (no ``session.step_presented`` units) contributes no
+    sample, same as a ledger-less/zero-second historic session.
+    """
     plans = {
         str(state.get("session_id")): state for _, state, _ in list_aggregates(store._conn, "session_plan")
     }
+    events = list(store.read())
+
     terminal_ids: list[str] = []
-    seen: set[str] = set()
-    for event in store.read():
+    seen_terminal: set[str] = set()
+    has_report: set[str] = set()
+    presented_targets: set[tuple[str, str]] = set()
+    session_baseline: dict[str, set[tuple[str, str]]] = {}
+    # (is_review, unit_weight, primary_target_pair) per session, in report order.
+    session_units: dict[str, list[tuple[bool, int, tuple[str, str]]]] = {}
+
+    for event in events:
+        session_id = str(event.correlation_id)
+        if session_id not in session_baseline:
+            # The first event ever seen for this session_id is session.started
+            # (lessons.sessions.start_session's own first append): snapshotting
+            # presented_targets right here, before this event is folded in, is
+            # exactly "every target ever presented before this session".
+            session_baseline[session_id] = set(presented_targets)
         if event.type in _TERMINAL:
-            session_id = str(event.correlation_id)
-            if session_id not in seen:
-                seen.add(session_id)
+            if session_id not in seen_terminal:
+                seen_terminal.add(session_id)
                 terminal_ids.append(session_id)
+        elif event.type == _EVENT_LESSON_REPORTED:
+            has_report.add(session_id)
+        if event.type == _EVENT_STEP_PRESENTED:
+            payload = event.payload
+            raw_targets = payload.get("targets") or []
+            primary = raw_targets[0] if raw_targets else {}
+            pair = (str(primary.get("target_ref") or ""), str(primary.get("dimension") or ""))
+            if payload.get("source") == _REPORT_SOURCE:
+                is_block = "block_id" in payload
+                weight = len(payload.get("item_ids") or []) if is_block else 1
+                is_review = payload.get("review_assignment_id") is not None
+                session_units.setdefault(session_id, []).append((is_review, weight, pair))
+            if pair[0]:
+                presented_targets.add(pair)
+
     samples: list[dict[str, int | str]] = []
     for session_id in terminal_ids:
         plan = plans.get(session_id)
+        mode = str((plan or {}).get("mode") or "")
+        if session_id in has_report:
+            units = session_units.get(session_id) or []
+            total = sum(weight for _, weight, _ in units)
+            if total <= 0:
+                continue
+            baseline = session_baseline.get(session_id, set())
+            review_units = sum(weight for is_review, weight, _ in units if is_review)
+            growth_units = sum(weight for _, weight, pair in units if pair not in baseline)
+            samples.append(
+                {
+                    "session_id": session_id,
+                    "mode": mode,
+                    "review_bp": review_units * 10000 // total,
+                    "growth_bp": growth_units * 10000 // total,
+                }
+            )
+            continue
         if plan is None:
             continue
         ledger = plan.get("ledger") or {}
@@ -106,7 +197,7 @@ def _terminal_session_shares(store: EventStore) -> list[dict[str, int | str]]:
         samples.append(
             {
                 "session_id": session_id,
-                "mode": str(plan.get("mode") or ""),
+                "mode": mode,
                 "review_bp": int(presented.get("review") or 0) * 10000 // total,
                 "growth_bp": int(presented.get("growth") or 0) * 10000 // total,
             }

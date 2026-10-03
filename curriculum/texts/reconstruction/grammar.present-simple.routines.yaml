@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.present-simple-routines.work-day
+    title: "Daily work routine"
+    cefr: A1
+    topic: grammar.present-simple.routines
+    carries: [tense:present-simple, article:indefinite-first-mention]
+    domain: work
+    context: daily-standup
+    text: "I start work at nine every morning. My team checks the logs first thing. We test the code every day here. Sarah reviews pull requests daily. The client sends updates regularly. They deploy on Friday morning. We finish at six o'clock. Everyone follows the schedule strictly. The day is productive and good."
+    word_count: 52
+    keywords: ["I start work", "nine morning", "My team checks", "logs", "We test code", "every day", "Sarah reviews", "pull requests", "client sends", "updates", "deploy Friday", "finish at six"]
+    target_spans: ["I start work at nine", "My team checks", "We test the code", "Sarah reviews pull requests", "The client sends", "They deploy on Friday", "We finish", "Everyone follows"]
+    summary_ru: "Ежедневная рабочая рутина: я начинаю, команда проверяет, тестируем, Сара проверяет, клиент отправляет, деплоим в пятницу."
+    transformations: [authored]
+  - id: text.recon.present-simple-routines.weekend
+    title: "Weekend routine"
+    cefr: A1
+    topic: grammar.present-simple.routines
+    carries: [tense:present-simple]
+    domain: everyday
+    context: daily-standup
+    text: "I wake up late on Saturday morning. My family has breakfast together in the kitchen. We go shopping in the afternoon at the mall. My brother plays soccer with friends. My sister studies at home in her room. My parents relax and read books. We meet for dinner together at home. Everyone enjoys the weekend very much."
+    word_count: 57
+    keywords: ["I wake up", "late Saturday", "My family breakfast", "together", "We go shopping", "afternoon", "My brother plays", "soccer", "My sister studies", "parents relax", "read", "meet dinner", "enjoy weekend"]
+    target_spans: ["I wake up late", "My family has breakfast", "We go shopping", "My brother plays", "My sister studies", "My parents relax", "We meet for dinner", "Everyone enjoys"]
+    summary_ru: "Выходной: я просыпаюсь поздно, семья завтракает вместе, ходим за покупками, брат играет в футбол, сестра учится."
+    transformations: [authored]

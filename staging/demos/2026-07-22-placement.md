@@ -162,8 +162,8 @@ No 2.6 contract gap was found by this end-to-end scenario; no `xfail` is present
 ## Reproduction
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest tests/integration/test_placement_flow.py --basetemp "<local-tmp>/pytest" -q
-.\.venv\Scripts\python.exe -m pytest tests/integration/test_placement_flow.py --basetemp "<local-tmp>/pytest" -q
+.\.venv\Scripts\python.exe -m pytest tests/integration/test_placement_flow.py --basetemp "<tmp>/pytest" -q
+.\.venv\Scripts\python.exe -m pytest tests/integration/test_placement_flow.py --basetemp "<tmp>/pytest" -q
 .\.venv\Scripts\python.exe -m ruff check tests/integration
 .\.venv\Scripts\python.exe -m ruff format --check tests/integration
 ```

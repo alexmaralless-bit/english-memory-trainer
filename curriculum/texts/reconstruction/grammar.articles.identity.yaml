@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.articles-identity.project-roles
+    title: "Project roles and responsibilities"
+    cefr: A1
+    topic: grammar.articles.identity
+    carries: [article:indefinite-first-mention, article:definite-second-mention, article:a-an-sound]
+    domain: work
+    context: team-introduction
+    text: "I am an engineer on a project now. The project is exciting and important. She is a developer here. The developer has strong skills. He is an analyst for the team. The analyst reviews data daily. We have a goal here. The goal is always clear. They need a report today. The report is due soon. The team is always ready."
+    word_count: 61
+    keywords: ["I am an engineer", "a project", "project exciting", "a developer", "developer skills", "an analyst", "analyst reviews", "data", "a goal", "goal clear", "a report", "report due"]
+    target_spans: ["I am an engineer", "a project", "The project is", "She is a developer", "The developer has", "He is an analyst", "The analyst", "a goal", "The goal is", "a report", "The report is"]
+    summary_ru: "Роли и обязанности: я инженер на проекте, она разработчик, он аналитик анализирует, цель есть, нужен отчет."
+    transformations: [authored]
+  - id: text.recon.articles-identity.office-objects
+    title: "Things in the office"
+    cefr: A1
+    topic: grammar.articles.identity
+    carries: [article:indefinite-first-mention, article:definite-second-mention]
+    domain: work
+    context: team-introduction
+    text: "There is a desk here. The desk is big and strong. I see a chair. The chair is red and comfortable. There is a computer on the table. The computer is fast and new. I have a notebook. The notebook is new and clean. She has an office. The office is bright and nice."
+    word_count: 54
+    keywords: ["desk", "big", "chair", "red", "computer", "fast", "notebook", "new", "office", "bright", "space", "comfortable"]
+    target_spans: ["a desk", "The desk is big", "a chair", "The chair is", "a computer", "The computer is", "a notebook", "The notebook is", "an office", "The office is"]
+    summary_ru: "Вещи в офисе: стол большой, стул красный, компьютер быстрый, блокнот новый, офис светлый, место удобно."
+    transformations: [authored]

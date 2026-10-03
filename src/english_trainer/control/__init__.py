@@ -19,7 +19,12 @@ from english_trainer.control.availability import (
     validate_declared,
 )
 from english_trainer.control.classify import CLASS_ORDER, classify_review_candidates
-from english_trainer.control.compose import compose_plan, step_targets
+from english_trainer.control.compose import (
+    compose_plan,
+    contrast_targets,
+    drill_block_mode,
+    step_targets,
+)
 from english_trainer.control.deferral import (
     DeferralState,
     qualified_candidates,
@@ -30,14 +35,15 @@ from english_trainer.control.errors import (
     BudgetTooSmall,
     ControlPolicyInvalid,
     NoCandidates,
-    PlanVersionConflict,
-    ProbePrecondition,
-    SignalInvalid,
 )
 from english_trainer.control.metrics import metrics
 from english_trainer.control.policy import (
+    CONTRAST_MAX,
+    CONTRAST_MIN,
     CONTROL_KIND,
     PRODUCTION_STEP_TYPES,
+    STEP_TYPE_RANK,
+    STEP_TYPES_BY_KIND,
     mode_shares,
     require_valid,
     step_cost,
@@ -53,11 +59,8 @@ from english_trainer.control.signals import (
     active_signals,
     apply_signals,
     build_probe_candidate,
-    build_signal,
     current_session_seq,
-    derive_probe,
     is_excluded,
-    record_signal,
 )
 from english_trainer.control.trace import (
     DecisionTraceUnavailable,
@@ -78,8 +81,12 @@ from english_trainer.control.tunables import (
 
 __all__ = [
     "CLASS_ORDER",
+    "CONTRAST_MAX",
+    "CONTRAST_MIN",
     "CONTROL_KIND",
     "PRODUCTION_STEP_TYPES",
+    "STEP_TYPES_BY_KIND",
+    "STEP_TYPE_RANK",
     "AvailabilityInvalid",
     "BudgetTooSmall",
     "CalibrationPrecondition",
@@ -87,10 +94,7 @@ __all__ = [
     "DecisionTraceUnavailable",
     "DeferralState",
     "NoCandidates",
-    "PlanVersionConflict",
-    "ProbePrecondition",
     "SaturationState",
-    "SignalInvalid",
     "TunableCatalogueInvalid",
     "active_signals",
     "apply_signals",
@@ -98,13 +102,13 @@ __all__ = [
     "availability_set",
     "build_decision_trace",
     "build_probe_candidate",
-    "build_signal",
     "classify_review_candidates",
     "compose_plan",
     "confirm_calibration",
+    "contrast_targets",
     "current_session_seq",
-    "derive_probe",
     "divergence_ppm",
+    "drill_block_mode",
     "explain",
     "is_excluded",
     "is_long_break",
@@ -116,7 +120,6 @@ __all__ = [
     "observed_availability",
     "propose_calibration",
     "qualified_candidates",
-    "record_signal",
     "recurring_error_keys",
     "reduce_deferrals",
     "reduce_saturation",

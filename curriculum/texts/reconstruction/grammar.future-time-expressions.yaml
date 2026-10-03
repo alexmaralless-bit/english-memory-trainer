@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.future-time-expressions.deadline-plan
+    title: "Deadline plan"
+    cefr: A1
+    topic: grammar.future-time-expressions
+    carries: [structure:time-marker]
+    domain: work
+    context: task-planning
+    text: "The report is due on Friday. I will finish the entire analysis by 4 p.m. tomorrow afternoon. The client meeting starts at 10 a.m. next Monday morning. We will review all the results by the end of the week. On Wednesday, I will send you the first draft for feedback."
+    word_count: 50
+    keywords: ["report", "Friday", "finish", "analysis", "4 p.m.", "tomorrow", "client meeting", "10 a.m.", "Monday", "results", "end of week", "Wednesday", "draft"]
+    target_spans: ["is due on Friday", "will finish", "by 4 p.m.", "starts at 10 a.m.", "next Monday", "will review", "by the end of the week", "On Wednesday", "will send"]
+    summary_ru: "План сроков: отчет в пятницу, встреча в понедельник, черновик в среду."
+    transformations: [authored]
+  - id: text.recon.future-time-expressions.weekend-plan
+    title: "Weekend plan"
+    cefr: A1
+    topic: grammar.future-time-expressions
+    carries: [structure:time-marker]
+    domain: everyday
+    context: task-planning
+    text: "On Saturday morning at 10 a.m., I will go to the cafe. At 2 p.m., I will meet my friend. In the evening, I will finish reading my book. Tomorrow at 8 a.m., I must leave. In two days, we will have a party. By Sunday, everything will be ready."
+    word_count: 50
+    keywords: ["Saturday morning", "10 a.m.", "cafe", "2 p.m.", "friend", "evening", "reading", "book", "tomorrow", "8 a.m.", "leave", "two days", "party", "next Sunday"]
+    target_spans: ["On Saturday morning at 10 a.m.", "will go", "At 2 p.m.", "will meet", "In the evening", "will finish", "Tomorrow at 8 a.m.", "In two days", "will have", "By Sunday"]
+    summary_ru: "План выходных: суббота с кофе, встреча в два часа, завтра рано уходить, праздник."
+    transformations: [authored]

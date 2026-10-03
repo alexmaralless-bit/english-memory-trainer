@@ -7,6 +7,12 @@ that recorded nothing is abandoned, never "finished"). At most one session is
 active at a time; the singleton pointer aggregate enforces that under
 compare-and-set, so two concurrent starts cannot both win.
 
+The brief/report protocol [PD-2026-09-23] closes a session with ONE
+committed lesson report (``lessons.report.commit_report``): inside that single
+transaction the session moves ``STARTED → IN_PROGRESS`` (the reported work)
+and then ``IN_PROGRESS → FINISHED`` (:func:`close_reported_session`), so the
+lifecycle still has no direct ``STARTED → FINISHED`` edge.
+
 ``start`` writes the immutable Session Manifest: provider, mode, and the
 **pinned versions** of every policy kind registered at that moment -- replay
 and resume resolve those exact versions, never the later active ones
@@ -24,7 +30,7 @@ not at all.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Callable, Mapping, Sequence
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -35,6 +41,7 @@ from english_trainer.adapters.skills import resolve as resolve_skill
 from english_trainer.control.availability import availability_get, resolve_total_seconds
 from english_trainer.control.compose import compose_plan
 from english_trainer.control.deferral import qualified_candidates, reduce_deferrals
+from english_trainer.control.lesson_profiles import build_lesson_arc, build_lesson_proposal
 from english_trainer.control.policy import CONTROL_KIND, require_valid
 from english_trainer.control.saturation import recurring_error_keys, reduce_saturation
 from english_trainer.control.signals import (
@@ -45,6 +52,7 @@ from english_trainer.control.signals import (
 )
 from english_trainer.control.trace import save_decision_traces
 from english_trainer.kernel.clock import Clock, RandomSource
+from english_trainer.kernel.encoding import payload_hash
 from english_trainer.kernel.envelopes import DomainEvent, make_event
 from english_trainer.kernel.errors import KernelError, NoActivePolicy
 from english_trainer.kernel.ids import new_ulid
@@ -52,12 +60,27 @@ from english_trainer.kernel.policy import KNOWN_KINDS, PolicyRegistry
 from english_trainer.kernel.session_fence import bump_session, load_session_for_update
 from english_trainer.kernel.store import EventStore
 from english_trainer.kernel.uow import UnitOfWork
+from english_trainer.lessons.forms import generation_schema_version
 
 # The default required skill (adapters 2), wired in only when the caller
 # names an `agent_skills_dir` AND that skill actually resolves there -- a
 # caller that passes neither (every pre-existing caller and test) keeps
 # `required_skills: []` (see `_resolve_required_skills`).
 _DEFAULT_REQUIRED_SKILL: tuple[str, str] = ("run-english-session", "1")
+# Legacy pedagogy-v2 default (generation@2 pinned, but not the brief/report
+# protocol -- see `_REPORT_REQUIRED_SKILL` below). Kept exactly as before:
+# `run-english-session@2` is not archived under agent-skills/run-english-
+# session/versions, so a caller relying on this default (with no explicit
+# `required_skills`) resolves `[]`, same as always -- this constant is not
+# the bug fixed here, only the third default (below) is [PD-2026-09-23].
+_PEDAGOGY_REQUIRED_SKILL: tuple[str, str] = ("run-english-session", "2")
+# The brief/report protocol's default (`uses_report_protocol`): the current
+# canonical `run-english-session` version (its SKILL.md frontmatter), so
+# `--agent-skills agent-skills` with no explicit `--required-skill` actually
+# pins something instead of silently resolving `[]` -- the stale-skill bug
+# this constant replaces pinned `@2`, which is neither current nor archived.
+# Bump this alongside the skill's own version bump.
+_REPORT_REQUIRED_SKILL: tuple[str, str] = ("run-english-session", "10")
 
 SESSION_AGGREGATE = "session"
 PLAN_AGGREGATE = "session_plan"
@@ -68,6 +91,23 @@ POINTER_ID = "active"
 # boundary; lessons must not import learner -- tests/architecture allowlist).
 # Literal on purpose, mirroring how evidence/scoring consume published events.
 LEARNER_LEXICON_ENTRY_ADDED = "learner.lexicon_entry_added"
+LEARNER_PREFERENCES_UPDATED = "learner.preferences_updated"
+
+# Mirrors learner.preferences.DEFAULT_PREFERENCES's round_size/timed_limit_
+# seconds (learner 4a) -- duplicated on purpose, exactly like the lexicon
+# constant above; lessons must not import learner. Control reads only these
+# two fields at composition time and keeps no copy of its own.
+_DEFAULT_LEARNER_PREFERENCES: dict[str, int] = {"round_size": 6, "timed_limit_seconds": 240}
+
+#: Injected classifier for the permanent interleaved tier (scheduler 3a,
+#: [PD-2026-09-22] PD-F). ``lessons`` must not import ``curriculum`` (layer
+#: allowlist), yet every scheduler call site here resolves a curriculum
+#: snapshot of its own -- so the EDGE passes
+#: ``curriculum.service.permanent_interleave_targets`` itself and the call site
+#: applies it to the snapshot it pinned. ``None`` -- the default every existing
+#: caller uses -- means an empty set, i.e. exactly today's behaviour.
+PermanentInterleave = Callable[[Mapping[str, Any]], frozenset[str]]
+
 
 EVENT_STARTED = "session.started"
 EVENT_FINISHED = "session.finished"
@@ -75,8 +115,9 @@ EVENT_ABANDONED = "session.abandoned"
 EVENT_STALE_ABANDONED = "session.stale_abandoned"
 EVENT_COMPOSED = "session.composed"
 EVENT_STEP_PRESENTED = "session.step_presented"
+# Written by the removed step-delivery protocol; historic logs carry it and
+# audit/metrics folds still read it.
 EVENT_SAFETY_REJECTED = "session.step_safety_rejected"
-EVENT_EXERCISE_USED = "exercise.used"
 # Owned by lessons (lessons 5): both `session start` and `session resume`
 # attach the tutor in the same UoW as the operation. Defined here so both call
 # sites (start below, resume via import) share one source of truth.
@@ -107,6 +148,40 @@ def _pin_versions(registry: PolicyRegistry) -> dict[str, str]:
             pinned[kind] = registry.active_version(kind)
         except NoActivePolicy:
             continue
+    return pinned
+
+
+def lessons_schema_version(pinned: Mapping[str, Any]) -> int:
+    """The integer after ``@`` of the pinned lessons policy, or 0."""
+    _, _, suffix = str(pinned.get("lessons") or "").partition("@")
+    try:
+        return int(suffix)
+    except ValueError:
+        return 0
+
+
+def uses_report_protocol(pinned: Mapping[str, Any]) -> bool:
+    """Whether a session runs the brief/report protocol [PD-2026-09-23].
+
+    Decided by the session's own pins: lessons@2 (brief/report schemas) with
+    evidence@2 (the verdict scale). Such a session is closed by ONE
+    ``lesson_report@1`` (``lessons.report.commit_report``), never step by step.
+    """
+    _, _, evidence = str(pinned.get("evidence") or "").partition("@")
+    return lessons_schema_version(pinned) >= 2 and evidence.isdigit() and int(evidence) >= 2
+
+
+def _session_pins(registry: PolicyRegistry) -> dict[str, str]:
+    """The pins of a NEW lesson session.
+
+    Every active policy kind, except that a brief/report session does not pin
+    ``rubric``: its correctness is the tutor's verdict (evidence@2), and no
+    step of it is rubric-assessed. Placement pins its own set, rubric included
+    (``assessments.placement``), and a legacy session keeps pinning it.
+    """
+    pinned = _pin_versions(registry)
+    if uses_report_protocol(pinned):
+        pinned.pop("rubric", None)
     return pinned
 
 
@@ -240,6 +315,7 @@ def review_candidates_for(
     saturation: dict[tuple[str, str], Any] | None = None,
     recurring_errors: frozenset[tuple[str, str]] | None = None,
     deferrals: dict[tuple[str, str], Any] | None = None,
+    permanent_interleave: PermanentInterleave | None = None,
 ) -> list[dict[str, Any]]:
     """Classified due/overdue review candidates for composition (control 4.4
     step 1: due backlog from the scheduler, classified per 4.5). Empty when
@@ -256,6 +332,12 @@ def review_candidates_for(
         registry.resolve_pinned("scoring", pinned["scoring"]),
         program,
         clock.now(),
+        # Each event under its OWN pinned scheduler version (scheduler 3a);
+        # the article tier is classified from the session's pinned snapshot.
+        registry=registry,
+        permanent_interleave_targets=(
+            permanent_interleave(program) if permanent_interleave is not None else None
+        ),
     )
     return classify_review_candidates(
         backlog,
@@ -313,38 +395,6 @@ def presented_targets(store: EventStore) -> frozenset[str]:
     return frozenset(seen)
 
 
-def reusable_bank_items(store: EventStore, active_program: dict[str, Any]) -> list[dict[str, Any]]:
-    """Accepted bank items that pass the current safety overlay.
-
-    This is a composition-time optimization only. ``session next`` repeats
-    the same checks against the authoritative aggregate and then-current
-    policy so a change between composition and claim still fails closed.
-    """
-    from english_trainer.kernel.aggregates import list_aggregates
-    from english_trainer.lessons.delivery import production_eligible
-
-    known_targets = {str(topic.get("id")) for topic in active_program.get("topics", [])} | {
-        str(unit.get("id")) for unit in active_program.get("lexicon", [])
-    }
-    reusable: list[dict[str, Any]] = []
-    for _, state, _ in list_aggregates(store._conn, "bank_item"):
-        if state.get("status") != "accepted":
-            continue
-        if any(str(ref) not in known_targets for ref in state.get("target_refs") or []):
-            continue
-        eligible, _ = production_eligible(
-            {
-                "step_type": state.get("step_type"),
-                "context_id": state.get("context_id"),
-                "generation_directive": {"lexicon_refs": list(state.get("lexicon_refs") or [])},
-            },
-            active_program,
-        )
-        if eligible:
-            reusable.append(dict(state))
-    return reusable
-
-
 def live_composition_inputs(
     store: EventStore,
     registry: PolicyRegistry,
@@ -354,6 +404,7 @@ def live_composition_inputs(
     clock: Clock,
     *,
     starting_new_session: bool,
+    permanent_interleave: PermanentInterleave | None = None,
 ) -> dict[str, Any]:
     """Fold every live control input from the authoritative event stream.
 
@@ -378,6 +429,7 @@ def live_composition_inputs(
         saturation=saturation,
         recurring_errors=recurring,
         deferrals=deferrals,
+        permanent_interleave=permanent_interleave,
     )
 
     requests: dict[str, tuple[int, dict[str, Any]]] = {}
@@ -425,12 +477,29 @@ def live_composition_inputs(
         if linked_item_id:
             relevant_targets.add(str(linked_item_id))
 
+    # LearnerPreferences (learner 4a): the drill profile reads round_size for
+    # its rounds and timed_writing reads timed_limit_seconds for its default
+    # limit. The newest LEARNER_PREFERENCES_UPDATED full snapshot wins (folded
+    # here -- lessons must not import learner); the documented defaults apply
+    # before the first `learner preferences set`.
+    learner_preferences = dict(_DEFAULT_LEARNER_PREFERENCES)
+    for event in events:
+        if event.type != LEARNER_PREFERENCES_UPDATED:
+            continue
+        learner_preferences = {
+            "round_size": event.payload.get("round_size", _DEFAULT_LEARNER_PREFERENCES["round_size"]),
+            "timed_limit_seconds": event.payload.get(
+                "timed_limit_seconds", _DEFAULT_LEARNER_PREFERENCES["timed_limit_seconds"]
+            ),
+        }
+
     return {
         "signals": signals,
         "review_candidates": review_candidates,
         "starvation_candidates": qualified_candidates(review_candidates, deferrals),
         "probe": probe,
         "relevant_targets": frozenset(relevant_targets),
+        "learner_preferences": learner_preferences,
     }
 
 
@@ -447,6 +516,10 @@ def plan_summary(plan_state: dict[str, Any]) -> list[dict[str, Any]]:
             "order_index": step["order_index"],
             "target_ref": step.get("target_ref"),
             "dimension": step.get("dimension"),
+            "lesson_profile": step.get("lesson_profile"),
+            "lesson_arc_id": step.get("lesson_arc_id"),
+            "arc_phase": step.get("arc_phase"),
+            "primary_role": step.get("primary_role"),
             "presented": step["presented_at"] is not None,
         }
         for step in plan_state["steps"]
@@ -456,6 +529,8 @@ def plan_summary(plan_state: dict[str, Any]) -> list[dict[str, Any]]:
 def _resolve_required_skills(
     agent_skills_dir: Path | str | None,
     required_skills: Sequence[tuple[str, str]] | None,
+    *,
+    default_required_skill: tuple[str, str] = _DEFAULT_REQUIRED_SKILL,
 ) -> list[dict[str, Any]]:
     """Resolve every required skill synchronously, before any session
     aggregate is written (adapters 4.2; lessons 4b [P0-Q1]): an unresolvable
@@ -476,10 +551,10 @@ def _resolve_required_skills(
         pairs: Sequence[tuple[str, str]] = required_skills
     elif agent_skills_dir is not None and Path(agent_skills_dir).is_dir():
         try:
-            resolve_skill(*_DEFAULT_REQUIRED_SKILL, agent_skills_dir)
+            resolve_skill(*default_required_skill, agent_skills_dir)
         except SkillUnavailable:
             return []
-        pairs = (_DEFAULT_REQUIRED_SKILL,)
+        pairs = (default_required_skill,)
     else:
         return []
 
@@ -502,6 +577,101 @@ def _resolve_required_skills(
     return resolved
 
 
+def known_target_refs(
+    store: EventStore,
+    registry: PolicyRegistry,
+    pinned: dict[str, str],
+) -> frozenset[str]:
+    """Targets backed by at least one scoring observation.
+
+    ``STEP_PRESENTED`` means "the tutor received a step", not "the learner
+    knows this language".  Conversation constraints therefore use scored
+    learner state when available and fall back to an empty set honestly.
+    """
+    if "scoring" not in pinned:
+        return frozenset()
+    from english_trainer.scoring.engine import fold_scores
+
+    policy = registry.resolve_pinned("scoring", pinned["scoring"])
+    scores = fold_scores(store, policy)
+    return frozenset(target_ref for target_ref, state in scores.items() if int(state.evidence_count) > 0)
+
+
+def _propose_session_with_pins(
+    store: EventStore,
+    registry: PolicyRegistry,
+    clock: Clock,
+    *,
+    pinned: dict[str, str],
+    duration_minutes: int | None = None,
+    lesson_profile: str | None = None,
+    target_ref: str | None = None,
+    theme: str | None = None,
+) -> dict[str, Any]:
+    """Build a preview against one already-resolved active-policy snapshot."""
+    for kind in ("curriculum", CONTROL_KIND):
+        if kind not in pinned:
+            raise SessionPrecondition(
+                f"no active {kind} policy version; run `trainer curriculum activate` first"
+            )
+    if generation_schema_version(pinned) < 2:
+        raise SessionPrecondition(
+            "lesson proposals require active generation@2; "
+            "run `trainer curriculum activate` with the updated policy set first"
+        )
+    program = registry.resolve_pinned("curriculum", pinned["curriculum"])
+    policy = require_valid(registry.resolve_pinned(CONTROL_KIND, pinned[CONTROL_KIND]))
+    availability = availability_get(store, policy, clock)
+    total_seconds, budget_source = resolve_total_seconds(
+        policy,
+        duration_minutes=duration_minutes,
+        declared=dict(availability["declared"]),
+        observed=dict(availability["observed"]),
+    )
+    presented = presented_targets(store)
+    profile = lesson_profile or "program_lesson"
+    explicit = lesson_profile is not None or target_ref is not None or bool(theme and theme.strip())
+    proposal = build_lesson_proposal(
+        program=program,
+        duration_minutes=total_seconds // 60,
+        profile=profile,
+        target_ref=target_ref,
+        theme=theme,
+        presented_targets=presented,
+        known_targets=known_target_refs(store, registry, pinned),
+        explicit_request=explicit,
+    )
+    # Budget provenance is part of the proposal the learner accepts, therefore
+    # recompute the final hash after adding it.
+    proposal.pop("proposal_hash")
+    proposal["budget_source"] = budget_source
+    proposal["proposal_hash"] = payload_hash(proposal)
+    return proposal
+
+
+def propose_session(
+    store: EventStore,
+    registry: PolicyRegistry,
+    clock: Clock,
+    *,
+    duration_minutes: int | None = None,
+    lesson_profile: str | None = None,
+    target_ref: str | None = None,
+    theme: str | None = None,
+) -> dict[str, Any]:
+    """Read-only lesson preview used for announcement and informed consent."""
+    return _propose_session_with_pins(
+        store,
+        registry,
+        clock,
+        pinned=_pin_versions(registry),
+        duration_minutes=duration_minutes,
+        lesson_profile=lesson_profile,
+        target_ref=target_ref,
+        theme=theme,
+    )
+
+
 def start_session(
     store: EventStore,
     registry: PolicyRegistry,
@@ -511,14 +681,25 @@ def start_session(
     provider: str,
     mode: str = "balanced",
     duration_minutes: int | None = None,
+    lesson_profile: str | None = None,
+    target_ref: str | None = None,
+    theme: str | None = None,
     actor: str = "engine",
     agent_skills_dir: Path | str | None = None,
     required_skills: Sequence[tuple[str, str]] | None = None,
+    permanent_interleave: PermanentInterleave | None = None,
 ) -> dict[str, Any]:
-    """Open a session, compose its plan, and return the immutable manifest plus a
-    tutor ``briefing`` (continuation flow: one CLI call is enough to run the
-    session). The briefing is a computed view riding the response only -- the
-    persisted manifest stays immutable.
+    """Open a session, compose its plan, and return the immutable manifest plus
+    the lesson ``brief`` (``lesson_brief@1``, :func:`lessons.brief.build_brief`):
+    ``{session_id, brief, session_revision, ...manifest}``. The brief is a
+    computed view riding the response only -- the persisted manifest stays
+    immutable.
+
+    Explicit ``lesson_profile``/``target_ref``/``duration_minutes``/``theme``
+    are the learner's consent: no proposal hash is compared [PD-2026-09-23].
+    With lessons@2 + evidence@2 active the session runs the brief/report
+    protocol and pins no ``rubric``. The plan never reuses exercise-bank items:
+    the bank belonged to the removed step-delivery protocol.
 
     Preconditions: active curriculum, control and generation policies must
     exist (composition is executed by control@1 and every step carries a
@@ -535,7 +716,7 @@ def start_session(
     :func:`_resolve_required_skills` for the exact defaulting rule.
     """
     sweep_stale_session(store, registry, clock, random_source, actor=actor)
-    pinned = _pin_versions(registry)
+    pinned = _session_pins(registry)
     for kind, hint in (
         ("curriculum", "run `trainer curriculum activate` first"),
         (CONTROL_KIND, "register and activate control@1 (curriculum activate does this)"),
@@ -560,6 +741,28 @@ def start_session(
         observed=dict(availability["observed"]),
     )
 
+    # "generation@2 or later" (generation@3 keeps the whole pedagogy contract).
+    pedagogy_v2 = generation_schema_version(pinned) >= 2
+    proposal: dict[str, Any] = {}
+    lesson_arc: dict[str, Any] = {}
+    if pedagogy_v2:
+        proposal = _propose_session_with_pins(
+            store,
+            registry,
+            clock,
+            pinned=pinned,
+            duration_minutes=duration_minutes,
+            lesson_profile=lesson_profile,
+            target_ref=target_ref,
+            theme=theme,
+        )
+        # No proposal-hash comparison any more [PD-2026-09-23]: the explicit
+        # profile/topic/duration/theme ARE the learner's consent, and a hash
+        # taken at `session propose` went stale on any unrelated learner fact.
+        lesson_arc = build_lesson_arc(proposal)
+    elif any((lesson_profile is not None, target_ref is not None, bool(theme and theme.strip()))):
+        raise SessionPrecondition("lesson profile/topic/theme proposals require active generation@2")
+
     if "scheduler" in pinned:
         # The overdue sweep runs before composition so AT_RISK facts exist
         # before any plan is built on them (scheduler 4). Idempotent by
@@ -574,12 +777,32 @@ def start_session(
             clock,
             random_source,
             actor=actor,
+            permanent_interleave_targets=(
+                permanent_interleave(registry.resolve_pinned("curriculum", pinned["curriculum"]))
+                if permanent_interleave is not None and "curriculum" in pinned
+                else None
+            ),
+            registry=registry,
         )
 
     # Required skills resolve synchronously here, before any session aggregate
     # exists (adapters 4.2; lessons 4b [P0-Q1]): an unresolvable pin raises and
-    # `start` creates nothing.
-    resolved_required_skills = _resolve_required_skills(agent_skills_dir, required_skills)
+    # `start` creates nothing. A report-protocol session (`uses_report_
+    # protocol`) defaults to the current canonical skill version regardless of
+    # the pinned generation version [PD-2026-09-23]; a pedagogy-v2 session that
+    # is NOT report-protocol keeps the old `@2` default; everything else keeps
+    # `@1`.
+    if uses_report_protocol(pinned):
+        default_skill = _REPORT_REQUIRED_SKILL
+    elif generation_schema_version(pinned) >= 2:
+        default_skill = _PEDAGOGY_REQUIRED_SKILL
+    else:
+        default_skill = _DEFAULT_REQUIRED_SKILL
+    resolved_required_skills = _resolve_required_skills(
+        agent_skills_dir,
+        required_skills,
+        default_required_skill=default_skill,
+    )
 
     session_id = new_ulid(clock, random_source)
     manifest: dict[str, Any] = {
@@ -591,6 +814,7 @@ def start_session(
         "required_skills": resolved_required_skills,
         "session_plan_id": new_ulid(clock, random_source),
         "plan": {"composition_revision": 1, "plan_version": 1},
+        **({"lesson_profile": proposal["profile"], "lesson_arc": lesson_arc} if pedagogy_v2 else {}),
     }
 
     live = live_composition_inputs(
@@ -601,7 +825,10 @@ def start_session(
         policy,
         clock,
         starting_new_session=True,
+        permanent_interleave=permanent_interleave,
     )
+    known = known_target_refs(store, registry, pinned)
+    central = proposal.get("central_topic") or {}
     composed = compose_plan(
         program=program,
         policy=policy,
@@ -615,9 +842,17 @@ def start_session(
         starvation_candidates=live["starvation_candidates"],
         relevant_targets=live["relevant_targets"],
         availability_long_break=bool(availability["long_break"]),
-        bank_items=reusable_bank_items(store, program),
+        # No exercise bank: the tutor builds the items itself and reports them
+        # (the bank belonged to the removed step-delivery protocol).
+        bank_items=[],
         pinned_versions=pinned,
         active_safety_version=pinned["curriculum"],
+        lesson_profile=str(proposal["profile"]) if pedagogy_v2 else None,
+        lesson_arc=lesson_arc if pedagogy_v2 else None,
+        central_target_ref=(str(central["target_ref"]) if central.get("target_ref") is not None else None),
+        lesson_theme=(str(proposal["theme"]) if proposal.get("theme") is not None else None),
+        known_targets=known,
+        learner_preferences=live["learner_preferences"],
         new_id=lambda: new_ulid(clock, random_source),
     )
     plan_state: dict[str, Any] = {
@@ -634,6 +869,7 @@ def start_session(
             "long_break": availability["long_break"],
             "trace": availability["trace"],
         },
+        **({"lesson_profile": proposal["profile"], "lesson_arc": lesson_arc} if pedagogy_v2 else {}),
         **composed,
     }
 
@@ -751,38 +987,15 @@ def start_session(
             ]
         )
 
-    # `start` returns the tutor briefing too, not only the manifest: an agent
-    # needs a single CLI call to run the session (continuation flow "Правила" --
-    # `resume` и `start` возвращают tutor briefing). It is built from committed
-    # engine state via the SAME builder `resume` uses (one source of truth), and
-    # rides the START RESPONSE only -- never baked into the immutable Session
-    # Manifest that was already persisted above (lessons 4b: manifest неизменяем;
-    # continuation §2 trust boundary: computed state stays separate). Imported
-    # locally to avoid a start-time import cycle (resume imports this module).
-    from english_trainer.lessons.resume import build_briefing
+    # `start` returns the lesson brief (lesson_brief@1): everything the tutor
+    # needs to run the lesson without calling the engine again. It is built
+    # from committed engine state and rides the START RESPONSE only -- never
+    # baked into the immutable manifest persisted above (lessons 4b). Imported
+    # locally to avoid an import cycle (brief imports this module).
+    from english_trainer.lessons.brief import build_brief
 
-    briefing = build_briefing(store, registry, clock, session_id, manifest)
-    return {**manifest, "briefing": briefing, "session_revision": 1}
-
-
-def mark_in_progress(
-    store: EventStore, clock: Clock, session_id: str, *, expected_session_revision: int
-) -> int:
-    """STARTED → IN_PROGRESS: the first real work arrived (a presented step or
-    a recorded attempt flips this in later increments)."""
-    state, revision = load_session_for_update(store, session_id, expected_session_revision)
-    if state.get("status") != STARTED:
-        if state.get("status") == IN_PROGRESS:
-            return revision  # already there; idempotent
-        raise SessionPrecondition(f"session {session_id} is {state.get('status')}, not {STARTED}")
-    with UnitOfWork(store, clock) as uow:
-        uow.save_aggregate(
-            SESSION_AGGREGATE,
-            session_id,
-            {**state, "status": IN_PROGRESS, "last_activity_at": clock.now().isoformat()},
-            expected_revision=revision,
-        )
-    return revision + 1
+    brief = build_brief(store, registry, session_id, permanent_interleave=permanent_interleave)
+    return {**manifest, "session_id": session_id, "brief": brief, "session_revision": 1}
 
 
 def _close_session(
@@ -797,11 +1010,10 @@ def _close_session(
     allowed_from: tuple[str, ...],
     refusal: str,
     actor: str,
-    require_empty_pending: bool = False,
     close_pending_reason: str | None = None,
 ) -> DomainEvent:
-    from english_trainer.evidence.attempts import close_pending_attempts, pending_attempts
-    from english_trainer.evidence.reviews import close_pending_assignments, pending_assignments
+    from english_trainer.evidence.attempts import close_pending_attempts
+    from english_trainer.evidence.reviews import close_pending_assignments
 
     state, revision = load_session_for_update(store, session_id, expected_session_revision)
     status = state.get("status")
@@ -810,27 +1022,6 @@ def _close_session(
 
     manifest = state.get("manifest") or {}
     with UnitOfWork(store, clock) as uow:
-        # Pending-set rules run inside the transaction so the decision and the
-        # terminalization see one consistent state (lessons 0.5).
-        if require_empty_pending:
-            pending = pending_attempts(store, session_id)
-            open_reviews = pending_assignments(store, session_id)
-            if pending or open_reviews:
-                parts = []
-                if pending:
-                    names = ", ".join(str(a.get("attempt_id")) for a in pending[:3])
-                    parts.append(f"{len(pending)} unassessed attempt(s) ({names})")
-                if open_reviews:
-                    names = ", ".join(str(a.get("review_id")) for a in open_reviews[:3])
-                    parts.append(
-                        f"{len(open_reviews)} open review assignment(s) ({names}) -- "
-                        "`trainer review close` each one"
-                    )
-                raise SessionPrecondition(
-                    f"session {session_id} has a non-empty pending set: {'; '.join(parts)}. "
-                    "Finish REQUIRES an empty pending set and never auto-closes [P0-2]; "
-                    "use `trainer session abandon` to close without contribution."
-                )
         closed_attempts: list[str] = []
         closed_assignments: list[str] = []
         if close_pending_reason is not None:
@@ -883,41 +1074,6 @@ def _close_session(
     return event
 
 
-def finish_session(
-    store: EventStore,
-    clock: Clock,
-    random_source: RandomSource,
-    session_id: str,
-    *,
-    expected_session_revision: int,
-    actor: str = "engine",
-) -> DomainEvent:
-    """IN_PROGRESS → FINISHED. A session that recorded nothing cannot finish:
-    the contract lifecycle has no ``STARTED → FINISHED`` edge -- abandon it.
-
-    FINISHED *requires* an already-empty pending set and refuses otherwise --
-    it never closes goals itself [P0-2]: auto-closing would let a session end
-    without outcomes, bypassing exactly the evidence persistence finish exists
-    to guarantee. Review assignments join the pending set with the scheduler.
-    """
-    return _close_session(
-        store,
-        clock,
-        random_source,
-        session_id,
-        expected_session_revision=expected_session_revision,
-        target_status=FINISHED,
-        event_type=EVENT_FINISHED,
-        allowed_from=(IN_PROGRESS,),
-        refusal=(
-            "session {session_id} is {status}: a session that recorded nothing cannot finish; "
-            "use `trainer session abandon` instead"
-        ),
-        actor=actor,
-        require_empty_pending=True,
-    )
-
-
 def abandon_session(
     store: EventStore,
     clock: Clock,
@@ -943,3 +1099,72 @@ def abandon_session(
         actor=actor,
         close_pending_reason="abandoned",
     )
+
+
+def close_reported_session(
+    uow: UnitOfWork,
+    clock: Clock,
+    random_source: RandomSource,
+    session_id: str,
+    state: dict[str, Any],
+    revision: int,
+    *,
+    report_hash: str,
+    actor: str = "agent",
+) -> tuple[DomainEvent, int]:
+    """Terminalize a session INSIDE the lesson-report transaction.
+
+    The report is the lesson's work, so a ``STARTED`` session first moves to
+    ``IN_PROGRESS`` (the edge the first delivered step used to take) and then
+    to ``FINISHED`` -- two revision bumps in one UnitOfWork, never the illegal
+    direct ``STARTED → FINISHED`` edge. There is no pending-set gate: the same
+    transaction has already closed every review assignment (addressed ones by
+    verdict, the rest INSUFFICIENT_EVIDENCE with a reason), which is exactly
+    the evidence persistence ``finish`` exists to guarantee.
+
+    Returns ``(session.finished event, new session revision)``.
+    """
+    status = state.get("status")
+    if status not in _ACTIVE_STATES:
+        raise SessionPrecondition(f"session {session_id} is {status}; only an active session can be reported")
+    manifest = dict(state.get("manifest") or {})
+    pinned = dict(manifest.get("pinned_versions") or {})
+    current_state, current_revision = dict(state), revision
+    if status == STARTED:
+        current_revision = bump_session(
+            uow, session_id, current_state, current_revision, clock.now(), changes={"status": IN_PROGRESS}
+        )
+        current_state = {**current_state, "status": IN_PROGRESS, "last_activity_at": clock.now().isoformat()}
+    new_revision = bump_session(
+        uow,
+        session_id,
+        current_state,
+        current_revision,
+        clock.now(),
+        changes={"status": FINISHED, "closed_at": clock.now().isoformat()},
+    )
+    pointer = uow.get_aggregate(POINTER_AGGREGATE, POINTER_ID)
+    if pointer is not None and pointer[0].get("session_id") == session_id:
+        uow.save_aggregate(POINTER_AGGREGATE, POINTER_ID, {"session_id": None}, expected_revision=pointer[1])
+    (event,) = uow.append(
+        [
+            make_event(
+                id=new_ulid(clock, random_source),
+                type=EVENT_FINISHED,
+                occurred_at=clock.now(),
+                actor=actor,
+                provider=manifest.get("provider"),
+                correlation_id=session_id,
+                payload={
+                    "session_id": session_id,
+                    "from_status": IN_PROGRESS,
+                    "reported_from_status": status,
+                    "closed_by": "lesson_report",
+                    "report_hash": report_hash,
+                    "session_revision": new_revision,
+                },
+                pinned_versions=pinned,
+            )
+        ]
+    )
+    return event, new_revision

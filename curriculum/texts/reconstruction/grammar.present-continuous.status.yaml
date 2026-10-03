@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.present-continuous-status.code-review
+    title: "Status update on code review"
+    cefr: A1
+    topic: grammar.present-continuous.status
+    carries: [tense:present-continuous]
+    domain: work
+    context: status-update
+    text: "I am testing the new payment flow right now. My team is reviewing the database schema. We are waiting for approval from the vendor. The client is checking the staging environment. The team is fixing the API errors in parallel. We are making good progress today. I am not worried about the deadline."
+    word_count: 53
+    keywords: ["testing", "payment flow", "team reviewing", "database", "waiting", "approval", "vendor", "client checking", "fixing errors", "making progress", "not worried - deadline"]
+    target_spans: ["am testing", "is reviewing", "are waiting", "is checking", "is fixing", "are making"]
+    summary_ru: "Статус: я тестирую платеж, команда проверяет базу, ждем одобрения, клиент проверяет, фиксим ошибки, прогресс хороший."
+    transformations: [authored]
+  - id: text.recon.present-continuous-status.weekend-projects
+    title: "What we are doing this weekend"
+    cefr: A1
+    topic: grammar.present-continuous.status
+    carries: [tense:present-continuous]
+    domain: everyday
+    context: status-update
+    text: "I am organizing my apartment right now. My friend is painting the bedroom. We are installing new shelves in the kitchen. The kids are playing in the garden outside. My partner is preparing dinner for us. We are having a busy but fun day together. Everyone is enjoying the beautiful weather today."
+    word_count: 52
+    keywords: ["organizing", "apartment", "friend painting", "bedroom", "installing shelves", "kids playing", "partner preparing", "dinner", "having busy day", "enjoying weather"]
+    target_spans: ["am organizing", "is painting", "are installing", "are playing", "is preparing", "are having"]
+    summary_ru: "Выходной: я организую квартиру, друг красит спальню, полки, дети на улице, готовим ужин, день насыщенный."
+    transformations: [authored]

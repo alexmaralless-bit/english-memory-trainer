@@ -4,6 +4,7 @@ can_do: "Explain systems and decisions in tickets, summaries, incident reports, 
 tracks: [grammar-engine, reading, written-interaction, written-production-mediation, us-tech-english]
 topics:
   - grammar.present-perfect.duration
+  - grammar.articles.generic-statements
   - reading.connected-technical-explanation
   - written-interaction.project-risk-update
   - written-production.system-overview

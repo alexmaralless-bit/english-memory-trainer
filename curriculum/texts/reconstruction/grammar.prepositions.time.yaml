@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.prepositions-time.schedule-meeting
+    title: "Schedule meeting"
+    cefr: A1
+    topic: grammar.prepositions.time
+    carries: [structure:preposition-time]
+    domain: work
+    context: daily-standup
+    text: "The team meeting is on Tuesday morning at the office. We start at 10 a.m. sharp. In January, we will have the annual review meeting. The deadline is on the fifteenth of September. At noon, I will send the agenda. In March, the company will launch the new software tool."
+    word_count: 50
+    keywords: ["team meeting", "Tuesday", "morning", "10 a.m.", "January", "annual review", "deadline", "fifteenth", "September", "noon", "agenda", "March", "software"]
+    target_spans: ["is on Tuesday", "at 10 a.m.", "In January", "on the fifteenth", "of September", "At noon", "In March"]
+    summary_ru: "Расписание встреч: вторник, январь, годовой обзор, сентябрь, полдень."
+    transformations: [authored]
+  - id: text.recon.prepositions-time.daily-schedule
+    title: "Daily schedule"
+    cefr: A1
+    topic: grammar.prepositions.time
+    carries: [structure:preposition-time]
+    domain: everyday
+    context: daily-standup
+    text: "I wake up at 7 a.m. every day. On Monday, I go to the gym. At night, I read a book. In summer, I like to travel abroad. The concert is on August twenty-first evening. At the moment, we are planning a trip. The festival happens in June every year."
+    word_count: 50
+    keywords: ["7 a.m.", "Monday", "gym", "night", "read", "book", "summer", "travel", "concert", "August", "trip", "festival", "June"]
+    target_spans: ["at 7 a.m.", "On Monday", "At night", "In summer", "on August", "At the moment", "in June"]
+    summary_ru: "Ежедневное расписание: семь утра, понедельник спортзал, ночью читаю, лето путешествую."
+    transformations: [authored]

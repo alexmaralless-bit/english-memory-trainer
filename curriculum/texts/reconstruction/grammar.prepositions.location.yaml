@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.prepositions-location.config-walkthrough
+    title: "Finding config settings"
+    cefr: A1
+    topic: grammar.prepositions.location
+    carries: [structure:preposition-place]
+    domain: work
+    context: interface-walkthrough
+    text: "The settings are in the menu at the top right corner. Your password is under Account Settings in the security tab. Find the API key in the Developers section on the left side. The log files are on the server in storage. All database backups are stored in the cloud infrastructure for safety and recovery."
+    word_count: 55
+    keywords: ["settings", "in the menu", "at the top", "password", "under Account Settings", "API key", "in the Developers section", "on the left", "log files", "on the server", "backups", "in the cloud"]
+    target_spans: ["are in the menu", "under Account Settings", "in the Developers section", "on the server", "in the cloud"]
+    summary_ru: "Где найти настройки: в меню, пароль под Account Settings, ключи в разделе, логи на сервере, бэкапы в облаке."
+    transformations: [authored]
+  - id: text.recon.prepositions-location.home-office
+    title: "Organizing the home office"
+    cefr: A1
+    topic: grammar.prepositions.location
+    carries: [structure:preposition-place]
+    domain: everyday
+    context: interface-walkthrough
+    text: "My desk is by the window in the corner near the wall. The monitor sits on the desk surface. Papers are in the drawer below the desk. The keyboard is under the papers in storage. Cables are behind the monitor on the shelf. Files and books are on the shelf above. My notebook rests at the side near the lamp."
+    word_count: 60
+    keywords: ["desk", "by the window", "monitor", "on the desk", "papers", "in the drawer", "keyboard", "under the papers", "cables", "behind the monitor", "on the shelf", "notebook", "at the side"]
+    target_spans: ["is by the window", "on the desk", "in the drawer", "under the papers", "behind the monitor", "on the shelf"]
+    summary_ru: "Офис дома: стол у окна, монитор на столе, бумаги в ящике, кабели позади монитора, файлы на полке, блокнот с краю."
+    transformations: [authored]

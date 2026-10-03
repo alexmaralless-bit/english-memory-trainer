@@ -1,0 +1,31 @@
+schema_version: 1
+texts:
+  - id: text.recon.passive-reporting-structures.research-summary
+    title: "Research summary"
+    cefr: B2
+    topic: grammar.passive.reporting-structures
+    also_targets: [grammar.reported-speech.work-updates]
+    carries: [tense:passive, tense:reported-speech, article:definite-second-mention]
+    domain: academic
+    context: research-summary
+    text: "The new filter is believed to reduce false alerts by up to forty percent. It has been reported that the update will be released in October. The outage is said to have been caused by a misconfigured certificate. According to recent studies, the approach is considered more efficient than the previous method. It is estimated that the implementation will take three months. The system is believed to have started failing during the rotation process. The data is said to show a correlation with the deployment. The vendor is reported to be investigating the issue currently. It has been suggested that a second review should occur before launch. The results are considered preliminary until further validation is complete."
+    word_count: 117
+    keywords: ["filter believed reduce alerts", "reported release October", "outage said caused", "studies considered efficient", "estimated take months", "believed started failing", "data said show", "vendor reported investigating"]
+    target_spans: ["is believed to reduce", "has been reported that", "is said to have been", "is considered more", "is estimated that", "is believed to have", "is said to show", "is reported to be"]
+    summary_ru: "Обзор исследования: считается, что фильтр снижает ошибки; говорят, что апдейт выйдет в октябре; сбой якобы был из-за сертификата."
+    transformations: [authored]
+
+  - id: text.recon.passive-reporting-structures.incident-communication
+    title: "Incident communication"
+    cefr: B2
+    topic: grammar.passive.reporting-structures
+    also_targets: []
+    carries: [tense:passive, article:definite-second-mention]
+    domain: work
+    context: incident-communication
+    text: "The database is believed to have recovered at approximately two in the morning. It is reported that a network upgrade caused the disruption. The component is said to have malfunctioned during the rotation. The issue was determined to stem from incomplete migration steps. It has been confirmed that no customer data was compromised. The backup is believed to have activated as designed. The system is said to be stable now. It is understood that the engineering team will provide a full report tomorrow. The cause is estimated to be a configuration mismatch. The incident is considered fully resolved at this time."
+    word_count: 101
+    keywords: ["database believed recovered", "morning reported", "network upgrade caused", "component said malfunctioned", "rotation issue determined", "migration steps confirmed", "data not compromised", "backup believed activated"]
+    target_spans: ["is believed to have recovered", "is reported that", "is said to have", "was determined to stem", "has been confirmed", "is believed to have", "is said to be", "is understood that"]
+    summary_ru: "Коммуникация инцидента: база якобы восстановилась в два утра; говорят, что апгрейд сети вызвал сбой; считается, что повреждений нет."
+    transformations: [authored]

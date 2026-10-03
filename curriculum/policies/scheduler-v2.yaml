@@ -1,0 +1,46 @@
+# scheduler@2 -- scheduler@1 plus a short relearning ladder that runs BEFORE
+# the base interval table (wiki/modules/scheduler.md 3a, decision PD-2026-09-22
+# PD-D). Day counts are integers; ratios are decimal STRINGS parsed under
+# scoring's pinned Decimal context -- floats are banned on the whole decision
+# path, exactly as in scheduler@1.
+#
+# Effective interval table = relearning_ladder_days followed by every base
+# intervals_days rung strictly greater than the ladder's last rung:
+#   [1, 2, 4] + [7, 14, 30, 60, 120, 180] = [1, 2, 4, 7, 14, 30, 60, 120, 180]
+#
+# A failed ladder rung (REGRESSION, or any outcome below CONFIRMED) repeats
+# the same rung -- it neither steps back nor advances. Once a target has moved
+# past the ladder into the base-table portion of the effective table,
+# REGRESSION step-back/reset, INSUFFICIENT_EVIDENCE hold+retry, and CANCELLED
+# no-op are unchanged from scheduler@1.
+#
+# permanent_interleave_interval_days -- the permanent-interleave tier (PD-F,
+# scheduler.md 3a): an article-tier frame (frame_of under grammar.articles.*,
+# lexical-system 1c) that reaches the end of the effective table is re-pinned
+# to THIS interval on every further CONFIRMED/RECOVERED instead of merely
+# holding there -- it never leaves the due queue, even at MASTERED. It names
+# the base table's LAST rung, not an independent number (validated equal to
+# intervals_days[-1]): "the last base interval" is one interval, not two
+# config knobs that happen to agree today.
+policy_id: "scheduler@2"
+schema_version: 2
+status: "accepted"
+decision_record: "PD-2026-09-22"
+canonical_encoding: "kernel.canonical_json_v1"
+numeric_value_rule: "integers_and_decimal_strings_only"
+
+intervals_days: [1, 3, 7, 14, 30, 60, 120, 180]
+relearning_ladder_days: [1, 2, 4]
+permanent_interleave_interval_days: 180
+retry_days: 1
+target_recall: "0.9"
+
+# due when now >= next_review_at; overdue when lateness > overdue_factor * interval.
+overdue_factor: "0.5"
+# AT_RISK boundary: next_review_at + at_risk_overdue_factor * interval
+# (a deterministic instant -- never the wall clock of the sweep run).
+at_risk_overdue_factor: "1.0"
+
+re_entry:
+  gap_threshold_days: 14
+  retrievability_floor: "0.5"

@@ -1,7 +1,7 @@
 # Phase 2 completion — independent review verdict
 
 > Reviewer: Claude (owner, independent of the implementing author).
-> Under review: `2d7373c` (implementation) + `9c41105` (canon/roadmap), against the author's report `staging/handoff/2026-07-22-phase2-completion-review-report.md`.
+> Under review: `6a2ca43` (implementation) + `4744437` (canon/roadmap), against the author's report `staging/handoff/2026-07-22-phase2-completion-review-report.md`.
 > Rule: the author does not accept their own work; this is the owner's independent verdict.
 
 ## Verdict: PASS

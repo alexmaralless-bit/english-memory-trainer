@@ -15,6 +15,8 @@ from english_trainer.learner.errors import (
 )
 from english_trainer.learner.lexicon import (
     EVENT_LEXICON_ENTRY_ADDED,
+    build_encounter_events,
+    find_encounter_entry,
     lexicon_add,
     lexicon_encounter,
     lexicon_entries,
@@ -31,6 +33,8 @@ __all__ = [
     "LearnerError",
     "LexiconEntryInvalid",
     "LinkedItemNotFound",
+    "build_encounter_events",
+    "find_encounter_entry",
     "lexicon_add",
     "lexicon_encounter",
     "lexicon_entries",

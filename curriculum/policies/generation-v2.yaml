@@ -1,0 +1,87 @@
+policy_id: "generation@2"
+schema_version: 2
+status: "accepted"
+decision_record: "PD-2026-07-23"
+canonical_encoding: "kernel.canonical_json_v1"
+own_text_rule: "All learner-facing text is authored for this project; third-party excerpts are forbidden."
+
+lesson_contract:
+  announce_before_teaching:
+    - "title"
+    - "profile"
+    - "duration_class"
+    - "central_topic"
+    - "agenda"
+    - "reason"
+  duration_classes:
+    micro: "10_to_19_minutes"
+    full: "20_minutes_or_more"
+  program_lesson:
+    central_new_topics_max: 1
+    warmup: "optional_short_known_language"
+    related_known_topics_max: 1
+  explanation:
+    required:
+      - "clear_mental_model"
+      - "at_least_two_authored_examples"
+      - "contrasts"
+      - "common_errors_with_corrections"
+      - "guided_retrieval"
+      - "independent_use"
+      - "recap"
+    optional:
+      - "relevant_history"
+      - "etymology"
+      - "phonetic_motivation"
+    curiosity_rule: "Include an insight only when it explains the form, prevents an error, or provides a useful memory cue."
+    seductive_detail_rule: "Do not add an interesting fact that competes with the lesson target."
+
+teaching_segment:
+  event_type: "teaching.segment_rendered"
+  timing: "commit_before_display"
+  evidence_role: "none"
+  required_fields:
+    - "phase_id"
+    - "title"
+    - "agenda"
+    - "explanation"
+    - "examples"
+    - "common_errors"
+    - "sources"
+    - "provenance"
+
+source_policy:
+  curriculum_first: "true"
+  runtime_research_when: "a useful history, etymology, phonetics, or usage insight is absent"
+  persist:
+    - "source_title"
+    - "source_url"
+    - "authored_summary"
+  learner_display: "brief_source_note_and_links_on_request"
+  network_failure: "skip_optional_insight_and_continue_lesson"
+  curriculum_mutation: "never_from_runtime_research"
+  third_party_excerpt: "forbidden"
+
+free_conversation:
+  comprehensibility_basis: "known_language_from_tutor_briefing"
+  new_units_min: 1
+  new_units_max: 3
+  new_unit_enrollment: "trainer lexicon encounter"
+  correction_rhythm: "correct_focus_errors_immediately_batch_secondary_errors"
+
+exercise_delivery:
+  order:
+    - "session.peek"
+    - "session.next"
+    - "exercise.rendered"
+    - "display_prompt"
+    - "attempt.record"
+  no_answer_leakage: "structured prompts must not reveal the answer or target form"
+  retrieval_before_restudy: "true"
+
+generation_strategy:
+  dynamic: "true"
+  prewritten_lesson_matrix: "forbidden"
+  profile_templates: "structure_only"
+  background_prefetch: "disabled"
+  latency_telemetry: "measure_before_adding_parallel_generation"

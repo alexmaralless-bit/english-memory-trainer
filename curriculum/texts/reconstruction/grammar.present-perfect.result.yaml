@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.present-perfect-result.deployment-complete
+    title: "Deployment complete"
+    cefr: A2
+    topic: grammar.present-perfect.result
+    carries: [tense:present-perfect]
+    domain: work
+    context: deployment-update
+    text: "We have successfully deployed the new dashboard to production this morning. The team has tested all critical features thoroughly, and we have found no significant issues. I have already notified the client about the launch. The database migration has completed, and the backup has been fully verified. Performance metrics are excellent. Everything has gone smoothly, and the users are very happy with the new system."
+    word_count: 65
+    keywords: ["deployed - dashboard", "tested - features", "found - issues", "notified - client", "launch", "migration - completed", "backup - verified", "excellent", "gone smoothly"]
+    target_spans: ["have successfully deployed", "has tested all", "have found no", "have already notified", "migration has completed", "has been fully verified", "has gone smoothly"]
+    summary_ru: "Описание успешно завершённого развёртывания с результатами, важными для текущего момента."
+    transformations: [authored]
+  - id: text.recon.present-perfect-result.repairs-completed
+    title: "Repairs completed"
+    cefr: A2
+    topic: grammar.present-perfect.result
+    carries: [tense:present-perfect]
+    domain: everyday
+    context: home-update
+    text: "I have finally fixed the kitchen sink this week after several attempts. My brother has helped me with the installation work. We have installed a new water filter and it has improved the water flow significantly. The kitchen looks much cleaner now than before. We have also organized the shelves carefully and arranged everything perfectly. The renovation project has taken two weeks total but the result is worth the effort and time."
+    word_count: 72
+    keywords: ["fixed - kitchen sink", "brother - helped", "installation", "filter - improved", "looks - cleaner", "organized - shelves", "arranged", "renovation"]
+    target_spans: ["have finally fixed", "has helped", "have installed", "has improved", "have also organized", "has taken"]
+    summary_ru: "Сообщение о завершённом ремонте на кухне, который важен для текущего состояния дома."
+    transformations: [authored]

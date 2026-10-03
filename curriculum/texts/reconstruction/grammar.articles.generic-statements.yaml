@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.articles-generic-statements.software-requirements
+    title: "Software requirements"
+    cefr: B1
+    topic: grammar.articles.generic-statements
+    carries: [article:zero-plural, article:generic, article:indefinite-first-mention]
+    domain: work
+    context: technical-documentation
+    text: "Users need access to a modern browser for our application to function correctly. The system requires a stable internet connection at all times. Developers should follow best practices when writing code. A developer must understand the framework we use before starting work. Servers need proper configuration and continuous monitoring before deployment. The application provides data export in multiple formats for convenience. Users appreciate features that save time and improve efficiency. A feature request should go through the proper review process."
+    word_count: 80
+    keywords: ["Users - browser", "system - connection", "Developers - practices", "developer - framework", "Servers - configuration", "application - export", "Users - features - time", "feature - review"]
+    target_spans: ["Users need access to a modern browser", "The system requires a stable internet connection", "Developers should follow", "A developer must understand the framework", "Servers need proper configuration", "The application provides", "Users appreciate features", "A feature request should go through"]
+    summary_ru: "Технические требования к приложению: браузер, стабильное интернет-соединение, лучшие практики разработчиков, знание фреймворка, настройка серверов, экспорт данных и рассмотрение запросов на новые функции."
+    transformations: [authored]
+  - id: text.recon.articles-generic-statements.healthy-lifestyle
+    title: "Healthy lifestyle"
+    cefr: B1
+    topic: grammar.articles.generic-statements
+    carries: [article:zero-plural, article:generic, article:indefinite-first-mention]
+    domain: everyday
+    context: lifestyle-advice
+    text: "People need regular exercise to stay healthy and maintain energy levels. A healthy diet includes fresh fruits and vegetables every day. The human body requires sufficient sleep for recovery and repair. Doctors recommend at least eight hours of quality sleep nightly. Athletes understand the importance of recovery periods between training sessions. Exercise provides both physical and mental health benefits to everyone. A person should consult a professional before starting a new exercise routine. The body adapts gradually to changes in training intensity."
+    word_count: 82
+    keywords: ["People - exercise", "healthy diet - fruits", "body - sleep", "Doctors - hours", "Athletes - recovery", "Exercise - benefits", "person - professional", "body - adapts"]
+    target_spans: ["People need regular exercise", "A healthy diet includes", "The human body requires", "Doctors recommend at least eight hours", "Athletes understand the importance", "Exercise provides", "A person should consult a professional", "The body adapts gradually"]
+    summary_ru: "Советы по здоровому образу жизни: регулярные упражнения, здоровое питание, сон, важность восстановления после тренировок и консультация с врачом перед новой программой."
+    transformations: [authored]

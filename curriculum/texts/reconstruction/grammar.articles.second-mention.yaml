@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.articles-second-mention.project-description
+    title: "Describing a new project"
+    cefr: A1
+    topic: grammar.articles.second-mention
+    carries: [article:indefinite-first-mention, article:definite-second-mention]
+    domain: work
+    context: daily-standup
+    text: "We have a new project starting next week. The project is important for the company. A developer is assigned to lead it. The developer has experience with similar work. The team will use a shared folder for files. The folder is on the server. We need a budget for tools. The budget is already approved."
+    word_count: 55
+    keywords: ["new project", "next week", "important", "company", "developer", "lead", "experience", "shared folder", "files", "server", "budget", "tools", "approved"]
+    target_spans: ["a new project", "The project", "A developer", "The developer", "a shared folder", "The folder", "a budget", "The budget"]
+    summary_ru: "Новый проект: его ведёт назначенный разработчик, файлы лежат в общей папке на сервере, бюджет на инструменты уже одобрен."
+    transformations: [authored]
+  - id: text.recon.articles-second-mention.morning-discovery
+    title: "Finding something in the morning"
+    cefr: A1
+    topic: grammar.articles.second-mention
+    carries: [article:indefinite-first-mention, article:definite-second-mention]
+    domain: everyday
+    context: daily-standup
+    text: "I found a note on my desk this morning. The note had an important message. The message was about a meeting at noon. The meeting was with my manager. I saw a coffee cup in the kitchen. The cup was full. There was also a broken door. The door needed repair."
+    word_count: 51
+    keywords: ["note", "desk", "morning", "important message", "meeting", "noon", "manager", "coffee cup", "kitchen", "full", "broken door", "repair"]
+    target_spans: ["a note", "The note", "an important message", "The message", "a meeting", "The meeting", "a coffee cup", "The cup", "a broken door", "The door"]
+    summary_ru: "Утренние находки: записка с важным сообщением о встрече с руководителем, полная чашка кофе и сломанная дверь, которую нужно починить."
+    transformations: [authored]

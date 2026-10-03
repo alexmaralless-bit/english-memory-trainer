@@ -8,12 +8,13 @@ compare-and-set on the currently active version and commits **atomically with
 its** ``curriculum.version_activated`` **event** -- the registry pointer and the
 announcement can never disagree.
 
-Reads (``get_topic``, ``lexicon_query``) are pure functions over a loaded
-program: the CLI serves them without touching learner state.
+Reads (``get_topic``, ``lexicon_query``, ``texts_for_topic``) are pure functions
+over a loaded program: the CLI serves them without touching learner state.
 """
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any, cast
 
 from english_trainer.curriculum.loader import snapshot_payload
@@ -27,6 +28,13 @@ from english_trainer.kernel.uow import UnitOfWork
 
 CURRICULUM_KIND = "curriculum"
 EVENT_VERSION_ACTIVATED = "curriculum.version_activated"
+
+#: Frames of these topics form the permanent interleaved tier (scheduler 3a,
+#: [PD-2026-09-22] PD-F): articles are the one form the method never lets
+#: leave the review queue. Spelled once, here -- curriculum is the only layer
+#: that may read ``frame_of`` semantics, and every consumer receives the
+#: resulting set of target refs as a plain value.
+ARTICLE_FRAME_TOPIC_PREFIX = "grammar.articles."
 
 
 def register_version(registry: PolicyRegistry, program: dict[str, Any], version_id: str) -> str:
@@ -95,6 +103,46 @@ def get_topic(program: dict[str, Any], topic_id: str) -> dict[str, Any] | None:
         if topic.get("id") == topic_id:
             return cast("dict[str, Any]", topic)
     return None
+
+
+def texts_for_topic(program: dict[str, Any], topic_id: str) -> list[dict[str, Any]]:
+    """Reconstruction texts authored for ``topic_id`` (curriculum 2d).
+
+    Matches the owning ``topic`` only -- ``also_targets`` records the secondary
+    grammar a text happens to exercise, not a second owner. Deterministic order
+    by id. A program (or a historical snapshot) without ``texts`` yields none.
+    """
+    matches = [
+        text
+        for text in program.get("texts") or []
+        if isinstance(text, dict) and text.get("topic") == topic_id
+    ]
+    matches.sort(key=lambda text: str(text.get("id")))
+    return matches
+
+
+def permanent_interleave_targets(program: Mapping[str, Any]) -> frozenset[str]:
+    """Target refs of the permanent interleaved tier (scheduler 3a, PD-F).
+
+    A frame is a ``chunk`` lexical item whose ``frame_of`` names the topic
+    whose form it carries (lexical-system 1c); the article tier is every frame
+    whose topic sits under ``grammar.articles.``. The scheduler stays pure and
+    never reads curriculum content, so it takes this classification as an
+    injected ``frozenset[str]`` -- and this function is the ONE place that
+    knows the rule. Callers that cannot import curriculum (``lessons``,
+    ``memory`` -- see the layer allowlist) receive the set, or this callable,
+    from the edge that resolved the snapshot.
+
+    Pure over the passed snapshot: a historical curriculum version classifies
+    by its OWN frames, not by today's active program.
+    """
+    return frozenset(
+        str(unit["id"])
+        for unit in program.get("lexicon") or []
+        if isinstance(unit, dict)
+        and unit.get("id")
+        and str(unit.get("frame_of") or "").startswith(ARTICLE_FRAME_TOPIC_PREFIX)
+    )
 
 
 def lexicon_query(

@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.here-is-are-presenting.interface-demo
+    title: "Interface demo"
+    cefr: A1
+    topic: grammar.here-is-are.presenting
+    carries: [structure:here-is]
+    domain: work
+    context: interface-walkthrough
+    text: "Here is your new access card with your name on it. Here are the login instructions for the system. Here is the database password you will need. Here are the steps to set up your email. Here is a quick guide to the software. Here are all the forms you must complete."
+    word_count: 52
+    keywords: ["access card", "name", "login instructions", "system", "database password", "steps", "email", "quick guide", "software", "forms", "complete"]
+    target_spans: ["Here is your new access card", "Here are the login instructions", "Here is the database password", "Here are the steps", "Here is a quick guide", "Here are all the forms"]
+    summary_ru: "Демонстрация интерфейса: вот карточка, инструкции входа, пароль, шаги, гайд, формы."
+    transformations: [authored]
+  - id: text.recon.here-is-are-presenting.equipment-handoff
+    title: "Equipment handoff"
+    cefr: A1
+    topic: grammar.here-is-are.presenting
+    carries: [structure:here-is]
+    domain: everyday
+    context: interface-walkthrough
+    text: "Here is your new laptop for work today. Here are the charging cables you will need. Here is a mouse for your desk setup area. Here are three pens for your office space. Here is your notebook for all meetings. Here are the keys to your new workspace. Here is your badge too."
+    word_count: 53
+    keywords: ["new laptop", "work", "charging cables", "mouse", "desk setup", "pens", "office", "notebook", "meetings", "keys", "workspace", "badge"]
+    target_spans: ["Here is your new laptop", "Here are the charging cables", "Here is a mouse", "Here are three pens", "Here is your notebook", "Here are the keys", "Here is your badge"]
+    summary_ru: "Выдача оборудования: вот ноутбук, кабели, мышка, ручки, тетрадь, ключи."
+    transformations: [authored]

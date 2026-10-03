@@ -1,0 +1,29 @@
+schema_version: 1
+texts:
+  - id: text.recon.past-perfect-sequence.deployment-incident
+    title: "Deployment incident review"
+    cefr: B1
+    topic: grammar.past-perfect.sequence
+    carries: [tense:past-perfect, tense:past-simple]
+    domain: work
+    context: incident-timeline
+    text: "The critical alert arrived after the backup process had failed completely. We discovered the problem only when the database had already gone offline. By the time the engineering team assembled for the meeting, the cache had been cleared by the system. The detailed incident report showed exactly what had happened before anyone even noticed. It turned out that a network timeout had triggered the automatic rollback of changes. After we had thoroughly investigated the logs, we found the underlying root cause."
+    word_count: 81
+    keywords: ["alert arrived", "backup had failed", "discovered problem", "database had gone offline", "team assembled", "cache had been cleared", "incident report", "had happened", "timeout had triggered", "rollback", "investigated logs", "found root cause"]
+    target_spans: ["after the backup process had failed", "when the database had already gone offline", "the cache had been cleared", "what had happened", "a network timeout had triggered", "After we had thoroughly investigated"]
+    summary_ru: "Сигнал пришел после сбоя резервной копии. Проблему нашли, когда БД уже вышла. Когда собралась команда, кэш был очищен. Отчет показал, что произошло до замечания. Таймаут вызвал откат. После проверки логов нашли причину."
+    transformations: [authored]
+
+  - id: text.recon.past-perfect-sequence.travel-story
+    title: "Train station arrival"
+    cefr: B1
+    topic: grammar.past-perfect.sequence
+    carries: [tense:past-perfect, tense:past-simple]
+    domain: everyday
+    context: personal-narrative
+    text: "I arrived at the busy central station after the train had already left a few minutes before. By the time I reached the platform, all the last passengers had just boarded the train and taken their seats. The helpful ticket clerk told me the previous train had departed exactly ten minutes earlier. I learned that I had missed it by only five minutes. Another train had been cancelled much earlier that same morning. It turned out that the long delay had been caused by severe weather conditions."
+    word_count: 87
+    keywords: ["arrived at station", "train had left", "reached platform", "passengers had boarded", "ticket clerk told", "previous train had departed", "ten minutes earlier", "missed it", "five minutes", "train had been cancelled", "earlier that morning", "delay had been caused", "severe weather"]
+    target_spans: ["after the train had already left", "had just boarded", "the previous train had departed", "had missed it", "had been cancelled", "had been caused"]
+    summary_ru: "Пришёл на станцию, когда поезд уже уехал несколько минут назад. Вышел на платформу — пассажиры только что заняли места. Билетёр сказал, что предыдущий поезд ушёл ровно десять минут назад. Опоздал всего на пять минут. Другой поезд отменили ещё утром. Задержка была из-за сильной непогоды."
+    transformations: [authored]

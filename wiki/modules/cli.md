@@ -1,8 +1,8 @@
 # Модуль: cli
 
 > **Status**: current
-> **Last updated**: 2026-07-22
-> **Sources**: `docs/english-memory-trainer-build-prompt.md` §12 (CLI contract), §11 (skills) · `CLAUDE.md` инварианты · [[../platform/foundation]] (envelopes, idempotency, correlation) · [[lessons]], [[assessments]], [[evidence]], [[scoring]], [[memory]], [[curriculum]] (владельцы команд) · все решения [PD-2026-07-20]
+> **Last updated**: 2026-09-23
+> **Sources**: `docs/english-memory-trainer-build-prompt.md` §12 (CLI contract), §11 (skills) · `CLAUDE.md` инварианты · [[../platform/foundation]] (envelopes, idempotency, correlation) · [[lessons]], [[assessments]], [[evidence]], [[scoring]], [[memory]], [[curriculum]] (владельцы команд) · `staging/concepts/2026-09-23-lesson-brief-report-concept.md` (одобрен, [PD-2026-09-23]) · все решения [PD-2026-07-20]
 > **Bounded context**: `src/english_trainer/cli/`
 
 > Спека — **target**. Одна цель продукта, без фазовых тегов (Принцип 4). Термины — по [[../glossary]].
@@ -31,7 +31,7 @@ Envelope **тотален**: успех и отказ имеют одну фор
 {
   "schema_version": 1,
   "ok": false,
-  "command": "session.finish",
+  "command": "session.report",
   "correlation_id": "01J...",
   "error": {
     "error_code": "SESSION_ALREADY_FINISHED",
@@ -85,7 +85,7 @@ Envelope **тотален**: успех и отказ имеют одну фор
 
 ### 4.4 Граница авторитета
 
-- **MUST NOT — нет команды, записывающей оценку**: в поверхности отсутствует операция, принимающая Mastery, Stability, CEFR-уровень или knowledge state как **вход**. Агент подаёт evidence и свою rubric-оценку как наблюдение; число вычисляет [[scoring]] по pinned policy. Команда, позволяющая агенту записать балл, сделала бы детерминизм недостижимым и обессмыслила `trainer scoring replay`.
+- **MUST NOT — нет команды, записывающей агрегатное состояние**: в поверхности отсутствует операция, принимающая Mastery, Stability, CEFR-уровень или knowledge state как **вход**. [PD-2026-09-23] `trainer session report` принимает от тьютора **вердикт** по каждому item'у (`correct`/`partial`/`incorrect`) — это разворачивает прежний запрет ровно на классификацию правильности одного ответа ([[evidence]] §4.2), но не на агрегаты: `score_ppm` вердикта, Mastery, Stability, CEFR-уровень и knowledge state по-прежнему **исключительно** вычисляет [[scoring]] по pinned policy из этого вердикта, а не принимает их готовыми. Команда, позволяющая тьютору записать сам агрегат, сделала бы детерминизм недостижимым и обессмыслила `trainer scoring replay`; placement сохраняет прежний rubric-путь без вердикта тьютора вовсе ([[assessments]] §3).
 - **MUST — запись только через команды**: прямые правки SQLite, JSONL и сгенерированных файлов `memory/` запрещены (`CLAUDE.md`). CLI — не удобная обёртка, а единственный вход.
 - **MUST — read-only команды не мутируют бизнес-состояние**: команды, помеченные `mutating: false`, не изменяют state/projections даже косвенно (не «чинят» найденный drift, не досоздают недостающее). Единственное исключение — outer audit telemetry, не являющаяся business effect. Диагностика, меняющая диагностируемое состояние, недопустима.
 - **MUST — полная CLI telemetry [PD-2026-07-22]**: перед dispatch записывается invocation, после любого успеха/отказа/внутренней ошибки — terminal fact с causation на invocation, exit code и стабильным error code. Аргументы представлены только redacted shape/hash; raw values и user content запрещены. Для session-команд оба факта несут `session_id`, даже если бизнес-команда отказана. Нарушенная БД не маскируется telemetry-ошибкой.
@@ -106,32 +106,35 @@ Envelope **тотален**: успех и отказ имеют одну фор
 |---|---|---|---|
 | `trainer doctor` | cli | нет | среда, версии, целостность путей; запускается первым при разборе поломки |
 | `trainer init` | storage | да | инициализация локального состояния |
-| `trainer status` | learner | нет | сводка: уровень, активная сессия, что просрочено |
+| `trainer status` | learner | нет | сводка: уровни per-skill (`level`/`confidence`/`basis`/`provisional`), `measured_working_level` и `provisional_working_estimate` ([[scoring]] §4c) [PD-2026-09-22], активная сессия, что просрочено, ось `automaticity` ([[scoring]] §3d) |
+| `trainer learner preferences show` \| `set` | learner | `set` — да | форма занятий: раунд, язык объяснений, формы дрилла, лимит timed, режим обратной связи ([[learner]] §4a) [PD-2026-09-22] |
 
 ### Обучение
 
 | Команда | Владелец | Мутирует | Что делает |
 |---|---|---|---|
-| `trainer session start` | lessons | да | открывает сессию; композиция плана — в той же UoW; `--mode` задаёт режим занятия |
-| `trainer session next` | lessons | **да** | требует `--expected-session-revision`, `--expected-plan-version` и `--idempotency-key`; выдаёт шаг и увеличивает оба токена ([[control]] §4.2) |
-| `trainer session peek` | lessons | нет | показывает следующий шаг и текущий `plan_version`, ничего не помечая |
-| `trainer session replan` | lessons | да | требует `--expected-session-revision`, `--expected-plan-version` и `--idempotency-key`; `composition_revision + 1`, `plan_version + 1`, новое `SESSION_COMPOSED` |
-| `trainer session resume` | lessons | да | возобновляет `IN_PROGRESS` после потери чата; `--provider` обязателен и атомарно фиксирует `AGENT_ATTACHED` |
-| `trainer session finish` | lessons | да | требует `--expected-session-revision`; **единственный** способ завершить сессию; требует persisted evidence |
+| `trainer session propose` | lessons | нет | строит learner-facing LessonProposal и hash без резервирования или изменения state |
+| `trainer session start` | lessons | да | открывает сессию; принимает profile/topic/theme (включая `--profile drill`, [[control]] §4.2a); композиция advisory-плана — в той же UoW; возвращает `{session_id, brief}` — [PD-2026-09-23] `--expected-proposal-hash` удалён |
+| `trainer session resume` | lessons | да | возобновляет `STARTED`/`IN_PROGRESS`; разрешает exact pinned skill package, атомарно фиксирует `AGENT_ATTACHED`, возвращает пересобранный **тот же** LessonBrief [PD-2026-09-23] |
+| `trainer session check-report` | lessons | нет | [PD-2026-09-23] read-only проверка LessonReport до записи: по каждому item accepted/rejected + причина, эффекты (score, contributing, review outcome), предупреждения (duplicate_span, advisory-требования) |
+| `trainer session report` | lessons | да | [PD-2026-09-23] атомарная запись всего LessonReport + `session.finished`; отклонённый хотя бы один item → отказ целиком; без `--expected-session-revision`, с `--idempotency-key` |
 | `trainer session abandon` | lessons | да | требует `--expected-session-revision`; явный отказ от сессии |
-| `trainer attempt record` | evidence | да | требует `--expected-session-revision`; фиксирует попытку по **выданному шагу** (`--step`); target/dimension/mode и `origin` движок берёт из плана. `--note` — необязательная untrusted-заметка |
-| `trainer attempt finalize` | evidence | да | требует session revision; движок применяет pinned rubric и атомарно фиксирует assessment/evidence |
+| `trainer session status` | lessons | нет | read-only снимок активной сессии |
 | `trainer review due` | scheduler | нет | что подлежит повторению |
-| `trainer review close` | evidence | да | вычисляет терминальный ReviewOutcome по накопленному evidence; идемпотентен, повтор возвращает прежний исход |
-| `trainer observed record` | evidence | да | фиксирует наблюдённый факт (ошибка, слово, chunk), замеченный в свободном ответе, — вход `record_observed` ([[evidence]] §3); принимает `--note` |
 | `trainer reentry decline` | scheduler | да | ученик отказался от предложенного re-entry: факт сохраняется, ничего не блокирует и не штрафуется ([[scheduler]] §4) |
 | `trainer gate begin` \| `submit` \| `evaluate` | gates | да | рекомендательный гейт по теме |
+
+[PD-2026-09-23] Удалены вместе с пошаговой доставкой: `session next/peek/replan/finish`, `teaching rendered`, `exercise rendered`/`prepare`/`render-prepared`, `attempt record`/`record-block`/`finalize`, `review close`, `observed record`, `turn submit`. Правильность каждого item'а отчёта решает тьютор ([[evidence]] §4.2); движок хранит prompt, дословный ответ, вердикт и причину ошибки, сам выводит span и детерминированно агрегирует.
 
 ### Placement
 
 | Команда | Владелец | Мутирует | Что делает |
 |---|---|---|---|
-| `trainer placement start` \| `answer` \| `submit` \| `resume` \| `abandon` | assessments | да | жизненный цикл placement ([[assessments]]) |
+| `trainer placement start` | assessments | да | выбирает `PlacementForm` из активного curriculum-снапшота ([[curriculum]] §2f) и возвращает секции: passages, items с `kind`/`prompt`/`choice`-опциями a–d/`min_words`/`max_words` — **без** `answer_key` или rubric-эталона ни при каком kind ([[assessments]] §3) |
+| `trainer placement answer --input FILE` | assessments | да | инкрементальная checkpoint-фиксация секции; для writing принимает `observations` — span-ссылочные rubric-наблюдения по `rubric@1`, не вердикт |
+| `trainer placement resume` | assessments | да | продолжение в пределах resume-окна |
+| `trainer placement submit` | assessments | да | терминальный идемпотентный submit: скорит objective-секции кодом, считает rubric-assessment письма (provisional); возвращает objective `skills:{skill:{level, confidence, basis}}` (пусто, если ни один band не достиг пола); provisional writing-уровень и `provisional_working_estimate` — только в `trainer status`, который остаётся каноническим источником уровня
+| `trainer placement abandon` | assessments | да | терминализация без результата |
 | `trainer placement decline` | assessments | да | отказ от placement с опциональным **per-skill** self-report ([[assessments]] §4) |
 
 ### Данные и проверки
@@ -155,12 +158,13 @@ Envelope **тотален**: успех и отказ имеют одну фор
 | `trainer skills report` | adapters | да | untrusted started/completed/failed self-report по pinned skill |
 | `trainer adapters capture-turn` | adapters | да | полный локальный untrusted user-turn + hash/span на provider boundary |
 | `trainer why` | control | нет | почему выбран этот шаг: decision trace ([[control]] §4.8) |
-| `trainer signal KIND` | control | да | записывает сигнал; при активной сессии `too_easy` возвращает `probe_id` и `next_action: session.replan`, но сам план не меняет |
 | `trainer availability show` \| `set` | control | `set` — да | объявленный и наблюдаемый ритм занятий |
 | `trainer tunables list` | control | нет | каталог настроек: владелец, диапазон, режим изменения |
 | `trainer metrics` | control | нет | метрики качества политики + аварийные признаки |
 | `trainer calibration list` \| `confirm ID` | control | `confirm` — да | предложения калибровки; активацию выполняет владелец параметра ([[control]] §4.9) |
 | `trainer adapters compare` | adapters | нет | паритет тьюторов по фикстурам ([[adapters]]) |
+
+[PD-2026-09-23] `trainer signal` удалён — мид-сессионного адресата у сигналов ученика больше нет ([[control]] §4.7).
 
 - **MUST — `--format json` у всех agent-facing команд**. Команды, не предназначенные агенту (`doctor`, `init`), тоже его поддерживают: их зовут в автоматике диагностики.
 
@@ -179,6 +183,12 @@ Envelope **тотален**: успех и отказ имеют одну фор
 
 ## История изменений
 
+- **2026-09-23**: [PD-2026-09-23] переход на протокол «задание → отчёт»: `session next/peek/replan/finish`, `teaching rendered`, `exercise rendered/prepare/render-prepared`, `attempt record/record-block/finalize`, `review close`, `observed record`, `turn submit`, `trainer signal` удалены. Добавлены `session check-report` (read-only) и `session report` (атомарная запись всего LessonReport + finish, без `--expected-session-revision`); `session start`/`resume` возвращают LessonBrief вместо пошагового briefing. §4.4 уточнён: `session report` принимает вердикт тьютора по item'у (разворот прежнего запрета), но агрегатное состояние (Mastery/Stability/CEFR/knowledge state) по-прежнему исключительно вычисляет scoring.
+- **2026-09-22 (4)**: [PD-2026-09-22] `trainer status` отдаёт по каждому core skill флаг `provisional` и отдельное поле `provisional_working_estimate` (measured → provisional writing из placement → self-report, [[scoring]] §4c).
+- **2026-09-22 (3)**: [PD-2026-09-22] реальные placement-формы (Д15) — раздел Placement детализирован: `start` (passages/items/word ranges, никогда answer keys), `answer` (`observations` на writing), `submit` (level/confidence/basis только через `trainer status`, не в ответе `submit`).
+- **2026-09-22 (2)**: [PD-2026-09-22] добавлены `attempt record --close-review` и `attempt record-block --close-review`; `session next` отдаёт `composition_revision`/`steps_remaining`, `session peek` нужен после `resume`/конфликта, `attempt finalize` и `review close` помечены как fallback, `exercise prepare`/`render-prepared` — как MAY.
+- **2026-09-22**: [PD-2026-09-22] в поверхность добавлены `attempt record --latency-ms`, `attempt record-block`, `learner preferences show|set` и `session start --profile drill`; `trainer status` отдаёт ось `automaticity` отдельным блоком.
+- **2026-07-23**: [PD-2026-07-23] добавлены `session propose`, profile/topic/theme + proposal hash на старте, `teaching rendered` и `lesson_request`; закреплён порядок `peek → next → exercise rendered → display → attempt`.
 - **2026-07-22 (3)**: [PD-2026-07-22] добавлены fail-closed session revision на все мутации, outer invocation/terminal telemetry (включая read-only/отказы), новые audit/tunables/calibration/ingress/transition команды; OPEN-11 закрыт.
 - **2026-07-22**: фазовые теги `[mvp]`/`[post-mvp]` сняты [PD-2026-07-22]: спека описывает одну цель продукта, порядок и статус — только в roadmap (Принцип 4).
 - **2026-07-21**: `next`/`replan` синхронизированы с единым CAS-токеном `plan_version`; исправлена ссылка decision trace и явный replan после `too_easy`.

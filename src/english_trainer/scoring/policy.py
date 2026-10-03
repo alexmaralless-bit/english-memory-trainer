@@ -19,6 +19,11 @@ SCORING_KIND = "scoring"
 
 DIMENSIONS = ("recognition", "controlled_production", "spontaneous_production", "transfer")
 OUTCOME_QUALITIES = ("PROGRESS", "CONFIRMED", "RECOVERED")
+CONFIDENCE_LEVELS = ("very_low", "low", "medium", "high")
+#: Writing is the one core skill a placement never measures objectively.
+WRITING_SKILL = "writing"
+#: Rubric scores are integer parts per million (evidence 4.1).
+PPM_SCALE = 1_000_000
 
 
 class ScoringPolicyInvalid(KernelError):
@@ -36,17 +41,17 @@ def scoring_context(payload: dict[str, Any]) -> decimal.Context:
     )
 
 
-def _walk_floats(value: Any, path: str, errors: list[str]) -> None:
+def reject_floats(value: Any, path: str, errors: list[str]) -> None:
     if isinstance(value, bool):
         return
     if isinstance(value, float):
         errors.append(f"{path}: float {value!r} is banned on the scoring path; use a decimal string")
     elif isinstance(value, dict):
         for key, item in value.items():
-            _walk_floats(item, f"{path}.{key}", errors)
+            reject_floats(item, f"{path}.{key}", errors)
     elif isinstance(value, list):
         for index, item in enumerate(value):
-            _walk_floats(item, f"{path}[{index}]", errors)
+            reject_floats(item, f"{path}[{index}]", errors)
 
 
 def _decimal_or_error(value: Any, path: str, errors: list[str]) -> Decimal | None:
@@ -60,7 +65,7 @@ def _decimal_or_error(value: Any, path: str, errors: list[str]) -> Decimal | Non
 def validate_scoring_policy(payload: dict[str, Any]) -> list[str]:
     """Return every violation (empty list = valid)."""
     errors: list[str] = []
-    _walk_floats(payload, "scoring", errors)
+    reject_floats(payload, "scoring", errors)
 
     context = payload.get("decimal_context") or {}
     if context.get("precision") != 28 or context.get("rounding") != "ROUND_HALF_EVEN":
@@ -126,6 +131,15 @@ def validate_scoring_policy(payload: dict[str, Any]) -> list[str]:
     if origin.get("control_probe_no_negative") is not True:
         errors.append("scoring.origin_rules.control_probe_no_negative: must be true (canon 4b)")
 
+    # The placement-derived starting level (scoring@2) is OPTIONAL: scoring@1
+    # has no such section and must keep validating unchanged.
+    placement = payload.get("placement")
+    if placement is not None:
+        if not isinstance(placement, dict):
+            errors.append("scoring.placement: must be a mapping")
+        else:
+            _validate_placement(placement, payload, errors)
+
     skill_map = payload.get("core_skill_map")
     if not isinstance(skill_map, dict) or not skill_map:
         errors.append("scoring.core_skill_map: missing")
@@ -148,6 +162,68 @@ def validate_scoring_policy(payload: dict[str, Any]) -> list[str]:
                         cell.get("weight"), f"scoring.core_skill_map.{track}.{dimension}.weight", errors
                     )
     return errors
+
+
+def _core_skills(payload: dict[str, Any]) -> set[str]:
+    """Every core skill the versioned map names, at any weight (canon 4)."""
+    skills: set[str] = set()
+    for row in (payload.get("core_skill_map") or {}).values():
+        if not isinstance(row, dict):
+            continue
+        for cell in row.values():
+            if isinstance(cell, dict) and isinstance(cell.get("skill"), str):
+                skills.add(cell["skill"])
+    return skills
+
+
+def _validate_placement(placement: dict[str, Any], payload: dict[str, Any], errors: list[str]) -> None:
+    """The `placement` section of scoring@2 (canon 4c).
+
+    Coverage floors are PER SKILL: a placement form offers very different
+    coverage per skill (a grammar band is 5-8 one-item topics, a reading band 3
+    questions on one passage), so one shared floor would leave reading
+    structurally unmeasurable. Writing has no floor at all -- it gets the
+    provisional rule instead -- and every OTHER core skill must carry one, or the
+    section would silently stop measuring a skill.
+    """
+    floors = placement.get("min_topics_by_skill")
+    if not isinstance(floors, dict):
+        errors.append(
+            "scoring.placement.min_topics_by_skill: must be a mapping of core skill -> positive integer"
+        )
+        floors = {}
+    known = _core_skills(payload)
+    for skill, floor in floors.items():
+        if known and skill not in known:
+            errors.append(
+                f"scoring.placement.min_topics_by_skill.{skill}: not a core skill of core_skill_map"
+            )
+        if isinstance(floor, bool) or not isinstance(floor, int) or floor <= 0:
+            errors.append(f"scoring.placement.min_topics_by_skill.{skill}: must be a positive integer")
+    for skill in sorted(known - {WRITING_SKILL}):
+        if skill not in floors:
+            errors.append(f"scoring.placement.min_topics_by_skill.{skill}: missing (the map must be total)")
+    if WRITING_SKILL in floors:
+        errors.append(
+            f"scoring.placement.min_topics_by_skill.{WRITING_SKILL}: writing has no objective floor; "
+            "one rubric fragment gives a provisional level only (learning-model 6)"
+        )
+    if placement.get("confidence") not in CONFIDENCE_LEVELS:
+        errors.append(f"scoring.placement.confidence: must be one of {list(CONFIDENCE_LEVELS)}")
+    if placement.get("basis") != "placement":
+        errors.append("scoring.placement.basis: must be 'placement' (origin of the measurement, canon 4b)")
+
+    writing = placement.get("writing")
+    if not isinstance(writing, dict):
+        errors.append("scoring.placement.writing: must be a mapping (the provisional writing rule)")
+        return
+    threshold = writing.get("provisional_threshold_ppm")
+    if isinstance(threshold, bool) or not isinstance(threshold, int) or not 0 <= threshold <= PPM_SCALE:
+        errors.append(
+            f"scoring.placement.writing.provisional_threshold_ppm: must be an integer 0..{PPM_SCALE}"
+        )
+    if writing.get("confidence") not in CONFIDENCE_LEVELS:
+        errors.append(f"scoring.placement.writing.confidence: must be one of {list(CONFIDENCE_LEVELS)}")
 
 
 def require_valid(payload: dict[str, Any]) -> dict[str, Any]:

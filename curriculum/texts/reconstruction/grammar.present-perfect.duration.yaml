@@ -1,0 +1,31 @@
+schema_version: 1
+texts:
+  - id: text.recon.present-perfect-duration.platform-stability
+    title: "Platform stability update"
+    cefr: B1
+    topic: grammar.present-perfect.duration
+    also_targets: [grammar.time-dates]
+    carries: [tense:present-perfect, structure:time-marker]
+    domain: work
+    context: project-tenure
+    text: "The platform has been remarkably stable for the last three months now. We have not had any major outages since the last scheduled maintenance in July. The development team has worked on this critical system for over two years without significant issues. System performance has improved gradually and consistently during this entire period of operation. We have successfully maintained an uptime of 99.9 percent throughout the quarter. The service has reliably served thousands of active users without any interruption since initial launch."
+    word_count: 82
+    keywords: ["platform has been stable", "three months", "not had outages", "since last maintenance", "team has worked", "over two years", "performance has improved", "during this time", "maintained uptime", "throughout quarter", "service has served", "without interruption", "since launch"]
+    target_spans: ["has been remarkably stable for", "have not had any", "since the last scheduled maintenance", "has worked on", "for over two years", "has improved gradually", "have successfully maintained", "has reliably served", "since initial launch"]
+    summary_ru: "Платформа стабильна три месяца. Нет сбоев с последнего обслуживания в июле. Команда работает с системой больше двух лет. Производительность улучшается постепенно весь период. Поддерживаем время доступности 99,9% весь квартал. Сервис надёжно обслуживает тысячи пользователей с запуска."
+    transformations: [authored]
+
+  - id: text.recon.present-perfect-duration.learning-english
+    title: "Learning English progress"
+    cefr: B1
+    topic: grammar.present-perfect.duration
+    also_targets: [grammar.time-dates]
+    carries: [tense:present-perfect, structure:time-marker]
+    domain: everyday
+    context: project-tenure
+    text: "I have studied English consistently for six months now. Overall progress has been quite steady since I started this intensive learning program. My active vocabulary has grown considerably and noticeably over these past months. I have watched English films and television shows without any subtitles for the past month. My listening comprehension has improved significantly through regular viewing and conversation practice. I have maintained a strict and regular study routine for the entire period and concrete results have shown up gradually."
+    word_count: 81
+    keywords: ["studied English", "for six months", "progress has been steady", "since I started", "vocabulary has grown", "considerably", "watched English films", "without subtitles", "for the past month", "listening has improved", "maintained study routine", "entire period", "results have shown"]
+    target_spans: ["have studied English", "for six months now", "has been quite steady since", "has grown considerably", "have watched English films", "without any subtitles", "has improved significantly", "have maintained", "have shown up"]
+    summary_ru: "Учу английский последовательно полгода. Прогресс стабильный с начала интенсивной программы. Словарь вырос заметно за эти месяцы. Смотрю фильмы без субтитров месяц. Аудирование улучшилось через практику. Поддерживаю режим учёбы весь период, результаты есть."
+    transformations: [authored]

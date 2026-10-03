@@ -51,7 +51,7 @@ topics:
       soft: [grammar.time-dates]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: big-five
-    lexicon: [chunk.we-have-not-had-any-issues-since, word.since, word.yet]
+    lexicon: [chunk.we-have-not-had-any-issues-since, word.since, word.yet, chunk.present-perfect-duration.ever-since, chunk.present-perfect-duration.for-two-weeks-now, chunk.present-perfect-duration.hasnt-been-updated, chunk.present-perfect-duration.have-you-heard, chunk.present-perfect-duration.how-long-have-you, chunk.present-perfect-duration.how-long-since, chunk.present-perfect-duration.its-been-since, chunk.present-perfect-duration.ive-been-waiting, chunk.present-perfect-duration.ive-known-for, chunk.present-perfect-duration.ive-not-seen, chunk.present-perfect-duration.ive-worked-for, chunk.present-perfect-duration.since-you-joined, chunk.present-perfect-duration.so-far-we-have, chunk.present-perfect-duration.the-project-has-been-ongoing, chunk.present-perfect-duration.the-service-has-been-since, chunk.present-perfect-duration.theres-been-no, chunk.present-perfect-duration.theyve-been-testing, chunk.present-perfect-duration.we-have-had-for, chunk.present-perfect-duration.weve-been-trying, chunk.present-perfect-duration.weve-had-the-opportunity, chunk.present-perfect-duration.weve-not-had-issues]
     contexts: [project-tenure, service-status]
     typical_errors:
       - "Using Present Simple with since (I work here since 2022), following the Russian present-tense pattern."
@@ -60,6 +60,14 @@ topics:
     examples:
       - "I have worked on the platform for three years."
       - "The service has been stable since Monday."
+    contrasts:
+      - "I have worked on the platform for three years. / I worked on the platform for three years.: an unfinished period continuing now contrasts with a closed period that is now over."
+      - "The service has been stable since Monday. / The service was stable last Monday.: since Monday marks an ongoing state up to now; last Monday anchors a fact about one finished day."
+      - "We have known about the issue for two days. / We knew about the issue two days ago.: a state still true now contrasts with a past state framed as a finished fact."
+      - "She has used this tool since she joined the team. / She used this tool when she joined the team.: an unbroken period up to now contrasts with one specific past moment."
+      - "They have lived in Austin for five years. / They lived in Austin for five years, then moved to Denver.: an ongoing, still-current period contrasts with a period explicitly closed by a later event."
+      - "The bug has existed since the last release. / The bug existed in the last release only.: a duration still continuing into the present contrasts with a duration limited to one finished release."
+      - "We deployed the fix yesterday. / We have used this deployment process since January.: a finished-time marker such as yesterday forces Past Simple; a duration continuing up to now with since needs Present Perfect, a distinction Russian aspect does not mark the same way."
     explanation_language: ru-allowed
     mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
 
@@ -168,6 +176,54 @@ topics:
     explanation_language: ru-allowed
     mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
 
+  - id: grammar.articles.generic-statements
+    title: "Generic reference in technical writing: users, a user, the user"
+    cefr: B1
+    track: grammar-engine
+    module: b1.1-systems-and-project-reports
+    can_do: "Choose zero plural, a plus singular, or the plus singular to describe a general category of people or things in technical writing."
+    advisory_prerequisites:
+      strong: [grammar.articles.zero-plural-uncountable, grammar.articles.the-unique-superlative-ordinal]
+      soft: [grammar.nouns-singular-plural]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: core
+    lexicon: [chunk.each-record-has, word.aggregate, word.domain, word.specification, chunk.articles-generic-statements.a-good-leader-listens-first, chunk.articles-generic-statements.a-successful-product-solves-a-real-problem, chunk.articles-generic-statements.a-well-designed-interface-needs-no-manual, chunk.articles-generic-statements.a-x-should-always-x, chunk.articles-generic-statements.customers-expect-fast-support, chunk.articles-generic-statements.developers-usually-test-locally-first, chunk.articles-generic-statements.employees-are-expected-to-log-hours, chunk.articles-generic-statements.managers-often-approve-requests-quickly, chunk.articles-generic-statements.systems-should-be-tested-before-release, chunk.articles-generic-statements.the-average-user-skips-the-tutorial, chunk.articles-generic-statements.the-human-brain-processes-images-quickly, chunk.articles-generic-statements.the-modern-smartphone-replaced-many-devices, chunk.articles-generic-statements.the-x-has-changed-how-we-x, chunk.articles-generic-statements.x-need-x]
+    contexts: [architecture-overview, team-onboarding]
+    typical_errors:
+      - "Adding the before a plural noun used generically (The users need clear error messages) when zero article states the general category."
+      - "Switching between a plus singular and the plus singular generic patterns inside one paragraph, creating an inconsistent reference."
+      - "Using the with a category noun that has not been narrowed to one specific instance yet, transferring a Russian default toward definiteness."
+    examples:
+      - "Users need a clear error message when a request fails."
+      - "The database stores each record with a unique identifier."
+    core_points:
+      - "A generic plural with zero article states a rule about the whole category: users need, records include, tests confirm."
+      - "A generic singular with a states the same kind of rule about one representative member: a user needs, a request contains."
+      - "A generic singular with the states a rule about one defined system or component as a class: the database stores, the cache expires."
+    contrasts:
+      - "Users need feedback. / The users need feedback.: users in general takes no article; the users narrows the claim to one already-identified group."
+      - "A user submits a request. / The user submits a request.: a user speaks generically about any user; the user points to one specific user already introduced."
+      - "A database stores records. / The database stores records.: a database makes a broader generic claim about databases as a category; the database names this specific system as a defined type."
+      - "Tests confirm the fix. / The tests confirm the fix.: tests in general states expected behavior; the tests points to the specific test run just described."
+      - "Requirements change over time. / The requirements changed last week.: requirements as a category contrasts with this project's specific, already-mentioned requirements."
+      - "A cache reduces load. / The cache reduces load on this service.: a cache is a generic technical claim; the cache names the particular one in this system."
+      - "Errors are logged automatically. / The errors were logged at 10:00.: errors in general as a system behavior contrasts with the specific errors from one incident."
+    scope_limits:
+      - "This topic focuses on generic reference in technical and project writing; the same pattern in everyday speech is not separately drilled here."
+      - "Proper nouns and geographic names have their own article rules and are covered in a separate topic."
+    error_patterns:
+      - learner_form: "The users need clear error messages, in general."
+        correction: "Users need clear error messages, in general."
+        explanation: "A generic claim about the whole category of users takes zero article with the plural noun, not the."
+      - learner_form: "A database stores each record with unique identifier, referring to this specific system."
+        correction: "The database stores each record with a unique identifier."
+        explanation: "Referring to this one specific system needs the, not the generic a pattern; the missing a before identifier is also required."
+      - learner_form: "Requirement changed last week for this project."
+        correction: "The requirement changed last week for this project."
+        explanation: "A specific, already-identified requirement in this project needs the and the singular noun, not a bare noun."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
+
   - id: grammar.past-perfect.sequence
     cefr: B1
     track: grammar-engine
@@ -178,7 +234,7 @@ topics:
       soft: [grammar.when-while.sequence]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: tail
-    lexicon: [chunk.it-stopped-working-after, chunk.it-turned-out-that, word.incident]
+    lexicon: [chunk.it-stopped-working-after, chunk.it-turned-out-that, word.incident, chunk.past-perfect-sequence.after-had-and-then, chunk.past-perfect-sequence.before-that, chunk.past-perfect-sequence.by-the-time-had, chunk.past-perfect-sequence.had-been-down, chunk.past-perfect-sequence.had-before, chunk.past-perfect-sequence.had-by-then, chunk.past-perfect-sequence.hardly-had, chunk.past-perfect-sequence.it-turned-out-that, chunk.past-perfect-sequence.not-until, chunk.past-perfect-sequence.once-had, chunk.past-perfect-sequence.only-after-had, chunk.past-perfect-sequence.the-had-broken, chunk.past-perfect-sequence.the-time-had-come, chunk.past-perfect-sequence.when-had]
     contexts: [incident-timeline, personal-narrative]
     typical_errors:
       - "Using Past Perfect for both past events instead of marking only the earlier event when the order needs clarification."
@@ -200,7 +256,7 @@ topics:
       soft: [grammar.past-simple.events]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: tail
-    lexicon: [chunk.we-should-consider, word.if, word.option]
+    lexicon: [chunk.we-should-consider, word.if, word.option, chunk.second-conditional-hypothetical.assuming-would, chunk.second-conditional-hypothetical.i-wouldnt-unless, chunk.second-conditional-hypothetical.if-had-would, chunk.second-conditional-hypothetical.if-i-were-id, chunk.second-conditional-hypothetical.if-not-for, chunk.second-conditional-hypothetical.if-she-were, chunk.second-conditional-hypothetical.in-that-case-would, chunk.second-conditional-hypothetical.it-would-be-if, chunk.second-conditional-hypothetical.suppose-would, chunk.second-conditional-hypothetical.we-would-if, chunk.second-conditional-hypothetical.what-would-you-do-if, chunk.second-conditional-hypothetical.would-you-if]
     contexts: [design-hypothesis, personal-choice]
     typical_errors:
       - "Putting would in the if-clause (If we would add a cache...)."
@@ -222,7 +278,7 @@ topics:
       soft: [grammar.sequencing.delivery]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: tail
-    lexicon: [word.process, word.delivery, chunk.we-have-completed]
+    lexicon: [word.process, word.delivery, chunk.we-have-completed, chunk.passive-expanded-process.been-given-new-tool, chunk.passive-expanded-process.can-be-resolved, chunk.passive-expanded-process.had-been-archived, chunk.passive-expanded-process.has-been-completed, chunk.passive-expanded-process.is-being-tested, chunk.passive-expanded-process.may-be-postponed, chunk.passive-expanded-process.must-have-been-deleted, chunk.passive-expanded-process.needs-to-be-fixed, chunk.passive-expanded-process.should-be-signed, chunk.passive-expanded-process.was-being-reviewed, chunk.passive-expanded-process.was-scheduled-to-complete, chunk.passive-expanded-process.will-be-published]
     contexts: [process-description, deployment-report]
     typical_errors:
       - "Dropping the form of be and leaving only the participle (The file processed yesterday)."
@@ -244,7 +300,7 @@ topics:
       soft: [written-production.paraphrase-summary]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: tail
-    lexicon: [chunk.the-key-point-is, chunk.do-you-mean, word.question]
+    lexicon: [chunk.the-key-point-is, chunk.do-you-mean, word.question, chunk.reported-speech-work-updates.agreed-would, chunk.reported-speech-work-updates.asked-if-were, chunk.reported-speech-work-updates.asked-when-would, chunk.reported-speech-work-updates.asked-whether-had, chunk.reported-speech-work-updates.claimed-had-been, chunk.reported-speech-work-updates.mentioned-needed, chunk.reported-speech-work-updates.notified-was, chunk.reported-speech-work-updates.pointed-out-had, chunk.reported-speech-work-updates.repeated-should, chunk.reported-speech-work-updates.said-that-would, chunk.reported-speech-work-updates.stated-must, chunk.reported-speech-work-updates.told-me-was, chunk.reported-speech-work-updates.told-us-had, chunk.reported-speech-work-updates.was-told-had-been, chunk.reported-speech-work-updates.wondered-might]
     contexts: [meeting-summary, handover-update]
     typical_errors:
       - "Keeping direct-question word order after asked (She asked when would it start)."
@@ -308,7 +364,7 @@ topics:
       soft: [grammar.pronouns.possessives]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: core
-    lexicon: [word.team, word.company, chunk.i-work-in-the-team]
+    lexicon: [word.team, word.company, chunk.i-work-in-the-team, chunk.relative-clauses-specification.approach-suggested, chunk.relative-clauses-specification.change-requested, chunk.relative-clauses-specification.developer-wrote, chunk.relative-clauses-specification.document-outlines, chunk.relative-clauses-specification.event-occurred, chunk.relative-clauses-specification.feature-allows, chunk.relative-clauses-specification.file-contains, chunk.relative-clauses-specification.issue-affects, chunk.relative-clauses-specification.manager-oversees, chunk.relative-clauses-specification.model-use, chunk.relative-clauses-specification.noun-discussed, chunk.relative-clauses-specification.person-owns, chunk.relative-clauses-specification.person-whose, chunk.relative-clauses-specification.reason-why, chunk.relative-clauses-specification.requirement-mentioned, chunk.relative-clauses-specification.rule-applies, chunk.relative-clauses-specification.service-handles, chunk.relative-clauses-specification.solution-found, chunk.relative-clauses-specification.standard-follows, chunk.relative-clauses-specification.system-processes, chunk.relative-clauses-specification.team-built, chunk.relative-clauses-specification.test-validates, chunk.relative-clauses-specification.user-who, chunk.relative-clauses-specification.vendor-who, chunk.relative-clauses-specification.which-means]
     contexts: [requirement-definition, team-description]
     typical_errors:
       - "Repeating the noun with a pronoun inside the relative clause (the service which it stores data)."
@@ -330,7 +386,7 @@ topics:
       soft: [written-production.fact-inference]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: core
-    lexicon: [chunk.we-should-consider, word.requirement, chunk.as-far-as-i-understand]
+    lexicon: [chunk.we-should-consider, word.requirement, chunk.as-far-as-i-understand, chunk.modals-deduction-obligation.can-ability, chunk.modals-deduction-obligation.cannot-be-logical, chunk.modals-deduction-obligation.cannot-have, chunk.modals-deduction-obligation.cant-be-deduction, chunk.modals-deduction-obligation.could-be-possibility, chunk.modals-deduction-obligation.could-have-past, chunk.modals-deduction-obligation.do-not-have-to, chunk.modals-deduction-obligation.may-explain-why, chunk.modals-deduction-obligation.may-permission, chunk.modals-deduction-obligation.might-be-that, chunk.modals-deduction-obligation.might-have, chunk.modals-deduction-obligation.might-not, chunk.modals-deduction-obligation.must-be-deduction, chunk.modals-deduction-obligation.must-have, chunk.modals-deduction-obligation.must-have-been, chunk.modals-deduction-obligation.must-not-prohibition, chunk.modals-deduction-obligation.must-obligation, chunk.modals-deduction-obligation.ought-to, chunk.modals-deduction-obligation.shall-obligation, chunk.modals-deduction-obligation.should-have, chunk.modals-deduction-obligation.should-not, chunk.modals-deduction-obligation.should-obligation]
     contexts: [requirements-review, evidence-based-diagnosis]
     typical_errors:
       - "Using must not for absence of obligation instead of do not have to."
@@ -528,6 +584,54 @@ topics:
     examples:
       - "Could you please inspect the leak reported for apartment 14? It began on Tuesday and is now affecting the hallway."
       - "My account was locked after the password reset. Please restore access or let me know which document you need."
+    explanation_language: ru-allowed
+    mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
+
+  - id: grammar.articles.proper-nouns-geography
+    title: "The with geography: the US, the Alps, the Thames, but zero with most countries and cities"
+    cefr: B1
+    track: grammar-engine
+    module: b1.5-independent-life
+    can_do: "Use the correctly with countries, mountain ranges, rivers, and organizations, and zero article with most cities and single-word countries."
+    advisory_prerequisites:
+      strong: [grammar.articles.the-unique-superlative-ordinal]
+      soft: [grammar.articles.institutional-places]
+    dimensions: [recognition, controlled_production, spontaneous_production, transfer]
+    frequency_tier: core
+    lexicon: [word.option, chunk.the-main-advantage-is, word.detail, chunk.articles-proper-nouns-geography.germany, chunk.articles-proper-nouns-geography.nasa, chunk.articles-proper-nouns-geography.the-alps, chunk.articles-proper-nouns-geography.the-eu, chunk.articles-proper-nouns-geography.the-fbi, chunk.articles-proper-nouns-geography.the-netherlands, chunk.articles-proper-nouns-geography.the-pacific-ocean, chunk.articles-proper-nouns-geography.the-philippines, chunk.articles-proper-nouns-geography.the-thames, chunk.articles-proper-nouns-geography.the-uk, chunk.articles-proper-nouns-geography.the-un, chunk.articles-proper-nouns-geography.the-united-states, chunk.articles-proper-nouns-geography.the-us, chunk.articles-proper-nouns-geography.the-x-river]
+    contexts: [travel-planning]
+    typical_errors:
+      - "Adding the before a single-word country or city name (the France, the Berlin) by over-generalizing the pattern from plural or descriptive country names."
+      - "Dropping the before a country name that is plural or contains a common noun (Netherlands, United States) instead of using the fixed the form."
+      - "Adding the before an organization's acronym that functions like a proper name without it (the NASA), or dropping it where the acronym needs it (in EU)."
+    examples:
+      - "We are flying to the Netherlands, then driving through the Alps."
+      - "The Thames divides the city, and the EU has an office nearby."
+    core_points:
+      - "A single-word country or city name normally takes zero article: France, Berlin, Canada, Tokyo."
+      - "A country name that is plural in form or contains a common noun such as states, kingdom, or republic takes the: the United States, the Netherlands, the United Kingdom."
+      - "Mountain ranges, rivers, seas, and multi-word organization names normally take the, while single peaks, lakes, and single-word organization names normally do not."
+    contrasts:
+      - "France / the Netherlands: single-word country names usually take zero article; plural-form or descriptive country names take the."
+      - "London / the United States: single cities usually take zero article; multi-word country names with a common noun take the."
+      - "Everest / the Alps: a single named peak takes zero article; a mountain range name takes the."
+      - "Lake Michigan / the Thames: a lake named with Lake takes zero article; a river name on its own takes the."
+      - "NASA / the EU: an acronym pronounced as a word often takes zero article; an acronym read as separate letters for an organization commonly takes the."
+      - "Google / the World Health Organization: a single company name usually takes zero article; a descriptive multi-word organization name takes the."
+      - "Asia / the Middle East: a continent name takes zero article; a region name built from a common noun such as east or coast takes the."
+    scope_limits:
+      - "This topic gives the productive pattern and common landmark exceptions; it does not list every irregular place name in English."
+      - "Institutional zero-article phrases such as at school or in the hospital are covered in a separate topic, not repeated here."
+    error_patterns:
+      - learner_form: "We visited the France last summer."
+        correction: "We visited France last summer."
+        explanation: "Single-word country names normally take zero article; the only appears with plural or descriptive country names."
+      - learner_form: "Netherlands has a flat landscape."
+        correction: "The Netherlands has a flat landscape."
+        explanation: "A country name that is grammatically plural in form keeps the fixed the, even though the country itself is one nation."
+      - learner_form: "The Google announced a new policy."
+        correction: "Google announced a new policy."
+        explanation: "A single proper company name normally takes zero article, unlike a descriptive multi-word organization name."
     explanation_language: ru-allowed
     mastery_criteria: {schema_version: 1, per_dimension: {recognition: {active_threshold: 70, independent_attempts: 2}, controlled_production: {active_threshold: 75, independent_attempts: 2}, spontaneous_production: {active_threshold: 75, independent_attempts: 2}, transfer: {active_threshold: 75, independent_attempts: 2}}, mastered: {all_required_active: true, retention_stability_days: 30, retention_confirmations: 2}}
 

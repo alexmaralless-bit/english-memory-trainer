@@ -1,0 +1,28 @@
+# lessons@2 layers the brief/report protocol [PD-2026-09-23] onto lessons@1's
+# lifecycle timing decision: `stale_session_days` is carried over unchanged --
+# a session pins this snapshot, so a stale boundary stays replayable and does
+# not follow a later policy (lessons@1's own comment still applies).
+#
+# `brief_schema`/`report_schema` name the two schemas `session start`/
+# `session resume` and `session report` exchange with the tutor
+# (staging/concepts/2026-09-23-lesson-brief-report-concept.md): the brief the
+# engine hands over at the start of a lesson, and the report the tutor files
+# at the end. Pinning the schema id, not just a bare version number, lets a
+# session record exactly which contract it was built and closed against.
+#
+# `requirements` is advisory ONLY: the concept is explicit that a brief's
+# requirements (does the report cover the central topic, are the reviews it
+# was handed addressed) are warnings shown to the tutor, never grounds to
+# reject a report -- `session check-report`/`session report` still accept a
+# report that misses them. `severity` therefore can only ever be "warning";
+# this policy has no vocabulary for a blocking requirement.
+policy_id: "lessons@2"
+schema_version: 2
+status: "accepted"
+stale_session_days: 7
+brief_schema: "lesson_brief@1"
+report_schema: "lesson_report@1"
+requirements:
+  central_topic_min_items: 1
+  reviews_must_be_addressed: true
+  severity: "warning"

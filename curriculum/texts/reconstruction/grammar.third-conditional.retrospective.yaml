@@ -1,0 +1,31 @@
+schema_version: 1
+texts:
+  - id: text.recon.third-conditional-retrospective.incident-postmortem
+    title: "Incident postmortem"
+    cefr: B2
+    topic: grammar.third-conditional.retrospective
+    also_targets: [grammar.past-perfect.sequence]
+    carries: [tense:conditional-3, tense:past-perfect]
+    domain: work
+    context: incident-retrospective
+    text: "If we had tested the new release before deploying it, we would have discovered the encoding bug earlier. The outage would not have lasted three hours if the backup system had activated correctly. Had the team monitored the logs more closely, they would have noticed the error pattern immediately. If the database credentials had been rotated on schedule, the breach would have been prevented. The customer would not have lost data if we had implemented the failover mechanism. Had we reviewed the configuration changes, we would have caught the mistake before production. If the alert threshold had been set properly, someone would have been notified within minutes. The incident would have been contained if proper documentation had existed."
+    word_count: 118
+    keywords: ["tested release deploying", "would have discovered bug", "outage lasted hours", "backup activated correctly", "monitored logs closely", "database credentials rotated", "would have prevented breach", "reviewed configuration changes"]
+    target_spans: ["had tested the new", "would have discovered", "would not have lasted", "had activated correctly", "would have noticed", "had been rotated", "would have been prevented", "would not have lost"]
+    summary_ru: "Постмортем инцидента: если бы тестировали, баг нашли бы раньше; если бы бэкап сработал, аутажа не было бы три часа."
+    transformations: [authored]
+
+  - id: text.recon.third-conditional-retrospective.delivery-delay-analysis
+    title: "Delivery delay analysis"
+    cefr: B2
+    topic: grammar.third-conditional.retrospective
+    also_targets: []
+    carries: [tense:conditional-3, article:definite-second-mention]
+    domain: work
+    context: missed-deadline-review
+    text: "The delivery would have succeeded if the address had been verified before shipping. If the client had confirmed the requirements earlier, the team would have started coding sooner. If we had allocated more budget for infrastructure, we would have upgraded the servers on time. The project would not have slipped if the vendor had delivered the components as promised. Had resources been available in March, the bottleneck would never have appeared. If the scope had been frozen at the beginning, we would have delivered before the deadline. The timeline would have been realistic if stakeholders had communicated their needs clearly. Had testing begun earlier, we would have identified the integration issues in advance."
+    word_count: 113
+    keywords: ["delivery succeeded address", "verified before shipping", "client confirmed requirements", "team started coding", "allocated budget infrastructure", "servers upgraded time", "vendor delivered components", "resources available March"]
+    target_spans: ["would have succeeded if", "had been verified", "had confirmed the requirements", "would have started", "had allocated more", "would have upgraded", "would not have slipped", "had delivered the"]
+    summary_ru: "Анализ задержки: если бы адрес проверили, доставка прошла бы; если бы клиент подтвердил требования, команда начала бы раньше."
+    transformations: [authored]

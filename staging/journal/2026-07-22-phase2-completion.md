@@ -4,7 +4,7 @@ Append-only implementation trail for the ordered completion handoff.
 
 ## 2.8c — Availability
 
-- Commit: `87104d4` (`Add deterministic availability control`).
+- Commit: `126d647` (`Add deterministic availability control`).
 - Implemented the integer-only declared profile and replay-derived observed profile, including exact calendar-week windows, lower medians, honest `no-data`, budget precedence, divergence proposals, and the long-break predicate.
 - `compose_plan` accepts an optional `availability_long_break=False`; the default path is byte-identical. A true value runs the bounded critical boost after starvation and before ordinary review without overshoot or cap/floor violations.
 - Added atomic/idempotent `availability_set`, read-only `availability_get`, `AVAILABILITY_UPDATED`, and registered `trainer availability show|set`.
@@ -13,7 +13,7 @@ Append-only implementation trail for the ordered completion handoff.
 
 ## 2.8d — Decision trace (complete)
 
-- Commit: `2076a5e` (`Persist control decision traces`).
+- Commit: `90947c9` (`Persist control decision traces`).
 - Every materialized step now carries classification rules, risk/stake/retrievability, saturation, quotas, bucket occupancy, applied signal ids, pins, and active safety as either computed inputs, immutable facts, or catalogue references.
 - Traces are stored in immutable per-step aggregates in the same UoW as plan creation/replan, so a later dropped step remains explainable. `trainer why --step` reads the saved fact and never recomputes history.
 - `STEP_PRESENTED` now captures the delivery-time (not composition-time) predicted Retrievability for review assignments.
@@ -21,7 +21,7 @@ Append-only implementation trail for the ordered completion handoff.
 
 ## 2.8d — Policy metrics (complete, one upstream producer finding)
 
-- Commit: `c53f18d` (`Add deterministic control metrics`).
+- Commit: `5e28401` (`Add deterministic control metrics`).
 - Added all seven v1 metric folds, integer ppm/basis-point arithmetic, exact windows/minimum sample rules, nearest-rank p90, last-presentation calibration matching, and honest `no-data`.
 - Alerts use only terminal balanced-session DeliveryLedger facts, keep separate enter/exit thresholds and consecutive runs, and report choices without changing composition.
 - `trainer metrics` is read-only; missing neighboring policy state makes only dependent metrics `no-data`.
@@ -36,7 +36,7 @@ Append-only implementation trail for the ordered completion handoff.
 
 ## 2.8e — Exercise-bank reuse and observed errors
 
-- Commit: `40b44b3` (`Wire exercise bank reuse and observed errors`).
+- Commit: `fcaeb05` (`Wire exercise bank reuse and observed errors`).
 - Composition now selects accepted bank items conservatively and deterministically by exact step type, target, dimension, and context. The step carries exactly one source: `bank_item_id` or `generation_directive`.
 - `session next` re-reads the authoritative accepted state, revalidates target/lexicon safety against the active curriculum, resolves the immutable rendered snapshot, and commits `STEP_PRESENTED` plus `ExerciseUse` in one UoW. A safety change leaves the plan version untouched. Reused snapshots are valid attempt inputs through the published `exercise.used` fact; delivery alone creates no evidence.
 - Added `trainer observed record`: the engine derives target/dimension and rubric-owned error family/severity from an assessed attempt, validates the exact UTF-8 span, rejects agent-supplied verdicts and `contradicts_machine_result`, and emits `evidence.error_observed`. Semantic duplicate observations are idempotent.
@@ -45,7 +45,7 @@ Append-only implementation trail for the ordered completion handoff.
 
 ## Lessons wiring — live control inputs
 
-- Commit: `7e5a172` (`Activate live control inputs in lessons`).
+- Commit: `f9affb5` (`Activate live control inputs in lessons`).
 - `session start` and `session replan` now fold active learner signals, probe requests, saturation, recurring observed errors, terminal-session deferrals, starvation qualification, and AvailabilityProfile state from the authoritative log before composition.
 - Probe signal consumption, plan/assignment state, `SESSION_COMPOSED`, and immutable decision traces commit in the same UoW. Composition events persist eligible/excluded review facts, allowing terminal session events to advance the deferral fold without a second mutable counter.
 - End-to-end tests prove: `too_easy` produces and consumes one control probe; `need_more_practice` raises a live urgency class; repeated real exposures make a target deferrable; three terminal systematic deferrals qualify and admit the target through the starvation reserve; declared availability changes the live session budget.
@@ -65,8 +65,8 @@ Append-only implementation trail for the ordered completion handoff.
 
 ## Final handoff summary
 
-- Completed implementation commits: Availability `87104d4`; immutable DecisionTrace `2076a5e`; deterministic metrics `c53f18d`; bank reuse + observed errors `40b44b3`; live lessons/control wiring `7e5a172`.
-- Acceptance trail commits: `b5b6e74`, `8430712`, `8efcdaf`, `9eb673b`; 2.9 executable findings and concept: `4b514c9`.
+- Completed implementation commits: Availability `126d647`; immutable DecisionTrace `90947c9`; deterministic metrics `5e28401`; bank reuse + observed errors `fcaeb05`; live lessons/control wiring `f9affb5`.
+- Acceptance trail commits: `35e98ae`, `ac5a7e6`, `10b2520`, `bc63358`; 2.9 executable findings and concept: `25bb6be`.
 - Implemented behavior is active end-to-end, not only pure helpers: session composition consumes availability, signals/probes, saturation, recurring errors, deferral/starvation and bank state; decision facts and one-shot consumption are transactional.
 - Owner decisions still required: complete tunable catalogue metadata/ranges and calibration ownership; canonical scoring `STATE_TRANSITION` producer; OPEN-11 session-revision/multi-aggregate CAS; 2.9 provider ingress, command observation and obligations payload. These are represented by four strict xfails and two mini-concepts, not placeholder success paths.
 - Final verification: 451 tests collected — `447 passed, 4 xfailed`; `ruff check .` clean; `ruff format --check src tests` clean (145 files); `mypy src` strict clean (72 source files); CLI registry remains 45 commands.
@@ -74,7 +74,7 @@ Append-only implementation trail for the ordered completion handoff.
 
 ## Owner decisions implemented — Phase 2 complete
 
-- Commit: `2d7373c` (`Complete Phase 2 safety and trust contracts`).
+- Commit: `6a2ca43` (`Complete Phase 2 safety and trust contracts`).
 - The owner accepted all four proposed closures. The tunables gap is now a versioned 60-entry `tunables@1` catalogue with integer bounds, read-only listing, and proposal/confirmation that activates a successor owner policy atomically with its calibration fact.
 - `evidence@1` now assigns primary `1.0`, secondary `0.5`, and total cap `2.0`; allocation is deterministic, captured in the assessment event, and the scoring fold consumes every accepted allocation without changing the primary Decimal result.
 - OPEN-11 is closed by one coarse `session_revision` fence on every public live-session mutation. Same-key cached retries precede the fence; stale writers have no effects. A pinned `lessons@1` stale policy emits a deterministic boundary event and closes pending attempts, reviews, the active pointer, and their causal scoring facts in one UoW.

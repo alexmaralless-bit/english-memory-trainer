@@ -1,52 +1,41 @@
-"""Recording attempts against delivered steps (evidence contract 0.4; 2.2).
+"""Attempt facts: the event contract, the span/credit index and the pending set
+(evidence contract 0.4, 4.6; roadmap 2.2).
 
-Evidence is the only door through which knowledge reaches scoring, and the
-door checks papers: an attempt must reference a step with a recorded
-``STEP_PRESENTED`` in its active session, and a structured attempt must
-reference a stored ``EXERCISE_RENDERED`` snapshot that matches the step. From
-those facts the engine derives target, dimension, mode and ``origin`` itself
--- the client cannot claim a probe was a review or re-aim an answer at a
-different topic [RR2-3].
+The per-step writers that used to live here (``record_attempt``,
+``record_block_attempt`` -- the ``attempt record[-block]`` commands) went away
+with the step-delivery protocol [PD-2026-09-23]. Attempts are now written by
+the lesson report (``lessons.report`` over the pure builders in
+``evidence.report``), which emits the SAME event contract, so everything that
+remains here serves both the new producer and the historic log:
 
-This module deliberately reads **only published events and its own
-aggregates** (evidence depends on kernel + curriculum, never on lessons):
-session status is folded from the session lifecycle events, the step comes
-from ``STEP_PRESENTED``, the exercise from ``EXERCISE_RENDERED``. The event
-log is the module boundary.
+- the event and aggregate names (``attempt.recorded``,
+  ``attempt.state_changed``, ``evidence.added``, the ``attempt`` aggregate) and
+  the drill-block constants;
+- **semantic identity**: :func:`_credited_item_spans` indexes every (span,
+  target, dimension) that already earned credit -- single attempts by their
+  ``span_hash``/``primary_target``, drill blocks per CREDITED item -- so the
+  same span never mints evidence twice, whichever protocol recorded it;
+- :func:`_automaticity_updates`: the ``AUTOMATICITY_UPDATED`` facts caused by a
+  batch of ``EVIDENCE_ADDED``, appended in the SAME UnitOfWork (scoring 3d);
+- the pending set (:func:`pending_attempts`) and its abandon/stale closure
+  (:func:`close_pending_attempts`) -- an attempt still ``recorded`` in a
+  historic session closes ``closed_unassessed``, never a learner zero.
 
-What is honestly computable today:
-
-- **objective check**: an attempt against a stored exercise with an
-  ``answer_key`` is scored by deterministic normalization (NFC, casefold,
-  whitespace collapse) against the key's variants -- status ``assessed``.
-- **open answers** stay ``recorded``: rubric-based AttemptAssessment needs the
-  scoring policy (roadmap 2.3) and is never invented by the client (0.4:
-  client-side ready-made classification is forbidden).
-- **semantic identity**: ``span_hash`` over the raw answer; the same span
-  resubmitted for the same primary target is refused -- new keys or a new
-  session do not mint new evidence.
-
-``ATTEMPT_RECORDED`` captures everything scoring will need (capture-into-event
-4.5): raw answer, span hash, targets, origin, exercise reference, pinned
-versions. ``EVIDENCE_ADDED`` -- the scored fact -- arrives with scoring (2.3).
-
-Session notes (``--note``) are stored as untrusted text with author and
-timestamp; they are not evidence and never touch scoring [P0-5].
+This module reads only published events and its own aggregates (evidence
+depends on kernel + curriculum, never on lessons): the event log is the module
+boundary.
 """
 
 from __future__ import annotations
 
-import unicodedata
+from collections.abc import Sequence
 from typing import Any
 
-from english_trainer.evidence.policy import allocate_credit, multi_credit_policy
 from english_trainer.kernel.clock import Clock, RandomSource
-from english_trainer.kernel.encoding import payload_hash
-from english_trainer.kernel.envelopes import make_event
+from english_trainer.kernel.envelopes import DomainEvent, make_event
 from english_trainer.kernel.errors import KernelError
 from english_trainer.kernel.ids import new_ulid
 from english_trainer.kernel.policy import PolicyRegistry
-from english_trainer.kernel.session_fence import bump_session, load_session_for_update
 from english_trainer.kernel.store import EventStore
 from english_trainer.kernel.uow import UnitOfWork
 
@@ -55,21 +44,19 @@ from english_trainer.kernel.uow import UnitOfWork
 # the dependency rule (evidence depends on kernel + curriculum only).
 SESSION_STARTED_EVENT = "session.started"
 SESSION_CLOSED_EVENTS = ("session.finished", "session.abandoned")
-STEP_PRESENTED_EVENT = "session.step_presented"
-EXERCISE_RENDERED_EVENT = "exercise.rendered"
-EXERCISE_USED_EVENT = "exercise.used"
 
 EVENT_ATTEMPT_RECORDED = "attempt.recorded"
 EVENT_ATTEMPT_STATE_CHANGED = "attempt.state_changed"
 EVENT_EVIDENCE_ADDED = "evidence.added"
 
 ATTEMPT_AGGREGATE = "attempt"
-NOTES_AGGREGATE = "session_notes"
 
-# Closed / structured step types whose evidence is an objective check: an
-# attempt without a stored exercise snapshot cannot be checked and is refused.
-# Open production and conversation record now and get rubric assessment in 2.3.
-REQUIRES_EXERCISE_INSTANCE = frozenset({"recognition_check", "controlled_production", "gate_item"})
+# A drill block is one step, one snapshot and one attempt (evidence 4.6).
+DRILL_BLOCK_FORM = "drill_block"
+# The block passes as ONE objective evidence at or above this accuracy; below
+# it the single boolean is False. A block is not a graduated rubric score:
+# collapsing it here keeps it on the unchanged objective Mastery path.
+BLOCK_CORRECT_THRESHOLD_PPM = 750_000
 
 RECORDED = "recorded"
 ASSESSED = "assessed"
@@ -104,268 +91,89 @@ def _session_manifest(store: EventStore, session_id: str) -> dict[str, Any]:
     return manifest
 
 
-def _presented_step(store: EventStore, session_id: str, step_id: str) -> dict[str, Any]:
-    found: dict[str, Any] | None = None
-    for event in store.read():
-        if (
-            event.type == STEP_PRESENTED_EVENT
-            and event.correlation_id == session_id
-            and str(event.payload.get("step_id")) == step_id
-        ):
-            found = dict(event.payload)
-    if found is None:
-        raise EvidencePrecondition(
-            f"step {step_id} has no STEP_PRESENTED in session {session_id}: "
-            "an attempt without a delivered step is not admissible [RR2-3]"
-        )
-    return found
+def _item_pair(item_target_ref: Any, primary_target: dict[str, Any] | None) -> tuple[str, str | None] | None:
+    """The (target, dimension) a block item's span is credited to (evidence 4.6).
+
+    The item's own ``target_ref`` from the SNAPSHOT when it has one (a contrast
+    item drills a different target than the block's primary), else the block's
+    primary target. ``None`` when neither exists: with no target there is no
+    pair, so the one-span-per-pair rule has nothing to bind and the item is
+    credited.
+    """
+    primary = primary_target or {}
+    ref = item_target_ref or primary.get("target_ref")
+    if not ref:
+        return None
+    dimension = primary.get("dimension")
+    return str(ref), None if dimension is None else str(dimension)
 
 
-def _rendered_exercise(store: EventStore, session_id: str, instance_id: str) -> dict[str, Any]:
-    for event in store.read():
-        if (
-            event.type == EXERCISE_RENDERED_EVENT
-            and event.correlation_id == session_id
-            and str(event.payload.get("exercise_instance_id")) == instance_id
-        ):
-            return dict(event.payload)
-    use: dict[str, Any] | None = None
-    for event in store.read():
-        if (
-            event.type == EXERCISE_USED_EVENT
-            and event.correlation_id == session_id
-            and str(event.payload.get("exercise_instance_id")) == instance_id
-        ):
-            use = dict(event.payload)
-            break
-    if use is not None:
-        for event in store.read():
-            if (
-                event.type == EXERCISE_RENDERED_EVENT
-                and str(event.payload.get("exercise_instance_id")) == instance_id
-                and event.payload.get("content_hash") == use.get("content_hash")
-            ):
-                return {
-                    **dict(event.payload),
-                    "session_id": session_id,
-                    "step_id": use["step_id"],
-                    "reused_from_session_id": event.payload.get("session_id"),
-                }
-    raise EvidencePrecondition(
-        f"exercise instance {instance_id} has no EXERCISE_RENDERED in session {session_id}"
-    )
+def _credited_item_spans(store: EventStore) -> set[tuple[str, str, str | None]]:
+    """Every (span, target, dimension) a span already earned credit for.
 
-
-def _normalize_answer(text: str) -> str:
-    collapsed = " ".join(unicodedata.normalize("NFC", text).split())
-    return collapsed.casefold()
-
-
-def _objective_check(raw_answer: str, answer_key: Any) -> bool:
-    variants = answer_key if isinstance(answer_key, list) else [answer_key]
-    normalized = _normalize_answer(raw_answer)
-    return any(_normalize_answer(str(variant)) == normalized for variant in variants)
-
-
-def _duplicate_span_exists(store: EventStore, span_hash: str, primary_target: dict[str, Any] | None) -> bool:
-    """One source span counts at most once per (target, dimension) -- across
-    sessions and idempotency keys alike (semantic identity, 0.4 4.1)."""
+    Both attempt shapes are indexed, because semantic identity is a property of
+    the SPAN, not of the document it arrived in (0.4 4.1 + 4.6): a single
+    attempt contributes its own ``span_hash``/``primary_target``, and a drill
+    block contributes one entry per CREDITED item. An item recorded
+    ``credited: false`` never earned anything, so it does not block a later
+    honest answer.
+    """
+    seen: set[tuple[str, str, str | None]] = set()
     for event in store.read():
         if event.type != EVENT_ATTEMPT_RECORDED:
             continue
-        if event.payload.get("span_hash") != span_hash:
+        payload = event.payload
+        primary = payload.get("primary_target") or {}
+        items = payload.get("items")
+        if isinstance(items, list) and items:
+            for item in items:
+                if not isinstance(item, dict) or item.get("credited") is False:
+                    continue
+                span = item.get("span_hash")
+                pair = _item_pair(item.get("target_ref"), primary)
+                if span is None or pair is None:
+                    continue
+                seen.add((str(span), *pair))
             continue
-        if event.payload.get("primary_target") == primary_target:
-            return True
-    return False
+        span = payload.get("span_hash")
+        if span is None or not primary.get("target_ref"):
+            continue
+        dimension = primary.get("dimension")
+        seen.add((str(span), str(primary["target_ref"]), None if dimension is None else str(dimension)))
+    return seen
 
 
-def record_attempt(
+def _automaticity_updates(
     store: EventStore,
     clock: Clock,
-    random_source: RandomSource,
-    session_id: str,
-    *,
-    expected_session_revision: int,
-    step_id: str,
-    raw_answer: str,
-    exercise_instance_id: str | None = None,
-    observations: list[dict[str, Any]] | None = None,
-    hints: int = 0,
-    note: str | None = None,
-    provider: str | None = None,
-    registry: PolicyRegistry | None = None,
-    actor: str = "agent",
-) -> dict[str, Any]:
-    """Record one learner attempt against a delivered step."""
-    if not raw_answer or not raw_answer.strip():
-        raise EvidencePrecondition("raw_answer is empty: an explanation is not evidence (0.4 4.2)")
+    registry: PolicyRegistry | None,
+    batch: Sequence[DomainEvent],
+) -> list[DomainEvent]:
+    """The ``AUTOMATICITY_UPDATED`` facts caused by the evidence in ``batch``.
 
-    session_state, session_revision = load_session_for_update(store, session_id, expected_session_revision)
-    manifest = _session_manifest(store, session_id)
-    step = _presented_step(store, session_id, step_id)
-    step_type = str(step.get("step_type"))
-
-    exercise: dict[str, Any] | None = None
-    if exercise_instance_id is not None:
-        exercise = _rendered_exercise(store, session_id, exercise_instance_id)
-        if str(exercise.get("step_id")) != step_id:
-            raise EvidencePrecondition(
-                f"exercise instance {exercise_instance_id} was rendered for step "
-                f"{exercise.get('step_id')}, not {step_id}"
-            )
-    elif step_type in REQUIRES_EXERCISE_INSTANCE:
-        raise EvidencePrecondition(
-            f"step type {step_type} is a structured check: record the EXERCISE_RENDERED "
-            "snapshot first (`trainer exercise rendered`) and pass --exercise-instance"
-        )
-
-    # The engine derives the classification facts; the client never sends them.
-    targets = [dict(t) for t in step.get("targets", [])]
-    primary_target = None
-    selection_basis = "no_target"  # target-less choice steps record without a target
-    if exercise is not None and exercise.get("target_refs"):
-        refs = list(exercise["target_refs"])
-        dims = list(exercise.get("dimensions") or [])
-        primary_target = {"target_ref": str(refs[0]), "dimension": str(dims[0]) if dims else None}
-        selection_basis = "declared_item_target"
-    elif targets:
-        primary_target = dict(targets[0])  # targets[] is already in canonical order
-        selection_basis = "canonical_order"
-    origin = "control_probe" if step.get("kind") == "probe" else "session"
-
-    span_hash = payload_hash({"raw_answer": raw_answer})
-    if _duplicate_span_exists(store, span_hash, primary_target):
-        raise EvidencePrecondition(
-            "this answer span was already recorded for the same target: one source span "
-            "counts at most once per (target, dimension) -- semantic identity (0.4 4.1)"
-        )
-
-    assessment: dict[str, Any] | None = None
-    status = RECORDED
-    if exercise is not None and exercise.get("answer_key") is not None:
-        correct = _objective_check(raw_answer, exercise["answer_key"])
-        assessment = {
-            "basis": "objective_check",
-            "correct": correct,
-            "score_ppm": 1_000_000 if correct else 0,
-            "checked_against_content_hash": exercise["content_hash"],
-        }
-        status = ASSESSED
-
-    attempt_id = new_ulid(clock, random_source)
-    pinned = dict(manifest.get("pinned_versions") or {})
-    recorded_at = clock.now().isoformat()
-    payload: dict[str, Any] = {
-        "attempt_id": attempt_id,
-        "session_id": session_id,
-        "step_id": step_id,
-        "exercise_instance_id": exercise_instance_id,
-        "step_type": step_type,
-        "mode": step_type,
-        "origin": origin,
-        "targets": targets,
-        "primary_target": primary_target,
-        "selection_basis": selection_basis,
-        "raw_answer": raw_answer,
-        "span_hash": span_hash,
-        "observations": list(observations or []),
-        "hints": hints,
-        "status": status,
-        "assessment": assessment,
-        "recorded_at": recorded_at,
-    }
-
-    with UnitOfWork(store, clock) as uow:
-        new_session_revision = bump_session(uow, session_id, session_state, session_revision, clock.now())
-        uow.save_aggregate(ATTEMPT_AGGREGATE, attempt_id, payload, expected_revision=0)
-        if note is not None and note.strip():
-            entry = {
-                "author_provider": provider or manifest.get("provider"),
-                "created_at": recorded_at,
-                "text": note.strip(),
-                "attempt_id": attempt_id,
-            }
-            existing = uow.get_aggregate(NOTES_AGGREGATE, session_id)
-            if existing is None:
-                uow.save_aggregate(NOTES_AGGREGATE, session_id, {"notes": [entry]}, expected_revision=0)
-            else:
-                state, revision = existing
-                uow.save_aggregate(
-                    NOTES_AGGREGATE,
-                    session_id,
-                    {"notes": [*state.get("notes", []), entry]},
-                    expected_revision=revision,
-                )
-        batch = [
-            make_event(
-                id=new_ulid(clock, random_source),
-                type=EVENT_ATTEMPT_RECORDED,
-                occurred_at=clock.now(),
-                actor=actor,
-                provider=provider or manifest.get("provider"),
-                correlation_id=session_id,
-                payload=payload,
-                pinned_versions=pinned,
-            )
-        ]
-        if assessment is not None:
-            # The assessed attempt IS admissible evidence: EVIDENCE_ADDED rides
-            # the same transaction (capture-into-event, 0.4 4.5) with the full
-            # CreditAllocation. Multi-target spans are weighted and capped by
-            # the pinned evidence policy. Capped targets remain explicit.
-            allocations = allocate_credit(targets, primary_target, multi_credit_policy(registry, pinned))
-            batch.append(
-                make_event(
-                    id=new_ulid(clock, random_source),
-                    type=EVENT_EVIDENCE_ADDED,
-                    occurred_at=clock.now(),
-                    actor=actor,
-                    provider=provider or manifest.get("provider"),
-                    correlation_id=session_id,
-                    causation_id=batch[0].id,
-                    payload={
-                        "evidence_id": new_ulid(clock, random_source),
-                        "attempt_id": attempt_id,
-                        "session_id": session_id,
-                        "step_id": step_id,
-                        "exercise_instance_id": exercise_instance_id,
-                        "origin": origin,
-                        "mode": step_type,
-                        "primary_target": primary_target,
-                        "selection_basis": selection_basis,
-                        "credit_allocations": allocations,
-                        "span_hash": span_hash,
-                        "assessment_basis": assessment["basis"],
-                        "correct": assessment["correct"],
-                        "score_ppm": assessment["score_ppm"],
-                        "hints": hints,
-                        "recorded_at": recorded_at,
-                    },
-                    pinned_versions=pinned,
-                )
-            )
-        uow.append(batch)
-    return {
-        "attempt_id": attempt_id,
-        "status": status,
-        "assessment": assessment,
-        "primary_target": primary_target,
-        "selection_basis": selection_basis,
-        "origin": origin,
-        "session_revision": new_session_revision,
-    }
-
-
-def list_notes(store: EventStore, session_id: str) -> list[dict[str, Any]]:
-    """The session's untrusted notes in chronological order [R-3]."""
-    from english_trainer.kernel.aggregates import read_aggregate
-
-    found = read_aggregate(store._conn, NOTES_AGGREGATE, session_id)
-    if found is None:
+    Built here and appended by the caller INSIDE its UnitOfWork, exactly the
+    shape ``evidence.reviews`` uses for state-transition facts: the axis and
+    the scoring update that consumed the evidence must never be able to commit
+    apart (scoring 3d). Empty when the session pinned no ``automaticity``
+    version, or when neither the state nor any number of the axis moved --
+    nothing observed means nothing to say.
+    """
+    sources = [event for event in batch if event.type == EVENT_EVIDENCE_ADDED]
+    if not sources:
         return []
-    notes = found[0].get("notes", [])
-    return [dict(entry) for entry in notes]
+    # Local import: evidence may call scoring's narrow producers (see the layer
+    # allowlist), and a module-scope import would widen the start-time graph.
+    from english_trainer.scoring.automaticity import build_automaticity_update
+
+    resolver = registry if registry is not None else PolicyRegistry(store._conn, clock)
+    built: list[DomainEvent] = []
+    for source in sources:
+        # At most one EVIDENCE_ADDED per attempt today; the loop keeps the
+        # helper total rather than assuming that shape forever.
+        update = build_automaticity_update(store, resolver, source)
+        if update is not None:
+            built.append(update)
+    return built
 
 
 def session_attempts(store: EventStore, session_id: str) -> list[dict[str, Any]]:

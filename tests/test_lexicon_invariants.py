@@ -147,4 +147,6 @@ def test_every_a1_a2_module_has_at_least_five_work_frames(items, links):
             per_module.setdefault(module_of[topic], set()).add(link["lexical_item"])
     thin = {m: len(c) for m, c in per_module.items() if len(c) < 5}
     assert not thin
-    assert len(per_module) == 16, f"expected all 16 A1-A2 modules covered, got {len(per_module)}"
+    # 16 work modules were the original floor; grammar frames (2026-09-22) also cover
+    # everyday modules through the article topics, so coverage may only grow.
+    assert len(per_module) >= 16, f"expected at least the 16 work modules covered, got {len(per_module)}"

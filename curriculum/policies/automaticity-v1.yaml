@@ -1,0 +1,32 @@
+# automaticity@1 -- the executable automaticity policy (wiki/modules/scoring.md
+# §3d, [PD-2026-09-22]). A separate policy KIND, pinned beside scoring@1 in the
+# Session Manifest: it neither overrides scoring@1 nor is overridden by it.
+#
+# The axis answers "does the form come out without stopping to think?", never
+# "does the learner know it". It therefore feeds nothing in §2-§3 -- not
+# Mastery, not Stability/Retrievability, not knowledge state, not the working
+# CEFR level, not the Learning Score, not XP.
+#
+# Every value is a concrete authored default (a range would not be executable).
+# `latency_factor` is a decimal STRING parsed under the fixed Decimal context of
+# canon §2.1 (precision 28, ROUND_HALF_EVEN); YAML floats are refused on
+# activation. Thresholds are uncalibrated by design -- OPEN-37.
+policy_id: "automaticity@1"
+schema_version: 1
+status: "accepted"
+decision_record: "PD-2026-09-22"
+canonical_encoding: "kernel.canonical_json_v1"
+numeric_value_rule: "integers_and_decimal_strings_only"
+
+# deliberate -> proceduralized: accuracy at or above this over >= min_blocks
+# drill blocks. A block below it also demotes proceduralized/automatic back to
+# proceduralized (a speed observation, never a knowledge loss).
+proceduralized_accuracy_ppm: 900000
+# proceduralized -> automatic additionally needs this accuracy, a median
+# per-item latency within latency_factor of the learner's own baseline, blocks
+# from >= min_sessions sessions, and >= 1 confirmation outside the drill.
+automatic_accuracy_ppm: 950000
+min_blocks: 3
+min_sessions: 2
+latency_factor: "1.5"
+baseline_window_sessions: 10

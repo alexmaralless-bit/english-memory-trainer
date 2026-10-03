@@ -8,7 +8,11 @@ by a deterministic fold over events that already exist:
 - ``STEP_PRESENTED`` -- one exposure per ``(target_ref, dimension)`` in
   ``targets[]``, with its ``context_id``; a ``transfer_task`` delivery records
   the transfer-check instant (control 4.6: exposure and saturation are counted
-  from delivery to the tutor, not from a screen the engine never sees);
+  from delivery to the tutor, not from a screen the engine never sees). A
+  ``drill_block`` is ONE exposure however many items it runs [PD-2026-09-22]:
+  items are invisible to control, and counting them would exhaust
+  ``max_exposures_in_window: 3`` inside half of the first block, making the
+  massed repetition the step type exists for impossible to plan;
 - ``EVIDENCE_ADDED`` / ``REVIEW_OUTCOME`` -- an independent success advances the
   streak, a failure or a scaffolded (hinted) success breaks it, and
   ``INSUFFICIENT_EVIDENCE`` is neutral (excluded, matching the calibration rule
@@ -53,6 +57,7 @@ EVENT_ERROR_OBSERVED = "evidence.error_observed"
 Key = tuple[str, str]
 
 _TRANSFER_STEP_TYPE = "transfer_task"
+_DRILL_BLOCK_STEP_TYPE = "drill_block"
 
 # Review-outcome markings (control 4.10): a five-value outcome, not a bool.
 _SUCCESS_OUTCOMES = frozenset({"CONFIRMED", "PROGRESS", "RECOVERED"})
@@ -175,6 +180,13 @@ def reduce_saturation(events: Iterable[DomainEvent], policy: dict[str, Any]) -> 
     streak: dict[Key, int] = {}
     last_transfer: dict[Key, str | None] = {}
     keys: set[Key] = set()
+    # A drill block is ONE exposure and ONE success, whatever its round size
+    # [PD-2026-09-22]. The delivery side is automatic (one STEP_PRESENTED per
+    # block); the evidence side is not, because a block produces one attempt per
+    # item, so its outcomes are collapsed per (step_id, key) below.
+    block_steps: set[str] = set()
+    block_scored: set[tuple[str, Key]] = set()
+    block_failed: set[tuple[str, Key]] = set()
 
     for event in sorted(events, key=_seq):
         if event.id in seen:
@@ -188,8 +200,14 @@ def reduce_saturation(events: Iterable[DomainEvent], policy: dict[str, Any]) -> 
             context_id = str(event.payload.get("context_id") or "")
             step_type = str(event.payload.get("step_type") or "")
             when = event.occurred_at.isoformat()
+            if step_type == _DRILL_BLOCK_STEP_TYPE:
+                block_steps.add(str(event.payload.get("step_id") or ""))
             for key in target_pairs(event.payload):
                 keys.add(key)
+                # One delivery, one exposure -- for every listed pair, the
+                # drilled target and the ``role: contrast`` distractors alike:
+                # a competing form put in front of the learner has been shown,
+                # even though it earns no evidence credit of its own (4.6).
                 exposures.setdefault(key, []).append(session_seq)
                 contexts.setdefault(key, set()).add(context_id)
                 if step_type == _TRANSFER_STEP_TYPE:
@@ -200,14 +218,32 @@ def reduce_saturation(events: Iterable[DomainEvent], policy: dict[str, Any]) -> 
             independent = _is_independent(event.payload)
             mode = str(event.payload.get("mode") or event.payload.get("step_type") or "")
             when = event.occurred_at.isoformat()
+            step_id = str(event.payload.get("step_id") or "")
+            in_block = bool(step_id) and step_id in block_steps
             for key in _evidence_pairs(event.payload):
                 keys.add(key)
-                if success is None:
-                    pass  # neutral: INSUFFICIENT_EVIDENCE never breaks the run
-                elif success and independent:
-                    streak[key] = streak.get(key, 0) + 1
+                if not in_block:
+                    if success is None:
+                        pass  # neutral: INSUFFICIENT_EVIDENCE never breaks the run
+                    elif success and independent:
+                        streak[key] = streak.get(key, 0) + 1
+                    else:
+                        streak[key] = 0
                 else:
-                    streak[key] = 0
+                    # Collapse the block: the first independent success scores it
+                    # once, and any failure inside it resets the streak and keeps
+                    # a later item from scoring the same block again.
+                    marker = (step_id, key)
+                    if success is None:
+                        pass
+                    elif success and independent:
+                        if marker not in block_scored and marker not in block_failed:
+                            streak[key] = streak.get(key, 0) + 1
+                            block_scored.add(marker)
+                    else:
+                        streak[key] = 0
+                        block_failed.add(marker)
+                        block_scored.discard(marker)
                 if mode == _TRANSFER_STEP_TYPE:
                     last_transfer[key] = when
             continue

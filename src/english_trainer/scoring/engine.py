@@ -13,7 +13,13 @@ What this increment honestly computes:
 - **Mastery deltas** from objective evidence (correct/incorrect, mode weight,
   hint-scaled independence, per-session cap). Rubric-based evidence joins the
   same channel when rubric@1 exists (P.5); the rubric_cap is enforced here
-  already so the arrival is a data change, not a code change.
+  already so the arrival is a data change, not a code change. Tutor-verdict
+  evidence (``assessment_basis: tutor_verdict``, lesson-brief/report
+  [PD-2026-09-23]) joins the same channel too, with its own explicit branch:
+  ``quality = score_ppm / 1e6`` exactly like rubric, session cap applies, but
+  ``rubric_cap`` deliberately does not -- that cap is specific to the engine's
+  own rubric pipeline, and the tutor-verdict channel is checked post-hoc by
+  ``audit-english-tutor`` instead of being capped here.
 - **Stability** per target: the initial value on first admissible evidence,
   outcome-driven growth/shrink. Retrievability is time-dependent and is
   computed at read time, never stored -- the replay hash covers only
@@ -180,6 +186,18 @@ def fold_scores(store: EventStore, policy: dict[str, Any]) -> dict[str, TargetSt
                     # delta (monotonicity, canon 2.1 -- decreases arrive only via
                     # a confirmed REGRESSION outcome), a correct one full quality.
                     quality = _ONE if bool(payload.get("correct")) else _ZERO
+                elif basis == "tutor_verdict":
+                    # The tutor's own verdict (lesson-brief/report [PD-2026-09-23]):
+                    # score_ppm already carries the verdict_scale value
+                    # (correct/partial/incorrect), so quality scales the delta
+                    # exactly like a rubric score. It never sees rubric_cap --
+                    # that cap belongs to the ENGINE's own rubric pipeline, and
+                    # collapsing the tutor's graduated verdict under it would be
+                    # an uncalled-for trust discount on a channel the concept
+                    # deliberately leaves uncapped (audited post-hoc instead).
+                    quality = context.divide(
+                        context.create_decimal(int(payload.get("score_ppm") or 0)), Decimal(1_000_000)
+                    )
                 else:
                     # Graduated rubric quality (P.5 PD-2 B): the engine-computed
                     # score_ppm scales the positive delta. Collapsing it back to a
@@ -220,7 +238,7 @@ def fold_scores(store: EventStore, policy: dict[str, Any]) -> dict[str, TargetSt
                         state.audit.append(f"session-cap: {event.id}")
                         continue
                     delta = min(delta, room)
-                    if basis != "objective_check":
+                    if basis not in ("objective_check", "tutor_verdict"):
                         rubric_room = rubric_cap - state.rubric_gain
                         if rubric_room <= 0:
                             state.audit.append(f"rubric-cap: {event.id}")

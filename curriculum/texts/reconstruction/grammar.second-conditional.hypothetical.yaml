@@ -1,0 +1,29 @@
+schema_version: 1
+texts:
+  - id: text.recon.second-conditional-hypothetical.project-scenario
+    title: "Project planning scenario"
+    cefr: B1
+    topic: grammar.second-conditional.hypothetical
+    carries: [tense:conditional-2]
+    domain: work
+    context: design-hypothesis
+    text: "If we had another full week available to the team, we would test the migration process twice, very thoroughly. If the budget allowed it, we would hire another experienced developer to help. If the requirements suddenly changed, we would redesign the entire database structure from scratch. If we had more resources, we would implement comprehensive backup systems across the infrastructure. What would happen if the deadline moved forward? We would focus only on core features. Remaining features would be postponed."
+    word_count: 80
+    keywords: ["had another week", "test migration", "twice", "budget allowed", "hire another developer", "requirements changed", "redesign database", "more resources", "implement backup", "deadline moved forward", "focus on core features", "postponed"]
+    target_spans: ["If we had another full week", "we would test", "If the budget allowed", "we would hire", "If the requirements suddenly changed", "we would redesign", "If we had more resources", "would happen if", "We would focus"]
+    summary_ru: "Если бы была ещё неделя, проверили бы миграцию дважды. Если бы был бюджет, наняли бы ещё разработчика. Если бы требования изменились, переделали бы БД. Если бы больше ресурсов, внедрили бы резервные системы. Что было бы, если бы срок сдвинулся? Сосредоточились бы на основных функциях. Функции перенеслись бы на позже."
+    transformations: [authored]
+
+  - id: text.recon.second-conditional-hypothetical.life-choices
+    title: "Life choices"
+    cefr: B1
+    topic: grammar.second-conditional.hypothetical
+    carries: [tense:conditional-2]
+    domain: everyday
+    context: personal-choice
+    text: "I would move closer to work if rent were much lower in this area. If I had more free time, I would travel much more often and visit many interesting new places. If money were not a problem at all, I would pursue different hobbies. What would you do if you didn't have to work for money anymore? If I were taller, I would try playing basketball with my friends on weekends. If transportation were better, life would be much easier."
+    word_count: 81
+    keywords: ["move closer to work", "rent were lower", "had more time", "travel more often", "money were not problem", "pursue hobbies", "didn't have to work", "were taller", "try basketball", "transportation were better", "life would be easier"]
+    target_spans: ["would move closer", "if rent were", "If I had more free time", "would travel", "If money were not", "would pursue", "If transportation were", "would be much easier"]
+    summary_ru: "Переехал бы ближе к работе, если бы квартира была дешевле. Если бы было больше времени, путешествовал бы чаще. Если бы деньги не были проблемой, занялся бы другим. Что бы ты делал, если бы не нужно было работать? Если бы я был выше, играл бы в баскетбол. Если бы транспорт был лучше, жизнь была бы проще."
+    transformations: [authored]

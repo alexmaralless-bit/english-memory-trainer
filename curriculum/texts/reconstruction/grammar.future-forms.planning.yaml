@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.future-forms-planning.sprint-plans
+    title: "Sprint plans"
+    cefr: A2
+    topic: grammar.future-forms.planning
+    carries: [tense:future-going-to, tense:future-will]
+    domain: work
+    context: delivery-planning
+    text: "We are going to start the new sprint next Monday morning with a full team meeting scheduled. The team will review the backlog on Friday afternoon carefully. We are going to implement three major features during this upcoming sprint. I will coordinate with the design team directly. The developers are going to work on the API layer first. Everyone is well prepared."
+    word_count: 62
+    keywords: ["start - sprint - Monday", "review - backlog - Friday", "implement - features", "coordinate - design team", "API layer", "developers - work"]
+    target_spans: ["are going to start", "will review", "are going to implement", "will coordinate", "are going to work"]
+    summary_ru: "План спринта, демонстрирующий использование going to и will."
+    transformations: [authored]
+  - id: text.recon.future-forms-planning.weekend-activities
+    title: "Weekend activities"
+    cefr: A2
+    topic: grammar.future-forms.planning
+    carries: [tense:future-going-to, tense:future-will]
+    domain: everyday
+    context: leisure-planning
+    text: "We are going to visit my parents this coming weekend as planned together. My mother will prepare a special dinner for everyone in the family. I am going to help with the cooking and setup work. We will probably take a walk in the park after lunch together. The kids are going to play in the garden if the weather is nice. Everyone looks forward to this."
+    word_count: 67
+    keywords: ["visit - parents - weekend", "mother - prepare - dinner", "help - cooking", "walk - park", "kids - play - garden", "weather - nice"]
+    target_spans: ["are going to visit", "will prepare", "am going to help", "will probably take", "are going to play"]
+    summary_ru: "Описание планов на выходные с использованием future-going-to и will."
+    transformations: [authored]

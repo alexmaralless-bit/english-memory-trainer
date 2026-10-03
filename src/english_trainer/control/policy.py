@@ -31,13 +31,53 @@ BUCKETS = ("review", "growth", "integration", "choice")
 # kind -> admissible step types (control 4.3a); the closed matrix that keeps
 # two implementations from pricing the same plan differently [RR2-5].
 STEP_TYPES_BY_KIND: dict[str, tuple[str, ...]] = {
-    "review": ("recognition_check", "controlled_production", "spontaneous_production", "transfer_task"),
-    "growth": ("new_material_intro", "controlled_production"),
-    "integration": ("integration_task", "transfer_task"),
-    "choice": ("free_conversation", "spontaneous_production"),
+    "review": (
+        "recognition_check",
+        "controlled_production",
+        "spontaneous_production",
+        "transfer_task",
+        "drill_block",
+    ),
+    "growth": ("new_material_intro", "controlled_production", "drill_block"),
+    "integration": ("integration_task", "transfer_task", "reconstruction", "timed_writing"),
+    "choice": ("free_conversation", "spontaneous_production", "timed_writing"),
     "gate": ("gate_item",),
     "probe": ("transfer_task", "spontaneous_production"),
 }
+
+# The automaticity-loop step types [PD-2026-09-22], control 4.3a. The pairs the
+# matrix omits are forbidden on purpose: ``drill_block`` never lands in
+# ``integration`` (it drills ONE pattern, not a pair of roles), and
+# ``reconstruction`` never lands in ``growth`` (only introduced language can be
+# reconstructed).
+DRILL_BLOCK = "drill_block"
+TIMED_WRITING = "timed_writing"
+RECONSTRUCTION = "reconstruction"
+AUTOMATICITY_STEP_TYPES = frozenset({DRILL_BLOCK, TIMED_WRITING, RECONSTRUCTION})
+
+# Every step type any kind may use -- the set ``expected_seconds_by_step_type``
+# must price in full, or the version does not activate (control 3).
+MATRIX_STEP_TYPES: tuple[str, ...] = tuple(
+    sorted({step_type for types in STEP_TYPES_BY_KIND.values() for step_type in types})
+)
+
+# The matrix as control@1/@2 knew it. A policy version is judged by the matrix
+# it was written against: control@2 does not price the automaticity loop, and
+# retro-fitting the rows would silently rewrite a pinned, already-replayed
+# version. ``schema_version >= 3`` is what makes the three new prices mandatory.
+LEGACY_MATRIX_STEP_TYPES: tuple[str, ...] = tuple(sorted(set(MATRIX_STEP_TYPES) - AUTOMATICITY_STEP_TYPES))
+AUTOMATICITY_SCHEMA_VERSION = 3
+
+
+def required_step_types(payload: dict[str, Any]) -> tuple[str, ...]:
+    """The step types this policy version must price (control 3, 4.3a)."""
+    version = payload.get("schema_version")
+    if isinstance(version, int) and not isinstance(version, bool):
+        if version >= AUTOMATICITY_SCHEMA_VERSION:
+            return MATRIX_STEP_TYPES
+        return LEGACY_MATRIX_STEP_TYPES
+    return LEGACY_MATRIX_STEP_TYPES
+
 
 # kind -> bucket is total (control 4.3a): choice hosts gate and probe steps too.
 BUCKET_BY_KIND: dict[str, str] = {
@@ -59,13 +99,33 @@ STEP_TYPE_RANK: dict[str, int] = {
     "integration_task": 5,
     "gate_item": 6,
     "free_conversation": 7,
+    # [PD-2026-09-22] appended, never inserted by meaning: renumbering would
+    # reorder plans that already exist for identical input (control 4.4 step 4).
+    "drill_block": 8,
+    "reconstruction": 9,
+    "timed_writing": 10,
 }
 
 # Step types whose delivery asks the learner to *produce* language -- the set
 # the live production_eligible safety check applies to (control 4.2 [П.3]).
 PRODUCTION_STEP_TYPES = frozenset(
-    {"controlled_production", "spontaneous_production", "transfer_task", "integration_task"}
+    {
+        "controlled_production",
+        "spontaneous_production",
+        "transfer_task",
+        "integration_task",
+        # The automaticity loop is production too: a drill round, a timed text
+        # and a reconstruction all ask the learner to emit the language.
+        DRILL_BLOCK,
+        TIMED_WRITING,
+        RECONSTRUCTION,
+    }
 )
+
+# Contrast band for an interleaved drill block (control 4.6): fewer than two
+# competing forms is not interleaving, more than four stops being a contrast set.
+CONTRAST_MIN = 2
+CONTRAST_MAX = 4
 
 # Buckets whose floors are reserved, in the fixed reservation order (4.4 step 5).
 FLOOR_ORDER = ("growth", "integration", "choice")
@@ -98,7 +158,9 @@ def validate_control_policy(payload: dict[str, Any]) -> list[str]:
     if not isinstance(costs, dict):
         errors.append("control.budget.expected_seconds_by_step_type: missing")
         costs = {}
-    for step_type in STEP_TYPE_RANK:
+    # Every step type the kind -> step_type matrix admits must be priced: an
+    # unpriced admissible type would make the plan's cost implementation-defined.
+    for step_type in required_step_types(payload):
         if not isinstance(costs.get(step_type), int):
             errors.append(f"control.budget.expected_seconds_by_step_type.{step_type}: missing integer cost")
 

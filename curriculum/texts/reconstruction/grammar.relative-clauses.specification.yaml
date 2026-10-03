@@ -1,0 +1,31 @@
+schema_version: 1
+texts:
+  - id: text.recon.relative-clauses-specification.system-requirements
+    title: "System requirements"
+    cefr: B1
+    topic: grammar.relative-clauses.specification
+    also_targets: []
+    carries: [structure:relative-clause, article:definite-second-mention]
+    domain: work
+    context: requirement-definition
+    text: "We need a database that can handle millions of records per day. The service that we are building requires reliable logging. We must hire a developer who has experience with cloud platforms. The team that handles the infrastructure is overbooked this quarter. We need a tool which integrates with the existing pipeline. The vendor whose products we evaluated last month can deliver on time. The architect who led the design review suggested a different approach. The platform which our support team uses daily must be stable and secure."
+    word_count: 88
+    keywords: ["database handle millions", "service requires reliable logging", "developer experience cloud", "team infrastructure overbooked", "tool integrates pipeline", "vendor evaluated month", "architect led design review", "platform support team uses"]
+    target_spans: ["database that can handle", "service that we are building", "developer who has experience", "team that handles", "tool which integrates", "vendor whose products", "architect who led", "platform which our support"]
+    summary_ru: "Требования системы: база должна держать миллионы, сервис нужен надежный, разработчик должен знать облако, инструмент должен интегрироваться."
+    transformations: [authored]
+
+  - id: text.recon.relative-clauses-specification.team-roles
+    title: "Team roles"
+    cefr: B1
+    topic: grammar.relative-clauses.specification
+    also_targets: []
+    carries: [structure:relative-clause]
+    domain: everyday
+    context: team-description
+    text: "I work with a manager who gives clear feedback every week. The colleague that I mentioned yesterday can code in multiple languages. We have a trainer who helps new people learn the system. The person who reviews our code is very experienced. The workshop that we attended last month was about testing. The tools that the team prefers are open source and free. The office which everyone shares is downtown. The company that hired me last year values remote work."
+    word_count: 80
+    keywords: ["manager gives clear feedback", "colleague mentioned languages", "trainer helps new people", "person reviews code experienced", "workshop attended month testing", "tools team prefers open", "office everyone shares downtown", "company hired remote work"]
+    target_spans: ["manager who gives", "colleague that I mentioned", "trainer who helps", "person who reviews", "workshop that we attended", "tools that the team", "office which everyone shares", "company that hired me"]
+    summary_ru: "Роли команды: менеджер даёт понятную обратную связь, коллега программирует на нескольких языках, тренер обучает новичков, а тот, кто проверяет код, — опытный специалист."
+    transformations: [authored]

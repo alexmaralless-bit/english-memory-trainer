@@ -34,3 +34,15 @@ class LinkedItemNotFound(LearnerError):
     """
 
     code = "LINKED_ITEM_NOT_FOUND"
+
+
+class PreferencesInvalid(LearnerError):
+    """A ``LearnerPreferences`` patch is malformed (learner §4a [PD-2026-09-22]).
+
+    An unknown field, an out-of-range ``round_size``/``timed_limit_seconds``, or
+    an unknown ``explanation_language``/``feedback_mode``/drill form is refused
+    before it ever touches state (cli 4.5). Maps to the CLI's INVALID_INPUT
+    (exit 3).
+    """
+
+    code = "PREFERENCES_INVALID"

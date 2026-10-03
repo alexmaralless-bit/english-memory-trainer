@@ -117,7 +117,7 @@ def _minimal_program() -> dict[str, Any]:
                 "advisory_prerequisites": {},
                 "dimensions": ["recognition", "transfer"],
                 "frequency_tier": "core",
-                "lexicon": ["w1"],
+                "lexicon": ["w1", *(f"chunk.t1.f{index}" for index in range(12))],
                 "contexts": ["ctx"],
                 "mastery_criteria": copy.deepcopy(criteria),
             }
@@ -129,7 +129,23 @@ def _minimal_program() -> dict[str, Any]:
                 "title": "thing",
                 "cefr": "A1",
                 "transformations": ["authored"],
-            }
+            },
+            # A Grammar Engine core topic owes its frame floor (curriculum 2c,
+            # [PD-2026-09-22]); without these the fixture would be invalid for a
+            # reason none of the parametrized mutations is about.
+            *(
+                {
+                    "id": f"chunk.t1.f{index}",
+                    "type": "chunk",
+                    "title": f"I've already ___ #{index}",
+                    "cefr": "A1",
+                    "transparency": "transparent",
+                    "frame_of": "t1",
+                    "carries": ["tense:present-perfect"],
+                    "transformations": ["authored"],
+                }
+                for index in range(12)
+            ),
         ],
         "provenance": {"source_artifacts": [{"id": "wordfreq@3.1.1"}]},
     }

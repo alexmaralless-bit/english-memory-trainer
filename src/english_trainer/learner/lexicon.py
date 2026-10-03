@@ -38,8 +38,9 @@ from __future__ import annotations
 import unicodedata
 from typing import Any
 
+from english_trainer.kernel.aggregates import read_aggregate
 from english_trainer.kernel.clock import Clock, RandomSource
-from english_trainer.kernel.envelopes import make_event
+from english_trainer.kernel.envelopes import DomainEvent, make_event
 from english_trainer.kernel.ids import new_ulid
 from english_trainer.kernel.session_fence import bump_session, load_session_for_update
 from english_trainer.kernel.store import EventStore
@@ -208,6 +209,104 @@ def lexicon_list(
     return out
 
 
+def find_encounter_entry(
+    store: EventStore, *, surface: str, linked_item_id: str | None = None
+) -> dict[str, Any] | None:
+    """The stored personal-lexicon entry for this identity, or ``None``.
+
+    Identity is the same rule :func:`_identity_key` uses everywhere else
+    (``linked_item_id`` when given, else the normalized surface). Read-only and
+    deterministic -- a caller can learn "already enrolled" ahead of a write
+    without duplicating the fold. :func:`build_encounter_events` uses this
+    internally to decide whether to emit an event or an empty list; a lesson
+    report committer can call it directly (e.g. for a dry-run ``check-report``)
+    to report the same fact without building anything.
+    """
+    identity_key = _identity_key(linked_item_id, normalize_surface(surface))
+    return _fold(store).get(identity_key)
+
+
+def build_encounter_events(
+    store: EventStore,
+    clock: Clock,
+    random_source: RandomSource,
+    *,
+    session_id: str,
+    surface: str,
+    provider: str | None = None,
+    note_ru: str | None = None,
+    linked_item_id: str | None = None,
+    program: dict[str, Any] | None = None,
+    pinned_versions: dict[str, str] | None = None,
+    source_event_id: str | None = None,
+    actor: str = "agent",
+) -> list[DomainEvent]:
+    """Pure builder: the ``learner.lexicon_entry_added`` event(s) one
+    ``encountered`` entry needs, with none of the side effects.
+
+    Same validation and identity rules as :func:`lexicon_encounter` /
+    :func:`lexicon_add` today -- an empty surface is refused, a
+    ``linked_item_id`` must resolve against ``program`` -- but this function
+    opens no :class:`UnitOfWork`, bumps no session revision, and performs no
+    idempotency check. It only reads the event log (via
+    :func:`find_encounter_entry`) to decide whether the identity is already
+    enrolled. A caller composing a bigger transaction (e.g. a lesson-report
+    committer) appends the returned event(s) itself, alongside the report's
+    other facts, inside its own :class:`UnitOfWork`.
+
+    Returns an empty list when the identity (linked id, else normalized
+    surface) is already enrolled -- exactly the case :func:`lexicon_add`
+    reports as ``cached: True`` and writes nothing for. Otherwise returns a
+    list with exactly one event, ready to hand to ``uow.append``.
+
+    ``pinned_versions`` lets the caller carry the session's pinned policy
+    versions onto the event, exactly as the session-bound path of
+    :func:`lexicon_add` does today (it reads them from the session manifest
+    before opening its own UoW); omit it for an unpinned event.
+    """
+    normalized = normalize_surface(surface)
+    if not normalized:
+        raise LexiconEntryInvalid("surface is empty after normalization: nothing to remember")
+    if linked_item_id is not None:
+        if program is None:
+            raise LinkedItemNotFound(
+                "a linked entry needs the active curriculum to resolve linked_item_id against"
+            )
+        resolve_linked_item(program, linked_item_id)  # raises on a dangling/non-lexical id
+
+    if find_encounter_entry(store, surface=surface, linked_item_id=linked_item_id) is not None:
+        return []
+
+    identity_key = _identity_key(linked_item_id, normalized)
+    entry_id = new_ulid(clock, random_source)
+    added_at = clock.now().isoformat()
+    payload: dict[str, Any] = {
+        "entry_id": entry_id,
+        "surface": _display_surface(surface),
+        "normalized_surface": normalized,
+        "note_ru": note_ru,
+        "source": "encountered",
+        "linked_item_id": linked_item_id,
+        "added_at": added_at,
+        "session_id": session_id,
+        "provider": provider,
+        "source_event_id": source_event_id,
+        "identity_key": identity_key,
+    }
+    event = make_event(
+        id=new_ulid(clock, random_source),
+        type=EVENT_LEXICON_ENTRY_ADDED,
+        occurred_at=clock.now(),
+        actor=actor,
+        provider=provider,
+        correlation_id=session_id,
+        causation_id=source_event_id,
+        payload=payload,
+        pinned_versions=pinned_versions or {},
+    )
+    return [event]
+
+
 def lexicon_add(
     store: EventStore,
     clock: Clock,
@@ -348,22 +447,54 @@ def lexicon_encounter(
 
     The clearer, validated contract for the tutor path: the tutor uses or
     explains a word, the learner does not know it or asks for a translation, and
-    the agent calls this with the plain facts. It is a thin ``source=encountered``
-    wrapper over :func:`lexicon_add` that requires the active session and its
-    fence token. Explaining a word is enrollment, never evidence (evidence §4.2).
+    the agent calls this with the plain facts. It requires the active session
+    and its fence token. Explaining a word is enrollment, never evidence
+    (evidence §4.2).
+
+    Validation, identity and the event payload come from the pure
+    :func:`build_encounter_events` builder (the same one a lesson-report
+    committer uses), so this stays byte-identical to the historical
+    ``source=encountered`` wrapper over :func:`lexicon_add`: this function only
+    adds the session-fence behaviour build_encounter_events deliberately leaves
+    out -- the CAS check against ``expected_session_revision`` and the atomic
+    revision bump, both inside one :class:`UnitOfWork` alongside the event.
+
+    Logical dedup is checked (inside the builder) BEFORE the session fence is
+    touched at all, exactly like :func:`lexicon_add`: a re-encounter returns
+    the stored entry and never raises on a stale ``expected_session_revision``.
     """
-    return lexicon_add(
+    # A plain peek at the session's pinned policy versions (no CAS check, no
+    # write) so a genuinely new event carries them like lexicon_add's
+    # session-bound path does -- reading is harmless even for a stale/missing
+    # session and must not run before the dedup check below has a chance to
+    # short-circuit on a duplicate.
+    found = read_aggregate(store._conn, "session", session_id)
+    manifest = dict(found[0].get("manifest") or {}) if found is not None else {}
+    pinned = dict(manifest.get("pinned_versions") or {})
+
+    events = build_encounter_events(
         store,
         clock,
         random_source,
+        session_id=session_id,
         surface=surface,
+        provider=provider,
         note_ru=note_ru,
-        source="encountered",
         linked_item_id=linked_item_id,
         program=program,
-        session_id=session_id,
-        provider=provider,
-        expected_session_revision=expected_session_revision,
+        pinned_versions=pinned,
         source_event_id=source_event_id,
         actor=actor,
     )
+    if not events:
+        existing = find_encounter_entry(store, surface=surface, linked_item_id=linked_item_id)
+        assert existing is not None  # build_encounter_events just confirmed this identity is enrolled
+        return {**existing, "cached": True}
+
+    state, revision = load_session_for_update(store, session_id, expected_session_revision)
+    with UnitOfWork(store, clock) as uow:
+        new_revision = bump_session(uow, session_id, state, revision, clock.now())
+        # Both the event append and the fence bump are in this one UoW: a
+        # failure rolls back the event AND the revision, never a partial.
+        (event,) = uow.append(events)
+    return {**_entry_from_payload(event.payload), "session_revision": new_revision, "cached": False}

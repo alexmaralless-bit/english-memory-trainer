@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.articles-proper-nouns-geography.international-expansion
+    title: "International business expansion"
+    cefr: B1
+    topic: grammar.articles.proper-nouns-geography
+    carries: [article:proper-noun, article:zero-uncountable]
+    domain: work
+    context: option-review
+    text: "Our company plans to open offices in Paris, Berlin, and London next year. We are targeting the Netherlands and Belgium as our first markets in Europe. The EU regulations are important for our compliance team. We also want to expand to the United States and Canada. We will need to understand the Thames Valley tech ecosystem. The Alps region offers strategic access to several central European markets. In parallel, we submitted a proposal to NASA for a space-technology partnership. We also work with firms in India and Brazil."
+    word_count: 88
+    keywords: ["offices - Paris", "Berlin", "London", "Netherlands", "Belgium", "EU regulations", "United States", "Canada", "Thames Valley", "tech", "Alps region", "NASA", "India", "Brazil"]
+    target_spans: ["the Netherlands", "The EU", "the United States", "the Thames Valley", "The Alps", "to NASA"]
+    summary_ru: "Компания открывает офисы в Европе, выходит на рынки Нидерландов, Бельгии, США и Канады, а параллельно подаёт заявку в NASA на партнёрство в космических технологиях."
+    transformations: [authored]
+  - id: text.recon.articles-proper-nouns-geography.travel-plans
+    title: "Planning a European trip"
+    cefr: B1
+    topic: grammar.articles.proper-nouns-geography
+    carries: [article:proper-noun]
+    domain: everyday
+    context: option-review
+    text: "I want to visit France, Germany, and Switzerland this summer. My friend suggested hiking in the Alps, which sounds wonderful. The Netherlands is known for its canals and bicycles. We will fly into Amsterdam and later walk along the Thames in London. The EU makes travel so convenient with no border checks. I have never seen mountains like the Alps before. We plan to visit Rome and Florence in Italy. The United States would be too far for this trip."
+    word_count: 80
+    keywords: ["visit - France", "Germany", "Switzerland", "hiking - Alps", "Netherlands", "Amsterdam", "walk - Thames", "EU", "travel", "Rome", "Florence", "Italy", "United States"]
+    target_spans: ["in the Alps", "The Netherlands", "along the Thames", "The EU", "like the Alps", "The United States"]
+    summary_ru: "Планы поездки по Европе: Франция, Германия, Швейцария, поход в Альпах, каналы Нидерландов, прогулка вдоль Темзы в Лондоне и почему поездка в США слишком далёкая для этого лета."
+    transformations: [authored]

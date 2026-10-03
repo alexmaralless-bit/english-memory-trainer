@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.basic-word-order.daily-tasks
+    title: "Daily work tasks"
+    cefr: A1
+    topic: grammar.basic-word-order
+    carries: [structure:svo-order, tense:present-simple]
+    domain: work
+    context: team-introduction
+    text: "I start work at nine every morning sharp. My team reviews the code carefully every day. The client needs a report this morning. We test the model every single day here. Sarah uploads the data to the server now. The server runs fine without problems. Everyone completes their tasks on time daily."
+    word_count: 52
+    keywords: ["I start work", "nine morning", "My team reviews", "code", "client needs", "report", "We test model", "every day", "Sarah uploads", "data", "Everyone completes", "tasks"]
+    target_spans: ["I start work at nine", "My team reviews", "The client needs", "We test the model", "Sarah uploads the data", "The server runs", "Everyone completes"]
+    summary_ru: "Рабочие задачи: я начинаю в девять, команда проверяет код, клиенту нужен отчет, мы тестируем модель каждый день."
+    transformations: [authored]
+  - id: text.recon.basic-word-order.evening-routine
+    title: "Evening routine"
+    cefr: A1
+    topic: grammar.basic-word-order
+    carries: [structure:svo-order, tense:present-simple]
+    domain: everyday
+    context: team-introduction
+    text: "I cook dinner every evening after work at home. My sister does the dishes and cleans the kitchen. The dog sleeps on the sofa in the living room. We watch a show together on television. My parents read books and relax in their chairs. The cat eats food from the bowl happily. Everyone goes to bed at ten o'clock."
+    word_count: 59
+    keywords: ["I cook dinner", "evening", "My sister does", "dishes", "dog sleeps", "sofa", "We watch show", "parents read", "books", "cat eats", "food", "Everyone goes to bed"]
+    target_spans: ["I cook dinner", "My sister does", "The dog sleeps", "We watch a show", "My parents read", "The cat eats", "Everyone goes to bed"]
+    summary_ru: "Вечерний распорядок: я готовлю ужин, сестра моет посуду, собака спит на диване, мы смотрим, родители читают, кошка ест."
+    transformations: [authored]

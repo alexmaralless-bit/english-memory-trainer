@@ -1,0 +1,59 @@
+# obligations@4 observes the brief/report protocol [PD-2026-09-23]: the
+# tutor now gets one brief at the start of a lesson and files one report at
+# the end (staging/concepts/2026-09-23-lesson-brief-report-concept.md), so
+# the two obligations that watched per-step rendering and engine-graded
+# correction no longer describe anything that happens.
+#
+# `delivery_protocol` is dropped: there is no more per-step
+# STEP_PRESENTED -> EXERCISE_RENDERED pairing to police, because
+# `session report` writes the whole exchange (prompt, verdict, evidence) in
+# one transaction, ordered by construction, not by tutor call sequence.
+# `correction_protocol` is dropped with it: verdicts are the tutor's,
+# recorded by `lesson.reported`, and there is no separate "close the review"
+# step left to forget. `teaching_snapshot` goes for the same reason -- the
+# report's own `teaching[]` entries are evidence of what was taught, not a
+# separately-observable rendering event.
+#
+# Two outcome-shaped obligations replace them. `report_committed` asks for
+# the one fact the lean protocol actually depends on: a session that reached
+# FINISHED did so because a report landed first, not because `session
+# finish` was called on its own (that command no longer exists in this
+# protocol; `session report` closes the session atomically). `reviews_addressed`
+# asks that no review assignment the session picked up is left dangling: each
+# one must reach a `review.outcome` (whatever the verdict) or, if the tutor
+# skipped it, an `INSUFFICIENT_EVIDENCE` outcome that names why.
+#
+# `required_skill_effect` and `forbidden_action_absence` are unchanged in
+# meaning from obligations@1-@3; they watch facts the brief/report protocol
+# did not touch.
+policy_id: "obligations@4"
+schema_version: 4
+status: "accepted"
+measurement_window_terminal_sessions: 10
+matching_order:
+  - required_skill_effect
+  - lesson_preflight
+  - report_committed
+  - reviews_addressed
+  - forbidden_action_absence
+obligations:
+  - obligation_id: required_skill_effect
+    required_effect: skill_cli_call_succeeded
+    self_report_required: true
+    one_effect_per_instance: true
+  - obligation_id: lesson_preflight
+    applicable_when: session_started_is_present
+    required_effect: session_started_has_lesson_profile
+    one_effect_per_instance: true
+  - obligation_id: report_committed
+    applicable_when: session_finished
+    required_effect: lesson_reported_before_session_finished
+    one_effect_per_instance: true
+  - obligation_id: reviews_addressed
+    applicable_when: session_has_review_assignments
+    required_effect: review_outcome_or_reasoned_insufficient_evidence
+    one_effect_per_instance: true
+  - obligation_id: forbidden_action_absence
+    required_effect: terminal_postconditions_satisfied
+    forbidden_error_codes: [MISSING_IDEMPOTENCY_KEY]
+    one_effect_per_instance: true

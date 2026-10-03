@@ -1,0 +1,29 @@
+schema_version: 1
+texts:
+  - id: text.recon.inversion-emphasis.incident-resolution
+    title: "Incident resolution"
+    cefr: B2
+    topic: grammar.inversion.emphasis
+    carries: [structure:inversion]
+    domain: work
+    context: incident-emphasis
+    text: "Only after the incident was reviewed did the root cause emerge. Rarely have we seen such a critical dependency. Never before had a single service failure affected the entire pipeline. At no point during the deployment did the monitoring alert fire properly. Only then did the team recognize the flaw in the escalation logic. Seldom does a single configuration change have such widespread impact. Not only did the latency increase, but the error rate also spiked. Only with the rollback did stability return fully. Rarely will such a vulnerability pass review again."
+    word_count: 92
+    keywords: ["incident reviewed", "root cause", "rare critical dependency", "single service failure", "entire pipeline affected", "deployment monitoring alert", "escalation logic flaw", "configuration change", "latency increase", "rollback stability"]
+    target_spans: ["Only after the incident was reviewed did", "Rarely have we seen", "Never before had a single", "At no point during the deployment did", "Only then did the team", "Not only did the latency increase", "Only with the rollback did"]
+    summary_ru: "После тщательного разбора инцидента выявлена критическая зависимость в системе, которая редко встречается и требует переоценки процесса обновлений."
+    transformations: [authored]
+
+  - id: text.recon.inversion-emphasis.research-findings
+    title: "Research findings"
+    cefr: B2
+    topic: grammar.inversion.emphasis
+    carries: [structure:inversion]
+    domain: academic
+    context: incident-emphasis
+    text: "Only after the experiment concluded did the researchers identify the emerging pattern. Rarely have such clear results emerged from a preliminary study. Never before had the data shown such remarkable consistency. At no stage of the analysis did the outliers undermine the overall conclusion. Only then did the team propose the novel hypothesis. Seldom do initial findings require such minimal revision or replication. Not only did the sample size exceed expectations, but the confidence interval also narrowed substantially. Only with repeated independent trials did the predicted effect persist reliably. Rarely will such elegant evidence be published without rigorous peer scrutiny."
+    word_count: 100
+    keywords: ["experiment concluded", "emerging pattern", "clear results", "preliminary study", "remarkable consistency", "outliers undermined", "novel hypothesis", "minimal revision", "sample size", "confidence interval", "repeated trials", "peer scrutiny"]
+    target_spans: ["Only after the experiment concluded did", "Rarely have such clear results", "Never before had the data shown", "At no stage of the analysis did", "Only then did the team propose", "Not only did the sample size", "Only with repeated independent trials did"]
+    summary_ru: "Результаты эксперимента показали редкую и устойчивую закономерность, которая после тщательного анализа подтверждена повторным исследованием с высокой значимостью."
+    transformations: [authored]

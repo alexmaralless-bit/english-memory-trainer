@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.basic-questions-clarification.meeting-confusion
+    title: "Asking for clarification in a meeting"
+    cefr: A1
+    topic: grammar.basic-questions.clarification
+    carries: [structure:question-wh, structure:question-do]
+    domain: work
+    context: work-chat
+    text: "What does this status mean exactly? Do we need to update the old version? Where is the latest documentation? Does the client approve this change? What does the vendor need from us? Do you mean the staging environment or production? Which team handles the deployment? Do they have access to the data?"
+    word_count: 52
+    keywords: ["What does status mean", "Do we need update", "Where is documentation", "Does client approve", "What vendor needs", "Do you mean staging", "Which team handles", "Do they have access"]
+    target_spans: ["What does this status mean", "Do we need to update", "Does the client approve", "What does the vendor need", "Do you mean", "Which team handles", "Do they have access"]
+    summary_ru: "Уточнение: что означает статус, обновить версию, где документация, одобрит клиент, что нужно, staging или production?"
+    transformations: [authored]
+  - id: text.recon.basic-questions-clarification.everyday-confusion
+    title: "Asking friends for clarification"
+    cefr: A1
+    topic: grammar.basic-questions.clarification
+    carries: [structure:question-wh, structure:question-do]
+    domain: everyday
+    context: work-chat
+    text: "What does your joke mean? Do you like the new restaurant? Where do you want to meet on Saturday? Does your family enjoy traveling? What does she prefer, coffee or tea? Do they live near the park? When does your friend arrive from work? Do you understand the instructions? Do you know the answer?"
+    word_count: 54
+    keywords: ["What does joke mean", "Do you like restaurant", "Where meet Saturday", "Does family enjoy", "What prefer coffee tea", "Do they live", "When friend arrive", "Do you understand", "Do you know answer"]
+    target_spans: ["What does your joke mean", "Do you like the new restaurant", "Where do you want to meet", "Does your family enjoy traveling", "What does she prefer", "Do they live near the park", "Do you understand the instructions"]
+    summary_ru: "Уточнение: что означает шутка, нравится ресторан, где встретимся, семья путешествует, что предпочитает, когда приходит?"
+    transformations: [authored]

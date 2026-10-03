@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.do-questions.standup-questions
+    title: "Daily standup questions"
+    cefr: A1
+    topic: grammar.do-questions
+    carries: [structure:question-do, tense:present-simple]
+    domain: work
+    context: daily-standup
+    text: "Do you start work early in the morning? Does Sarah finish by five o'clock? Do they test the code carefully? Does the server work fine today? Do we deploy on Friday? Does the client approve changes? Do you review the report today? Does everyone follow the plan? Do we finish on time? Do you understand?"
+    word_count: 55
+    keywords: ["Do you start", "work early", "Does Sarah finish", "five", "Do they test", "code", "Does server work", "fine", "Do we deploy", "today", "Does client approve", "Does everyone"]
+    target_spans: ["Do you start", "Does Sarah finish", "Do they test", "Does the server work", "Do we deploy", "Does the client approve", "Do you review", "Does everyone follow"]
+    summary_ru: "Вопросы на стендапе: начинаешь ли рано, заканчивает ли Сара, тестируют ли, работает ли сервер, деплоим ли мы."
+    transformations: [authored]
+  - id: text.recon.do-questions.everyday-questions
+    title: "Everyday questions"
+    cefr: A1
+    topic: grammar.do-questions
+    carries: [structure:question-do, tense:present-simple]
+    domain: everyday
+    context: daily-standup
+    text: "Do you like coffee in the morning? Does your sister cook dinner? Do they have a dog at home? Does he play sports after work? Do you go to bed early? Does your mother work every day? Do we meet on weekends? Does everyone enjoy the food? Do you like ice cream? Do you agree?"
+    word_count: 55
+    keywords: ["Do you like", "coffee", "Does sister cook", "Do they have", "dog", "Does he play", "sports", "Do you go", "bed early", "Does mother work", "Do we meet", "weekends", "Does everyone enjoy"]
+    target_spans: ["Do you like", "Does your sister cook", "Do they have a dog", "Does he play", "Do you go to bed", "Does your mother work", "Do we meet", "Does everyone enjoy"]
+    summary_ru: "Вопросы в повседневной жизни: любишь ли кофе, готовит ли сестра, есть ли у них собака, ходим ли мы на выходных."
+    transformations: [authored]

@@ -114,7 +114,7 @@ topics:
       soft: [toefl-writing.academic-register]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: core
-    lexicon: [chunk.as-far-as-i-understand, word.reason, word.result]
+    lexicon: [chunk.as-far-as-i-understand, word.reason, word.result, chunk.hedging-stance-control.admittedly, chunk.hedging-stance-control.appears-plausible, chunk.hedging-stance-control.arguably, chunk.hedging-stance-control.arguably-more, chunk.hedging-stance-control.by-and-large, chunk.hedging-stance-control.conceivably, chunk.hedging-stance-control.generally-speaking, chunk.hedging-stance-control.in-a-sense, chunk.hedging-stance-control.in-our-view, chunk.hedging-stance-control.it-appears-unlikely, chunk.hedging-stance-control.it-bears-noting, chunk.hedging-stance-control.it-could-be-argued, chunk.hedging-stance-control.it-is-worth-noting, chunk.hedging-stance-control.it-may-be-that, chunk.hedging-stance-control.it-remains-true-that, chunk.hedging-stance-control.it-seems-likely, chunk.hedging-stance-control.on-balance, chunk.hedging-stance-control.one-could-argue, chunk.hedging-stance-control.subject-to, chunk.hedging-stance-control.tentatively, chunk.hedging-stance-control.the-data-appear, chunk.hedging-stance-control.the-evidence-suggests, chunk.hedging-stance-control.this-suggests, chunk.hedging-stance-control.to-some-extent, chunk.hedging-stance-control.we-would-argue, chunk.hedging-stance-control.while-it-appears]
     contexts: [research-claim, risk-assessment]
     typical_errors:
       - "Replacing every Russian uncertainty marker with perhaps and losing distinctions in evidence strength."
@@ -136,7 +136,7 @@ topics:
       soft: [grammar.hedging-stance.control]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: tail
-    lexicon: []
+    lexicon: [chunk.inversion-formal-emphasis.barely-had, chunk.inversion-formal-emphasis.had-we-known, chunk.inversion-formal-emphasis.in-no-way-can, chunk.inversion-formal-emphasis.neither-nor-should, chunk.inversion-formal-emphasis.not-only-did, chunk.inversion-formal-emphasis.not-until, chunk.inversion-formal-emphasis.nowhere-is-this-more, chunk.inversion-formal-emphasis.only-by, chunk.inversion-formal-emphasis.only-if-then, chunk.inversion-formal-emphasis.only-when, chunk.inversion-formal-emphasis.scarcely-had, chunk.inversion-formal-emphasis.seldom-have-we, chunk.inversion-formal-emphasis.should-the, chunk.inversion-formal-emphasis.so-great-was, chunk.inversion-formal-emphasis.under-no-circumstances, chunk.inversion-formal-emphasis.were-it-not-for]
     contexts: [decision-memo, formal-analysis]
     typical_errors:
       - "Using inversion after every fronted phrase instead of only licensed negative or restrictive openings."
@@ -326,7 +326,7 @@ topics:
       soft: [written-production.multi-source-synthesis]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: core
-    lexicon: [word.summary]
+    lexicon: [word.summary, chunk.reference-cohesion.a-consequence-of-this, chunk.reference-cohesion.all-this-means, chunk.reference-cohesion.as-mentioned-above, chunk.reference-cohesion.by-this-i-mean, chunk.reference-cohesion.exactly-this-is-why, chunk.reference-cohesion.from-this-perspective, chunk.reference-cohesion.in-summary, chunk.reference-cohesion.in-the-latter-case, chunk.reference-cohesion.in-this-respect, chunk.reference-cohesion.it-follows-that, chunk.reference-cohesion.notably, chunk.reference-cohesion.such-a-scenario, chunk.reference-cohesion.such-approaches, chunk.reference-cohesion.such-is-the-case, chunk.reference-cohesion.that-is-to-say, chunk.reference-cohesion.the-evidence-for-this, chunk.reference-cohesion.the-former-latter, chunk.reference-cohesion.the-latter-point, chunk.reference-cohesion.the-point-is-that, chunk.reference-cohesion.the-reverse-is-true, chunk.reference-cohesion.the-same-applies, chunk.reference-cohesion.these-considerations, chunk.reference-cohesion.these-findings, chunk.reference-cohesion.this-approach, chunk.reference-cohesion.this-connection, chunk.reference-cohesion.this-distinction, chunk.reference-cohesion.to-summarize]
     contexts: [technical-report, academic-paragraph]
     typical_errors:
       - "Using it, this, or they when two preceding nouns are equally plausible antecedents."
@@ -348,7 +348,7 @@ topics:
       soft: [grammar.reference-cohesion]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: core
-    lexicon: [word.requirement, word.improvement, word.agreement]
+    lexicon: [word.requirement, word.improvement, word.agreement, chunk.nominalization-information-flow.an-analysis-of-shows, chunk.nominalization-information-flow.our-decision-to-reflected, chunk.nominalization-information-flow.our-success-in-stemmed, chunk.nominalization-information-flow.the-adoption-of-demonstrated, chunk.nominalization-information-flow.the-benefit-of-was-that, chunk.nominalization-information-flow.the-challenge-was-that, chunk.nominalization-information-flow.the-consequence-of-was, chunk.nominalization-information-flow.the-decline-of-concerned, chunk.nominalization-information-flow.the-difficulty-in-arose, chunk.nominalization-information-flow.the-discovery-of-opened, chunk.nominalization-information-flow.the-exception-was-that, chunk.nominalization-information-flow.the-expansion-of-required, chunk.nominalization-information-flow.the-failure-to, chunk.nominalization-information-flow.the-improvement-in-validates, chunk.nominalization-information-flow.the-introduction-of, chunk.nominalization-information-flow.the-lack-of-explains, chunk.nominalization-information-flow.the-proposal-for-was, chunk.nominalization-information-flow.the-reason-for-was, chunk.nominalization-information-flow.the-reduction-of-enabled, chunk.nominalization-information-flow.the-removal-of-prevented, chunk.nominalization-information-flow.the-requirement-that, chunk.nominalization-information-flow.the-shift-to-reflected, chunk.nominalization-information-flow.the-solution-involved, chunk.nominalization-information-flow.this-increase-in-reflects, chunk.nominalization-information-flow.this-observation-suggests, chunk.nominalization-information-flow.this-shift-demonstrates]
     contexts: [formal-report, decision-analysis]
     typical_errors:
       - "Turning every verb into a noun under the influence of Russian bureaucratic style."
@@ -370,7 +370,7 @@ topics:
       soft: [grammar.passive.reporting-structures]
     dimensions: [recognition, controlled_production, spontaneous_production, transfer]
     frequency_tier: tail
-    lexicon: []
+    lexicon: [chunk.participle-clauses-precision.adjusted-to, chunk.participle-clauses-precision.based-on-the, chunk.participle-clauses-precision.compared-with, chunk.participle-clauses-precision.depending-on, chunk.participle-clauses-precision.excluding-the, chunk.participle-clauses-precision.given-the, chunk.participle-clauses-precision.having-completed, chunk.participle-clauses-precision.leaving-unresolved, chunk.participle-clauses-precision.not-considering, chunk.participle-clauses-precision.once-completed, chunk.participle-clauses-precision.provided-that, chunk.participle-clauses-precision.resulting-in, chunk.participle-clauses-precision.surprised-by, chunk.participle-clauses-precision.using-the, chunk.participle-clauses-precision.without-proper]
     contexts: [research-report, incident-analysis]
     typical_errors:
       - "Leaving a dangling implied subject because Russian adverbial constructions tolerate a looser actor link."

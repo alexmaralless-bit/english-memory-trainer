@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository state
 
-**English Memory Trainer** — a local-first Python CLI app for learning American English with interchangeable AI tutors (Codex / Claude Code). Phase 0 is complete: all twelve design contracts in `wiki/` are accepted. Implementation has begun — the kernel (roadmap 1.2, `src/english_trainer/kernel/`) is the first application code, built to `wiki/platform/foundation.md`. The curriculum data (`curriculum/`) and lexicon (838 units) are authored. `wiki/roadmap.md` is the single source of "where we are".
+**English Memory Trainer** — a local-first Python CLI app for learning American English with interchangeable AI tutors (Codex / Claude Code). Phase 0 (twelve design contracts in `wiki/`), Phase 2 (the vertical slice: 16 modules, ~67 CLI commands at the time; 50 after Phase 4, versioned policies) and Phase 3 (the **automaticity layer** [PD-2026-09-22] — grammar *frames* with `frame_of`/`carries`, nine article topics, reconstruction texts, drill blocks, the `automaticity` axis, the relearning ladder, the `drill` lesson profile, learner preferences; 283 topics and 2671 lexical units (1529 frames) plus 150 reconstruction texts) are complete. Phase 4 — the **brief/report protocol** [PD-2026-09-23] — is complete: the engine now *proposes* (a `LessonBrief` returned by `session start`/`resume`) and *records* (one atomic `LessonReport` filed by `session report` at the end) instead of dictating the lesson step by step. The tutor decides each item's correctness — a verdict, `correct`/`partial`/`incorrect` — and the engine stores the evidence (prompt, verbatim answer, verdict, error note), derives spans itself, and deterministically aggregates, schedules and levels. `wiki/roadmap.md` is the single source of "where we are"; `staging/concepts/2026-09-23-lesson-brief-report-concept.md` and `staging/journal/2026-09-23-brief-report.md` record the decisions and wave plan of that phase.
 
 ## Source of truth (order of precedence)
 
@@ -36,7 +36,7 @@ Dependencies live in `pyproject.toml`; Python 3.12+, `uv` where available. Runti
 
 ```bash
 pip install -e . --group dev             # or: uv sync
-pytest                                   # kernel determinism + lexicon invariants (no network)
+python -m pytest                         # full suite; bare `pytest` fails on `tests.*` imports
 ruff check .
 ruff format --check src tests
 mypy src                                 # strict; kernel is fully typed
@@ -46,7 +46,7 @@ mypy src                                 # strict; kernel is fully typed
 python tools/enrich_lexicon.py --cache <dir> --check
 ```
 
-These already pass. The `trainer` CLI exists (kernel-facing surface): `trainer doctor`, `trainer init` (mutating — requires `--idempotency-key` with `--format json`), `trainer database check`. Subcommands below arrive with their owning modules:
+These already pass (pytest ≈ 800 tests, ~80 s). The venv lives in `.venv` (`uv sync --python 3.12`); use `.venv/bin/trainer`, `.venv/bin/pytest` etc. when the tools are not on PATH. Mutating `trainer` commands require `--idempotency-key` with `--format json`. Curriculum content is validated by `trainer curriculum validate`; frames and reconstruction texts are pre-checked by `python tools/check_authoring.py <files>`, and frames are linked to their topics by the idempotent post-pass `python tools/link_frames.py` (advisory links + `topic.lexicon`) before validation. Frequently used agent-facing commands:
 
 ```bash
 trainer curriculum validate
@@ -62,7 +62,8 @@ Run `trainer doctor` first when diagnosing a local setup. Agent-facing CLI comma
 
 - Read learner state only through the CLI. Never directly edit SQLite rows, event logs, scores, or generated memory/Obsidian files.
 - Every assessment needs stored evidence; merely mentioning a topic is not evidence. Never fabricate scores for uncovered modalities.
-- Finish sessions only through `trainer session finish` (CLI namespace is `session`, not the brief's `lesson` — [PD-2026-07-19]); change curriculum only through the `maintain-english-curriculum` workflow, then run the relevant validations.
+- Finish sessions only through `trainer session report` (which atomically commits the whole lesson report and closes the session) or `trainer session abandon` (CLI namespace is `session`, not the brief's `lesson` — [PD-2026-07-19]); validate a report with `trainer session check-report` before filing it. The tutor decides each report item's correctness (a verdict — [PD-2026-09-23]); the engine never re-grades it — it only stores the evidence, derives spans, and deterministically aggregates, schedules and levels.
+- Change curriculum only through the `maintain-english-curriculum` workflow, then run the relevant validations.
 - Style: four-space indentation, type annotations, `snake_case` functions/modules, `PascalCase` classes, stable lowercase dotted topic IDs (`grammar.present-perfect.result`), UTC timestamps, versioned schemas for external inputs, Ruff for lint/format.
 - Never commit SQLite WAL/SHM files, secrets, or incidental generated data.
 

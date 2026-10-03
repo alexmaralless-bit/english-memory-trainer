@@ -42,6 +42,7 @@ from english_trainer.kernel.encoding import canonical_json
 from english_trainer.kernel.policy import PolicyRegistry
 from english_trainer.kernel.store import EventStore, connect, migrate
 from english_trainer.scoring.engine import ACTIVE, fold_scores, snapshot
+from tests.assessments.fixtures import STUB_FORM
 
 REPO = Path(__file__).resolve().parents[2]
 EPOCH = datetime(2026, 7, 22, 12, 0, tzinfo=UTC)
@@ -96,6 +97,9 @@ PROGRAM: dict[str, Any] = {
         },
     ],
     "lexicon": [],
+    # Forms are curriculum data: the scenario activates the legacy stub form
+    # explicitly, exactly the way an authored form travels in a snapshot.
+    "placement_forms": [STUB_FORM],
     "provenance": {},
 }
 
@@ -221,6 +225,7 @@ def _run_scenario(root: Path) -> dict[str, Any]:
         assert vocabulary_row == {
             "item_id": "v-greeting-1",
             "section": "vocabulary",
+            "band": None,
             "target_ref": "vocabulary.core.greeting",
             "dimension": "recognition",
             "item_exposure_id": "exposure:placement-en-core@1#v-greeting-1",

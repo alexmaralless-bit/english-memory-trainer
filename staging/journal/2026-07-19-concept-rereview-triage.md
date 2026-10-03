@@ -1,6 +1,6 @@
 # 2026-07-19 — триаж повторного red-team ревью
 
-Провенанс триажа rereview (`staging/reviews/2026-07-19-concept-rereview-codex.md`, checkout dba6448): 1 BLOCKER, 21 MAJOR, 1 MINOR, 2 QUESTION. Первый прогон (66 находок) подтверждён корректно закрытым. План одобрен пользователем; 2 продуктовых развилки решены.
+Провенанс триажа rereview (`staging/reviews/2026-07-19-concept-rereview-codex.md`, checkout 9201cfe): 1 BLOCKER, 21 MAJOR, 1 MINOR, 2 QUESTION. Первый прогон (66 находок) подтверждён корректно закрытым. План одобрен пользователем; 2 продуктовых развилки решены.
 
 ## Продуктовые решения (2 развилки)
 

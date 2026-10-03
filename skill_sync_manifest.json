@@ -1,0 +1,112 @@
+[
+  {
+    "content_hash": "2fdbd9d81ae8a0fbbda8f45dd9f8fb71292c8f2d518dd7cc5b30736c417e27ae",
+    "skill_name": "assess-english-gate",
+    "synced_at": "2026-09-24T08:05:31.340387+00:00",
+    "targets": [
+      ".agents/skills/assess-english-gate/SKILL.md",
+      ".claude/skills/assess-english-gate/SKILL.md"
+    ],
+    "version": "2"
+  },
+  {
+    "content_hash": "3953b530b063ad744154c2c344aa7aeb765b87f4c4772e4a49fe7ed651b4bc83",
+    "skill_name": "audit-english-tutor",
+    "synced_at": "2026-09-24T08:05:31.340387+00:00",
+    "targets": [
+      ".agents/skills/audit-english-tutor/SKILL.md",
+      ".claude/skills/audit-english-tutor/SKILL.md"
+    ],
+    "version": "2"
+  },
+  {
+    "content_hash": "80e3267d4cb61f4e159a29bd3243f2489199b23b4b169086064f6a3c6bc7fc26",
+    "skill_name": "coach-english-conversation",
+    "synced_at": "2026-09-24T08:05:31.340387+00:00",
+    "targets": [
+      ".agents/skills/coach-english-conversation/SKILL.md",
+      ".claude/skills/coach-english-conversation/SKILL.md"
+    ],
+    "version": "6"
+  },
+  {
+    "content_hash": "41617d18b4e342da7aca4c379a509814a089ff371a369cd68a65b2ee3f4c954e",
+    "skill_name": "correct-learner-output",
+    "synced_at": "2026-09-24T08:05:31.340387+00:00",
+    "targets": [
+      ".agents/skills/correct-learner-output/SKILL.md",
+      ".claude/skills/correct-learner-output/SKILL.md"
+    ],
+    "version": "5"
+  },
+  {
+    "content_hash": "b72f5e65623cf1d3e0f22b3401f148a4d3d102fa8f0feaacbc02d4b66760fecb",
+    "skill_name": "finish-english-session",
+    "synced_at": "2026-09-24T08:05:31.340387+00:00",
+    "targets": [
+      ".agents/skills/finish-english-session/SKILL.md",
+      ".claude/skills/finish-english-session/SKILL.md"
+    ],
+    "version": "2"
+  },
+  {
+    "content_hash": "f0c6b064274910acd35defe3695eb7f6145e5a4bbf638608791ed7397d8fd42f",
+    "skill_name": "maintain-english-curriculum",
+    "synced_at": "2026-09-24T08:05:31.340387+00:00",
+    "targets": [
+      ".agents/skills/maintain-english-curriculum/SKILL.md",
+      ".claude/skills/maintain-english-curriculum/SKILL.md"
+    ],
+    "version": "2"
+  },
+  {
+    "content_hash": "b5e9e0c79a767c3510849cdf097384f0bbc13a06db9429b7a8767397483e32ff",
+    "skill_name": "run-drill-block",
+    "synced_at": "2026-09-24T08:05:31.340387+00:00",
+    "targets": [
+      ".agents/skills/run-drill-block/SKILL.md",
+      ".claude/skills/run-drill-block/SKILL.md"
+    ],
+    "version": "4"
+  },
+  {
+    "content_hash": "255e4adc5dc5fd4fb19f6e48b9df16d0bf56cdf97a72583b5432c531cd6683ae",
+    "skill_name": "run-english-session",
+    "synced_at": "2026-09-24T08:05:31.340387+00:00",
+    "targets": [
+      ".agents/skills/run-english-session/SKILL.md",
+      ".claude/skills/run-english-session/SKILL.md"
+    ],
+    "version": "10"
+  },
+  {
+    "content_hash": "a1ebcf3c80269c44bcb4bfaae1f35123d1892d2ef462a6a56aa9909b814ffd37",
+    "skill_name": "run-placement-assessment",
+    "synced_at": "2026-09-24T08:05:31.340387+00:00",
+    "targets": [
+      ".agents/skills/run-placement-assessment/SKILL.md",
+      ".claude/skills/run-placement-assessment/SKILL.md"
+    ],
+    "version": "3"
+  },
+  {
+    "content_hash": "ae4f1af8a7c4484536f732699b4f51d6ecd496723a6136b3e07bd3fddd0eda21",
+    "skill_name": "run-spaced-review",
+    "synced_at": "2026-09-24T08:05:31.340387+00:00",
+    "targets": [
+      ".agents/skills/run-spaced-review/SKILL.md",
+      ".claude/skills/run-spaced-review/SKILL.md"
+    ],
+    "version": "6"
+  },
+  {
+    "content_hash": "be1566fd91a7655c25aa73e89b9436f83df4f6465329008d4146103d03f4aa9d",
+    "skill_name": "teach-english-topic",
+    "synced_at": "2026-09-24T08:05:31.340387+00:00",
+    "targets": [
+      ".agents/skills/teach-english-topic/SKILL.md",
+      ".claude/skills/teach-english-topic/SKILL.md"
+    ],
+    "version": "7"
+  }
+]

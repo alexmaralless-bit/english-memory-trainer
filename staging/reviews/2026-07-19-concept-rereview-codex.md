@@ -1,6 +1,6 @@
 # Повторное red-team ревью после триажа 66 находок
 
-> **Checkout**: `dba6448` (`Triage red-team concept review: fix specs, rebuild OPEN registry`)  
+> **Checkout**: `9201cfe` (`Triage red-team concept review: fix specs, rebuild OPEN registry`)  
 > **Scope**: шесть принятых спек + `wiki/README.md`, `glossary.md`, `OPEN.md`, `roadmap.md`; frozen docs и journal использованы только как lower-priority provenance  
 > **Режим**: docs-only; старый отчёт и канон не изменялись
 

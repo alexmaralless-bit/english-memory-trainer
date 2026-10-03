@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.connectors-cause-contrast.production-incident
+    title: "Production incident report"
+    cefr: A2
+    topic: grammar.connectors.cause-contrast
+    carries: [structure:connector]
+    domain: work
+    context: support-ticket
+    text: "The page failed because the authentication token expired at midnight. So we had to restart the service immediately to recover. Although the system recovered quickly in five minutes, we lost some important data. The root cause was a misconfigured timeout value in the code, so we changed the settings. We notified the client because we noticed the issue before they did. Although the downtime was brief and lasted only minutes, we implemented additional safeguards."
+    word_count: 74
+    keywords: ["page failed", "token expired", "restart - service", "recovered - minutes", "lost - data", "root cause", "misconfigured - timeout", "changed - settings", "notified - client", "noticed - issue", "downtime - brief", "safeguards"]
+    target_spans: ["failed because", "So we had", "Although the system", "because we noticed", "Although the downtime"]
+    summary_ru: "Отчёт об инциденте в продакшене: причина сбоя, результаты, принятые меры несмотря на быстрое восстановление."
+    transformations: [authored]
+  - id: text.recon.connectors-cause-contrast.weekend-plans
+    title: "Weekend plans"
+    cefr: A2
+    topic: grammar.connectors.cause-contrast
+    carries: [structure:connector]
+    domain: everyday
+    context: support-ticket
+    text: "We wanted to hike on Saturday morning because the weather was perfect. So we invited our friends early on Friday. Although the trail was difficult and steep, everyone enjoyed it. The path was muddy because it rained all week. We returned late that evening, so my brother slept in the next morning. Although we were tired, we went out for dinner anyway. The restaurant was closed because of a special event."
+    word_count: 71
+    keywords: ["wanted - hike", "Saturday", "weather - perfect", "invited - friends", "trail - difficult", "everyone - enjoyed", "path - muddy", "rained - week", "returned - late", "brother - slept", "tired", "went - dinner", "restaurant - closed"]
+    target_spans: ["because the weather", "So we invited", "Although the trail", "because it rained", "so my brother", "Although we were", "because of"]
+    summary_ru: "План выходного дня: причины для похода, результаты, сложности, но всё равно продолжение программы."
+    transformations: [authored]

@@ -1,7 +1,7 @@
 # Лексическая система
 
 > **Status**: current
-> **Last updated**: 2026-07-20
+> **Last updated**: 2026-09-22
 > **Sources**: дизайн пользователя 2026-07-19 (Concept Gate, зафиксирован в journal) · концепт Codex по informal-треку (`staging/journal/2026-07-19-codex-curriculum-concept.md`) · [[learning-model]] §3–§4, §7 · все решения [PD-2026-07-19]
 > **Роль**: продуктовый контракт словарной системы (roadmap 0.9). Определяет три слоя лексики и их связь со scoring. Формат данных и frequency source — Curriculum Contract (0.3); проекция — Obsidian Vault Contract (0.6); отбор лексикона A1–A2 — работа П.4.
 
@@ -105,6 +105,48 @@ examples:
 - **MUST — mastery-профиль** [rereview E-R3, P0-3]: у каждого LexicalItem (в т.ч. обычного word/chunk) есть versioned `LexicalMasteryProfile` — required dimensions и mastery-критерии по кортежу `(type, transparency, usage_policy)`, разрешимый из curriculum; validator проверяет наличие профиля. Таблица разрешения и precedence — [[../modules/scoring]] §6 (OPEN-13 закрыт).
 
 - Источники данных и лицензии — решены (OPEN-6): CEFR-J + NGSL + wordfreq, build-time режим; правовая позиция, provenance и notices — OPEN-15 закрыт, детали — [[../modules/curriculum]] §3.1–3.2.
+
+### 1c. Фрейм — единица заучивания грамматики [PD-2026-09-22]
+
+Правило объясняет, но заучивается не правило, а фраза. Ученик просит, чтобы артикли, порядок слов и глагольные формы вылетали без припоминания правила в момент письма; такую автоматизацию даёт инвентарь готовых фраз со слотом, а не всё более подробный разбор формы. До этого решения chunks были привязаны к темам как **иллюстрации**; теперь часть из них объявлена тем, что ученик **заучивает и производит**.
+
+- **MUST — фрейм это `chunk`, а не новый тип** [PD-2026-09-22, PD-C]: **Фрейм** — LexicalItem существующего типа `chunk` с двумя новыми полями: `frame_of` (стабильный id темы, чью форму фрейм несёт) и непустой `carries` (теги грамматической нагрузки). Нового `type`, отдельной mastery-таблицы и отдельной оси состояния фрейм не вводит: это тот же chunk — заготовка со слотом, — размеченная как носитель грамматической цели. Введение типа `pattern` потребовало бы второго `LexicalMasteryProfile` и второй ветки во всех потребителях ради разметки, которую выражают два поля.
+```yaml
+id: chunk.present-perfect-result.ive-already
+type: chunk                    # фрейм — это chunk, без нового type
+title: "I've already ___"      # слоты помечены ___; 0–2 слота
+cefr: A2
+curriculum_priority_band: CORE
+register: neutral
+transparency: transparent      # фрейм никогда не opaque
+domains: [work, reporting]
+meaning_ru: "я уже …"
+frame_of: grammar.present-perfect.result
+carries: [tense:present-perfect]
+slot_hint_ru: "третья форма глагола + объект"
+transformations: [authored]
+examples:
+  - I've already sent the report to the client.
+  - I've already restarted the router twice.
+```
+
+- **MUST — `carries` закрыт** [PD-2026-09-22]: 1–3 тега на фрейм из закрытого словаря трёх семейств; незнакомый токен отвергает валидатор ([[../modules/curriculum]] §2c). Пополнение словаря — правка **этой** спеки, как и для `transformations`.
+
+  | Семейство | Теги |
+  |---|---|
+  | `tense:` | `present-simple`, `present-continuous`, `past-simple`, `past-continuous`, `present-perfect`, `present-perfect-continuous`, `past-perfect`, `future-will`, `future-going-to`, `future-continuous`, `passive`, `conditional-0`, `conditional-1`, `conditional-2`, `conditional-3`, `reported-speech`, `modal-perfect` |
+  | `article:` | `indefinite-first-mention`, `definite-second-mention`, `definite-shared-context`, `zero-plural`, `zero-uncountable`, `fixed-expression`, `institutional`, `superlative-ordinal`, `generic`, `proper-noun`, `a-an-sound`, `of-phrase` |
+  | `structure:` | `svo-order`, `question-do`, `question-be`, `question-wh`, `negative`, `there-is`, `here-is`, `imperative`, `modal`, `comparative`, `superlative`, `connector`, `relative-clause`, `sequencing`, `time-marker`, `frequency-adverb`, `quantifier`, `preposition-time`, `preposition-place`, `possessive`, `demonstrative`, `inversion`, `cleft`, `participle-clause`, `ellipsis`, `hedging`, `nominalization`, `reference` |
+
+- **MUST — `article:*` только при фиксированной позиции** [PD-2026-09-22]: тег артикля ставится, лишь если артикль стоит во фрейме в **фиксированной** позиции (`at the end of the ___`, `have a look`), а не внутри слота, который ученик заполняет сам (`I've already ___` не несёт `article:*`, хотя типичное заполнение содержит `the report`). Иначе тег перестал бы различать «артикль заучен как часть фразы» и «артикль выбирается заново каждый раз» — а это и есть то самое различие, ради которого ось заведена.
+- **MUST — у фрейма нет частотных полей**: фрейм многословен, поэтому `frequency_score`, `frequency_band` и `source_refs` у него отсутствуют по уже действующему правилу §1b («частота есть не у всех единиц»): корпус слов фраз не покрывает, а композитная оценка из токенов запрещена. Отсутствие — норма, не пробел.
+- **MUST — артикльный инвентарь в три яруса** [PD-2026-09-22, PD-F]: артикли — главный разрыв русскоязычного ученика, поэтому их фреймы организованы ярусами по убыванию «заучиваемости целиком»:
+  1. **ярус 1 — фиксированные обороты, заучиваемые как целое**: `in the morning`, `at night`, `on the weekend`, `at the end of the day`, `once a week`, `have a look`, `go to work`, `on the other hand`, `by the way`, `at the moment`. Слотов нет либо один хвостовой;
+  2. **ярус 2 — низкоуровневые схемы со слотами**: `I'm a ___` (роль), `There's a ___ in the ___`, `the ___ of the ___`, `one of the ___`, `a new ___ / the new ___`, `___ (plural, no article) are ___`;
+  3. **ярус 3 — дискурсивное правило** (первое упоминание → определённость, общая идентифицируемость): даётся **коротко и последним**, как объяснение уже отработанного, а не как вход в тему.
+- **MUST — поле `tier` у артикльного фрейма** [PD-2026-09-22]: фрейм с `frame_of` из артикльной темы несёт `tier: 1 | 2` (ярус 3 — не фреймы, а объяснение темы). Поле обязательно только для артикльных фреймов и проверяется валидатором.
+- **MUST — фреймы попадают в личный словарь обычными триггерами**: фрейм становится `tracked` по тем же шести критериям enrollment §3 и планируется в повторения как обычный LexicalItem ([[learning-model]] §7). Отдельной очереди, отдельного scoring и отдельного состояния у фреймов нет — это и есть смысл решения «chunk, а не новый тип».
+- **MUST — артикльный ярус повторяется постоянно** [PD-2026-09-22, PD-F]: фреймы артикльных ярусов 1–2 **никогда не покидают** очередь повторений полностью: пройдя базовую лестницу, они переназначаются на последний базовый интервал вместо выбывания (`permanent_interleave`, [[../modules/scheduler]] §3a). Знание артиклей без постоянной практики распадается, и «выучено» для них — состояние, требующее поддержки, а не финал. Ограничение объёма такого яруса в одном занятии — [[../OPEN]] OPEN-38.
 
 ## 2. Слой 2 — lexemes и формы
 
@@ -229,9 +271,11 @@ memory/current/vocabulary-review.md
 - ~~OPEN-14~~ **закрыт П.3** [PD-2026-07-21]: currency/usage-policy lifecycle, context_dependent fallback, stale-safety банка/live manifests, `dated` recognition-only и lexeme form-slot handoff — §3b + [[../modules/scoring]] §6.
 - ~~OPEN-15~~ **закрыт** [PD-2026-07-20]: правовая позиция, состав данных и provenance — [[../modules/curriculum]] §3.1–§3.2.
 - **OPEN-22**: формула learner_priority (OPEN-8 закрыт только в части CEFR-уровня; формула переоткрыта) → 0.4 scoring.
+- **OPEN-38**: нужен ли потолок на число артикльных фреймов постоянного interleaved-яруса в одном занятии (§1c) → [[../modules/control]] после эксплуатации.
 
 ## История изменений
 
+- **2026-09-22**: [PD-2026-09-22] добавлен §1c — **фрейм** как единица заучивания грамматики: `chunk` с `frame_of` и закрытым `carries` (PD-C), правило `article:*` только при фиксированной позиции артикля, отсутствие частотных полей у фреймов, три яруса артиклей и поле `tier` (PD-F), enrollment/повторения фреймов на общих основаниях и постоянный interleaved-ярус артикльных фреймов. Заведён OPEN-38.
 - **2026-07-21**: патч П.3 фазы 2 [PD-2026-07-21] фиксирует effective `production_eligible`, гибридное currency-старение, `dated` recognition-only, границу living-layer candidate и политику покрытия unlinked-лексикона; OPEN-14 закрыт. OPEN-31 остаётся content-review.
 - **2026-07-20 (P0-триаж)**: ранее в этот день добавлены ось `transparency`, тип `idiom`, `literal_trap_ru` и правила покрытия частотой (П.4b/П.4c); здесь — ссылка на OPEN-22 вместо закрытого OPEN-8 (P0-12).
 - **2026-07-20**: content-review П.4a — слот формы lexeme допускает список поверхностных форм (`be → past: [was, were]`); «знать слот» = все перечисленные, если policy не пометит опциональными; агрегация слот→lexeme → OPEN-14.

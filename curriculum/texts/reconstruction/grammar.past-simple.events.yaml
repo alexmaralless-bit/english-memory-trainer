@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.past-simple-events.incident-note
+    title: "Incident note"
+    cefr: A1
+    topic: grammar.past-simple.events
+    carries: [tense:past-simple]
+    domain: work
+    context: incident-note
+    text: "Yesterday morning at nine, the database server crashed without warning. We discovered the serious technical problem when our main customers reported the outage to the support team. The senior engineer on duty restarted the entire service at ten o'clock and all critical systems worked correctly again. The team fixed the underlying issue and verified the complete fix by noon."
+    word_count: 59
+    keywords: ["database server crashed", "yesterday morning at nine", "serious problem", "customers reported", "outage", "support team", "senior engineer", "restarted service", "ten o'clock", "systems worked", "fixed by noon"]
+    target_spans: ["crashed without warning", "discovered the serious technical problem", "reported the outage", "restarted the entire service", "worked correctly again", "fixed the underlying issue"]
+    summary_ru: "Записка об инциденте: сервер упал вчера утром, команда исправила проблему к полудню."
+    transformations: [authored]
+  - id: text.recon.past-simple-events.my-day
+    title: "My day"
+    cefr: A1
+    topic: grammar.past-simple.events
+    carries: [tense:past-simple]
+    domain: everyday
+    context: incident-note
+    text: "Yesterday I woke up late in the morning and missed my usual breakfast. I rushed to the office and finally arrived at nine o'clock. My colleague started the important meeting without me at eight thirty. We finished the presentation before noon and everyone seemed quite happy with our work results. I left the office at six o'clock and walked home."
+    word_count: 60
+    keywords: ["woke up late", "yesterday morning", "missed breakfast", "rushed to office", "arrived at nine", "colleague started", "meeting", "eight thirty", "finished presentation", "noon", "seemed happy", "left the office", "walked home"]
+    target_spans: ["woke up late", "missed my usual breakfast", "rushed to the office", "arrived at nine", "started the important meeting", "finished the presentation", "left the office"]
+    summary_ru: "Мой день: проснулась поздно, опоздала на встречу в офис, но презентация прошла хорошо."
+    transformations: [authored]

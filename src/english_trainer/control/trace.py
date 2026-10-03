@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from english_trainer.control.policy import AUTOMATICITY_STEP_TYPES, DRILL_BLOCK
 from english_trainer.kernel.aggregates import list_aggregates, read_aggregate
 from english_trainer.kernel.errors import KernelError
 from english_trainer.kernel.store import EventStore
@@ -21,6 +22,44 @@ class DecisionTraceUnavailable(KernelError):
     """A step id is unknown or predates decision-trace persistence."""
 
     code = "DECISION_TRACE_UNAVAILABLE"
+
+
+def _automaticity_trace(candidate: dict[str, Any]) -> dict[str, Any] | None:
+    """Why an automaticity-loop step looks the way it does (control 4.6).
+
+    Names the three facts that are otherwise invisible in the plan: whether the
+    block was blocked or interleaved, which contrast targets were chosen (and
+    whether the interleave had to fall back for want of them), and that the
+    block is accounted as ONE exposure regardless of how many items it runs.
+    """
+    step_type = str(candidate.get("step_type") or "")
+    if step_type not in AUTOMATICITY_STEP_TYPES:
+        return None
+    reasons: dict[str, Any] = {
+        "step_type": step_type,
+        "matched_rule": "control.4.6.automaticity-loop",
+    }
+    if step_type == DRILL_BLOCK:
+        reasons["mode"] = candidate.get("drill_mode")
+        reasons["rounds"] = candidate.get("rounds")
+        reasons["round_size"] = candidate.get("round_size")
+        reasons["contrast_targets"] = [
+            {"target_ref": item.get("target_ref"), "dimension": item.get("dimension")}
+            for item in candidate.get("contrast_targets") or []
+        ]
+        reasons["contrast_rule"] = (
+            "authored_contrast_refs_then_same_track_and_cefr" if candidate.get("contrast_targets") else None
+        )
+        if candidate.get("contrast_waiver"):
+            reasons["waiver"] = "NO_CONTRAST_CANDIDATE"
+        # The rule the whole step type depends on: a block is one exposure for
+        # saturation and one step for max_steps_per_topic, whatever its size.
+        reasons["exposure_accounting"] = "block_counts_as_one_exposure"
+    if step_type == "timed_writing":
+        reasons["declared_limit_seconds"] = candidate.get("declared_limit_seconds")
+    if step_type == "reconstruction":
+        reasons["text_ref"] = candidate.get("text_ref")
+    return reasons
 
 
 def build_decision_trace(
@@ -45,6 +84,7 @@ def build_decision_trace(
             "urgency_class": candidate.get("urgency_class"),
             "saturation": None,
         }
+    automaticity = _automaticity_trace(candidate)
     pins = dict(sorted((pinned_versions or {}).items()))
     pins["control_policy"] = str(policy.get("policy_id") or "control@1")
     pins.setdefault("generation", generation_version)
@@ -64,6 +104,9 @@ def build_decision_trace(
             "applied_signal_ids": sorted(str(item) for item in candidate.get("applied_signal_ids", [])),
             "bucket_occupancy_before": dict(sorted(bucket_before.items())),
             "bucket_occupancy_after": dict(sorted(bucket_after.items())),
+            # Present only for the automaticity loop, so every historical trace
+            # keeps its exact canonical shape.
+            **({"automaticity": automaticity} if automaticity else {}),
         },
         "parameters": {
             "max_consecutive_same_mode": {

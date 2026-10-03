@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.there-is-are-systems.form-fields
+    title: "Form fields overview"
+    cefr: A1
+    topic: grammar.there-is-are.systems
+    carries: [structure:there-is]
+    domain: work
+    context: interface-walkthrough
+    text: "There is a login field at the top. There are two buttons below the form. There is an error message in red text. There are three required fields on this screen. There is a link to reset the password. There are optional fields marked in gray. There is also a confirm button. The page looks very clean."
+    word_count: 57
+    keywords: ["login field", "top", "two buttons", "form", "error message", "red text", "three required fields", "screen", "reset password", "optional fields", "gray", "confirm button"]
+    target_spans: ["There is a login field", "There are two buttons", "There is an error message", "There are three required fields", "There is a link", "There are optional fields", "There is also"]
+    summary_ru: "Описание элементов на экране используя структуру There is/are с исчисляемыми существительными."
+    transformations: [authored]
+  - id: text.recon.there-is-are-systems.room-description
+    title: "What is in my room"
+    cefr: A1
+    topic: grammar.there-is-are.systems
+    carries: [structure:there-is]
+    domain: everyday
+    context: interface-walkthrough
+    text: "There is a desk in my room. There are two chairs near the window. There is a lamp on the table. There are three shelves on the wall. There is a picture above the sofa. There are books on every shelf. There is a small carpet on the floor. There is also a plant."
+    word_count: 54
+    keywords: ["desk", "room", "two chairs", "window", "lamp", "table", "three shelves", "wall", "picture", "sofa", "books", "shelf", "small carpet", "plant"]
+    target_spans: ["There is a desk", "There are two chairs", "There is a lamp", "There are three shelves", "There is a picture", "There are books", "There is a small carpet", "There is also"]
+    summary_ru: "Описание предметов в комнате с помощью структуры There is/are для единственного и множественного числа."
+    transformations: [authored]

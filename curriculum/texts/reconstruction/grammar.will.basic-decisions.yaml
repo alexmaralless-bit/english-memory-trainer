@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.will-basic-decisions.task-delegation
+    title: "Task delegation"
+    cefr: A1
+    topic: grammar.will.basic-decisions
+    carries: [tense:future-will]
+    domain: work
+    context: task-planning
+    text: "I will handle the client email right now. My colleague will prepare the presentation materials for the team meeting. The team will finish the full documentation by tomorrow morning. The manager will review the proposal this afternoon at three o'clock. We will send the final version to the client within two hours. The vendor will deliver the new equipment next week. Everything will be ready before the deadline arrives."
+    word_count: 69
+    keywords: ["will handle", "client email right now", "colleague will prepare", "presentation materials", "team will finish", "documentation tomorrow", "manager will review", "proposal at three", "will send", "final version", "vendor will deliver", "equipment next week", "will be ready"]
+    target_spans: ["I will handle the client email", "will prepare the presentation", "will finish the full documentation", "will review the proposal", "will send the final version", "will deliver the new equipment", "will be ready"]
+    summary_ru: "Делегирование задач: я помогу, коллега подготовит, команда закончит, всё будет готово."
+    transformations: [authored]
+  - id: text.recon.will-basic-decisions.spontaneous-offers
+    title: "Spontaneous offers"
+    cefr: A1
+    topic: grammar.will.basic-decisions
+    carries: [tense:future-will]
+    domain: everyday
+    context: task-planning
+    text: "I will help you move next weekend. My brother will bring his truck from the garage. I will drive the truck and he will navigate with the map. We will start very early in the morning. My sister will prepare lunch and drinks for everyone. We will finish the entire move by afternoon. I will arrange everything carefully for your comfort. You will not need to worry about anything."
+    word_count: 69
+    keywords: ["will help you", "move next weekend", "brother will bring", "truck from garage", "will drive truck", "will navigate", "start early at seven", "sister will prepare", "lunch and drinks", "will finish", "afternoon", "will arrange carefully", "will not need to worry"]
+    target_spans: ["I will help you move", "will bring his truck", "I will drive the truck", "will navigate with the map", "will start very early", "will prepare lunch", "will finish the entire move", "will arrange everything", "will not need to worry"]
+    summary_ru: "Спонтанные предложения: помогу с переездом, брат привезёт машину, закончим днём."
+    transformations: [authored]

@@ -26,26 +26,34 @@ On ``submit`` the placement scores itself: correct objective items become
 target. The scoring engine already caps ``origin=placement`` at ``ACTIVE`` (never
 ``MASTERED``) -- this module only emits the facts; scoring owns the ceiling.
 
-Deliberately deferred to the content phase (П, OPEN-17): the full authored
-A1-B1 form content and a second form; the writing rubric hand-off (a placement
-has no session/rendered-exercise/rubric context the evidence rubric pipeline
-needs, so writing items record a provisional observation and contribute no
-measured level); calibration of ``resume_window``/``form_cooldown_days`` and of
-the item->outcome mapping.
+The form itself is authored **curriculum data** (``curriculum/assessments``),
+resolved from the active snapshot at ``start`` and then stored inside the
+placement aggregate: a placement is measured against exactly the form it opened
+with, even if the curriculum is re-activated while it is in progress.
+
+The writing section is settled by the pinned ``rubric@1`` pipeline: the tutor
+reports span-based observations with the answer, the engine computes the only
+authoritative assessment and records ``origin=placement``,
+``assessment_basis=rubric`` evidence flagged ``provisional`` (one fragment is a
+provisional writing level, never a measured one -- learning-model 6). Without
+observations the item stays recorded and non-contributing.
 """
 
 from __future__ import annotations
 
-import unicodedata
+from collections.abc import Mapping
 from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
 from english_trainer.assessments.forms import (
-    OBJECTIVE,
+    OBJECTIVE_KINDS,
     WRITING,
+    form_passages,
     form_sections,
+    grade_item,
     item_exposure_id,
+    public_item,
     section_items,
     select_form,
 )
@@ -62,6 +70,8 @@ from english_trainer.assessments.self_assessment import (
     SELF_ASSESSMENT_SCHEMA_VERSION,
     normalize_self_assessment,
 )
+from english_trainer.evidence.assessment import compute_rubric_assessment
+from english_trainer.evidence.attempts import EvidencePrecondition
 from english_trainer.kernel.clock import Clock, RandomSource
 from english_trainer.kernel.encoding import payload_hash
 from english_trainer.kernel.envelopes import DomainEvent, make_event
@@ -70,6 +80,8 @@ from english_trainer.kernel.ids import new_ulid
 from english_trainer.kernel.policy import KNOWN_KINDS, PolicyRegistry
 from english_trainer.kernel.store import EventStore
 from english_trainer.kernel.uow import UnitOfWork
+from english_trainer.scoring.aggregates import placement_skill_levels
+from english_trainer.scoring.policy import SCORING_KIND
 from english_trainer.scoring.transitions import build_state_transition
 
 PLACEMENT_AGGREGATE = "placement"
@@ -91,6 +103,19 @@ EVENT_EXPIRED = "placement.expired"
 # producer is imported so source outcome + canonical transition stay atomic.
 EVIDENCE_ADDED_EVENT = "evidence.added"
 REVIEW_OUTCOME_EVENT = "review.outcome"
+
+#: The curriculum policy kind the authored forms travel in (a literal: the
+#: event log and the policy registry are the boundary, not a curriculum import).
+CURRICULUM_KIND = "curriculum"
+#: The rubric policy kind the writing section is settled under.
+RUBRIC_KIND = "rubric"
+#: The placement writing step type, and the rubric-facing step type it is
+#: assessed through (``rubric@1`` enumerates ``spontaneous_production``; the
+#: attempt keeps its own step type everywhere else -- the same mapping shape
+#: timed writing and reconstruction use, [PD-2026-09-22]).
+PLACEMENT_WRITING_STEP_TYPE = "placement_writing"
+RUBRIC_STEP_TYPE = "spontaneous_production"
+RUBRIC_STEP_TYPE_FIELD = "rubric_step_type"
 
 STARTED = "STARTED"
 IN_PROGRESS = "IN_PROGRESS"
@@ -168,17 +193,23 @@ def _assessments_policy(registry: PolicyRegistry, manifest: dict[str, Any]) -> d
     return require_valid(registry.resolve_pinned(ASSESSMENTS_KIND, version))
 
 
-# -- deterministic answer checking --------------------------------------------
+# -- the form of a placement ---------------------------------------------------
 
 
-def _normalize_answer(text: str) -> str:
-    return " ".join(unicodedata.normalize("NFC", text).split()).casefold()
+def placement_form(state: Mapping[str, Any]) -> dict[str, Any]:
+    """The authored form this placement opened with, stored in its aggregate.
 
-
-def _objective_check(raw_answer: str, answer_key: Any) -> bool:
-    variants = answer_key if isinstance(answer_key, list) else [answer_key]
-    normalized = _normalize_answer(raw_answer)
-    return any(_normalize_answer(str(variant)) == normalized for variant in variants)
+    Resolved once, at ``start``, from the curriculum snapshot the manifest
+    pins: re-activating the curriculum mid-placement can never swap the items
+    under a learner who already answered half of them.
+    """
+    form = state.get("form")
+    if not isinstance(form, Mapping) or not form.get("items"):
+        raise PlacementPrecondition(
+            "this placement carries no stored form; abandon it and start a new placement "
+            "(forms moved into the curriculum snapshot)"
+        )
+    return dict(form)
 
 
 # -- exposure -----------------------------------------------------------------
@@ -199,6 +230,23 @@ def prior_exposed_ids(store: EventStore, exclude_placement_id: str) -> set[str]:
             continue
         for exposure_id in event.payload.get("item_exposure_ids", []):
             seen.add(str(exposure_id))
+    return seen
+
+
+def form_exposure_history(store: EventStore) -> dict[str, str]:
+    """``form_version -> last shown at`` over every placement ever started.
+
+    Read from the append-only ``PLACEMENT_STARTED`` facts, so rotation and the
+    cooldown window are a pure function of the log (no side table to drift).
+    """
+    seen: dict[str, str] = {}
+    for event in store.read():
+        if event.type != EVENT_STARTED:
+            continue
+        manifest = event.payload.get("manifest") or {}
+        version = manifest.get("form_version")
+        if version:
+            seen[str(version)] = event.occurred_at.isoformat()
     return seen
 
 
@@ -223,12 +271,25 @@ def next_unanswered_section(form: dict[str, Any], answered_sections: list[str]) 
 # -- start --------------------------------------------------------------------
 
 
+def _active_program(registry: PolicyRegistry) -> dict[str, Any]:
+    """The active curriculum snapshot the authored forms travel in."""
+    try:
+        _, program = registry.resolve_active(CURRICULUM_KIND)
+    except NoActivePolicy:
+        raise PlacementPrecondition(
+            "no active curriculum: placement forms are curriculum data; "
+            "run `trainer curriculum activate` first"
+        ) from None
+    return program
+
+
 def start_placement(
     store: EventStore,
     registry: PolicyRegistry,
     clock: Clock,
     random_source: RandomSource,
     *,
+    program: Mapping[str, Any] | None = None,
     form_selector: str | None = None,
     actor: str = "engine",
 ) -> dict[str, Any]:
@@ -237,6 +298,9 @@ def start_placement(
     Refuses when another placement is still active: the contract keeps "start
     with abandon" as two explicit commands, so the caller abandons/submits the
     active one first.
+
+    ``program`` is the curriculum snapshot the form is read from; the active
+    snapshot is resolved when the caller passes none.
     """
     assessments_version = ensure_policy(registry, clock)
     current = active_placement_id(store)
@@ -245,24 +309,41 @@ def start_placement(
             f"placement {current} is still active; submit, abandon or let it expire first"
         )
 
-    form = select_form(form_selector)
+    snapshot = _active_program(registry) if program is None else program
+    assessments_policy = require_valid(registry.resolve_pinned(ASSESSMENTS_KIND, assessments_version))
+    form, selection = select_form(
+        snapshot,
+        form_selector,
+        seen=form_exposure_history(store),
+        cooldown_days=int(assessments_policy["form_cooldown_days"]),
+        now=clock.now(),
+    )
     pinned = _pin_versions(registry, assessments_version)
     placement_id = new_ulid(clock, random_source)
     started_at = clock.now().isoformat()
     manifest: dict[str, Any] = {
         "placement_id": placement_id,
         "form_version": str(form["form_version"]),
-        "seed": str(form["seed"]),
+        # The form version IS the deterministic seed (spec 1); an authored form
+        # may still carry an explicit one.
+        "seed": str(form.get("seed") or form["form_version"]),
+        "title": form.get("title"),
+        "target_minutes": form.get("target_minutes"),
         "started_at": started_at,
         "pinned_versions": pinned,
         "pinned_assessments_policy": assessments_version,
         "sections": form_sections(form),
+        "form_selection": selection,
     }
     state: dict[str, Any] = {
         "status": STARTED,
         "manifest": manifest,
+        # The authored form travels WITH the placement: answers, resume and
+        # grading all read this exact item set.
+        "form": dict(form),
         "last_activity_at": started_at,
         "answers": {},
+        "observations": {},
         "answered_sections": [],
     }
 
@@ -295,30 +376,50 @@ def start_placement(
         )
 
     # The agent presents item prompts verbatim; the answer keys stay engine-side.
-    items = [
-        {
-            "item_id": item["item_id"],
-            "section": item["section"],
-            "kind": item["kind"],
-            "prompt": item["prompt"],
-            "target_ref": item["target_ref"],
-            "dimension": item["dimension"],
-        }
-        for item in form["items"]
-    ]
     return {
         "placement_id": placement_id,
         "status": STARTED,
         "form_version": manifest["form_version"],
         "seed": manifest["seed"],
+        "title": manifest["title"],
+        "target_minutes": manifest["target_minutes"],
+        "form_selection": selection,
         "pinned_versions": pinned,
         "pinned_assessments_policy": assessments_version,
         "sections": manifest["sections"],
-        "items": items,
+        "passages": form_passages(form),
+        "items": [public_item(item) for item in form["items"]],
     }
 
 
 # -- answer (checkpoint) ------------------------------------------------------
+
+
+def _accept_observations(
+    form: Mapping[str, Any], section: str, observations: Mapping[str, Any] | None
+) -> dict[str, list[dict[str, Any]]]:
+    """Validate the shape of the reported rubric observations, nothing more.
+
+    Whether an observation is *admissible* (criterion in the profile, finding
+    allowed, span inside the saved answer with a matching hash) is decided by
+    the rubric pipeline at submit, which is the only authoritative classifier.
+    """
+    if not observations:
+        return {}
+    rubric_items = {
+        str(item["item_id"]) for item in section_items(form, section) if item.get("kind") == WRITING
+    }
+    accepted: dict[str, list[dict[str, Any]]] = {}
+    for item_id, reported in observations.items():
+        key = str(item_id)
+        if key not in rubric_items:
+            raise PlacementPrecondition(
+                f"item {key!r} is not a rubric-assessed writing item of section {section!r}"
+            )
+        if not isinstance(reported, list) or not all(isinstance(obs, Mapping) for obs in reported):
+            raise PlacementPrecondition(f"observations for {key!r} must be a list of objects")
+        accepted[key] = [dict(obs) for obs in reported]
+    return accepted
 
 
 def answer_placement(
@@ -329,9 +430,17 @@ def answer_placement(
     *,
     section: str,
     answers: dict[str, str],
+    observations: Mapping[str, Any] | None = None,
     actor: str = "agent",
 ) -> dict[str, Any]:
-    """Incrementally record one section's answers (checkpoint -> IN_PROGRESS)."""
+    """Incrementally record one section's answers (checkpoint -> IN_PROGRESS).
+
+    ``observations`` carries the tutor's span-based rubric observations for the
+    writing items of this section (``{item_id: [observation, ...]}``, the same
+    schema ``attempt record`` takes). The engine stores them as reported facts
+    and computes the assessment itself at ``submit`` -- the tutor never supplies
+    a level, a score or a verdict (rubric@1 ``agent_forbidden_fields``).
+    """
     found = get_placement(store, placement_id)
     if found is None:
         raise PlacementPrecondition(f"placement {placement_id} does not exist")
@@ -342,7 +451,7 @@ def answer_placement(
             f"placement {placement_id} is {status}; answers attach only to an active placement"
         )
     manifest = state.get("manifest") or {}
-    form = select_form(str(manifest.get("form_version")))
+    form = placement_form(state)
     if section not in form_sections(form):
         raise PlacementPrecondition(f"section {section!r} is not part of form {manifest.get('form_version')}")
     if not isinstance(answers, dict) or not answers:
@@ -355,9 +464,12 @@ def answer_placement(
             raise PlacementPrecondition(f"item {item_id!r} is not in section {section!r}")
         accepted[str(item_id)] = str(raw)
 
+    accepted_observations = _accept_observations(form, section, observations)
+
     merged_answers = {**state.get("answers", {})}
     section_answers = {**merged_answers.get(section, {}), **accepted}
     merged_answers[section] = section_answers
+    merged_observations = {**state.get("observations", {}), **accepted_observations}
     answered_sections = list(state.get("answered_sections", []))
     if section not in answered_sections:
         answered_sections.append(section)
@@ -369,6 +481,7 @@ def answer_placement(
         **state,
         "status": IN_PROGRESS,
         "answers": merged_answers,
+        "observations": merged_observations,
         "answered_sections": answered_sections,
         "last_activity_at": answered_at,
     }
@@ -388,6 +501,10 @@ def answer_placement(
                         "section": section,
                         "item_ids": sorted(accepted),
                         "item_exposure_ids": exposure_ids,
+                        # WHICH items arrived with rubric observations; the
+                        # observations themselves live in the aggregate beside
+                        # the raw answers, exactly like the answers do.
+                        "observed_item_ids": sorted(accepted_observations),
                         "answered_at": answered_at,
                     },
                     pinned_versions=dict(manifest.get("pinned_versions") or {}),
@@ -399,6 +516,7 @@ def answer_placement(
         "status": IN_PROGRESS,
         "section": section,
         "answered_items": sorted(accepted),
+        "observed_items": sorted(accepted_observations),
         "next_section": next_unanswered_section(form, answered_sections),
     }
 
@@ -504,7 +622,7 @@ def resume_placement(
             "(resume window elapsed); start a new placement"
         )
 
-    form = select_form(str(manifest.get("form_version")))
+    form = placement_form(state)
     answered_sections = list(state.get("answered_sections", []))
     with UnitOfWork(store, clock) as uow:
         uow.append(
@@ -580,19 +698,74 @@ def sweep_expired_placements(
 # -- submit (score) -----------------------------------------------------------
 
 
+def _rubric_assessment(
+    store: EventStore,
+    registry: PolicyRegistry,
+    *,
+    pinned: dict[str, Any],
+    placement_id: str,
+    item: dict[str, Any],
+    raw_answer: str,
+    observations: list[dict[str, Any]],
+) -> dict[str, Any] | str:
+    """The engine-made rubric assessment of one writing item, or a refusal reason.
+
+    Same pipeline, same pinned ``rubric@1`` and same authoritative classifier
+    the session path uses -- a placement simply has no rendered exercise, so the
+    item's authored ``rubric_ref`` and the rubric-facing step type are passed
+    in explicitly.
+    """
+    attempt = {
+        "attempt_id": f"{placement_id}#{item['item_id']}",
+        "session_id": placement_id,
+        "raw_answer": raw_answer,
+        "step_type": PLACEMENT_WRITING_STEP_TYPE,
+        "primary_target": {
+            "target_ref": item["target_ref"],
+            "dimension": item["dimension"],
+        },
+        "origin": "placement",
+        "hints": 0,
+        "observations": observations,
+    }
+    try:
+        return compute_rubric_assessment(
+            store,
+            registry,
+            pinned=pinned,
+            attempt=attempt,
+            explicit_rubric_ref=item.get("rubric_ref"),
+            rubric_step_type=RUBRIC_STEP_TYPE,
+        )
+    except EvidencePrecondition as exc:
+        # A placement never fails to submit over a rubric problem: the item is
+        # recorded non-contributing with a stable audit reason instead.
+        return str(exc)
+
+
 def _score_answers(
     store: EventStore,
+    registry: PolicyRegistry,
     form: dict[str, Any],
     manifest: dict[str, Any],
     answers: dict[str, dict[str, str]],
+    observations: dict[str, Any],
     policy: dict[str, Any],
     placement_id: str,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
     """Grade answered items into (scored_item rows, evidence payloads, outcome
-    payloads). Correct objective items with non-zero exposure weight become
-    ``origin=placement`` evidence + a CONFIRMED outcome; re-seen (zeroed) items
-    and writing items are recorded non-contributing."""
+    payloads).
+
+    Correct objective items with non-zero exposure weight become
+    ``origin=placement`` evidence + a CONFIRMED outcome. A writing item that
+    arrived with rubric observations is settled by ``rubric@1`` and becomes
+    ``assessment_basis=rubric`` evidence, flagged ``provisional`` and capped by
+    the rubric cap -- but no outcome: one fragment gives a provisional writing
+    level, never a knowledge-state promotion (learning-model 6). Re-seen
+    (zeroed) items and unobserved writing are recorded non-contributing.
+    """
     form_version = str(manifest["form_version"])
+    pinned = dict(manifest.get("pinned_versions") or {})
     prior = prior_exposed_ids(store, placement_id)
     scored_items: list[dict[str, Any]] = []
     evidence_payloads: list[dict[str, Any]] = []
@@ -613,6 +786,7 @@ def _score_answers(
             row: dict[str, Any] = {
                 "item_id": item_id,
                 "section": section,
+                "band": item.get("band"),
                 "target_ref": target_ref,
                 "dimension": dimension,
                 "item_exposure_id": exposure_id,
@@ -620,17 +794,92 @@ def _score_answers(
                 "kind": item["kind"],
             }
             if item["kind"] == WRITING:
-                # Provisional-only: a placement has no session/rubric context to
-                # produce a measured level (deferred, П). Recorded for audit.
-                row.update({"basis": "writing_provisional", "correct": None, "contributing": False})
+                reported = [dict(obs) for obs in observations.get(item_id) or []]
+                row["provisional"] = True
+                if not reported or not contributing_weight:
+                    # Recorded for audit; a fragment without observations is no
+                    # evidence at all (never a fabricated zero).
+                    row.update({"basis": "writing_unassessed", "correct": None, "contributing": False})
+                    scored_items.append(row)
+                    continue
+                assessed = _rubric_assessment(
+                    store,
+                    registry,
+                    pinned=pinned,
+                    placement_id=placement_id,
+                    item=item,
+                    raw_answer=raw,
+                    observations=reported,
+                )
+                if isinstance(assessed, str):
+                    row.update(
+                        {
+                            "basis": "rubric_unavailable",
+                            "correct": None,
+                            "contributing": False,
+                            "audit": assessed,
+                        }
+                    )
+                    scored_items.append(row)
+                    continue
+                contributing = bool(assessed["contributing"])
+                row.update(
+                    {
+                        "basis": "rubric",
+                        "correct": None,
+                        "contributing": contributing,
+                        "disposition": assessed["disposition"],
+                        "score_ppm": assessed["score_ppm"],
+                        "rubric_ref": assessed["rubric_ref"],
+                        "pinned_rubric_version": assessed["pinned_rubric_version"],
+                        "uncovered_required": assessed["uncovered_required"],
+                        "criteria": assessed["criteria"],
+                    }
+                )
                 scored_items.append(row)
+                if not contributing:
+                    continue
+                evidence_payloads.append(
+                    {
+                        "evidence_id": None,  # filled with a fresh id at emit time
+                        "placement_id": placement_id,
+                        "session_id": placement_id,
+                        "item_id": item_id,
+                        "item_exposure_id": exposure_id,
+                        "applied_exposure_weight": weight,
+                        "origin": "placement",
+                        "mode": dimension,
+                        RUBRIC_STEP_TYPE_FIELD: RUBRIC_STEP_TYPE,
+                        "primary_target": {"target_ref": target_ref, "dimension": dimension},
+                        "selection_basis": "declared_item_target",
+                        "assessment_basis": "rubric",
+                        "score_ppm": assessed["score_ppm"],
+                        "rubric_ref": assessed["rubric_ref"],
+                        "pinned_rubric_version": assessed["pinned_rubric_version"],
+                        # One rubric fragment is a PROVISIONAL writing level
+                        # (learning-model 6, flows/placement PD-3): the flag
+                        # travels with the fact, it is not re-derived later.
+                        "provisional": True,
+                        "hints": 0,
+                        "span_hash": payload_hash({"raw_answer": raw, "item_exposure_id": exposure_id}),
+                        "credit_allocations": [
+                            {
+                                "target_ref": target_ref,
+                                "dimension": dimension,
+                                "contribution": "1.0",
+                                "used": True,
+                                "reason": "primary",
+                            }
+                        ],
+                    }
+                )
                 continue
-            if item["kind"] != OBJECTIVE:
+            if item["kind"] not in OBJECTIVE_KINDS:
                 row.update({"basis": "unknown_kind", "correct": None, "contributing": False})
                 scored_items.append(row)
                 continue
 
-            correct = _objective_check(raw, item.get("answer_key"))
+            correct = grade_item(item, raw)
             contributing = bool(correct and contributing_weight)
             row.update({"basis": "objective_check", "correct": correct, "contributing": contributing})
             scored_items.append(row)
@@ -680,6 +929,26 @@ def _score_answers(
     return scored_items, evidence_payloads, outcome_payloads
 
 
+def _placement_skills(
+    registry: PolicyRegistry, pinned: dict[str, Any], scored_items: list[dict[str, Any]]
+) -> dict[str, dict[str, Any]]:
+    """The per-skill starting level this placement measures (scoring@2).
+
+    Computed by scoring, under the placement's OWN pinned scoring policy and
+    curriculum snapshot, so the number the tutor reads at submit is the number
+    ``trainer status`` recomputes from the log. Empty while the pinned scoring
+    policy has no ``placement`` section (scoring@1) -- honest no-data, never a
+    guessed band.
+    """
+    curriculum_version = pinned.get(CURRICULUM_KIND)
+    scoring_version = pinned.get(SCORING_KIND)
+    if not curriculum_version or not scoring_version:
+        return {}
+    program = registry.resolve_pinned(CURRICULUM_KIND, str(curriculum_version))
+    policy = registry.resolve_pinned(SCORING_KIND, str(scoring_version))
+    return placement_skill_levels(scored_items, program, policy)
+
+
 def submit_placement(
     store: EventStore,
     registry: PolicyRegistry,
@@ -693,7 +962,9 @@ def submit_placement(
 
     One submit per form. A repeat returns the stored scored result and mints no
     new events (the placement is already ``SCORED``). ``origin=placement``
-    evidence and outcomes carry the ACTIVE ceiling that scoring enforces.
+    evidence and outcomes carry the ACTIVE ceiling that scoring enforces, the
+    writing section settles through ``rubric@1``, and the result reports the
+    per-skill starting level the diagnostic measured (``scoring@2``).
     """
     found = get_placement(store, placement_id)
     if found is None:
@@ -712,11 +983,12 @@ def submit_placement(
     manifest = state.get("manifest") or {}
     pinned = dict(manifest.get("pinned_versions") or {})
     policy = _assessments_policy(registry, manifest)
-    form = select_form(str(manifest.get("form_version")))
+    form = placement_form(state)
     answers: dict[str, dict[str, str]] = dict(state.get("answers") or {})
+    observations: dict[str, Any] = dict(state.get("observations") or {})
 
     scored_items, evidence_payloads, outcome_payloads = _score_answers(
-        store, form, manifest, answers, policy, placement_id
+        store, registry, form, manifest, answers, observations, policy, placement_id
     )
     submitted_at = clock.now().isoformat()
     scored_result = {
@@ -724,6 +996,9 @@ def submit_placement(
         "scored_items": scored_items,
         "evidence_count": len(evidence_payloads),
         "outcome_count": len(outcome_payloads),
+        # The placement-derived starting level per core skill (scoring@2):
+        # low-confidence by construction, replaced by session evidence later.
+        "skills": _placement_skills(registry, pinned, scored_items),
         "scored_at": submitted_at,
     }
 

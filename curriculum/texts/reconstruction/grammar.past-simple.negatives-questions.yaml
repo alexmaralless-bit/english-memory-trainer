@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.past-simple-negatives-questions.troubleshooting-email
+    title: "Troubleshooting email"
+    cefr: A1
+    topic: grammar.past-simple.negatives-questions
+    carries: [tense:past-simple]
+    domain: work
+    context: incident-note
+    text: "Did the system update run yesterday morning? We did not receive any notification from the vendor about it. The team did not find any error logs from last week in our server. Did the vendor send the fix they promised earlier? I did not see it in our support inbox yet. Did you check the staging server today? We did not deploy anything since Tuesday morning at all."
+    word_count: 68
+    keywords: ["Did system update run", "yesterday morning", "did not receive", "notification from vendor", "did not find error logs", "last week", "Did vendor send", "promised fix", "did not see", "support inbox", "Did you check", "staging server", "did not deploy"]
+    target_spans: ["Did the system update run", "did not receive any notification", "did not find any error logs", "Did the vendor send the fix", "did not see it", "Did you check the staging server", "did not deploy anything"]
+    summary_ru: "Email поддержки: вопросы о системе и отрицания о том, что информация не получена."
+    transformations: [authored]
+  - id: text.recon.past-simple-negatives-questions.weekend-call
+    title: "Weekend call"
+    cefr: A1
+    topic: grammar.past-simple.negatives-questions
+    carries: [tense:past-simple]
+    domain: everyday
+    context: incident-note
+    text: "Did you see the movie last weekend at the cinema? I did not go on Saturday because I was tired. Did your friend call you yesterday evening? She did not answer my calls because she was busy all day. Did you finish your project yesterday afternoon? I did not have enough time before evening. Did they arrive on time Sunday? No, they did not arrive until late Sunday night."
+    word_count: 69
+    keywords: ["Did you see", "movie last weekend", "did not go Saturday", "was tired", "Did your friend call", "yesterday evening", "did not answer my calls", "was busy", "Did you finish", "project yesterday", "did not have time", "evening", "Did they arrive", "did not arrive until late"]
+    target_spans: ["Did you see the movie", "did not go on Saturday", "Did your friend call you", "did not answer my calls", "Did you finish your project", "did not have enough time", "Did they arrive on time", "did not arrive until late"]
+    summary_ru: "Выходной разговор: вопросы о выходных и отрицания о том, что не сделали вчера."
+    transformations: [authored]

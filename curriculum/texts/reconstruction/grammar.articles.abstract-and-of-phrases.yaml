@@ -1,0 +1,29 @@
+schema_version: 1
+texts:
+  - id: text.recon.articles-abstract-and-of-phrases.research-findings
+    title: "Research findings"
+    cefr: B2
+    topic: grammar.articles.abstract-and-of-phrases
+    carries: [article:zero-uncountable, article:of-phrase, article:generic]
+    domain: academic
+    context: technical-documentation
+    text: "The goal of the study was to understand the impact of automation on productivity. Data was collected over six months by the research team. The analysis of the results showed important patterns and trends. Knowledge workers demonstrated increased efficiency during the trial. The implementation of new processes required extensive training. The success of the initiative depended heavily on support from leadership. The quality of decisions improved significantly compared to baseline. Understanding the nature of change proved essential for success. The adoption of technology accelerated when major barriers were removed. Implementation of recommendations began in the third quarter."
+    word_count: 97
+    keywords: ["goal of study", "understand impact", "automation on productivity", "data collected six months", "analysis of results", "important patterns", "knowledge workers", "increased efficiency", "implementation of processes", "required training", "success of initiative", "quality of decisions", "nature of change"]
+    target_spans: ["The goal of the study", "the impact of automation", "The analysis of the results", "The implementation of new processes", "The success of the initiative", "The quality of decisions", "Understanding the nature of change"]
+    summary_ru: "Цель исследования — понять влияние автоматизации на производительность. Данные собирали полгода. Анализ результатов показал важные закономерности. Работники знаний показали повышение эффективности. Внедрение новых процессов требовало обучения. Успех инициативы зависел от поддержки лидеров. Качество решений значительно улучшилось. Понимание природы изменений было критичным. Внедрение технологии ускорилось без препятствий. Рекомендации начали внедрять в третьем квартале."
+    transformations: [authored]
+
+  - id: text.recon.articles-abstract-and-of-phrases.academic-paper
+    title: "Academic discussion"
+    cefr: B2
+    topic: grammar.articles.abstract-and-of-phrases
+    carries: [article:zero-uncountable, article:of-phrase, article:generic]
+    domain: academic
+    context: technical-documentation
+    text: "The development of artificial intelligence has raised important questions across many fields. The ability to process information at unprecedented scale is transforming industries worldwide. The definition of progress varies across different cultural and national contexts. The importance of ethical considerations cannot be overstated in academic debate. Analysis of current trends suggests growing adoption of emerging systems. Understanding of systems complexity and behavior requires interdisciplinary knowledge. The role of human judgment in critical decisions remains central. The balance between technological innovation and personal responsibility shapes policy. The integration of new approaches into existing organizational structures faces considerable resistance. The future of technology and society depends on the decisions we make."
+    word_count: 109
+    keywords: ["development of AI", "raised questions", "ability to process", "information at scale", "definition of progress", "varies across contexts", "importance of ethics", "overstated", "analysis of trends", "growing adoption", "understanding of systems", "role of judgment", "integration of approaches", "future of technology"]
+    target_spans: ["The development of artificial intelligence", "The ability to process", "The definition of progress", "The importance of ethical", "The role of human judgment", "The balance between technological innovation", "The integration of new approaches", "The future of technology"]
+    summary_ru: "Развитие ИИ поставило важные вопросы. Обработка информации в масштабе преобразует отрасли. Определение прогресса варьируется в контекстах. Важность этики не переоценить. Анализ тенденций показывает растущее внедрение. Понимание сложности требует междисциплинарности. Роль суждения человека остаётся ключевой. Баланс инноваций и ответственности формирует политику. Интеграция подходов встречает сопротивление. Будущее зависит от этих решений."
+    transformations: [authored]

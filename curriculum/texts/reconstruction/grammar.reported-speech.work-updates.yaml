@@ -1,0 +1,31 @@
+schema_version: 1
+texts:
+  - id: text.recon.reported-speech-work-updates.sprint-handover
+    title: "Sprint handover"
+    cefr: B1
+    topic: grammar.reported-speech.work-updates
+    also_targets: []
+    carries: [tense:reported-speech, article:definite-second-mention]
+    domain: work
+    context: meeting-summary
+    text: "The team lead said that the API integration had stalled on Tuesday. The vendor told us they needed more time to fix the encoding issue. I asked whether we could push the deadline, but she said the client expected the final demo on Friday. The QA manager mentioned that three tests were still failing. We decided that the team would focus on the core features first. The lead said we should document the workaround for support. He asked if anyone disagreed with the approach. The tech lead told the group that the plan seemed realistic."
+    word_count: 95
+    keywords: ["API integration stalled Tuesday", "vendor needed more time", "encoding issue", "deadline push", "client expected Friday demo", "QA tests failing", "core features first", "document workaround support"]
+    target_spans: ["said that the API", "told us they needed", "asked whether we could", "she said the client", "mentioned that three tests", "decided that the team", "said we should document"]
+    summary_ru: "Планёрка спринта: что сказала команда про API, что попросил поставщик, когда дедлайн финальной демонстрации, какие тесты не прошли."
+    transformations: [authored]
+
+  - id: text.recon.reported-speech-work-updates.feedback-notes
+    title: "Feedback notes"
+    cefr: B1
+    topic: grammar.reported-speech.work-updates
+    also_targets: []
+    carries: [tense:reported-speech]
+    domain: everyday
+    context: handover-update
+    text: "My manager asked why I had missed the morning standup. I told her that my appointment had run late. She said she understood but that I should send a note next time. The client called and mentioned that the old interface still had bugs. My colleague asked if we could schedule another review session. The designer said the mockups were ready. He asked whether anyone had feedback on the layout. I told him the spacing looked good to me. They asked what else needed fixing before launch. My friend said she would help with the testing."
+    word_count: 96
+    keywords: ["manager asked why missed standup", "appointment ran late", "should send note", "client mentioned bugs", "colleague asked schedule review", "designer said mockups ready", "asked feedback layout", "spacing looked good"]
+    target_spans: ["asked why I had missed", "told her that my appointment", "said she understood", "mentioned that the old", "asked if we could", "said the mockups", "asked whether anyone had"]
+    summary_ru: "Записки по обратной связи: менеджер спросил про стендап, клиент сказал про баги, коллега спросил про обзор."
+    transformations: [authored]

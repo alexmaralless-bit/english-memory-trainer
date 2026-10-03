@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.sequencing-delivery.deployment-steps
+    title: "Deployment steps"
+    cefr: A2
+    topic: grammar.sequencing.delivery
+    carries: [structure:sequencing, tense:future-will]
+    domain: work
+    context: delivery-planning
+    text: "First we will prepare the staging environment with all necessary configurations carefully. Then we will run all automated tests to verify functionality completely. After testing completes successfully, the team will review the results thoroughly. Before deployment to production, we will get approval from the lead engineer. Finally, we will push the code to production. Everyone will monitor the system closely."
+    word_count: 60
+    keywords: ["prepare - staging - configurations", "run - tests", "review - results", "approval - lead", "push - production", "monitor - closely"]
+    target_spans: ["First we will prepare", "Then we will run", "After testing completes", "Before deployment", "Finally, we will push"]
+    summary_ru: "Пошаговое описание процесса развёртывания с маркерами последовательности."
+    transformations: [authored]
+  - id: text.recon.sequencing-delivery.house-renovation
+    title: "House renovation"
+    cefr: A2
+    topic: grammar.sequencing.delivery
+    carries: [structure:sequencing, tense:future-will]
+    domain: everyday
+    context: home-project
+    text: "First, we will demolish the old wall carefully with proper safety equipment. Then we will prepare the foundation for the new structure properly. After the foundation is ready and verified, we will build the frame precisely. Before painting the walls, the team will install all windows and doors. Finally, we will clean everything and do finishing touches. The process will take about four weeks total."
+    word_count: 65
+    keywords: ["demolish - wall", "prepare - foundation", "build - frame", "install - windows - doors", "painting", "clean", "weeks"]
+    target_spans: ["First, we will demolish", "Then we will prepare", "After the foundation is ready", "Before painting", "Finally, we will clean"]
+    summary_ru: "Описание этапов ремонта дома в логической последовательности с маркерами."
+    transformations: [authored]

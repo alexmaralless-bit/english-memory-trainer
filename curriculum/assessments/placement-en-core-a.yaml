@@ -1,0 +1,1019 @@
+# Placement form A - schema per staging/handoff/2026-09-22-placement-forms-spec.md
+schema_version: 1
+form_version: placement-en-core-a@1
+title: Placement A
+target_minutes: 35
+sections:
+- grammar
+- vocabulary
+- reading
+- writing
+passages:
+- passage_id: p-a2-1
+  cefr: A2
+  title: New parking rules
+  text: Meridian Software is changing its parking rules starting next month. Right now, any employee can
+    park in the main lot on a first-come basis. From March 1, spaces will be assigned by department, and
+    visitors will use the lot behind Building C. Employees who arrive after nine often struggle to find
+    a space, so the new system aims to fix that problem. Staff who bike or take the bus will still get
+    a small discount on their gym membership. Managers will email each team its assigned row by the end
+    of next week. Anyone with questions should contact facilities, not IT support.
+- passage_id: p-b1-1
+  cefr: B1
+  title: New ticket-routing bot
+  text: 'Note from Marcus, on the support team, posted to the #support-tools channel: starting Monday,
+    incoming tickets will be sorted automatically by the new routing bot instead of by the duty manager.
+    To get ready, tag your ticket queue with the correct category before Thursday, since the bot only
+    reads the category field and ignores the ticket text itself. Anyone who handles billing questions
+    will also need to request access to the finance queue separately, because the bot no longer grants
+    it automatically. I tested the bot against last month''s tickets over the weekend, and it sorted almost
+    everything correctly, though a few urgent tickets from enterprise clients ended up in the wrong queue.
+    That is probably just a gap in its training data rather than proof that the bot cannot be trusted,
+    so for now, please double-check anything marked urgent before it sits too long.'
+- passage_id: p-b2-1
+  cefr: B2
+  title: The case for automated monitoring
+  text: Our support team currently learns about outages only when customers report them, often hours after
+    a problem begins. This delay damages trust and increases the workload during an already stressful
+    incident. Automated monitoring would detect unusual error rates within minutes and alert the on-call
+    engineer before most customers notice anything wrong. Critics argue that monitoring tools are expensive
+    and require ongoing maintenance, and that concern is fair. However, the cost of one prevented outage,
+    in both engineering hours and customer trust, would likely cover a year of the subscription. For these
+    reasons, I recommend a three-month trial with our smallest customer segment before a full rollout.
+- passage_id: p-c1-1
+  cefr: C1
+  title: One survey, two conclusions
+  text: The product team's report concluded that the redesign had improved customer satisfaction, citing
+    a five-point rise in the average rating collected during the week the new interface launched, when
+    a banner promoting the change was shown to every visitor. A separate review from customer support
+    reached a more cautious conclusion, noting that ticket volume for the same month actually rose, especially
+    among users who complained about the removed search filters. Both teams treat the rating survey's
+    respondents as representative of the whole customer base, even though the survey pop-up appeared only
+    on the desktop site and most of the complaining users accessed the product through the mobile app.
+    Leadership wants to expand the redesign to every region next quarter based on the improved rating,
+    but doing so would do nothing for the mobile complaints the support review flagged, unless the assumption
+    about who the survey actually reached turns out not to matter.
+items:
+- item_id: g-a1-01
+  section: grammar
+  band: A1
+  kind: choice
+  target_ref: grammar.be.identity
+  dimension: recognition
+  prompt: Our new colleague ___ a backend developer on the payments team.
+  options:
+  - is
+  - am
+  - are
+  - be
+  answer_key:
+  - is
+- item_id: g-a1-02
+  section: grammar
+  band: A1
+  kind: choice
+  target_ref: grammar.basic-word-order
+  dimension: recognition
+  prompt: 'Choose the sentence that has correct word order:'
+  options:
+  - The support team answers customer emails every day.
+  - Answers the support team customer emails every day.
+  - The support team customer emails answers every day.
+  - Every day answers the support team customer emails.
+  answer_key:
+  - The support team answers customer emails every day.
+- item_id: g-a1-03
+  section: grammar
+  band: A1
+  kind: cloze
+  target_ref: grammar.present-simple.routines
+  dimension: controlled_production
+  prompt: Every Monday, the finance team ___ (review) last week's expense reports.
+  answer_key:
+  - reviews
+- item_id: g-a1-04
+  section: grammar
+  band: A1
+  kind: choice
+  target_ref: grammar.frequency-adverbs
+  dimension: recognition
+  prompt: The support queue ___ empties out before Friday afternoon.
+  options:
+  - rarely
+  - is rarely
+  - rarely is
+  - rare
+  answer_key:
+  - rarely
+- item_id: g-a1-05
+  section: grammar
+  band: A1
+  kind: choice
+  target_ref: grammar.there-is-are.systems
+  dimension: recognition
+  prompt: ___ two open tabs on the admin dashboard right now.
+  options:
+  - There are
+  - There is
+  - It has
+  - Are there
+  answer_key:
+  - There are
+- item_id: g-a1-06
+  section: grammar
+  band: A1
+  kind: cloze
+  target_ref: grammar.nouns-singular-plural
+  dimension: controlled_production
+  prompt: The support queue has five new ___ (ticket) since lunch.
+  answer_key:
+  - tickets
+- item_id: g-a1-07
+  section: grammar
+  band: A1
+  kind: choice
+  target_ref: grammar.quantifiers.basic
+  dimension: recognition
+  prompt: The dashboard shows ___ new alerts this morning.
+  options:
+  - a few
+  - a little
+  - much
+  - any
+  answer_key:
+  - a few
+- item_id: g-a1-08
+  section: grammar
+  band: A1
+  kind: choice
+  target_ref: grammar.articles.zero-plural-uncountable
+  dimension: recognition
+  prompt: ___ arrive automatically whenever a new build passes every test.
+  options:
+  - Notifications
+  - The notifications
+  - A notification
+  - Notification
+  answer_key:
+  - Notifications
+- item_id: g-a2-01
+  section: grammar
+  band: A2
+  kind: cloze
+  target_ref: grammar.past-continuous.incident-context
+  dimension: controlled_production
+  prompt: The checkout page ___ (load) slowly when the support ticket came in.
+  answer_key:
+  - was loading
+- item_id: g-a2-02
+  section: grammar
+  band: A2
+  kind: choice
+  target_ref: grammar.past-irregular-events
+  dimension: recognition
+  prompt: The vendor ___ a replacement router within two hours of the outage.
+  options:
+  - brought
+  - bringed
+  - broughted
+  - bring
+  answer_key:
+  - brought
+- item_id: g-a2-03
+  section: grammar
+  band: A2
+  kind: cloze
+  target_ref: grammar.past-participle.forms
+  dimension: controlled_production
+  prompt: The onboarding guide ___ (update) recently, so please read the new version.
+  answer_key:
+  - has been updated
+- item_id: g-a2-04
+  section: grammar
+  band: A2
+  kind: choice
+  target_ref: grammar.future-forms.planning
+  dimension: recognition
+  prompt: We ___ launch the beta next Tuesday; it's already on the calendar.
+  options:
+  - are going to
+  - will
+  - are
+  - going
+  answer_key:
+  - are going to
+- item_id: g-a2-05
+  section: grammar
+  band: A2
+  kind: choice
+  target_ref: grammar.sequencing.delivery
+  dimension: recognition
+  prompt: ___, the QA team runs the full regression suite before every release.
+  options:
+  - Initially
+  - Eventually
+  - However
+  - Afterward
+  answer_key:
+  - Initially
+- item_id: g-a2-06
+  section: grammar
+  band: A2
+  kind: cloze
+  target_ref: grammar.comparatives.options
+  dimension: controlled_production
+  prompt: Rewriting the script by hand is ___ (slow) than letting the tool generate it automatically.
+  answer_key:
+  - slower
+- item_id: g-a2-07
+  section: grammar
+  band: A2
+  kind: choice
+  target_ref: grammar.quantifiers.requirements
+  dimension: recognition
+  prompt: There ___ enough test coverage to approve this release safely.
+  options:
+  - isn't
+  - hasn't
+  - wasn't
+  - weren't
+  answer_key:
+  - isn't
+- item_id: g-a2-08
+  section: grammar
+  band: A2
+  kind: choice
+  target_ref: grammar.connectors.cause-contrast
+  dimension: recognition
+  prompt: The export failed ___ the API rate limit was reached mid-request.
+  options:
+  - because
+  - despite
+  - therefore
+  - unless
+  answer_key:
+  - because
+- item_id: g-b1-01
+  section: grammar
+  band: B1
+  kind: cloze
+  target_ref: grammar.present-perfect.duration
+  dimension: controlled_production
+  prompt: The customer chat widget ___ (work) correctly since the vendor's patch last month.
+  answer_key:
+  - has worked
+- item_id: g-b1-02
+  section: grammar
+  band: B1
+  kind: choice
+  target_ref: grammar.past-perfect.sequence
+  dimension: recognition
+  prompt: The dashboard only showed the correct totals after the cache ___ twice.
+  options:
+  - had refreshed
+  - refreshed
+  - has refreshed
+  - was refreshing
+  answer_key:
+  - had refreshed
+- item_id: g-b1-03
+  section: grammar
+  band: B1
+  kind: cloze
+  target_ref: grammar.passive.expanded-process
+  dimension: controlled_production
+  prompt: All expired sessions ___ (clear) automatically before the nightly backup starts.
+  answer_key:
+  - are cleared
+- item_id: g-b1-04
+  section: grammar
+  band: B1
+  kind: choice
+  target_ref: grammar.relative-clauses.specification
+  dimension: recognition
+  prompt: The company hired a consultant ___ specializes in accessibility audits.
+  options:
+  - who
+  - which
+  - whom
+  - it
+  answer_key:
+  - who
+- item_id: g-b1-05
+  section: grammar
+  band: B1
+  kind: choice
+  target_ref: grammar.articles.proper-nouns-geography
+  dimension: recognition
+  prompt: Our support hub is based in ___ Philippines, with a smaller office in Poland.
+  options:
+  - a
+  - no article
+  - an
+  - the
+  answer_key:
+  - the
+- item_id: g-b1-06
+  section: grammar
+  band: B1
+  kind: choice
+  target_ref: grammar.articles.generic-statements
+  dimension: recognition
+  prompt: ___ appreciate a status update even when there is no real progress to report.
+  options:
+  - Clients
+  - A client
+  - The clients
+  - An clients
+  answer_key:
+  - Clients
+- item_id: g-b1-07
+  section: grammar
+  band: B1
+  kind: cloze
+  target_ref: grammar.second-conditional.hypothetical
+  dimension: controlled_production
+  prompt: If the team ___ (have) a larger budget, they would hire a second designer.
+  answer_key:
+  - had
+- item_id: g-b1-08
+  section: grammar
+  band: B1
+  kind: choice
+  target_ref: grammar.reported-speech.work-updates
+  dimension: recognition
+  prompt: During the call, the manager mentioned that the office ___ closed for renovations the following
+    month.
+  options:
+  - would be
+  - will be
+  - is
+  - was
+  answer_key:
+  - would be
+- item_id: g-b2-01
+  section: grammar
+  band: B2
+  kind: choice
+  target_ref: grammar.third-conditional.retrospective
+  dimension: recognition
+  prompt: If the pipeline ___ the config file before deploying, the outage would never have happened.
+  options:
+  - had validated
+  - validated
+  - have validated
+  - would validate
+  answer_key:
+  - had validated
+- item_id: g-b2-02
+  section: grammar
+  band: B2
+  kind: choice
+  target_ref: grammar.passive.reporting-structures
+  dimension: recognition
+  prompt: The outage ___ to have started right after the certificate expired, though the postmortem is
+    still open.
+  options:
+  - is believed
+  - was believing
+  - has believed
+  - believe
+  answer_key:
+  - is believed
+- item_id: g-b2-03
+  section: grammar
+  band: B2
+  kind: cloze
+  target_ref: grammar.modal-perfect.speculation
+  dimension: controlled_production
+  prompt: The job ___ (must / crash) overnight, because the dashboard shows no results from any run after
+    midnight.
+  answer_key:
+  - must have crashed
+- item_id: g-b2-04
+  section: grammar
+  band: B2
+  kind: choice
+  target_ref: grammar.cleft-sentences.focus
+  dimension: recognition
+  prompt: ___ the outdated driver that caused every crash on the new laptops.
+  options:
+  - It was
+  - There was
+  - It had
+  - That is
+  answer_key:
+  - It was
+- item_id: g-b2-05
+  section: grammar
+  band: B2
+  kind: cloze
+  target_ref: grammar.mixed-conditionals.consequences
+  dimension: controlled_production
+  prompt: If the team ___ (document) the setup properly last year, onboarding today would be far easier.
+  answer_key:
+  - had documented
+- item_id: g-b2-06
+  section: grammar
+  band: B2
+  kind: choice
+  target_ref: grammar.inversion.emphasis
+  dimension: recognition
+  prompt: Only after the third retry ___ the upload finally complete without an error.
+  options:
+  - was
+  - had
+  - does
+  - did
+  answer_key:
+  - did
+- item_id: g-c1-01
+  section: grammar
+  band: C1
+  kind: choice
+  target_ref: grammar.hedging-stance.control
+  dimension: recognition
+  prompt: The rollback ___ to explain the drop in errors, though the timing alone is not proof.
+  options:
+  - is
+  - was
+  - appears
+  - will be
+  answer_key:
+  - appears
+- item_id: g-c1-02
+  section: grammar
+  band: C1
+  kind: choice
+  target_ref: grammar.reference-cohesion
+  dimension: recognition
+  prompt: The client rejected the invoice, not the contract; ___ rejection delayed the final payment.
+  options:
+  - it
+  - they
+  - which
+  - this
+  answer_key:
+  - this
+- item_id: g-c1-03
+  section: grammar
+  band: C1
+  kind: choice
+  target_ref: grammar.participle-clauses.precision
+  dimension: recognition
+  prompt: ___ the vendor contract line by line, the legal team finally approved the renewal.
+  options:
+  - Having reviewed
+  - Reviewing
+  - Having review
+  - Once reviewed
+  answer_key:
+  - Having reviewed
+- item_id: g-c1-04
+  section: grammar
+  band: C1
+  kind: choice
+  target_ref: grammar.inversion.formal-emphasis
+  dimension: recognition
+  prompt: Not only ___ the update break the login page, but it also deleted the saved drafts.
+  options:
+  - does
+  - has
+  - was
+  - did
+  answer_key:
+  - did
+- item_id: g-c1-05
+  section: grammar
+  band: C1
+  kind: choice
+  target_ref: grammar.nominalization-information-flow
+  dimension: recognition
+  prompt: The committee rejected the initial budget, and this ___ pushed the whole roadmap back a quarter.
+  options:
+  - rejection
+  - reject
+  - rejects
+  - rejecting
+  answer_key:
+  - rejection
+- item_id: v-a1-01
+  section: vocabulary
+  band: A1
+  kind: choice
+  target_ref: word.company
+  dimension: recognition
+  prompt: Our ___ opened two new offices this year, one in Austin and one in Lisbon.
+  options:
+  - company
+  - county
+  - campaign
+  - comment
+  answer_key:
+  - company
+- item_id: v-a1-02
+  section: vocabulary
+  band: A1
+  kind: choice
+  target_ref: phrasal-verb.log-in
+  dimension: recognition
+  prompt: Type your username and password, then click Continue to ___ to the portal.
+  options:
+  - log in
+  - log off
+  - check in
+  - turn on
+  answer_key:
+  - log in
+- item_id: v-a1-03
+  section: vocabulary
+  band: A1
+  kind: choice
+  target_ref: word.error
+  dimension: recognition
+  prompt: The system displayed a red ___ message when the file failed to upload.
+  options:
+  - mistake
+  - fault
+  - error
+  - bug
+  answer_key:
+  - error
+- item_id: v-a1-04
+  section: vocabulary
+  band: A1
+  kind: choice
+  target_ref: word.ticket
+  dimension: recognition
+  prompt: Please open a new ___ if the printer jams again tomorrow.
+  options:
+  - ticket
+  - basket
+  - blanket
+  - market
+  answer_key:
+  - ticket
+- item_id: v-a1-05
+  section: vocabulary
+  band: A1
+  kind: choice
+  target_ref: word.deadline
+  dimension: recognition
+  prompt: We must submit the budget before the ___ next Wednesday.
+  options:
+  - deadline
+  - byline
+  - guideline
+  - borderline
+  answer_key:
+  - deadline
+- item_id: v-a2-01
+  section: vocabulary
+  band: A2
+  kind: choice
+  target_ref: word.incident
+  dimension: recognition
+  prompt: The on-call engineer wrote a short report about the ___ for the client.
+  options:
+  - incident
+  - accident
+  - resident
+  - incidence
+  answer_key:
+  - incident
+- item_id: v-a2-02
+  section: vocabulary
+  band: A2
+  kind: choice
+  target_ref: phrasal-verb.run-into
+  dimension: recognition
+  prompt: We ___ an unexpected problem while testing the payment flow.
+  options:
+  - ran into
+  - ran over
+  - ran down
+  - ran along
+  answer_key:
+  - ran into
+- item_id: v-a2-03
+  section: vocabulary
+  band: A2
+  kind: choice
+  target_ref: word.requirement
+  dimension: recognition
+  prompt: The client sent a document listing every ___ for the mobile app.
+  options:
+  - requirement
+  - agreement
+  - arrangement
+  - adjustment
+  answer_key:
+  - requirement
+- item_id: v-a2-04
+  section: vocabulary
+  band: A2
+  kind: choice
+  target_ref: word.feedback
+  dimension: recognition
+  prompt: After the review, the manager shared detailed ___ on what to change.
+  options:
+  - feedback
+  - comeback
+  - throwback
+  - callback
+  answer_key:
+  - feedback
+- item_id: v-a2-05
+  section: vocabulary
+  band: A2
+  kind: choice
+  target_ref: word.priority
+  dimension: recognition
+  prompt: We need to decide which bug is the top ___ this sprint.
+  options:
+  - priority
+  - majority
+  - minority
+  - authority
+  answer_key:
+  - priority
+- item_id: v-b1-01
+  section: vocabulary
+  band: B1
+  kind: choice
+  target_ref: word.evident
+  dimension: recognition
+  prompt: The gap between the two teams' numbers became ___ once the reports were compared.
+  options:
+  - evident
+  - evidently
+  - evidence
+  - evasive
+  answer_key:
+  - evident
+- item_id: v-b1-02
+  section: vocabulary
+  band: B1
+  kind: choice
+  target_ref: word.coherent
+  dimension: recognition
+  prompt: Reviewers said the design document was clear and ___.
+  options:
+  - coherent
+  - coherence
+  - cohesive
+  - convincing
+  answer_key:
+  - coherent
+- item_id: v-b1-03
+  section: vocabulary
+  band: B1
+  kind: choice
+  target_ref: idiom.on-the-same-page
+  dimension: recognition
+  prompt: After the planning call, both teams were finally ___ about the launch date.
+  options:
+  - on the same page
+  - of one mind
+  - back to square one
+  - up in the air
+  answer_key:
+  - on the same page
+- item_id: v-b1-04
+  section: vocabulary
+  band: B1
+  kind: choice
+  target_ref: word.justification
+  dimension: recognition
+  prompt: The finance team wants a written ___ before approving the extra hire.
+  options:
+  - justification
+  - justifiable
+  - justly
+  - just
+  answer_key:
+  - justification
+- item_id: v-b1-05
+  section: vocabulary
+  band: B1
+  kind: choice
+  target_ref: word.aggregate
+  dimension: recognition
+  prompt: The chart shows ___ traffic for the whole site, not each page separately.
+  options:
+  - aggregate
+  - delegate
+  - advocate
+  - elaborate
+  answer_key:
+  - aggregate
+- item_id: v-b2-01
+  section: vocabulary
+  band: B2
+  kind: choice
+  target_ref: word.methodology
+  dimension: recognition
+  prompt: The paper's appendix describes its ___ so other teams can repeat the experiment.
+  options:
+  - methodology
+  - terminology
+  - ideology
+  - chronology
+  answer_key:
+  - methodology
+- item_id: v-b2-02
+  section: vocabulary
+  band: B2
+  kind: choice
+  target_ref: word.credibility
+  dimension: recognition
+  prompt: Publishing the raw data alongside the report increased its overall ___.
+  options:
+  - credit
+  - credible
+  - credibly
+  - credibility
+  answer_key:
+  - credibility
+- item_id: v-b2-03
+  section: vocabulary
+  band: B2
+  kind: choice
+  target_ref: idiom.touch-base
+  dimension: recognition
+  prompt: Let's ___ on Thursday to see how the migration is going.
+  options:
+  - touch base
+  - catch up
+  - check in
+  - stay in the loop
+  answer_key:
+  - touch base
+- item_id: v-b2-04
+  section: vocabulary
+  band: B2
+  kind: choice
+  target_ref: word.threshold
+  dimension: recognition
+  prompt: Once error rates cross a certain ___, the system pages the on-call engineer automatically.
+  options:
+  - corner
+  - border
+  - threshold
+  - edge
+  answer_key:
+  - threshold
+- item_id: v-b2-05
+  section: vocabulary
+  band: B2
+  kind: choice
+  target_ref: word.subjective
+  dimension: recognition
+  prompt: Because the score reflects personal taste, the panel called it too ___.
+  options:
+  - subjective
+  - objective
+  - speculative
+  - submissive
+  answer_key:
+  - subjective
+- item_id: v-c1-01
+  section: vocabulary
+  band: C1
+  kind: choice
+  target_ref: word.rhetoric
+  dimension: recognition
+  prompt: The candidate's closing statement leaned on ___ rather than concrete numbers.
+  options:
+  - rhetoric
+  - rhetorician
+  - aesthetic
+  - heretic
+  answer_key:
+  - rhetoric
+- item_id: v-c1-02
+  section: vocabulary
+  band: C1
+  kind: choice
+  target_ref: word.fallacy
+  dimension: recognition
+  prompt: Treating a louder complaint as a more common one is a familiar ___ in support data.
+  options:
+  - fallacy
+  - fidelity
+  - futility
+  - finality
+  answer_key:
+  - fallacy
+- item_id: v-c1-03
+  section: vocabulary
+  band: C1
+  kind: choice
+  target_ref: word.nuance
+  dimension: recognition
+  prompt: A skilled translator keeps the ___ of the original wording, not just its literal meaning.
+  options:
+  - nuance
+  - essence
+  - substance
+  - relevance
+  answer_key:
+  - nuance
+- item_id: v-c1-04
+  section: vocabulary
+  band: C1
+  kind: choice
+  target_ref: word.warrant
+  dimension: recognition
+  prompt: One vague complaint from a single user does not ___ redesigning the whole checkout flow.
+  options:
+  - warrant
+  - merit
+  - grant
+  - wander
+  answer_key:
+  - warrant
+- item_id: r-a2-01
+  section: reading
+  band: A2
+  kind: choice
+  passage_id: p-a2-1
+  target_ref: reading.main-idea-details
+  dimension: recognition
+  prompt: What is the main purpose of this notice?
+  options:
+  - To announce a new parking policy
+  - To advertise gym membership discounts
+  - To introduce new IT support hours
+  - To describe Building C's construction
+  answer_key:
+  - To announce a new parking policy
+- item_id: r-a2-02
+  section: reading
+  band: A2
+  kind: true_false
+  passage_id: p-a2-1
+  target_ref: reading.documentation-scan
+  dimension: recognition
+  prompt: According to the notice, employees with questions should contact IT support.
+  answer_key:
+  - 'false'
+- item_id: r-a2-03
+  section: reading
+  band: A2
+  kind: choice
+  passage_id: p-a2-1
+  target_ref: reading.idioms-in-context
+  dimension: recognition
+  prompt: What does "on a first-come basis" mean in the notice?
+  options:
+  - Whoever arrives first gets a space
+  - Parking is already assigned by department
+  - Only managers get a reserved space
+  - Spaces are given out by lottery
+  answer_key:
+  - Whoever arrives first gets a space
+- item_id: r-b1-01
+  section: reading
+  band: B1
+  kind: choice
+  passage_id: p-b1-1
+  target_ref: reading.connected-technical-explanation
+  dimension: recognition
+  prompt: What is this message mainly explaining?
+  options:
+  - How ticket routing will change with the new bot
+  - Why the finance team needs new software
+  - How to reset a forgotten password
+  - Why the office is moving to a new building
+  answer_key:
+  - How ticket routing will change with the new bot
+- item_id: r-b1-02
+  section: reading
+  band: B1
+  kind: true_false
+  passage_id: p-b1-1
+  target_ref: reading.multi-step-service-information
+  dimension: recognition
+  prompt: Everyone keeps automatic access to the finance ticket queue after the bot launches.
+  answer_key:
+  - 'false'
+- item_id: r-b1-03
+  section: reading
+  band: B1
+  kind: choice
+  passage_id: p-b1-1
+  target_ref: reading.implied-online-stance
+  dimension: recognition
+  prompt: What does Marcus seem to believe about the misrouted enterprise tickets?
+  options:
+  - They are probably a gap in the bot's training data, not proof it can't be trusted
+  - They mean the bot should be turned off immediately
+  - They only happen to people who forgot to tag their queue
+  - They prove the duty manager should keep sorting tickets by hand
+  answer_key:
+  - They are probably a gap in the bot's training data, not proof it can't be trusted
+- item_id: r-b2-01
+  section: reading
+  band: B2
+  kind: choice
+  passage_id: p-b2-1
+  target_ref: reading.argument-structure
+  dimension: recognition
+  prompt: What is the main claim of this passage?
+  options:
+  - The team should trial automated monitoring before full adoption
+  - Customers should report outages faster
+  - Monitoring tools are too expensive to consider
+  - The support team no longer needs an on-call engineer
+  answer_key:
+  - The team should trial automated monitoring before full adoption
+- item_id: r-b2-02
+  section: reading
+  band: B2
+  kind: true_false
+  passage_id: p-b2-1
+  target_ref: reading.evidence-quality
+  dimension: recognition
+  prompt: The passage gives exact cost figures proving that automated monitoring would pay for itself.
+  answer_key:
+  - 'false'
+- item_id: r-b2-03
+  section: reading
+  band: B2
+  kind: choice
+  passage_id: p-b2-1
+  target_ref: reading.author-stance-bias
+  dimension: recognition
+  prompt: What does the phrase "that concern is fair" reveal about the author's stance?
+  options:
+  - The author partly agrees with the critics before arguing for the trial anyway
+  - The author fully agrees that monitoring tools are too expensive
+  - The author dismisses the critics as completely wrong
+  - The author has no opinion on the cost issue
+  answer_key:
+  - The author partly agrees with the critics before arguing for the trial anyway
+- item_id: r-c1-01
+  section: reading
+  band: C1
+  kind: choice
+  passage_id: p-c1-1
+  target_ref: reading.methodology-limitations
+  dimension: recognition
+  prompt: What limits how much weight should be given to the product team's improved rating?
+  options:
+  - The survey ran only during a promotional push and mainly reached desktop visitors
+  - The rating was collected before the redesign had launched
+  - The survey had too many respondents to analyze properly
+  - The report was written by an outside agency
+  answer_key:
+  - The survey ran only during a promotional push and mainly reached desktop visitors
+- item_id: r-c1-02
+  section: reading
+  band: C1
+  kind: true_false
+  passage_id: p-c1-1
+  target_ref: reading.cross-source-tension
+  dimension: recognition
+  prompt: The product team's report and the customer support review reach the same conclusion about the
+    redesign.
+  answer_key:
+  - 'false'
+- item_id: r-c1-03
+  section: reading
+  band: C1
+  kind: choice
+  passage_id: p-c1-1
+  target_ref: reading.implicit-assumptions
+  dimension: recognition
+  prompt: What unstated assumption do both teams rely on?
+  options:
+  - That the survey respondents represent the whole customer base, including mobile users
+  - That leadership will approve expanding the redesign
+  - That mobile complaints are unrelated to the redesign
+  - That ticket volume cannot be measured accurately
+  answer_key:
+  - That the survey respondents represent the whole customer base, including mobile users
+- item_id: w-a2-01
+  section: writing
+  band: A2
+  kind: writing
+  target_ref: written-production.project-update
+  dimension: spontaneous_production
+  prompt: 'You have just joined a new team at your company. Write a short message introducing yourself:
+    your role, what you are currently working on, and one thing you are looking forward to on this team.'
+  rubric_ref: rubric:production.spontaneous
+  min_words: 60
+  max_words: 90
+- item_id: w-b1-01
+  section: writing
+  band: B1
+  kind: writing
+  target_ref: written-production.cause-effect-explanation
+  dimension: spontaneous_production
+  prompt: 'A dashboard in your product displayed incorrect totals for two days before anyone noticed.
+    Write a message to your team: explain what caused the problem, what made it worse, and what effect
+    it had on users.'
+  rubric_ref: rubric:production.spontaneous
+  min_words: 80
+  max_words: 120

@@ -1,8 +1,8 @@
 # Модуль: curriculum
 
 > **Status**: current
-> **Last updated**: 2026-07-22
-> **Sources**: концепт Codex (одобрен, `staging/journal/2026-07-19-codex-curriculum-concept.md`) · red-team триаж (`staging/journal/2026-07-19-concept-review-triage.md`) · [[../product/learning-model]] §9 · [[../product/lexical-system]] · flows [[../flows/session]], [[../flows/placement]] · лицензии проверены 2026-07-19 ([PD-2026-07-19])
+> **Last updated**: 2026-09-24
+> **Sources**: концепт Codex (одобрен, `staging/journal/2026-07-19-codex-curriculum-concept.md`) · red-team триаж (`staging/journal/2026-07-19-concept-review-triage.md`) · [[../product/learning-model]] §9 · [[../product/lexical-system]] · flows [[../flows/session]], [[../flows/placement]] · лицензии проверены 2026-07-19 ([PD-2026-07-19]) · реальные placement-формы `staging/handoff/2026-09-22-placement-forms-spec.md` ([PD-2026-09-22])
 > **Bounded context**: `src/english_trainer/curriculum/`
 
 > Спека — **target**. Одна цель продукта, без фазовых тегов (Принцип 4). Термины — из [[../glossary]]; поведение — полностью inline. Это контракт формата и правил программы (roadmap 0.3); само наполнение — фаза П.
@@ -24,6 +24,7 @@
 | `Topic` | единица изучения | см. формат ниже |
 | `LexicalItem` | единица лексикона ([[../product/lexical-system]]) | id, type, `frequency_band`, `curriculum_priority_band`, register, usage_policy, allowed_contexts?, volatility, currency, first_observed_at?, last_verified_at?, source_refs…; `production_eligible` вычисляется по active safety, не хранится как канон-истина |
 | `SourceArtifact` | внешний источник данных (provenance) | id, exact_version, url, retrieved_at, sha256, license, attribution, notices |
+| `ReconstructionText` | авторский текст для восстановления по ключевым словам (§2d) [PD-2026-09-22] | id, title, cefr, topic, also_targets?, carries, domain, context, text, word_count, keywords, target_spans, summary_ru, transformations |
 
 **Программа — граф can-do умений, не линейный учебник** [PD-2026-07-19]. Каждая тема отвечает на вопрос «что ученик сможет сделать», грамматика привязана к рабочей задаче (Present Perfect ← «сообщить о готовом результате»).
 
@@ -31,6 +32,7 @@
 
 ```yaml
 id: grammar.present-perfect.result
+title: Present Perfect for current results
 cefr: A2
 track: grammar-engine
 module: a2.2-results-and-experience
@@ -41,16 +43,26 @@ advisory_prerequisites:
   soft: [grammar.past-simple]                            # мягкая
 lexicon: [chunk.we-have-completed, chunk.we-have-run-into-an-issue]
 contexts: [project-update, deployment, aec-model-review]
+core_points: [...]             # optional authored teaching anchors
+contrasts: [...]               # optional boundaries against nearby forms
+scope_limits: [...]            # optional: what this lesson intentionally does not teach
 typical_errors:
-  - using Past Simple without a finished-time context
-  - incorrect past participle
-  - omitting have/has
+  - wrong: I have finish it.
+    why: have/has needs the past participle
+    correction: I have finished it.
+memory_insights:
+  - summary: ...               # optional authored phonetic/historical memory hook
+    sources:
+      - title: ...
+        url: https://...
 mastery_criteria: {...}        # по versioned schema из 0.4, критерий на каждую required dimension
 explanation_language: ru-allowed   # когда допустим русский
 ```
 
 - **Единый enum prerequisites — `strong`/`soft`** [ревью A-4]: сила рекомендации, не замок. `hard/soft` из брифа — **superseded**, в текущей schema не используется.
 - **`mastery_criteria`** — по versioned schema контракта 0.4 ([[../product/learning-model]] §9, ревью E-1); валидатор (§5) проверяет наличие критерия на каждую required dimension. До 0.4 полноценное авторское наполнение критериев не финализируется (см. roadmap: П.2 зависит от 0.4).
+- **Learner-facing title тотален [PD-2026-07-23]**: authored `title` имеет приоритет; для старой темы loader детерминированно выводит понятный fallback из ID и включает его в immutable snapshot.
+- **Teaching anchors опциональны, но проверяемы**: `core_points`, `contrasts`, `scope_limits`, structured error objects и sourced `memory_insights` усиливают объяснение конкретной темы. Их отсутствие не блокирует динамический урок: агент использует can-do, examples, contexts и typical errors. Если memory insight заявлен как researched, хотя бы один title+HTTP(S) URL обязателен.
 
 ### Треки
 
@@ -81,6 +93,73 @@ explanation_language: ru-allowed   # когда допустим русский
 - **MUST — вес advisory**: взвешивание — рекомендация (карта, не замки, §5); scheduler/control потребляют его как обычный приоритет и ничего не блокируют.
 - **MUST — разметка при авторинге (П.2)**: каждая тема трека Grammar Engine несёт `frequency_tier: big-five | core | tail`; валидатор требует поле только у тем этого трека.
 
+### 2c. Фреймы темы и `carries` [PD-2026-09-22]
+
+Фрейм — `LexicalItem` типа `chunk` с `frame_of` и `carries` ([[../product/lexical-system]] §1c). Здесь — только то, как он связан с темой и что проверяет валидатор.
+
+- **MUST — владелец связи один**: связь темы и фрейма выражается **обеими** сторонами, но владеет ею `topic.lexicon`: фрейм перечисляется среди `lexicon`-ссылок своей темы, а `frame_of` фрейма — **обратная ссылка** на ту же тему. Валидатор требует согласованности: `frame_of: T` при отсутствии единицы в `T.lexicon` — ошибка, как и `lexicon`-ссылка на фрейм с `frame_of` другой темы. Две независимые односторонние ссылки разошлись бы при первой же правке.
+- **MUST — минимальный инвентарь фреймов**: каждая тема трека Grammar Engine с `frequency_tier: big-five` или `core` несёт **≥ 12** фреймов, тема с `frequency_tier: tail` — **≥ 8**. Недобор — **ошибка** валидации, а не предупреждение: тема, обещающая производство, но не дающая ученику набора фраз, оставляет метод без единицы заучивания. Тем других треков требование не касается.
+- **MAY — фреймы у не-грамматических тем**: тема любого другого трека вправе иметь фреймы; минимума для неё нет.
+- **MUST — валидатор закрывает `carries`**: `carries` непуст (1–3 тега), каждый тег принадлежит закрытому словарю [[../product/lexical-system]] §1c, и у фрейма есть разрешимый `frame_of`. Незнакомый тег, пустой `carries` при заданном `frame_of` и `frame_of` на несуществующую тему — ошибки. Фрейм артикльной темы дополнительно обязан нести `tier ∈ {1, 2}`.
+- **MUST — `carries` у существующих chunks** [PD-2026-09-22]: chunk, чей `title` содержит артикль в фиксированной позиции (45 таких единиц в текущем лексиконе, преимущественно `chunks-work-frames.yaml`), получает соответствующий тег `article:*`. `carries` без `frame_of` допустим: он помечает грамматическую нагрузку единицы, не объявляя её фреймом темы. Обратное — `frame_of` без `carries` — ошибка.
+
+### 2d. Тексты для реконструкции — новый вид данных [PD-2026-09-22]
+
+Отдельный вид авторских данных программы: текст, насыщенный целевой формой, который ученик восстанавливает по ключевым словам. Версионируется вместе с curriculum, pin-ится теми же `pinned_versions`.
+
+- **MUST — расположение и схема**: один файл на тему, `curriculum/texts/reconstruction/<topic-id>.yaml`, загружается тем же loader'ом, что и темы/лексикон:
+
+```yaml
+schema_version: 1
+texts:
+  - id: text.recon.present-perfect-result.migration-update
+    title: "Migration update"
+    cefr: A2
+    topic: grammar.present-perfect.result
+    also_targets: [grammar.articles.second-mention]   # optional
+    carries: [tense:present-perfect, article:definite-second-mention]
+    domain: work                    # work | everyday | academic
+    context: deployment-update      # короткий kebab-id, по возможности из contexts темы
+    text: "Quick update on the migration. ..."
+    word_count: 72
+    keywords: [...]                 # 6–14 подсказок в порядке текста
+    target_spans: [...]             # 4–12 точных подстрок text, несущих цель
+    summary_ru: "..."
+    transformations: [authored]
+```
+
+- **MUST — правила валидации**: `word_count` **равен** фактическому числу слов `text` по пробелам; каждая строка `target_spans` встречается в `text` **дословно** (посимвольно, с учётом регистра); `topic` разрешается в существующую тему, каждый `also_targets` — в существующую тему **или** LexicalItem; каждый тег `carries` принадлежит закрытому словарю §2c; `id` уникален в пределах вида данных; `keywords` — 6–14 элементов, `target_spans` — 4–12 (границы согласованы с авторским чекером `tools/check_authoring.py` и живым корпусом). Нарушение любого пункта — ошибка валидации.
+- **MUST — собственный текст**: `text` написан для проекта. Сторонние excerpts запрещены тем же постоянным правилом, что и в living layer (§5).
+- **MUST — текст не evidence**: сохранённый текст — авторский материал программы, а не факт владения. Evidence возникает только из ответа ученика по обычному пути [[evidence]].
+- **MUST — покрытие командой**: `trainer curriculum validate` проверяет тексты наравне с темами и лексиконом; невалидный текст не даёт активировать версию.
+
+### 2e. Артикльные темы [PD-2026-09-22, PD-F]
+
+Артикли — главный системный разрыв русскоязычного ученика, и одной вводной темы на всю программу для него мало. Программа несёт **девять** артикльных тем, каждая с `frequency_tier: core` (частая не-временная грамматика, §«Частотное взвешивание грамматики»), полным набором dimensions и ≥ 6 минимальными парами в `contrasts`:
+
+| Тема | CEFR | Область |
+|---|---|---|
+| `grammar.articles.identity` | A1 | a/an при первом упоминании, роли, a/an по звуку |
+| `grammar.articles.second-mention` | A1 | a → the при втором упоминании; the при общей идентифицируемости |
+| `grammar.articles.zero-plural-uncountable` | A1 | нулевой артикль с множественным и неисчисляемым (data, information, software, feedback) |
+| `grammar.articles.fixed-time-expressions` | A1 | in the morning, at night, on Monday, on the weekend, at the end of, once a week |
+| `grammar.articles.institutional-places` | A2 | go to work / to the office, at home, in the hospital, at school, in bed |
+| `grammar.articles.the-unique-superlative-ordinal` | A2 | the с превосходной степенью, порядковыми, same/only/next/last, уникальными референтами |
+| `grammar.articles.generic-statements` | B1 | обобщение в техническом письме: нулевой plural, a + singular, the + singular |
+| `grammar.articles.proper-nouns-geography` | B1 | the US, the Netherlands, the Alps против нулевого с городами/странами/компаниями |
+| `grammar.articles.abstract-and-of-phrases` | B2 | абстрактные существительные zero против the; the N of N; академические паттерны |
+
+- **MUST — минимальные пары обязательны**: артикльная тема несёт **≥ 6** записей `contrasts` в форме минимальных пар (`a X` / `the X` / `X` в одном контексте). Для артикля именно контраст, а не отдельный пример, и есть учебная единица.
+
+### 2f. Placement-формы — данные assessments [PD-2026-09-22]
+
+Ещё один вид авторских данных программы. Схемой содержимого (item kinds, поля, band'ы, coverage floors) владеет [[assessments]] §3 — это её контракт, не curriculum (Принцип 3, «определяем один раз»); здесь описано только, как файлы входят в программу.
+
+- **MUST — расположение**: `curriculum/assessments/placement-<name>.yaml`, один файл на форму, **≥ 2** файла ([[../flows/placement]]: минимум две формы).
+- **MUST — тот же loader и снапшот**: файлы загружаются тем же loader'ом, что темы/лексикон/тексты реконструкции (§2d), сортируются по имени файла, входят в canonical-encodable снапшот `CurriculumVersion` и в его детерминированный хэш наравне с остальными данными программы.
+- **MUST — валидация той же командой**: `trainer curriculum validate` валидирует placement-формы по правилам [[assessments]] §3 (schema, item kinds, target/passage resolution, coverage-warnings) наравне с темами и текстами; невалидная форма не даёт активировать версию — тот же gate, что для остального содержимого программы.
+- **MUST NOT — схема не дублируется здесь**: полная схема формы описана один раз в [[assessments]] §3.
+
 ### Каталоги лексикона
 
 - **stable core** — проектируется заранее (П.4) из источников ниже;
@@ -94,13 +173,12 @@ explanation_language: ru-allowed   # когда допустим русский
 
 Источники и режим использования выбраны (OPEN-6). Правовая позиция и схема provenance — решены [PD-2026-07-20], см. §3.1 (закрывает OPEN-15).
 
-### 3.1 Правовая позиция: приватное личное использование [PD-2026-07-20]
+### 3.1 Правовая позиция: публичный репозиторий [PD-2026-07-20, PD-2026-09-24]
 
-- **Контекст**: репозиторий **приватный, для личного обучения одного ученика; не публикуется, не распространяется, не продаётся**. Обязательства CC BY-SA (attribution, license/notices, indication of changes, ShareAlike на Adapted Material) и требования цитирования срабатывают при **распространении** — при его отсутствии они не наступают. Поэтому **блокирующего лицензионного гейта перед первым импортом нет**.
-- **MUST — provenance сохраняется по технической причине**: `SourceArtifact`, `source_refs` и `transformations` остаются обязательными **не** ради лицензий, а ради воспроизводимости, повторного импорта, replay и аудита (§3.2). Их отмена лицензионной позицией не оправдана.
-- **MUST — publication trigger**: если репозиторий когда-либо публикуется/передаётся третьим лицам, **до** публикации обязана быть проведена ревизия: per-source notices (Octanove C1/C2, NGSL/NAWL/BSL, wordfreq data — все CC BY-SA), indication of changes, оценка «является ли отобранный лексикон Adapted Material» и граница ShareAlike. Это **условие**, а не открытый вопрос: пока распространения нет, работа не блокируется.
+- **Контекст** [PD-2026-09-24]: репозиторий **публичный** (ревизия проведена, публикация — 2026-09-24). Код и авторский контент распространяются под MIT (`LICENSE`); производные лексиконные поля из CC BY-SA 4.0 источников (`frequency_score`/`frequency_band`, членство в NGSL/BSL в `source_refs`) распространяются под CC BY-SA 4.0. Обязательства CC BY-SA (attribution, license/notices, indication of changes, ShareAlike на Adapted Material) срабатывают при распространении и с публикации действуют; полный per-source учёт — `ATTRIBUTIONS.md`.
+- **MUST — provenance сохраняется по технической причине**: `SourceArtifact`, `source_refs` и `transformations` остаются обязательными **не только** ради лицензий, а прежде всего ради воспроизводимости, повторного импорта, replay и аудита (§3.2).
 - **MUST NOT**: сторонние excerpts в living layer (см. §5) — правило постоянное, мотивировано ToS площадок и персональными данными, а не только лицензиями.
-- Автор — не юрист; позиция задокументирована как продуктовое решение с явным триггером пересмотра.
+- Автор — не юрист; позиция задокументирована как продуктовое решение.
 
 | Источник | Роль | Лицензия | Обязательства |
 |---|---|---|---|
@@ -122,7 +200,7 @@ explanation_language: ru-allowed   # когда допустим русский
 - **MUST — частотные поля не обязательны** [П.4b]: валидатор не требует `frequency_score`/`frequency_band` и не считает их отсутствие ошибкой — корпус слов не покрывает многословные единицы ([[../product/lexical-system]] §1). Но наличие частоты **без** `source_refs` — ошибка, равно как и `source_refs` на необъявленный артефакт.
 - Список per-source notices (для будущей публикации, §3.1 trigger) хранится вместе с `SourceArtifact`, чтобы ревизия перед публикацией была механической, а не археологической.
 - **Уточнение по wordfreq** [ревью I-5]: wordfreq даёт **агрегированную корпусную частоту** (домены, включая Reddit/Twitter, слиты в один score) — per-domain «присутствие в Reddit/Twitter» из API не запрашивается, а snapshot ~2021 не доказывает текущую currency. Источник informal-currency — отдельно, OPEN-14.
-- **SHOULD**: `ATTRIBUTIONS.md` ведётся с первого импорта — как готовая заготовка под publication trigger (§3.1), не как блокирующее условие приватного использования.
+- **MUST**: `ATTRIBUTIONS.md` ведётся с первого импорта и несёт полный набор CC BY-SA notices для каждого источника; при добавлении источника запись вносится до коммита данных [PD-2026-09-24].
 - **MUST NOT**: импортировать данные CEFR-SP (лицензия не указана) и данные OpenVLT (лицензия данных не заявлена; только архитектурный reference).
 
 ## 4. Публичный API и события
@@ -130,6 +208,7 @@ explanation_language: ru-allowed   # когда допустим русский
 | Операция / Событие | Тип | Что делает |
 |---|---|---|
 | `get_topic(id)` | API | тема с полным содержимым |
+| `get_reconstruction_texts(topic_id)` | API | тексты реконструкции темы из pinned-версии (§2d) [PD-2026-09-22] |
 | `recommendations(learner_state)` | API | темы с флагом `recommended / early` по advisory-графу и уровням |
 | `lexicon_query(filter)` | API | выборка LexicalItem (frequency_band, curriculum_priority_band, track, usage_policy, currency) |
 | `get_version(v)` | API | иммутабельный snapshot указанной версии (для replay/pin) |
@@ -157,7 +236,7 @@ explanation_language: ru-allowed   # когда допустим русский
 - **MUST — `rubric@1` validation [П.5, PD-2026-07-22]**: activation регистрирует payload как policy kind `rubric` и отклоняет float/duplicate keys, неверный namespace, dangling criterion/error/machine-op refs, profile weight total не 10000, неизвестный finding code, error family с не-единственным score-bearing criterion, duplicate default `(step_type, dimension)`, incompatible default/profile и неполную четырёхуровневую шкалу. Criterion/profile IDs стабильны; historical resolution идёт по pinned rubric version.
 - **MUST**: изменения программы и living-layer promotion проходят `maintain-english-curriculum` workflow с последующей валидацией.
 - **MUST — `production_eligible` и predicate** [rereview H-R1; П.3 PD-2026-07-21]: production/scheduler/generation используют вычисляемый `production_eligible`; `avoid`, `recognition_only`, `currency: obsolete`, `currency: dated` без явного recognition-override, `opaque` как required production и `context_dependent` вне `allowed_contexts` исключают production и новые assignments. `requires_usage_policy` — predicate по type/register, а не только по «informal-единица»: рискованный `type: word`/register тоже обязан иметь usage_policy.
-- **MUST**: валидация ловит: циклы advisory-графа; битые ссылки prerequisites/lexicon/module/track/source_refs; дубли ID; prerequisite с CEFR выше уровня темы; пустые dimensions или отсутствие `mastery_criteria`/`LexicalMasteryProfile` на required dimension; отсутствие can_do; тему трека Grammar Engine без `frequency_tier` [PD-2026-07-21]; единицу, для которой `requires_usage_policy=true`, без `usage_policy`; `context_dependent` без `allowed_contexts`; `volatility: changing` без полного набора (`first_observed_at`/`last_verified_at`/`currency`/источник); истёкший review interval без приостановки production; `meme_template` без нейтрального объяснения **или `cultural_context`** (rereview H-R1); импортированную единицу без `source_refs`/SourceArtifact **или без `transformations`** (rereview I-R3); сторонние excerpts в living layer (постоянное правило).
+- **MUST**: валидация ловит: циклы advisory-графа; битые ссылки prerequisites/lexicon/module/track/source_refs; дубли ID; prerequisite с CEFR выше уровня темы; пустые dimensions или отсутствие `mastery_criteria`/`LexicalMasteryProfile` на required dimension; отсутствие can_do; тему трека Grammar Engine без `frequency_tier` [PD-2026-07-21]; единицу, для которой `requires_usage_policy=true`, без `usage_policy`; `context_dependent` без `allowed_contexts`; `volatility: changing` без полного набора (`first_observed_at`/`last_verified_at`/`currency`/источник); истёкший review interval без приостановки production; `meme_template` без нейтрального объяснения **или `cultural_context`** (rereview H-R1); импортированную единицу без `source_refs`/SourceArtifact **или без `transformations`** (rereview I-R3); сторонние excerpts в living layer (постоянное правило). [PD-2026-09-22] Сюда же добавлены: тег `carries` вне закрытого словаря; `frame_of` без `carries` или на несуществующую тему; фрейм, не перечисленный в `lexicon` своей темы (и обратно); тему Grammar Engine `big-five`/`core` с менее чем 12 фреймами и `tail` — с менее чем 8; артикльный фрейм без `tier`; артикльную тему с менее чем 6 `contrasts`; текст реконструкции с расходящимся `word_count`, отсутствующим в `text` `target_spans`, неразрешимым `topic`/`also_targets`, тегом `carries` вне словаря или числом `keywords`/`target_spans` вне диапазонов (§2d).
 - **MUST NOT — living layer excerpts** [PD-2026-07-20, rereview I-R2; П.3]: **постоянно** запрещено хранить сторонние excerpts (текст forum post/example) — мотив ToS площадок и персональные данные, независимо от лицензий. Разрешены: source-метаданные, source pointer/hash, короткая сама единица (выражение/сокращение), авторское context summary и **собственный** нейтральный парафраз/объяснение.
 - **MUST**: informal-единицы с `usage_policy: avoid`/`recognition_only`/`currency: dated`/`currency: obsolete` не попадают в required production и не рекомендуются для production. `dated` допустим только в recognition/historical/register-awareness задачах с явным context-override. Банк/формы/live manifests ре-валидируются против active policy ([[../product/lexical-system]] §3b).
 - **MUST**: TOEFL-трек не порождает тем ниже B1.
@@ -167,7 +246,7 @@ explanation_language: ru-allowed   # когда допустим русский
 
 | Команда | Что делает | Ответ |
 |---|---|---|
-| `trainer curriculum validate [--candidate PATH]` | валидация кандидата или активной версии | exit 0 / список ошибок с адресами |
+| `trainer curriculum validate [--candidate PATH]` | валидация кандидата или активной версии — темы, лексикон (включая `frame_of`/`carries`/`tier`), тексты реконструкции §2d и placement-формы §2f (по правилам [[assessments]] §3) [PD-2026-09-22] | exit 0 / список ошибок с адресами |
 | `trainer curriculum activate --version V --expected-active W` | атомарная активация валидной версии | результат + событие |
 | `trainer curriculum show --topic ID --format json` | содержимое темы | Topic JSON |
 | `trainer curriculum lexicon --filter ... --format json` | выборка лексикона | список LexicalItem |
@@ -188,6 +267,10 @@ OPEN-6 решён (источники + build-time режим). Остаточн
 
 ## История изменений
 
+- **2026-09-24**: [PD-2026-09-24] публикация репозитория — §3.1 переписан с «приватное личное использование» на публичный статус: код/авторский контент под MIT (`LICENSE`), производные лексиконные поля (`frequency_score`/`frequency_band`, `source_refs` на NGSL/BSL) под CC BY-SA 4.0; publication-trigger ревизия закрыта, полный per-source notice-учёт — `ATTRIBUTIONS.md`.
+- **2026-09-22 (2)**: [PD-2026-09-22] реальные placement-формы (Д15) — новый §2f: `curriculum/assessments/placement-<name>.yaml` как вид данных программы (loader/снапшот/валидация те же, что у тем/лексикона/текстов), схема содержимого владеет [[assessments]] §3, не дублируется здесь; `curriculum validate` в §6 упомянул новую проверку.
+- **2026-09-22**: [PD-2026-09-22] контур автоматизации — §2c: фрейм связан с темой через `topic.lexicon` + обратный `frame_of`, минимум 12 фреймов на `big-five`/`core` и 8 на `tail` (ошибка валидации), закрытый словарь `carries` и `carries` у 45 существующих артикльных chunks; §2d: новый вид данных `curriculum/texts/reconstruction/<topic-id>.yaml` со схемой и правилами валидации, покрыт `trainer curriculum validate`; §2e: девять артикльных тем A1–B2 с `frequency_tier: core` и ≥ 6 минимальными парами.
+- **2026-07-23**: [PD-2026-07-23] Topic получил тотальный learner-facing title и optional teaching anchors (`core_points`, `contrasts`, `scope_limits`, structured errors, sourced `memory_insights`); три базовые A1-темы обогащены как эталоны, без предварительной генерации всех уроков.
 - **2026-07-22 (2)**: П.5 применена [PD-2026-07-22] — активация валидирует payload `rubric@1` (float/duplicate keys, namespace, dangling refs, веса 10000, единственный score-bearing criterion на error family, уникальные defaults, полная четырёхуровневая шкала).
 - **2026-07-22**: фазовые теги `[mvp]`/`[post-mvp]` сняты [PD-2026-07-22]: спека описывает одну цель продукта, порядок и статус — только в roadmap (Принцип 4). формулировка о снятой отсрочке TOEFL-трека очищена от упразднённого термина.
 - **2026-07-21 (5)**: **П.3 фаза 2 применена [PD-2026-07-21]**: living-layer candidate/promotion workflow, гибридное currency-старение, `dated` recognition-only, lexicon-first micro lane + auto-link candidates, active-safety хуки и доменные lifecycle-события добавлены как контракт реализации `generation@1`; OPEN-14 закрыт здесь. Патчи Codex, верификация и применение — владелец.

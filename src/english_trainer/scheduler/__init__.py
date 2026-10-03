@@ -22,6 +22,7 @@ from english_trainer.scheduler.engine import (
 from english_trainer.scheduler.policy import (
     SCHEDULER_KIND,
     SchedulerPolicyInvalid,
+    effective_intervals_days,
     require_valid,
     validate_scheduler_policy,
 )
@@ -36,6 +37,7 @@ __all__ = [
     "SchedulerPolicyInvalid",
     "at_risk_boundary",
     "due_backlog",
+    "effective_intervals_days",
     "fold_schedules",
     "require_valid",
     "review_status",

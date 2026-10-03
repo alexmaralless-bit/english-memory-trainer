@@ -1,6 +1,6 @@
 # 2026-07-20 — триаж foundation-review (0.2 kernel)
 
-Провенанс: `staging/reviews/2026-07-19-foundation-review-codex.md` (checkout c9e49c1). 2 BLOCKER (A-1=E-1, один корень), ~13 MAJOR, 2 MINOR, 2 QUESTION. Разделы F-2 (safety precedence), I (глоссарий), K (регрессия триажа), J-2 — ЧИСТО. Регрессия шести спек: **чисто** — предыдущий триаж не внёс новых противоречий.
+Провенанс: `staging/reviews/2026-07-19-foundation-review-codex.md` (checkout 88956bc). 2 BLOCKER (A-1=E-1, один корень), ~13 MAJOR, 2 MINOR, 2 QUESTION. Разделы F-2 (safety precedence), I (глоссарий), K (регрессия триажа), J-2 — ЧИСТО. Регрессия шести спек: **чисто** — предыдущий триаж не внёс новых противоречий.
 
 ## Продуктовое решение (BLOCKER)
 

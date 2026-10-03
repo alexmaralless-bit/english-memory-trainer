@@ -1,0 +1,31 @@
+schema_version: 1
+texts:
+  - id: text.recon.mixed-conditionals-consequences.system-design-reflection
+    title: "System design reflection"
+    cefr: B2
+    topic: grammar.mixed-conditionals.consequences
+    also_targets: [grammar.second-conditional.hypothetical]
+    carries: [tense:conditional-3, tense:conditional-2, article:indefinite-first-mention]
+    domain: work
+    context: current-system-consequence
+    text: "If we had chosen a better database architecture, the application would perform much faster today. If the original team had documented the workaround properly, the support team would know exactly what to do now. If the service were easier to configure, more customers would have adopted it last year. If we had invested in caching earlier, the system would be more reliable now. If that decision had been different, we would not have these constraints currently. If the framework were more flexible, we would have saved weeks of development time last year. If the infrastructure had been planned correctly, scaling would be straightforward now. If the requirements had been frozen earlier, the current timeline would be far more predictable."
+    word_count: 119
+    keywords: ["better database architecture", "perform faster today", "documented workaround properly", "support team know now", "service easier configure", "customers adopted year", "invested caching", "system reliable now"]
+    target_spans: ["had chosen a better", "would perform much faster", "had documented the", "would know exactly what", "were easier to", "would have adopted", "had invested in", "would be more reliable"]
+    summary_ru: "Отражение дизайна: если бы выбрали БД лучше, приложение было бы быстрым сейчас; если бы документировали, команда знала бы теперь."
+    transformations: [authored]
+
+  - id: text.recon.mixed-conditionals-consequences.career-decision-reflection
+    title: "Career decision reflection"
+    cefr: B2
+    topic: grammar.mixed-conditionals.consequences
+    also_targets: []
+    carries: [tense:conditional-3, tense:conditional-2]
+    domain: everyday
+    context: career-decision-reflection
+    text: "If I had started learning English earlier, I would be fluent now. If I had chosen a different job five years ago, I would have better opportunities today. If my manager were more supportive, I would have stayed at that company. If I had accepted that offer, my career would look completely different now. If the timing were different, I would have pursued that certification last year. If that project had succeeded, my reputation in the field would be much stronger today. If I had taken more risks earlier, I might have more experience now. If I had relocated when I had the chance, I would be living in a different country currently."
+    word_count: 113
+    keywords: ["started learning English", "fluent now", "different job ago", "better opportunities today", "manager supportive", "stayed company", "accepted offer", "career look different"]
+    target_spans: ["had started learning", "would be fluent", "had chosen a different", "would have better", "were more supportive", "would have stayed", "had accepted that", "would look completely different"]
+    summary_ru: "Карьерные размышления: если бы начал английский раньше, был бы беглым сейчас; если бы другую работу выбрал, возможностей было бы больше."
+    transformations: [authored]

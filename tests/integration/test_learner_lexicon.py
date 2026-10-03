@@ -4,9 +4,11 @@ The centerpiece invariant, proven here on a FixedClock + SeededRandomSource:
 **a translation request survives a chat swap but never by itself becomes
 evidence of knowledge.** The tutor uses a word, the learner asks what it means,
 the agent records an ``encounter``; scoring is byte-identical before and after;
-the next provider sees the word in its briefing; only a separate graded answer
-moves the LexicalItem's scoring state. An unknown-to-curriculum word stays an
-unlinked personal note and is never a scoring target.
+the next provider sees the word in its lesson brief; the next lesson's plan
+surfaces the word; only a separately reported, graded answer (the lesson
+report [PD-2026-09-23]) moves the LexicalItem's scoring state. An
+unknown-to-curriculum word stays an unlinked personal note and is never a
+scoring target.
 
 The whole scenario is run on two independent databases and their canonical
 final state is compared byte-for-byte -- determinism is a checkable guarantee.
@@ -22,7 +24,6 @@ import yaml
 
 from english_trainer.adapters.ingress import capture_user_turn
 from english_trainer.curriculum.service import activate_version, register_version
-from english_trainer.evidence.attempts import record_attempt
 from english_trainer.kernel.clock import FixedClock, SeededRandomSource
 from english_trainer.kernel.encoding import canonical_json
 from english_trainer.kernel.policy import PolicyRegistry
@@ -34,11 +35,11 @@ from english_trainer.learner.lexicon import (
     lexicon_entries,
     relevant_lexicon_targets,
 )
-from english_trainer.lessons.delivery import next_step, peek_step, replan_session
-from english_trainer.lessons.rendering import record_rendered_exercise
+from english_trainer.lessons.report import commit_report
 from english_trainer.lessons.resume import resume_session
 from english_trainer.lessons.sessions import get_plan, start_session
 from english_trainer.scoring.engine import fold_scores, snapshot
+from tests.lessons.report_support import enable_reports, item, lexicon_ports, report
 
 REPO = Path(__file__).resolve().parents[2]
 EPOCH = datetime(2026, 7, 22, 9, 0, tzinfo=UTC)
@@ -98,37 +99,12 @@ def _activate(
     ):
         registry.register(kind, version, _policy(filename))
         registry.activate(kind, version)
+    enable_reports(registry)
 
 
 def _plan_target_refs(store: EventStore, session_id: str) -> set[str]:
     _, plan_state, _ = get_plan(store, session_id)
     return {str(step["target_ref"]) for step in plan_state["steps"] if step.get("target_ref")}
-
-
-def _present_until(
-    store: EventStore,
-    registry: PolicyRegistry,
-    clock: FixedClock,
-    rng: SeededRandomSource,
-    session_id: str,
-    target_ref: str,
-) -> dict[str, Any]:
-    """Claim steps in order until the one that targets ``target_ref`` is presented."""
-    for _ in range(20):
-        peek = peek_step(store, session_id)
-        assert peek["step"] is not None, "plan exhausted before reaching the target word"
-        result = next_step(
-            store,
-            registry,
-            clock,
-            rng,
-            session_id,
-            expected_session_revision=peek["session_revision"],
-            expected_plan_version=peek["plan_version"],
-        )
-        if str(result["step"].get("target_ref")) == target_ref:
-            return result
-    raise AssertionError("target word never presented")
 
 
 def _run_scenario(db_path: Path) -> dict[str, Any]:
@@ -208,57 +184,61 @@ def _run_scenario(db_path: Path) -> dict[str, Any]:
     # (8) a DIFFERENT provider resumes the session.
     resumed = resume_session(store, registry, clock, rng, session_id, provider="claude-code")
     rev = int(resumed["session_revision"])
-    # (9) the word is in the tutor briefing, in its own personal-lexicon block,
-    # never declared learned.
-    encounters = resumed["briefing"]["personal_lexicon"]["recent_encounters"]
+    # (9) the word is in the rebuilt lesson brief, in its own personal-lexicon
+    # block, never declared learned.
+    encounters = resumed["brief"]["learner"]["personal_lexicon"]["recent_encounters"]
     assert any(e["surface"] == "feasible" and e["linked_item_id"] == WORD for e in encounters)
 
-    # (10) replan surfaces the word as an explicit growth target now.
-    peek = peek_step(store, session_id)
-    replan_session(
+    # The talk-only lesson closes with an (empty) report: the word was only
+    # explained, never graded, so nothing is scored from it.
+    first_report = report(session_id, resumed["brief"], [])
+    commit_report(
         store,
         registry,
         clock,
         rng,
         session_id,
-        expected_session_revision=rev,
-        expected_plan_version=peek["plan_version"],
+        first_report,
+        provider="claude-code",
+        idempotency_key="lesson-1",
+        **lexicon_ports(),
     )
-    assert WORD in _plan_target_refs(store, session_id)
+    assert snapshot(fold_scores(store, scoring_policy)) == scores_before
 
-    presented = _present_until(store, registry, clock, rng, session_id, WORD)
-    word_step_id = str(presented["step"]["step_id"])
-    rev = int(presented["session_revision"])
+    # (10) the NEXT lesson's composition surfaces the word as a growth target.
+    second = start_session(store, registry, clock, rng, provider="claude-code", mode="balanced")
+    second_id = str(second["session_id"])
+    assert WORD in _plan_target_refs(store, second_id)
+    _, plan_state, _ = get_plan(store, second_id)
+    word_step = next(step for step in plan_state["steps"] if step.get("target_ref") == WORD)
 
-    # (11) a graded answer against that step.
-    rendered = record_rendered_exercise(
+    # (11) a graded answer against the word, filed in the lesson report.
+    graded = report(
+        second_id,
+        second["brief"],
+        [
+            item(
+                "w1",
+                "feasible",
+                target_ref=WORD,
+                dimension=str(word_step["dimension"]),
+                kind="recall",
+                prompt="Which word means 'осуществимый'?",
+            )
+        ],
+    )
+    committed = commit_report(
         store,
         registry,
         clock,
         rng,
-        session_id,
-        expected_session_revision=rev,
-        step_id=word_step_id,
-        exercise={
-            "prompt": "Which word means 'осуществимый'?",
-            "answer_key": ["feasible"],
-            "provenance": {"origin": "authored"},
-            "lexicon_refs": [WORD],
-        },
+        second_id,
+        graded,
+        provider="claude-code",
+        idempotency_key="lesson-2",
+        **lexicon_ports(),
     )
-    rev = int(rendered["session_revision"])
-    attempt = record_attempt(
-        store,
-        clock,
-        rng,
-        session_id,
-        expected_session_revision=rev,
-        step_id=word_step_id,
-        raw_answer="feasible",
-        exercise_instance_id=str(rendered["exercise_instance_id"]),
-        registry=registry,
-    )
-    assert attempt["status"] == "assessed"
+    assert committed["cached"] is False
 
     # (12) ONLY NOW does the LexicalItem's scoring state change.
     scores_after = snapshot(fold_scores(store, scoring_policy))
@@ -277,7 +257,7 @@ def _run_scenario(db_path: Path) -> dict[str, Any]:
         "lexicon": lexicon_entries(store),
         "scores": snapshot(fold_scores(store, scoring_policy)),
         "relevant_targets": sorted(relevant_lexicon_targets(store)),
-        "recent_encounters": resumed["briefing"]["personal_lexicon"]["recent_encounters"],
+        "recent_encounters": resumed["brief"]["learner"]["personal_lexicon"]["recent_encounters"],
     }
     conn.close()
     return observable

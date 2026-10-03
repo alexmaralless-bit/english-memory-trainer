@@ -11,12 +11,12 @@ import yaml
 
 from english_trainer.control.compose import compose_plan, step_targets
 from english_trainer.control.signals import (
+    EVENT_PROBE_REQUESTED,
     EVENT_SESSION_STARTED,
     EVENT_SIGNAL_CONSUMED,
-    EVENT_STEP_PRESENTED,
+    EVENT_SIGNAL_RECORDED,
     active_signals,
     build_probe_candidate,
-    record_signal,
 )
 from english_trainer.kernel.clock import FixedClock, SeededRandomSource
 from english_trainer.kernel.encoding import canonical_json
@@ -132,29 +132,44 @@ def emit(
 def test_probe_consumed_atomically_else_the_signal_survives() -> None:
     evt_store, clock, rnd = make_store(), FixedClock(NOW), SeededRandomSource(3)
     emit(evt_store, clock, rnd, EVENT_SESSION_STARTED, {"n": 1})
+    # A historic too_easy signal and its probe request, exactly as the removed
+    # `trainer signal` wrote them (the read side is what stays live).
+    signal_id, probe_id = "sig-1", "probe-1"
+    probe_params = {
+        "target_ref": "grammar.a",
+        "dimension": "recognition",
+        "requested_difficulty": "spontaneous_production",
+        "avoid_context": "team-intro|controlled_production",
+    }
     emit(
         evt_store,
         clock,
         rnd,
-        EVENT_STEP_PRESENTED,
+        EVENT_SIGNAL_RECORDED,
         {
-            "step_id": "step-1",
-            "plan_version": 1,
-            "kind": "growth",
-            "step_type": "controlled_production",
-            "targets": [{"target_ref": "grammar.a", "dimension": "recognition"}],
-            "context_id": "team-intro|controlled_production",
+            "signal_id": signal_id,
+            "recorded_at": NOW.isoformat(),
+            "current_session_seq": 1,
+            "signal": {
+                "kind": "too_easy",
+                "target_ref": "grammar.a",
+                "domain": None,
+                "avoid_context": None,
+                "expires_at": None,
+                "expires_after_session_seq": None,
+                "profile": None,
+                "theme": None,
+            },
         },
     )
-    recorded = record_signal(
+    emit(
         evt_store,
         clock,
         rnd,
-        kind="too_easy",
-        payload={"target_ref": "grammar.a"},
-        policy=policy(),
-        idempotency_key="k1",
+        EVENT_PROBE_REQUESTED,
+        {"probe_id": probe_id, "signal_id": signal_id, **probe_params},
     )
+    recorded = {"signal_id": signal_id, "probe_id": probe_id, "probe": probe_params}
     signal_id = recorded["signal_id"]
     # Before any consumption the too_easy signal is in force.
     assert {s["signal_id"] for s in active_signals(evt_store, 1, NOW)} == {signal_id}

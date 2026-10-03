@@ -1,10 +1,10 @@
 """Stable control-module errors (control 3, 4.2; cli 4.2).
 
-Each carries a machine-stable ``code`` for the CLI envelope. The distinction
-the contract insists on: :class:`PlanVersionConflict` means "re-read the plan
-and retry with the fresh version" (CLI exit CONFLICT), while composition
+Each carries a machine-stable ``code`` for the CLI envelope. Composition
 refusals (:class:`BudgetTooSmall`, :class:`NoCandidates`) mean "this is not
-allowed now -- do something else" (PRECONDITION_FAILED).
+allowed now -- do something else" (PRECONDITION_FAILED). The step-delivery
+errors (plan-version CAS conflicts, signal/probe refusals) went away with the
+per-step protocol [PD-2026-09-23].
 """
 
 from __future__ import annotations
@@ -34,45 +34,8 @@ class NoCandidates(KernelError):
     code = "NO_CANDIDATES"
 
 
-class PlanVersionConflict(KernelError):
-    """CAS miss on ``expected_plan_version`` (control 4.2 [RR2-7]).
-
-    Carries the current version so the loser can re-read (``peek``) and retry
-    with a fresh expectation and a fresh idempotency key.
-    """
-
-    code = "PLAN_VERSION_CONFLICT"
-
-    def __init__(self, message: str, *, current_plan_version: int) -> None:
-        super().__init__(message)
-        self.current_plan_version = current_plan_version
-
-
-class SignalInvalid(KernelError):
-    """A learner control signal is malformed (control 4.7): an unknown ``kind``
-    or a missing required payload field for its kind. Rejected before anything
-    is written -- an invalid signal never reaches the event log."""
-
-    code = "SIGNAL_INVALID"
-
-
 class AvailabilityInvalid(KernelError):
     """The declared availability profile is not the integer-only schema from
     control 4.7a, or one of its timestamps is not an aware ISO instant."""
 
     code = "AVAILABILITY_INVALID"
-
-
-class ProbePrecondition(KernelError):
-    """A ``too_easy`` signal cannot mint a probe because its precondition does
-    not hold (control 4.7): the target has never been delivered, so there is no
-    ``STEP_PRESENTED`` to derive the probe difficulty and ``avoid_context``
-    from -- ``PRECONDITION_FAILED {reason: no_presented_step}``. Carries the
-    machine-stable ``reason`` for the envelope.
-    """
-
-    code = "PROBE_PRECONDITION"
-
-    def __init__(self, message: str, *, reason: str) -> None:
-        super().__init__(message)
-        self.reason = reason

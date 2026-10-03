@@ -1,6 +1,6 @@
 # 2026-07-20 — триаж foundation-rereview (0.2 kernel)
 
-Провенанс: `staging/reviews/2026-07-20-foundation-rereview-codex.md` (checkout d7b974a). Вердикт **PASS-with-findings**: BLOCKER A-1/E-1 подтверждён закрытым, новых BLOCKER нет. 4 MAJOR + 2 MINOR — все триаж-формулировки, продуктовых форков нет. Разделы D/G/J — ЧИСТО.
+Провенанс: `staging/reviews/2026-07-20-foundation-rereview-codex.md` (checkout 216e523). Вердикт **PASS-with-findings**: BLOCKER A-1/E-1 подтверждён закрытым, новых BLOCKER нет. 4 MAJOR + 2 MINOR — все триаж-формулировки, продуктовых форков нет. Разделы D/G/J — ЧИСТО.
 
 ## Диспозиция (всё fix-now в тексте)
 

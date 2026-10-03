@@ -89,7 +89,7 @@ def test_default_fixtures_cover_the_canon_minimal_set() -> None:
     assert ids == {
         "correct-trigger",
         "wrong-trigger",
-        "agent-attempts-self-score",
+        "tutor-verdict-report",
         "unfinished-required-review",
         "finish-without-persistence",
         "codex-claude-parity",
@@ -110,3 +110,109 @@ def test_codex_claude_parity_fixture_is_symmetric() -> None:
     results = {result.adapter: result for result in compare([fixture])}
     assert set(results) == {"codex", "claude-code"}
     assert results["codex"].passed and results["claude-code"].passed
+
+
+def _fixture(fixture_id: str) -> ParityFixture:
+    return next(f for f in DEFAULT_FIXTURES if f.id == fixture_id)
+
+
+def _replay(fixture: ParityFixture, effects: list[str]) -> ParityFixture:
+    return ParityFixture(
+        id=fixture.id,
+        given_state=fixture.given_state,
+        agent_input=fixture.agent_input,
+        expected_effects=fixture.expected_effects,
+        observed_effects={"claude-code": [{"tag": effect} for effect in effects]},
+    )
+
+
+def test_ordered_constraint_requires_before_ahead_of_after() -> None:
+    fixture = ParityFixture(
+        id="order",
+        given_state={},
+        agent_input={},
+        expected_effects={"required": [], "forbidden": [], "ordered": ["a -> b"]},
+        observed_effects={
+            "in-order": [{"tag": "a"}, {"tag": "b"}],
+            "reversed": [{"tag": "b"}, {"tag": "a"}],
+            "after-only": [{"tag": "b"}],
+            "after-absent": [{"tag": "a"}],
+        },
+    )
+    results = {result.adapter: result for result in compare([fixture])}
+    assert results["in-order"].passed is True
+    assert results["reversed"].order_violations == ("a -> b",)
+    assert results["after-only"].passed is False
+    # Presence is `required`'s job: an ordering whose `after` never happened holds.
+    assert results["after-absent"].passed is True
+    assert results["reversed"].as_dict()["order_violations"] == ["a -> b"]
+
+
+def test_malformed_order_constraint_fails_loudly() -> None:
+    fixture = ParityFixture(
+        id="typo",
+        given_state={},
+        agent_input={},
+        expected_effects={"required": [], "forbidden": [], "ordered": ["a b"]},
+        observed_effects={"codex": [{"tag": "a"}, {"tag": "b"}]},
+    )
+    (result,) = compare([fixture])
+    assert result.passed is False
+    assert result.order_violations == ("a b",)
+
+
+def test_report_fixture_requires_check_before_report() -> None:
+    fixture = _fixture("tutor-verdict-report")
+    (result,) = compare(
+        [
+            _replay(
+                fixture, ["cli_call:session.report", "cli_call:session.check-report", "event:lesson.reported"]
+            )
+        ]
+    )
+    assert result.passed is False
+    assert result.order_violations == ("cli_call:session.check-report -> cli_call:session.report",)
+
+
+def test_report_fixture_forbids_fabricated_or_non_verbatim_items() -> None:
+    fixture = _fixture("tutor-verdict-report")
+    path = ["cli_call:session.check-report", "cli_call:session.report", "event:lesson.reported"]
+    for violation in ("report:fabricated_item", "report:non_verbatim_answer", "report:latency_reported"):
+        (result,) = compare([_replay(fixture, [*path, violation])])
+        assert result.passed is False
+        assert result.present_forbidden == (violation,)
+
+
+def test_report_fixture_forbids_the_removed_step_protocol() -> None:
+    # The tutor now grades (PD-2026-09-23); the step-by-step engine grading path is gone.
+    fixture = _fixture("tutor-verdict-report")
+    (result,) = compare([_replay(fixture, ["cli_call:attempt.record", "cli_call:attempt.finalize"])])
+    assert result.passed is False
+    assert "cli_call:attempt.record" in result.present_forbidden
+    assert set(result.missing_required) == {
+        "cli_call:session.check-report",
+        "cli_call:session.report",
+        "event:lesson.reported",
+    }
+
+
+def test_unfinished_review_fixture_needs_the_review_addressed_in_the_report() -> None:
+    fixture = _fixture("unfinished-required-review")
+    (result,) = compare(
+        [
+            _replay(
+                fixture,
+                ["cli_call:session.check-report", "cli_call:session.report", "event:session.finished"],
+            )
+        ]
+    )
+    assert result.passed is False
+    assert result.missing_required == ("report:reviews_addressed",)
+
+
+def test_finish_fixture_rejects_the_removed_finish_command() -> None:
+    fixture = _fixture("finish-without-persistence")
+    (result,) = compare([_replay(fixture, ["cli_call:session.finish", "event:session.finished"])])
+    assert result.passed is False
+    assert result.present_forbidden == ("cli_call:session.finish",)
+    assert result.missing_required == ("event:lesson.reported",)

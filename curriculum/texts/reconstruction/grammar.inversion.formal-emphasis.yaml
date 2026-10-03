@@ -1,0 +1,29 @@
+schema_version: 1
+texts:
+  - id: text.recon.inversion-formal-emphasis.decision-memo
+    title: "Decision memo"
+    cefr: C1
+    topic: grammar.inversion.formal-emphasis
+    carries: [structure:inversion]
+    domain: work
+    context: decision-memo
+    text: "Only when the recovery test passes should the migration proceed. Not only did the change increase latency, but it also removed a diagnostic signal. Seldom have we observed such a dramatic shift in resource utilization. Never before has a single parameter affected three independent services. At no time during the transition did the monitoring system alert properly. Only after the incident concluded did the team grasp the architectural implications. Only with the implementation of the new timeout policy did stability return. Hardly ever have we encountered such a critical edge case. Not only is the code change minimal, but the review process has been rigorous. Only in retrospect did the root cause reveal itself with clarity. Nowhere in the existing documentation was this scenario adequately described. Only by redesigning the replication strategy did the team resolve the fundamental constraint."
+    word_count: 139
+    keywords: ["recovery test migration", "change latency diagnostic", "resource utilization", "parameter services", "monitoring alert", "architectural implications", "timeout policy", "edge case", "code review rigorous", "root cause clarity", "replication strategy", "fundamental constraint"]
+    target_spans: ["Only when the recovery test passes should", "Not only did the change increase latency", "Seldom have we observed", "Never before has a single parameter", "At no time during the transition did", "Only after the incident concluded did", "Only with the implementation of", "Not only is the code change minimal"]
+    summary_ru: "Миграция должна проводиться только после успешного теста восстановления; изменение не только увеличило задержку, но и удалило диагностический сигнал, а коренная причина проблемы выявлена была только в ретроспективе."
+    transformations: [authored]
+
+  - id: text.recon.inversion-formal-emphasis.research-findings
+    title: "Research findings"
+    cefr: C1
+    topic: grammar.inversion.formal-emphasis
+    carries: [structure:inversion]
+    domain: academic
+    context: formal-analysis
+    text: "Only through rigorous methodology can researchers establish causal relationships. Not only do the results contradict the prevailing theory, but they also challenge fundamental assumptions. Seldom has a single study produced such comprehensive evidence. Never before have we documented such a consistent pattern across independent populations. At no stage of the analysis did the researchers identify confounding variables. Only after multiple replications did the findings achieve statistical stability. Only with the implementation of advanced statistical techniques did the underlying mechanism become apparent. Hardly ever does one encounter such elegant simplicity in complex phenomena. Not only are the findings significant, but their theoretical implications are profound. Only in carefully controlled settings did the effect persist reliably. Nowhere in the existing literature was this phenomenon previously described. Only by reconceptualizing the fundamental framework did the paradox resolve."
+    word_count: 134
+    keywords: ["rigorous methodology", "causal relationships", "results contradict theory", "fundamental assumptions", "comprehensive evidence", "consistent pattern", "populations", "confounding variables", "statistical stability", "statistical techniques", "elegant simplicity", "theoretical implications", "paradox"]
+    target_spans: ["Only through rigorous methodology can", "Not only do the results contradict", "Seldom has a single study", "Never before have we documented", "At no stage of the analysis did", "Only after multiple replications did", "Only with the implementation of advanced", "Not only are the findings significant"]
+    summary_ru: "Только строгая методология позволила установить причинные связи; результаты не только противоречат преобладающей теории, но и ставят под сомнение фундаментальные предположения, а парадокс разрешен переосмыслением основной теоретической базы."
+    transformations: [authored]

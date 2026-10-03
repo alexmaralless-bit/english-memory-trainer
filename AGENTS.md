@@ -10,11 +10,11 @@ The planned Python application should keep runtime code, tests, curriculum/confi
 
 ## Development, Validation, and Local Commands
 
-Dependencies live in `pyproject.toml`; Python 3.12+, `uv` where available. Phase 0 (contracts) is complete; the kernel (`src/english_trainer/kernel/`, roadmap 1.2) is the first application code, and the `trainer` CLI (`src/english_trainer/cli/`) publishes its kernel-facing surface. Runtime deps are only what existing code imports (`pydantic`, `typer`, `pyyaml`); SQLAlchemy stays absent (SQLite via a thin `sqlite3` layer, no ORM).
+Dependencies live in `pyproject.toml`; Python 3.12+, `uv` where available (venv in `.venv`: `uv sync --python 3.12`). Phase 0 (contracts), Phase 2 (vertical slice: 16 modules, ~67 CLI commands at the time; 50 after Phase 4, versioned policies) and Phase 3 (automaticity layer [PD-2026-09-22] — grammar frames, nine article topics, reconstruction texts, drill blocks, the `automaticity` axis, the relearning ladder, the `drill` profile, learner preferences; 283 topics, 2671 lexical units (1529 frames), 150 reconstruction texts) are complete. Phase 4 — the brief/report protocol [PD-2026-09-23] — is complete: the engine proposes a `LessonBrief` at `session start`/`resume` and records one atomic `LessonReport` via `session report` at the end, instead of a step-by-step delivery protocol; the tutor decides each report item's correctness (a verdict), the engine stores the evidence and deterministically aggregates. Runtime deps are only what existing code imports (`pydantic`, `typer`, `pyyaml`); SQLAlchemy stays absent (SQLite via a thin `sqlite3` layer, no ORM).
 
 ```bash
 pip install -e . --group dev             # or: uv sync
-pytest                                   # kernel determinism + lexicon invariants (no network)
+python -m pytest                         # full suite; bare `pytest` fails on `tests.*` imports
 ruff check .
 ruff format --check src tests
 mypy src                                 # strict; kernel is fully typed
@@ -24,7 +24,7 @@ mypy src                                 # strict; kernel is fully typed
 python tools/enrich_lexicon.py --cache <dir> --check
 ```
 
-These already pass. The `trainer` CLI exists (kernel-facing surface): `trainer doctor`, `trainer init` (mutating — requires `--idempotency-key` with `--format json`), `trainer database check`. Subcommands below arrive with their owning modules:
+These already pass (pytest ≈ 800 tests). Mutating `trainer` commands require `--idempotency-key` with `--format json`. Frames and reconstruction texts are pre-checked by `python tools/check_authoring.py <files>` and linked to topics by the idempotent `python tools/link_frames.py` before `trainer curriculum validate`. Frequently used agent-facing commands:
 
 ```bash
 trainer curriculum validate
@@ -46,7 +46,7 @@ Use `pytest` with focused unit and integration tests named `test_<behavior>.py` 
 
 ## Agent and State Safety
 
-Read learner state through the CLI. Never directly alter progress, scores, SQLite rows, event logs, or generated memory. Run the required skill, record structured evidence, and finish sessions only through the CLI. Change curriculum only through the `maintain-english-curriculum` workflow, then run relevant validations.
+Read learner state through the CLI. Never directly alter progress, scores, SQLite rows, event logs, or generated memory. Run the required skill and finish sessions only through `trainer session report` (validate first with `trainer session check-report`) or `trainer session abandon`. The tutor decides each report item's correctness (a verdict — [PD-2026-09-23]); the engine never re-grades it — it only stores the evidence, derives spans, and deterministically aggregates, schedules and levels. Change curriculum only through the `maintain-english-curriculum` workflow, then run relevant validations.
 
 ## Commits & Pull Requests
 

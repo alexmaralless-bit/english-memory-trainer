@@ -19,3 +19,21 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+## Third-party data
+
+The code and the authored content in this repository (curriculum topics,
+frames, texts, lessons, and all other authored materials) are licensed under
+the MIT License above.
+
+Some values in `curriculum/lexicon/` are derived from third-party sources
+distributed under CC BY-SA 4.0 and remain under that license, independently
+of the MIT license on the surrounding code and authored content:
+
+- `frequency_score` and `frequency_band` fields, derived from wordfreq 3.1.1
+  frequency data (CC BY-SA 4.0).
+- `source_refs` entries recording membership in the New General Service List
+  (NGSL) 1.2 or the Business Service List (BSL) 1.2 (CC BY-SA 4.0).
+
+See ATTRIBUTIONS.md for the full per-source attribution, license text link,
+and indication of changes required by CC BY-SA 4.0.

@@ -1,0 +1,51 @@
+# obligations@3 keeps every obligation of obligations@2 and re-states two of
+# them in terms of what actually has to be true, so the lean tutor protocol
+# [PD-2026-09-22] is observed honestly instead of being scored as a violation.
+#
+# `delivery_protocol` no longer looks for a particular sequence of CLI calls:
+# what protects the learner is that the exact prompt was persisted before the
+# answer, not that `session peek` was called first. It now requires the
+# rendered snapshot to follow STEP_PRESENTED and precede the attempt.
+#
+# `correction_protocol` accepts an ASSESSED attempt however it was assessed --
+# the single-call `attempt record` with observations, `attempt record-block`,
+# or the two-call `record` + `finalize` recovery path -- plus a review closure
+# through either trigger (`attempt record --close-review` or `review close`).
+# Counting only `attempt.finalize` would have marked the shorter, equally
+# complete path as non-compliant.
+policy_id: "obligations@3"
+schema_version: 3
+status: "accepted"
+measurement_window_terminal_sessions: 10
+matching_order:
+  - required_skill_effect
+  - lesson_preflight
+  - teaching_snapshot
+  - delivery_protocol
+  - correction_protocol
+  - forbidden_action_absence
+obligations:
+  - obligation_id: required_skill_effect
+    required_effect: skill_cli_call_succeeded
+    self_report_required: true
+    one_effect_per_instance: true
+  - obligation_id: lesson_preflight
+    applicable_when: lesson_arc_is_pinned
+    required_effect: announced_arc_has_title_reason_agenda_and_language_envelope
+    one_effect_per_instance: true
+  - obligation_id: teaching_snapshot
+    applicable_when: new_material_intro_is_presented
+    required_effect: teaching_segment_rendered
+    one_effect_per_instance: true
+  - obligation_id: delivery_protocol
+    applicable_when: structured_step_is_presented
+    required_effect: exercise_rendered_before_attempt
+    one_effect_per_instance: true
+  - obligation_id: correction_protocol
+    required_effects: [attempt_assessed, review_closed]
+    applicable_when: open_or_rubric_error_observed
+    one_effect_per_instance: true
+  - obligation_id: forbidden_action_absence
+    required_effect: terminal_postconditions_satisfied
+    forbidden_error_codes: [MISSING_IDEMPOTENCY_KEY]
+    one_effect_per_instance: true

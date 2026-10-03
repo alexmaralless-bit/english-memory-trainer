@@ -111,8 +111,8 @@ normal atomic event/outbox path for both attachments.
 ## Reproduction
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest tests/integration --basetemp "<local-tmp>/pytest" -q
-.\.venv\Scripts\python.exe -m pytest tests/integration --basetemp "<local-tmp>/pytest" -q
+.\.venv\Scripts\python.exe -m pytest tests/integration --basetemp "<tmp>/pytest" -q
+.\.venv\Scripts\python.exe -m pytest tests/integration --basetemp "<tmp>/pytest" -q
 .\.venv\Scripts\python.exe -m ruff check tests/integration
 .\.venv\Scripts\python.exe -m ruff format --check tests/integration
 ```

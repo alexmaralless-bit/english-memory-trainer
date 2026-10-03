@@ -1,0 +1,39 @@
+# evidence@2 -- evidence@1 plus the tutor-verdict leaves of the lesson report
+# (decision PD-2026-09-23: the tutor decides each item's correctness; the
+# engine stores the evidence, aggregates deterministically and schedules).
+# Decimal values are strings; binary floats are forbidden by canonical encoding.
+#
+# verdict_scale -- the tutor's verdict as integer ppm of the full scale; this is
+# the assessment's score_ppm. `correct` is always the full scale; the scale is
+# monotone (correct >= partial >= incorrect).
+#
+# review_outcome_by_verdict -- the terminal ReviewOutcome a review item closes
+# with. `partial` confirms on purpose (learner decision, PD-2026-09-23): a
+# partly right recall still demonstrates the memory trace.
+#
+# report_limits -- hard bounds on one lesson_report@1 document.
+#
+# tutor_errors.default_severity -- the policy-owned severity stamped on every
+# tutor-reported error (rubric@1 severity vocabulary); the tutor never sends one.
+policy_id: "evidence@2"
+schema_version: 2
+status: "accepted"
+decision_record: "PD-2026-09-23"
+multi_credit:
+  primary_weight: "1.0"
+  secondary_weight: "0.5"
+  total_weight_cap: "2.0"
+verdict_scale:
+  correct: 1000000
+  partial: 500000
+  incorrect: 0
+review_outcome_by_verdict:
+  correct: "CONFIRMED"
+  partial: "CONFIRMED"
+  incorrect: "REGRESSION"
+report_limits:
+  max_items: 200
+  max_answer_chars: 4000
+  max_errors_per_item: 10
+tutor_errors:
+  default_severity: "major"

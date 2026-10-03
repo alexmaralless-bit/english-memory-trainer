@@ -43,6 +43,7 @@ from english_trainer.kernel.errors import KernelError, NoActivePolicy, PinnedPol
 KNOWN_KINDS = frozenset(
     {
         "assessments",
+        "automaticity",
         "control",
         "curriculum",
         "evidence",

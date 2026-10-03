@@ -1,6 +1,11 @@
 """The rubric assessment pipeline (P.5): observation validation, machine
-opcodes, the severity-ceiling reducer, PD-7 completeness, atomic settlement --
-and the payoff: a conversational session can finally finish."""
+opcodes, the severity-ceiling reducer and PD-7 completeness.
+
+``compute_rubric_assessment`` is a pure read; its live caller is placement
+(writing items). The per-step settlement path (``attempt record`` with
+observations, ``attempt finalize``) was removed with the step-delivery
+protocol [PD-2026-09-23], so the pipeline is exercised here directly over an
+attempt document -- the same inputs the placement hands it."""
 
 from __future__ import annotations
 
@@ -10,34 +15,25 @@ import pytest
 import yaml
 
 from english_trainer.evidence.assessment import (
+    compute_rubric_assessment,
     criterion_level,
-    finalize_attempt,
     run_machine_operation,
     span_hash,
 )
-from english_trainer.evidence.attempts import EvidencePrecondition, record_attempt
+from english_trainer.evidence.attempts import EvidencePrecondition
 from english_trainer.kernel.policy import PolicyRegistry
-from english_trainer.kernel.session_fence import current_session_revision
 from english_trainer.kernel.store import EventStore
-from english_trainer.lessons.delivery import next_step
-from english_trainer.lessons.sessions import finish_session, start_session
-from tests.evidence.conftest import PROGRAM, REPO
+from tests.evidence.conftest import REPO
+
+PINNED = {"rubric": "rubric@1"}
 
 
 @pytest.fixture
-def full_registry(store: EventStore, clock) -> PolicyRegistry:
+def rubric_registry(store: EventStore, clock) -> PolicyRegistry:
     reg = PolicyRegistry(store._conn, clock)
-    reg.register("curriculum", "v-test", PROGRAM)
-    reg.activate("curriculum", "v-test")
-    reg.register("generation", "generation@1", {"policy_id": "generation@1"})
-    reg.activate("generation", "generation@1")
-    for name, kind, version in (
-        ("control-v1.yaml", "control", "control@1"),
-        ("rubric-v1.yaml", "rubric", "rubric@1"),
-    ):
-        payload = yaml.safe_load((REPO / "curriculum" / "policies" / name).read_text("utf-8"))
-        reg.register(kind, version, payload)
-        reg.activate(kind, version)
+    payload = yaml.safe_load((REPO / "curriculum" / "policies" / "rubric-v1.yaml").read_text("utf-8"))
+    reg.register("rubric", "rubric@1", payload)
+    reg.activate("rubric", "rubric@1")
     return reg
 
 
@@ -65,36 +61,19 @@ def _full_coverage() -> list[dict[str, Any]]:
     ]
 
 
-def _conversation_attempt(store, registry, clock, rnd, observations) -> tuple[str, str]:
-    manifest = start_session(store, registry, clock, rnd, provider="claude-code")
-    session_id = str(manifest["session_id"])
-    version = 1
-    while True:
-        result = next_step(
-            store,
-            registry,
-            clock,
-            rnd,
-            session_id,
-            expected_session_revision=current_session_revision(store, session_id),
-            expected_plan_version=version,
-        )
-        version = result["plan_version"]
-        if result["step"]["step_type"] == "free_conversation":
-            step = result["step"]
-            break
-    recorded = record_attempt(
-        store,
-        clock,
-        rnd,
-        session_id,
-        expected_session_revision=current_session_revision(store, session_id),
-        step_id=str(step["step_id"]),
-        raw_answer=ANSWER,
-        observations=observations,
-    )
-    assert recorded["status"] == "recorded"  # open answers wait for the rubric
-    return session_id, str(recorded["attempt_id"])
+def _attempt(
+    observations: list[dict[str, Any]],
+    *,
+    step_type: str = "free_conversation",
+    primary_target: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    return {
+        "attempt_id": "attempt-1",
+        "raw_answer": ANSWER,
+        "step_type": step_type,
+        "primary_target": primary_target,
+        "observations": observations,
+    }
 
 
 def test_machine_opcodes_are_deterministic() -> None:
@@ -136,50 +115,21 @@ def test_severity_ceiling_caps_the_level() -> None:
     assert capped == 1  # policy-owned ceiling, no global double subtraction
 
 
-def test_conversational_attempt_scores_and_the_session_finishes(
-    store, full_registry, clock, random_source
-) -> None:
-    session_id, attempt_id = _conversation_attempt(
-        store, full_registry, clock, random_source, _full_coverage()
-    )
-    result = finalize_attempt(
-        store,
-        full_registry,
-        clock,
-        random_source,
-        session_id,
-        attempt_id,
-        expected_session_revision=current_session_revision(store, session_id),
-    )
-    assert result["disposition"] == "scored" and result["rejected"] == 0
+def test_a_fully_covered_answer_scores_and_is_deterministic(store, rubric_registry) -> None:
+    attempt = _attempt(_full_coverage())
+    result = compute_rubric_assessment(store, rubric_registry, pinned=PINNED, attempt=attempt)
+    assert result["basis"] == "rubric" and result["pinned_rubric_version"] == "rubric@1"
+    assert result["disposition"] == "scored" and result["rejected_observations"] == []
     # Every required criterion got one finding; levels come from finding units
     # (2 or 3 per the catalog), so the score lands strictly inside the scale.
     assert 0 < result["score_ppm"] <= 1_000_000
-    assert result["contributing"] is False or result["contributing"] is True  # target-less → audit-only
-
-    again = finalize_attempt(
-        store,
-        full_registry,
-        clock,
-        random_source,
-        session_id,
-        attempt_id,
-        expected_session_revision=current_session_revision(store, session_id),
-    )
-    assert again["already"] is True and again["score_ppm"] == result["score_ppm"]
-
-    # The pending set is settled: the conversational session finishes. THIS is
-    # the payoff of P.5 -- finish is no longer blocked by open answers.
-    finish_session(
-        store,
-        clock,
-        random_source,
-        session_id,
-        expected_session_revision=current_session_revision(store, session_id),
-    )
+    assert len(result["criteria"]) == 5  # the full per-criterion trace
+    assert result["uncovered_required"] == []
+    again = compute_rubric_assessment(store, rubric_registry, pinned=PINNED, attempt=attempt)
+    assert again == result  # a pure read: same inputs, same assessment
 
 
-def test_rejected_observations_do_not_count(store, full_registry, clock, random_source) -> None:
+def test_rejected_observations_do_not_count(store, rubric_registry) -> None:
     bad_span = _observation("meaning-clarity", "message_recoverable_first_reading")
     bad_span["span_ref"]["span_hash"] = "sha256:" + "0" * 64
     wrong_criterion = {
@@ -187,97 +137,35 @@ def test_rejected_observations_do_not_count(store, full_registry, clock, random_
         "finding_code": "claim_present",
         "span_ref": bad_span["span_ref"],
     }
-    session_id, attempt_id = _conversation_attempt(
-        store, full_registry, clock, random_source, [bad_span, wrong_criterion]
-    )
-    result = finalize_attempt(
-        store,
-        full_registry,
-        clock,
-        random_source,
-        session_id,
-        attempt_id,
-        expected_session_revision=current_session_revision(store, session_id),
+    result = compute_rubric_assessment(
+        store, rubric_registry, pinned=PINNED, attempt=_attempt([bad_span, wrong_criterion])
     )
     # Both rejected -> zero required coverage -> non-contributing
     # insufficient_evidence: assessor failure is never a learner zero (PD-7 C).
-    assert result["rejected"] == 2
+    assert len(result["rejected_observations"]) == 2
     assert result["disposition"] == "insufficient_evidence"
     assert result["score_ppm"] is None and result["contributing"] is False
-    finish_session(
-        store,
-        clock,
-        random_source,
-        session_id,
-        expected_session_revision=current_session_revision(store, session_id),
-    )  # settled => finish passes
 
 
-def test_growth_attempt_with_rubric_contributes_to_scoring(
-    store, full_registry, clock, random_source
-) -> None:
-    # A targeted open attempt (growth intro answered freely, no exercise
-    # instance): the exact default resolves by (step_type, dimension) --
-    # new_material_intro has no default, so we use the conversation flow but
-    # fabricate a targeted attempt through a spontaneous step is not composed
-    # yet; instead prove the contributing path end-to-end via EVIDENCE_ADDED
-    # consumption: finalize a conversation attempt whose step carried a target.
-    manifest = start_session(store, full_registry, clock, random_source, provider="claude-code")
-    session_id = str(manifest["session_id"])
-    result = next_step(
-        store,
-        full_registry,
-        clock,
-        random_source,
-        session_id,
-        expected_session_revision=current_session_revision(store, session_id),
-        expected_plan_version=1,
-    )
-    step = result["step"]  # growth intro: targeted
-    recorded = record_attempt(
-        store,
-        clock,
-        random_source,
-        session_id,
-        expected_session_revision=current_session_revision(store, session_id),
-        step_id=str(step["step_id"]),
-        raw_answer=ANSWER,
-        observations=[],
+def test_a_step_type_without_an_exact_default_is_refused(store, rubric_registry) -> None:
+    # new_material_intro deliberately has no default rubric (PD-6 B): generic
+    # prose scoring of an intro step would be hidden best-match.
+    attempt = _attempt(
+        [], step_type="new_material_intro", primary_target={"target_ref": "grammar.be.identity"}
     )
     with pytest.raises(EvidencePrecondition, match="no exact default"):
-        # new_material_intro deliberately has no default rubric (PD-6 B):
-        # generic prose scoring of an intro step would be hidden best-match.
-        finalize_attempt(
-            store,
-            full_registry,
-            clock,
-            random_source,
-            session_id,
-            recorded["attempt_id"],
-            expected_session_revision=current_session_revision(store, session_id),
-        )
+        compute_rubric_assessment(store, rubric_registry, pinned=PINNED, attempt=attempt)
 
 
-def test_targetless_assessment_is_audit_only(store, full_registry, clock, random_source) -> None:
-    # The free-conversation step carries no target: the assessment settles and
-    # scores, but EVIDENCE_ADDED must NOT exist (invariant 14: no target, no
-    # mastery evidence) and the state-change event captures the calculation.
-    session_id, attempt_id = _conversation_attempt(
-        store, full_registry, clock, random_source, _full_coverage()
-    )
-    result = finalize_attempt(
-        store,
-        full_registry,
-        clock,
-        random_source,
-        session_id,
-        attempt_id,
-        expected_session_revision=current_session_revision(store, session_id),
+def test_an_unpinned_rubric_is_refused(store, rubric_registry) -> None:
+    with pytest.raises(EvidencePrecondition, match="pins no rubric"):
+        compute_rubric_assessment(store, rubric_registry, pinned={}, attempt=_attempt(_full_coverage()))
+
+
+def test_targetless_assessment_is_audit_only(store, rubric_registry) -> None:
+    # A free-conversation answer with no target scores for audit, but it can
+    # never contribute mastery evidence (invariant 14: no target, no evidence).
+    result = compute_rubric_assessment(
+        store, rubric_registry, pinned=PINNED, attempt=_attempt(_full_coverage())
     )
     assert result["disposition"] == "scored" and result["contributing"] is False
-    assert [e for e in store.read() if e.type == "evidence.added"] == []
-    (change,) = [e for e in store.read() if e.type == "attempt.state_changed"]
-    captured = change.payload["assessment"]
-    assert captured["score_ppm"] == result["score_ppm"]
-    assert captured["pinned_rubric_version"] == "rubric@1"
-    assert len(captured["criteria"]) == 5  # the full per-criterion trace is in the event

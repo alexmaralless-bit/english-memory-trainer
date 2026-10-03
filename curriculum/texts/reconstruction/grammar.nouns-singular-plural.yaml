@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.nouns-singular-plural.task-list
+    title: "Tasks in the queue"
+    cefr: A1
+    topic: grammar.nouns-singular-plural
+    carries: [structure:svo-order]
+    domain: work
+    context: interface-walkthrough
+    text: "One task is assigned to me today. Two tasks are in the queue waiting. We have three open records to review. The database has five users registered. One file is missing from the system. Two messages need a reply from our team. Three fields require data entry. One report shows a problem."
+    word_count: 52
+    keywords: ["one task", "two tasks", "queue", "three open records", "database", "five users", "one file", "missing", "two messages", "three fields", "data", "one report"]
+    target_spans: ["One task", "Two tasks", "three open records", "five users", "One file", "Two messages", "Three fields", "One report"]
+    summary_ru: "Описание количества задач, файлов и записей используя единственное и множественное число существительных."
+    transformations: [authored]
+  - id: text.recon.nouns-singular-plural.shopping-list
+    title: "Things to buy"
+    cefr: A1
+    topic: grammar.nouns-singular-plural
+    carries: [structure:svo-order]
+    domain: everyday
+    context: interface-walkthrough
+    text: "I need one apple from the market. She needs three bananas for the cake. We want two oranges for juice. I have one notebook already. They have four pens in the box. He has one camera for the trip. We need two bags for shopping. One coat is too small for me. One shoe is broken."
+    word_count: 56
+    keywords: ["one apple", "three bananas", "two oranges", "one notebook", "four pens", "one camera", "two bags", "one coat", "one shoe"]
+    target_spans: ["one apple", "three bananas", "two oranges", "one notebook", "four pens", "one camera", "two bags", "One coat", "One shoe"]
+    summary_ru: "Список покупок и предметов с использованием единственного и множественного числа."
+    transformations: [authored]

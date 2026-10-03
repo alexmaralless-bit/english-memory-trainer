@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.be-identity.team-intro
+    title: "Team introduction"
+    cefr: A1
+    topic: grammar.be.identity
+    carries: [tense:present-simple, article:indefinite-first-mention]
+    domain: work
+    context: team-introduction
+    text: "Hi everyone. I am a data engineer at our company. My name is Sam. I am responsible for managing the data pipeline. Our team is small. The team is very skilled and experienced. The company is a startup in the tech field. We are always busy with challenging projects and work."
+    word_count: 51
+    keywords: ["I am a data engineer", "My name is Sam", "I am responsible", "data pipeline", "Our team is small", "team is skilled", "company is", "startup", "We are busy"]
+    target_spans: ["I am a data engineer", "I am responsible", "Our team is", "The team is", "The company is a startup", "We are always busy"]
+    summary_ru: "Представление в команде: я инженер данных, мое имя Сэм, отвечаю за pipeline, команда маленькая, компания стартап."
+    transformations: [authored]
+  - id: text.recon.be-identity.role-everyday
+    title: "What she does"
+    cefr: A1
+    topic: grammar.be.identity
+    carries: [tense:present-simple, article:indefinite-first-mention]
+    domain: everyday
+    context: team-introduction
+    text: "Helen is a teacher. She is very experienced and skillful with students. The school is near the park in our town. Her students are happy and engaged. Helen is an expert in teaching English to young learners. She is dedicated to the job every day. Her work is important and meaningful to many people."
+    word_count: 54
+    keywords: ["Helen is a teacher", "She is experienced", "school is", "park", "students are happy", "Helen is expert", "She is dedicated", "work is important", "meaningful"]
+    target_spans: ["Helen is a teacher", "She is very experienced", "The school is", "Her students are", "Helen is an expert", "She is dedicated", "Her work is"]
+    summary_ru: "Описание профессии: Хелен учитель, опытная, школа рядом с парком, студенты счастливы, она эксперт, работа важна."
+    transformations: [authored]

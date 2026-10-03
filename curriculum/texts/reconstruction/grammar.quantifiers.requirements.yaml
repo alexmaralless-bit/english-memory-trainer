@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.quantifiers-requirements.resource-planning
+    title: "Resource requirements"
+    cefr: A2
+    topic: grammar.quantifiers.requirements
+    carries: [structure:quantifier, article:zero-plural]
+    domain: work
+    context: option-review
+    text: "We need enough resources for the project to succeed. There are too many open tasks for one developer to handle. We have plenty of data, but we lack sufficient documentation for the team. The team requires more developers and some additional equipment very soon. We must limit the scope because we have too little time left. There are too many features for the current release next month."
+    word_count: 67
+    keywords: ["need enough - resources", "too many - tasks", "one developer", "plenty - data", "lack sufficient - documentation", "more developers", "additional equipment", "must limit - scope", "too little - time", "too many - features"]
+    target_spans: ["need enough resources", "too many open", "plenty of data", "sufficient documentation", "more developers", "too little time", "too many features"]
+    summary_ru: "Требования к ресурсам: необходимое количество разработчиков, оборудования, времени, недостаток данных и документации."
+    transformations: [authored]
+  - id: text.recon.quantifiers-requirements.grocery-shopping
+    title: "Shopping list"
+    cefr: A2
+    topic: grammar.quantifiers.requirements
+    carries: [structure:quantifier]
+    domain: everyday
+    context: option-review
+    text: "I need enough time for the grocery shopping today. The store stocks plenty of fresh vegetables all week. There is too much milk in the fridge right now. We have some bread, but we need more eggs for breakfast. There are too many cans of soup at home. I need just a few apples and a lot of water for cooking. We require sufficient space for all the shopping bags we carry."
+    word_count: 72
+    keywords: ["need enough", "grocery shopping", "plenty - vegetables", "too much", "milk", "fridge", "some bread", "need more", "eggs", "too many - cans", "few apples", "lot - water"]
+    target_spans: ["need enough time", "plenty of fresh", "too much milk", "need more eggs", "too many cans", "a few apples", "a lot of water"]
+    summary_ru: "Список покупок: какого количества продуктов достаточно, чего не хватает, чего слишком много."
+    transformations: [authored]

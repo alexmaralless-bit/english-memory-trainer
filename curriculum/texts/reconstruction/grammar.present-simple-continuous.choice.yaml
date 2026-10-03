@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.present-simple-continuous-choice.daily-vs-today
+    title: "Routine work vs today's work"
+    cefr: A1
+    topic: grammar.present-simple-continuous.choice
+    carries: [tense:present-simple, tense:present-continuous]
+    domain: work
+    context: status-update
+    text: "I check logs every day at nine. Today I am checking them right now because of the error. I usually test features on Friday. Today we are testing the payment system in parallel. We review code every week. But this week we are reviewing it daily because of the deadline. The team always follows process."
+    word_count: 55
+    keywords: ["check logs every day", "checking right now", "usually test", "testing payment system", "review code", "reviewing daily", "deadline"]
+    target_spans: ["check logs every day", "am checking them right now", "usually test", "are testing the payment system", "review code every week", "are reviewing it daily"]
+    summary_ru: "Обычно проверяю логи, но сегодня срочно. Обычно тесты в пятницу, но сейчас. Рутина, но срочное."
+    transformations: [authored]
+  - id: text.recon.present-simple-continuous-choice.habits-and-now
+    title: "My routine and what I do now"
+    cefr: A1
+    topic: grammar.present-simple-continuous.choice
+    carries: [tense:present-simple, tense:present-continuous]
+    domain: everyday
+    context: status-update
+    text: "I run in the park every morning at six. Right now I am running in the rain. I usually drink coffee after my run. Today I am drinking it while I check emails. I swim every Saturday at the pool. Today I am swimming after work. My life follows the same pattern every day."
+    word_count: 54
+    keywords: ["run every morning", "am running in rain", "drink coffee", "am drinking", "swim Saturday", "am swimming", "every day pattern"]
+    target_spans: ["run in the park every morning", "am running in the rain", "usually drink coffee", "am drinking it", "swim every Saturday", "am swimming after work"]
+    summary_ru: "Бегаю в парк по утрам, сейчас под дождем. Пью кофе, но сейчас пью работая. Плаваю по субботам, но сейчас после работы."
+    transformations: [authored]

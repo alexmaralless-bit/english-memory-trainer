@@ -1,0 +1,29 @@
+schema_version: 1
+texts:
+  - id: text.recon.cleft-sentences-focus.root-cause-emphasis
+    title: "Root cause emphasis"
+    cefr: B2
+    topic: grammar.cleft-sentences.focus
+    carries: [structure:cleft]
+    domain: work
+    context: root-cause-emphasis
+    text: "It was the expired token that caused the repeated failures. What the system needed was a shorter token refresh interval. It is the authentication service that processes every request. What the client received was stale data from the cache. It was the missing configuration parameter that broke the deployment. What we discovered was that a single setting affected multiple services. It is the database replication lag that limits consistency. What the team needed was a clearer error message. It was not the load, but the connection pool size that created the bottleneck."
+    word_count: 92
+    keywords: ["expired token", "repeated failures", "authentication service", "stale cache", "configuration parameter", "single setting", "database replication", "connection pool", "bottleneck"]
+    target_spans: ["It was the expired token that caused", "What the system needed was", "It is the authentication service that processes", "What the client received was", "It was the missing configuration parameter that broke", "It is the database replication lag that limits", "What the team needed was", "It was not the load"]
+    summary_ru: "Истекший токен вызвал повторяющиеся сбои, а истинная проблема заключалась в размере пула соединений, при этом система нуждалась в более частом обновлении токенов."
+    transformations: [authored]
+
+  - id: text.recon.cleft-sentences-focus.language-learning
+    title: "Language learning"
+    cefr: B2
+    topic: grammar.cleft-sentences.focus
+    carries: [structure:cleft]
+    domain: academic
+    context: root-cause-emphasis
+    text: "It was the social context that influenced language acquisition. What linguists discovered was that immersion alone does not guarantee fluency. It is the quality of interaction that determines success. What students receive from peers is informal practice and feedback. It was the motivation of the learner that predicted long-term retention. What the research shows is that explicit instruction enhances implicit knowledge. It is the consistency of exposure that strengthens memory formation. What teachers provide through structured tasks is guided practice. It was not the complexity of the material but the clarity of explanation that affected comprehension."
+    word_count: 96
+    keywords: ["social context", "language acquisition", "immersion fluency", "quality interaction", "peers practice", "learner motivation", "explicit instruction", "consistency exposure", "clarity explanation", "comprehension"]
+    target_spans: ["It was the social context that influenced", "What linguists discovered was that", "It is the quality of interaction that determines", "What students receive from peers is", "It was the motivation of the learner that predicted", "What the research shows is", "It is the consistency of exposure that strengthens", "It was not the complexity"]
+    summary_ru: "Социальный контекст оказал влияние на овладение языком, при этом решающим фактором была не сложность материала, а четкость объяснения и согласованность воздействия."
+    transformations: [authored]

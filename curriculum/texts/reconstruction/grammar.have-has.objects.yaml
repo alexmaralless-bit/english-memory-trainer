@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.have-has-objects.team-resources
+    title: "Our team resources"
+    cefr: A1
+    topic: grammar.have-has.objects
+    carries: [tense:present-simple]
+    domain: work
+    context: interface-walkthrough
+    text: "Our team has a shared folder on the server. Each project has a lead developer and a backup person. We have daily standup meetings at nine. The database has two backup copies in different locations. Our vendor has a support ticket system available. I have access to the main repository. We all have the tools we need."
+    word_count: 57
+    keywords: ["team", "shared folder", "server", "project", "lead developer", "backup person", "daily standup meetings", "database", "backup copies", "vendor", "support ticket system", "access", "main repository", "tools"]
+    target_spans: ["has a shared folder", "has a lead developer", "have daily standup meetings", "has two backup copies", "has a support ticket system", "have access", "have the tools"]
+    summary_ru: "Описание того, что есть у команды, проекта и отдельных людей используя have и has."
+    transformations: [authored]
+  - id: text.recon.have-has-objects.personal-items
+    title: "Things I have"
+    cefr: A1
+    topic: grammar.have-has.objects
+    carries: [tense:present-simple]
+    domain: everyday
+    context: interface-walkthrough
+    text: "I have a laptop and a tablet for work. My friend has a car and a motorcycle. We have two dogs at home and a fish tank. You have a nice apartment in the city. She has a small garden behind the house with flowers. They have many hobbies and interests. Everyone has something special."
+    word_count: 55
+    keywords: ["laptop", "tablet", "work", "friend", "car", "motorcycle", "two dogs", "home", "apartment", "city", "garden", "flowers", "hobbies"]
+    target_spans: ["have a laptop", "has a car", "have two dogs", "have a nice apartment", "has a small garden", "have many hobbies", "has something"]
+    summary_ru: "Описание предметов и того, чем владеют люди в личной жизни используя have и has."
+    transformations: [authored]

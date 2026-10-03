@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.time-dates.standup-schedule
+    title: "Daily standup schedule"
+    cefr: A1
+    topic: grammar.time-dates
+    carries: [structure:time-marker, structure:preposition-time]
+    domain: work
+    context: daily-standup
+    text: "The standup starts at nine every morning. We review tickets at the end of the day. The client call is on Monday at eleven. We submit the update at five in the afternoon. On Wednesday we have the demo. The report is due on Friday at the end of work."
+    word_count: 50
+    keywords: ["standup", "nine", "review tickets", "end of the day", "client call", "Monday", "eleven", "submit", "Wednesday", "demo", "Friday"]
+    target_spans: ["at nine", "at the end of the day", "on Monday", "at eleven", "at five", "On Wednesday", "on Friday"]
+    summary_ru: "Расписание дневных встреч и дедлайнов с предлогами at и on для времени и дней."
+    transformations: [authored]
+  - id: text.recon.time-dates.morning-routine
+    title: "My morning routine"
+    cefr: A1
+    topic: grammar.time-dates
+    carries: [structure:time-marker, structure:preposition-time]
+    domain: everyday
+    context: daily-standup
+    text: "I wake up at seven every morning. I have breakfast at eight. The bus leaves at eight thirty. I arrive at work at nine in the morning. I go to the gym at five in the afternoon. I have dinner at seven in the evening. I go to bed at eleven at night."
+    word_count: 53
+    keywords: ["wake up", "seven", "morning", "breakfast", "eight", "bus", "nine", "gym", "five", "afternoon", "dinner", "eleven"]
+    target_spans: ["at seven", "at eight", "at eight thirty", "at nine", "at five", "at seven", "at eleven"]
+    summary_ru: "Распорядок дня с точным указанием времени суток используя предлог at."
+    transformations: [authored]

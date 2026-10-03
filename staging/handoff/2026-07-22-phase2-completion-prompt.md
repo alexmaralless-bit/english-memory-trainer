@@ -4,7 +4,7 @@
 
 ## Где мы сейчас (контекст)
 
-Фаза 0 (12 контрактов) и Фаза П (программа A1–C2, лексикон 1142) закрыты. Живут 11 модулей. Фаза 2 (срез): 2.1–2.6 done, 2.7 done-with-open (осталась OPEN-11), **2.8a сигналы+пробы** (`9c0e496`) и **2.8b saturation+starvation** (`380eeef`) done как готовые чистые функции, но их **live-wiring в композицию отложен** (см. ниже). Осталось: 2.8c, 2.8d, 2.8e, общий lessons-проход (активация 2.8a/b/c и wiring), 2.9. Полный прогон сейчас: **420 passed / 1 xfailed** (единственный xfail — OPEN-11 в `tests/integration/test_tutor_swap.py`).
+Фаза 0 (12 контрактов) и Фаза П (программа A1–C2, лексикон 1142) закрыты. Живут 11 модулей. Фаза 2 (срез): 2.1–2.6 done, 2.7 done-with-open (осталась OPEN-11), **2.8a сигналы+пробы** (`130540f`) и **2.8b saturation+starvation** (`801d1b8`) done как готовые чистые функции, но их **live-wiring в композицию отложен** (см. ниже). Осталось: 2.8c, 2.8d, 2.8e, общий lessons-проход (активация 2.8a/b/c и wiring), 2.9. Полный прогон сейчас: **420 passed / 1 xfailed** (единственный xfail — OPEN-11 в `tests/integration/test_tutor_swap.py`).
 
 ## Железные правила (для КАЖДОГО под-инкремента)
 
@@ -14,7 +14,7 @@
 4. **Границы (арх-гейт `tests/architecture/`).** `control` импортит только `kernel`+`control` (события — межмодульный интерфейс, строковые литералы, не импортируй evidence/scheduler/lessons в control). Слой добавляй в `LAYER_ALLOWLIST` только если реально нужен новый импорт. Не ломай `command_registry()` 1:1 с published surface (+ `tests/cli/test_cli.py` parity) — каждую новую CLI-команду добавляй в оба.
 5. **Честность.** `no-data`/пустой результат — легитимный исход, не фейковый ноль. Неполноту/деферралы/находки называй явно (как 2.8a/2.8b называли отложенный wiring). Не выдумывай.
 6. **[PD]-развилки НЕ решай сам.** Продуктовые развилки (`wiki/OPEN.md`) решает пользователь. Если упрёшься в неспецифицированное дизайн-решение — **СТОП, оставь честный `xfail`/finding и переходи дальше**, не изобретай семантику.
-7. **Env (Windows).** Python из venv: `.\.venv\Scripts\python.exe` (НЕ `python` из PATH — там 3.11 без pytest). pytest всегда с `--basetemp "<local-tmp>/pytest"`. Уникальные basename тест-файлов (дубли ломают сбор).
+7. **Env (Windows).** Python из venv: `.\.venv\Scripts\python.exe` (НЕ `python` из PATH — там 3.11 без pytest). pytest всегда с `--basetemp "<tmp>/pytest"`. Уникальные basename тест-файлов (дубли ломают сбор).
 8. **Гейты перед каждым коммитом:** `pytest --basetemp ... -q` (полный, зелёный), `ruff check .`, `ruff format --check src tests`, `mypy src` (strict). Не коммить при красном без явного finding-объяснения.
 9. **Коммить по-доменно, по одному под-инкременту за коммит**, явными путями (`git add -- <files>`), НЕ `git add -A`. НЕ трогай и НЕ коммить CRLF-шум (`AGENTS.md`, `wiki/modules/control.md`, `curriculum/lexicon/{chunks-work-frames,everyday-reactions,everyday-words,phrasal-verbs}.yaml`) и `Irregular Verbs.md` — у них пустой content-diff. Сообщение коммита кончай строкой `Co-Authored-By: Codex <noreply@openai.com>` (или твоей стандартной).
 10. **Оставляй дерево чистым.** Если под-инкремент не доводится — заверши/откати частичное так, чтобы дерево было в коммиченном рабочем состоянии, и явно напиши, где остановился.

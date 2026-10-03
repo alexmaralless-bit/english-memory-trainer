@@ -410,12 +410,14 @@
 <body>
   <main class="shell">
     <header class="hero">
-      <p class="eyebrow">Living roadmap · updated 22 July 2026</p>
+      <p class="eyebrow">Living roadmap · updated 24 September 2026</p>
       <h1>English Memory Trainer</h1>
-      <p class="hero-copy">A deterministic Reading and Writing learning engine with replaceable tutors. The A1–C2 curriculum and the Phase 2 vertical slice are complete, plus a personal lexicon that captures unknown words as enrollment — never as faked knowledge. Real use now supplies calibration evidence.</p>
+      <p class="hero-copy">A deterministic Reading and Writing learning engine with replaceable tutors. The A1–C2 curriculum, the Phase 2 vertical slice, the Phase 3 automaticity layer (memorized frames, drill blocks, a short relearning ladder) and the Phase 4 lean brief → report protocol are all complete. The tutor runs each lesson in chat and rules on every item; the engine only proposes a brief, records the report, scores and schedules.</p>
       <div class="hero-meta" aria-label="Current state">
         <span>Phase 0 complete</span>
         <span>Phase 2 complete</span>
+        <span>Phase 3 complete (2 open)</span>
+        <span>Phase 4 complete</span>
         <span>Permanent text-only scope</span>
         <span>Personal tool</span>
       </div>
@@ -424,6 +426,8 @@
     <nav aria-label="Roadmap sections">
       <a href="#snapshot">Snapshot</a>
       <a href="#phase-2">Phase 2</a>
+      <a href="#phase-3">Phase 3</a>
+      <a href="#phase-4">Phase 4</a>
       <a href="#decisions">Decisions</a>
       <a href="#program">Program</a>
       <a href="#foundation">Foundation</a>
@@ -436,14 +440,14 @@
         <p>Counts are taken from the canonical roadmap and the latest completion gates.</p>
       </div>
       <div class="metrics">
-        <article class="metric"><strong>275</strong><span>fully authored topics across 53 modules and 10 tracks</span></article>
-        <article class="metric"><strong>1,142</strong><span>lexicon units, including academic and real slang layers</span></article>
-        <article class="metric"><strong>13</strong><span>live engine modules, incl. read-only audit and the personal lexicon</span></article>
-        <article class="metric"><strong>58</strong><span>registered CLI commands with structured envelopes</span></article>
-        <article class="metric"><strong>504</strong><span>passing tests; the whole collected suite is green</span></article>
-        <article class="metric"><strong>0</strong><span>xfails: all four completion findings are executable behaviour now</span></article>
+        <article class="metric"><strong>283</strong><span>fully authored topics across 53 modules and 10 tracks, A1–C2</span></article>
+        <article class="metric"><strong>2,671</strong><span>lexicon units, including 1,529 memorized frames for automaticity</span></article>
+        <article class="metric"><strong>16</strong><span>live engine modules, incl. read-only audit and the personal lexicon</span></article>
+        <article class="metric"><strong>50</strong><span>registered CLI commands under the lean brief → report protocol</span></article>
+        <article class="metric"><strong>948</strong><span>passing tests; the whole collected suite is green</span></article>
+        <article class="metric"><strong>23</strong><span>accepted live policy payloads, up to <code>obligations@4</code></span></article>
         <article class="metric"><strong>12/12</strong><span>accepted Phase 0 design contracts</span></article>
-        <article class="metric"><strong>11 / 56</strong><span>open questions / resolved decisions; four are trigger-based v2 candidates</span></article>
+        <article class="metric"><strong>18 / 56</strong><span>open questions / resolved decisions; all open ones are non-blocking</span></article>
       </div>
     </section>
 
@@ -489,6 +493,80 @@
           <span class="number">2.9</span><h3>Trust contour</h3>
           <p>Provider ingress captures raw local turns safely; outer CLI telemetry observes successes and refusals; versioned obligations produce Tutor Compliance or honest no-data.</p><span class="pill done status">done</span>
         </article>
+        <article class="roadmap-row">
+          <span class="number">2.10</span><h3>Tutor pedagogy</h3>
+          <p>Ten dynamic lesson profiles, a preflight lesson proposal with a stale-safe hash, full teaching segments with sourced examples, and a known-language envelope for free conversation.</p><span class="pill done status">done</span>
+        </article>
+      </div>
+    </section>
+
+    <section id="phase-3" aria-labelledby="phase-3-title">
+      <div class="section-head">
+        <h2 id="phase-3-title">Phase 3 · automaticity layer</h2>
+        <p>Launched 2026-09-22 [PD-2026-09-22]: phrases before rules. Frames become the unit of memorization, drill blocks give per-item latency, a dedicated automaticity axis and a short relearning ladder replace rule recall. Two calibration questions (OPEN-37/38) stay open without blocking dependent work.</p>
+      </div>
+      <div class="card roadmap-list">
+        <article class="roadmap-row">
+          <span class="number">А</span><h3>Canon</h3>
+          <p>Frame/<code>carries</code>/drill block/automaticity/relearning-ladder terms; the <code>automaticity</code> axis and <code>automaticity@1</code>; <code>response_latency_ms</code>; <code>scheduler@2</code> ladder <code>[1,2,4]</code> + permanent interleave; <code>control@3</code>; learner preferences.</p><span class="pill done status">done</span>
+        </article>
+        <article class="roadmap-row">
+          <span class="number">Б</span><h3>Skills</h3>
+          <p>New <code>pedagogy.md</code> protocol (hint → self-correction → phrase → retry) and a new <code>run-drill-block</code> skill, plus new versions of <code>correct-learner-output</code>, <code>run-spaced-review</code>, <code>teach-english-topic</code> and <code>maintain-english-curriculum</code>.</p><span class="pill done status">done</span>
+        </article>
+        <article class="roadmap-row">
+          <span class="number">В</span><h3>Program &amp; policies</h3>
+          <p>Nine article topics A1–B2 with ≥ 6 minimal pairs each, <code>carries</code> added to 45 existing article chunks, and the <code>generation@3</code>/<code>control@3</code>/<code>automaticity@1</code>/<code>tunables@2</code> payloads.</p><span class="pill done status">done</span>
+        </article>
+        <article class="roadmap-row">
+          <span class="number">Г</span><h3>Authored content</h3>
+          <p>Frames for all 66 grammar-engine topics (≈1,300 units), article frames for tiers 1–2, minimal pairs recorded as contrasts, and ≈150 reconstruction texts (two per grammar topic).</p><span class="pill done status">done</span>
+        </article>
+        <article class="roadmap-row">
+          <span class="number">Д</span><h3>Engine code</h3>
+          <p>Validator/loader for frames and texts; <code>response_latency_ms</code> and <code>attempt record-block</code>; the <code>drill_block</code>/<code>reconstruction</code>/<code>timed_writing</code> forms and the <code>drill</code> profile; the automaticity scoring reducer with replay; the short relearning ladder; and the lean tutor protocol (<code>obligations@3</code>, three engine calls per step).</p><span class="pill open status">done · open</span>
+        </article>
+        <article class="roadmap-row">
+          <span class="number">Д15</span><h3>Real placement forms</h3>
+          <p>Versioned <code>curriculum/assessments/placement-*.yaml</code> forms (≥ 2 forms, ≈73 items, ≈35 min) replace the old six-item A1 stub; <code>scoring@2</code> derives a per-skill measured level from placement coverage.</p><span class="pill done status">done</span>
+        </article>
+      </div>
+    </section>
+
+    <section id="phase-4" aria-labelledby="phase-4-title">
+      <div class="section-head">
+        <h2 id="phase-4-title">Phase 4 · task → report protocol</h2>
+        <p>Launched 2026-09-23 [PD-2026-09-23]: the engine proposes a LessonBrief and records a LessonReport; the tutor runs the whole lesson in chat with no per-step engine calls and rules on every item itself.</p>
+      </div>
+      <div class="card roadmap-list">
+        <article class="roadmap-row">
+          <span class="number">W0</span><h3>Concept plan</h3>
+          <p><code>13819b5</code> — Waves, schemas and policies mapped out, plus the decision journal. Plan approved.</p><span class="pill done status">done</span>
+        </article>
+        <article class="roadmap-row">
+          <span class="number">W1</span><h3>Foundation</h3>
+          <p><code>cecc823</code> — <code>evidence/report.py</code> builders, <code>evidence@2</code> (verdict scale, review-outcome-by-verdict), the <code>tutor_verdict</code> branch in <code>scoring/engine.py</code>, <code>learner/lexicon.py::build_encounter_events</code>, <code>obligations@4</code> + <code>lessons@2</code>, and a golden fixture proving the old protocol still replays byte-identically.</p><span class="pill done status">done</span>
+        </article>
+        <article class="roadmap-row">
+          <span class="number">W2</span><h3>Core</h3>
+          <p><code>c4f3cdc</code> — <code>lessons/brief.py::build_brief</code> (absorbs the old resume briefing), <code>lessons/report.py</code> (<code>check_report</code>/<code>commit_report</code>), and a session lifecycle that starts and closes without the old per-step CAS machinery.</p><span class="pill done status">done</span>
+        </article>
+        <article class="roadmap-row">
+          <span class="number">W3</span><h3>CLI and removal</h3>
+          <p><code>e7dc693</code> — <code>session check-report</code>/<code>session report</code> added; <code>next</code>/<code>peek</code>/<code>replan</code>/<code>finish</code>, <code>attempt record</code>/<code>record-block</code>/<code>finalize</code>, <code>review close</code>, <code>observed record</code>, <code>turn submit</code> and <code>trainer signal</code> removed, with the delivery/rendering/preparation/bank/teaching modules (src −5.8k lines).</p><span class="pill done status">done</span>
+        </article>
+        <article class="roadmap-row">
+          <span class="number">W4-E</span><h3>Skills</h3>
+          <p><code>e7dc693</code> — <code>run-english-session</code>, <code>run-drill-block</code>, <code>run-spaced-review</code>, <code>coach-english-conversation</code>, <code>finish-english-session</code> and <code>audit-english-tutor</code> rewritten for brief/report; the adapters comparison fixture switched from self-scored attempts to a report fixture.</p><span class="pill done status">done</span>
+        </article>
+        <article class="roadmap-row">
+          <span class="number">W4-F</span><h3>Canon</h3>
+          <p><code>e7dc693</code> — <code>wiki/modules/{lessons,evidence,control,scoring,audit,adapters,cli}.md</code>, the session/continuation flows, the glossary and <code>docs/design-direction.md</code> rewritten to the target protocol, reversing the earlier "the agent never scores itself" stance.</p><span class="pill done status">done</span>
+        </article>
+        <article class="roadmap-row">
+          <span class="number">W5</span><h3>Acceptance</h3>
+          <p><code>2006174</code> — Full pytest, Ruff, strict mypy, <code>skills validate</code>, <code>adapters compare</code>, <code>scoring replay</code> and <code>memory check</code> all clean; the live database moved to <code>curriculum@2026-09-23-brief-report</code>; a live lesson (possessives, 8 items) ran in 3 engine calls with the report accepted on first check, closing <code>obligations@4</code>.</p><span class="pill done status">done</span>
+        </article>
       </div>
     </section>
 
@@ -529,8 +607,8 @@
       <div class="phase-summary">
         <article class="card summary-card">
           <h3>A1–C2 curriculum</h3>
-          <span class="big">275 topics</span>
-          <p>Every topic has mastery criteria, Russian-interference errors, original examples and contexts. Grammar tail becomes productive from B1 onward.</p>
+          <span class="big">283 topics</span>
+          <p>Every topic has mastery criteria, Russian-interference errors, original examples and contexts. Grammar tail becomes productive from B1 onward; nine article topics carry ≥ 6 minimal pairs each.</p>
         </article>
         <article class="card summary-card">
           <h3>TOEFL reading &amp; writing</h3>
@@ -539,14 +617,14 @@
         </article>
         <article class="card summary-card">
           <h3>Lexical system</h3>
-          <span class="big">1,142 units</span>
-          <p>Words, chunks, idioms, phrasal verbs, academic vocabulary and slang with transparency, register, currency and production-safety metadata.</p>
+          <span class="big">2,671 units</span>
+          <p>1,142 words, chunks, idioms, phrasal verbs, academic vocabulary and slang, plus 1,529 memorized frames (<code>frame_of</code>/<code>carries</code>) that carry grammar targets without rule recall.</p>
         </article>
       </div>
 
       <div class="card policy-card" style="margin-top: 14px;">
-        <h3>Ten accepted live policies</h3>
-        <p><code>generation@1</code>, <code>control@1</code>, <code>scoring@1</code>, <code>scheduler@1</code>, <code>rubric@1</code>, <code>assessments@1</code>, <code>lessons@1</code>, <code>evidence@1</code>, <code>obligations@1</code> and <code>tunables@1</code>.</p>
+        <h3>Twenty-three accepted live policies</h3>
+        <p><code>generation@1/@2/@3</code>, <code>control@1/@2/@3</code>, <code>scoring@1/@2</code>, <code>automaticity@1</code>, <code>scheduler@1/@2</code>, <code>rubric@1</code>, <code>assessments@1</code>, <code>lessons@1/@2</code>, <code>evidence@1/@2</code>, <code>obligations@1/@2/@3/@4</code> and <code>tunables@1/@2</code>.</p>
         <ul>
           <li>Session and placement manifests pin active versions for deterministic replay.</li>
           <li>Only original exercise text is allowed; no borrowed passages or excerpts.</li>
@@ -554,13 +632,13 @@
         </ul>
       </div>
       <div class="card policy-card" style="margin-top: 14px;">
-        <h3>Four non-blocking v2 candidates</h3>
-        <p>OPEN-33–36 preserve the content-first extension boundary without turning ideas into current-version promises.</p>
+        <h3>Eighteen open questions, all non-blocking</h3>
+        <p>56 questions are already resolved. The open ones split into four groups:</p>
         <ul>
-          <li>A versioned Reading/Writing exam profile for timed and optionally adaptive mock sessions.</li>
-          <li>Validated, atomic bulk exercise packs for growing the authored bank.</li>
-          <li>An explicit active-policy manifest before multiple live versions coexist.</li>
-          <li>External benchmark ingress and confidence-bearing TOEFL calibration after official results exist.</li>
+          <li>OPEN-33–36: four trigger-based v2 extension candidates (exam profile, bulk exercise packs, active-policy manifest, external benchmark ingress).</li>
+          <li>OPEN-37/38: automaticity-layer calibration — threshold tuning and the article-tier ceiling.</li>
+          <li>OPEN-39: placement-form coverage and rubric hand-off for the real placement forms.</li>
+          <li>OPEN-40–43: findings from the 2026-09-23 live placement run; OPEN-43 is narrowed to placement's objective-check paths only — ordinary lessons keep the tutor, not an answer key, as the judge.</li>
         </ul>
       </div>
     </section>
@@ -596,14 +674,14 @@
         <p>Latest implementation and evidence commits, newest first.</p>
       </div>
       <div class="card timeline">
-        <article class="milestone"><code>c94e6aa</code><div><h3>Personal lexicon in canon and roadmap</h3><p>The learner module records unknown words as enrollment, never evidence — scoring stays byte-identical across an encounter; only a graded answer moves knowledge. Two canon extensions accepted.</p></div></article>
-        <article class="milestone"><code>8a79518</code><div><h3>Learner-lexicon end-to-end demo</h3><p>Encounter → tutor briefing after a provider swap → a separate graded answer, proven deterministic across two databases.</p></div></article>
-        <article class="milestone"><code>316b3d8</code><div><h3>Operating runbook and deployed skills</h3><p>A one-page README, the ten skills synced into place, and the placement skill moved to the dedicated placement CLI.</p></div></article>
-        <article class="milestone"><code>2d7373c</code><div><h3>Complete Phase 2 safety and trust contracts</h3><p>Closed all four accepted findings with deterministic runtime behaviour and removed every strict xfail.</p></div></article>
-        <article class="milestone"><code>7e5d66a</code><div><h3>Finalize the pre-decision completion journal</h3><p>Recorded the boundary that the owner's four decisions subsequently resolved.</p></div></article>
-        <article class="milestone"><code>4b514c9</code><div><h3>Document trust-contour findings</h3><p>Captured the missing semantics that were later resolved without inventing runtime behaviour.</p></div></article>
-        <article class="milestone"><code>9eb673b</code><div><h3>Complete lessons wiring and OPEN-11 decision record</h3><p>Joined session lifecycle to live control inputs while preserving atomic planning.</p></div></article>
-        <article class="milestone"><code>7e5a172</code><div><h3>Wire live control into planning</h3><p>Signals, probes, saturation, recurring errors, starvation and availability now influence real plans.</p></div></article>
+        <article class="milestone"><code>ac1fef6</code><div><h3>Close Phase 4</h3><p>Report-based counting recognised as skill self-report in <code>obligations@4</code>; roadmap and journal closed out the phase.</p></div></article>
+        <article class="milestone"><code>2006174</code><div><h3>Phase 4 acceptance tails (W5)</h3><p>Count-based metrics for reported sessions, an honest inapplicable shape for <code>obligations@4</code>, and a default report-session skill. Full gate clean; live database moved to the brief-report curriculum.</p></div></article>
+        <article class="milestone"><code>e7dc693</code><div><h3>Phase 4 W3/W4: CLI, protocol removal, skills, canon</h3><p><code>session check-report</code>/<code>report</code> added; the whole per-step protocol and its modules removed (src −5.8k lines); skills and canon rewritten for brief/report.</p></div></article>
+        <article class="milestone"><code>c4f3cdc</code><div><h3>Phase 4 W2: lesson brief and tutor-verdict report</h3><p><code>lessons/brief.py</code> and <code>lessons/report.py</code> land — <code>check-report</code> validates, atomic commit finishes the session.</p></div></article>
+        <article class="milestone"><code>cecc823</code><div><h3>Phase 4 W1: tutor-verdict foundation</h3><p>Evidence builders, the <code>scoring</code> branch for tutor verdicts, the lexicon builder, <code>obligations@4</code> and a golden replay proving the old protocol is untouched.</p></div></article>
+        <article class="milestone"><code>13819b5</code><div><h3>Concept: lesson brief/report protocol</h3><p>Replaces the step-by-step engine protocol with propose-brief/record-report, driven by the owner's request after the 2026-09-22 live lesson. Opens OPEN-40…43.</p></div></article>
+        <article class="milestone"><code>3f4d91e</code><div><h3>Real placement forms as curriculum data</h3><p>Versioned placement forms with a placement-derived per-skill level, replacing the old six-item A1 stub.</p></div></article>
+        <article class="milestone"><code>a33c4c2</code><div><h3>Automaticity layer (Phase 3)</h3><p>Frames, drill blocks, the automaticity axis and the lean tutor protocol land in one day of subagent waves: 1,529 frames, nine article topics, 150 reconstruction texts.</p></div></article>
       </div>
     </section>
 
@@ -622,7 +700,7 @@
     </section>
 
     <footer>
-      <strong>Source of truth:</strong> <code>wiki/roadmap.md</code>. This standalone HTML snapshot was rebuilt on 2026-07-22. It contains no external scripts, fonts or network dependencies. Current verification baseline: 504 collected · 504 passed · 0 xfail · Ruff and strict mypy clean.
+      <strong>Source of truth:</strong> <code>wiki/roadmap.md</code>. This standalone HTML snapshot was rebuilt on 2026-09-24. It contains no external scripts, fonts or network dependencies. Current verification baseline: 948 passed · Ruff and strict mypy clean.
     </footer>
   </main>
 </body>

@@ -20,7 +20,11 @@ from english_trainer.kernel.store import EventStore
 from english_trainer.kernel.uow import UnitOfWork
 
 TUNABLES_KIND = "tunables"
-TUNABLES_VERSION = "tunables@1"
+# The catalogue version shipped with the curriculum. It grows whenever an
+# owner policy gains a numeric decision leaf: the completeness check is
+# bidirectional, so a new control leaf cannot be left uncatalogued
+# ([PD-2026-09-22] control@3 -> tunables@2).
+TUNABLES_VERSION = "tunables@2"
 EVENT_CALIBRATION_PROPOSED = "calibration.proposed"
 EVENT_POLICY_ACTIVATED = "policy.version_activated"
 EVENT_CALIBRATION_APPLIED = "calibration.applied"

@@ -1,0 +1,29 @@
+schema_version: 1
+texts:
+  - id: text.recon.hedging-stance-control.system-analysis
+    title: "System analysis"
+    cefr: C1
+    topic: grammar.hedging-stance.control
+    carries: [structure:hedging]
+    domain: work
+    context: research-claim
+    text: "The data appears to suggest a correlation between the configuration and the error rate. While the evidence is consistent with the hypothesis, the logs do not establish the direct cause. The team's analysis seems to indicate a pattern, although further investigation would be required. It is possible that the recent change triggered the incident; however, the timeline remains unclear. The observed behavior may support the theory that the service was affected by lock contention. One could argue the recovery was faster than expected, yet we cannot rule out other factors. The results potentially suggest an important relationship; nevertheless, confidence intervals remain broad. It is reasonable to conclude the configuration parameter influences the outcome, although effect size is uncertain. The evidence arguably points to a systemic issue, but the root cause is not definitively established."
+    word_count: 134
+    keywords: ["data configuration", "correlation error rate", "evidence hypothesis", "direct cause", "pattern investigation", "recent change incident", "lock contention", "recovery factors", "confidence intervals", "effect size", "systemic issue", "root cause"]
+    target_spans: ["appears to suggest a correlation", "evidence is consistent with", "seems to indicate a pattern", "is possible that", "may support the theory", "One could argue", "potentially suggest", "is reasonable to conclude"]
+    summary_ru: "Анализ данных указывает на возможную связь между конфигурацией и частотой ошибок, хотя доказательства не полностью устанавливают причину, и доверительные интервалы остаются широкими."
+    transformations: [authored]
+
+  - id: text.recon.hedging-stance-control.educational-technology
+    title: "Educational technology"
+    cefr: C1
+    topic: grammar.hedging-stance.control
+    carries: [structure:hedging]
+    domain: academic
+    context: research-claim
+    text: "The findings suggest a possible relationship between educational technology and student engagement. While the data indicates a trend, the research does not definitively prove causation. The studies appear to support the notion that interactive learning may enhance retention; however, several confounding variables remain uncontrolled. One could reasonably argue that the effect size, though statistically significant, is modest. The evidence arguably points to a promising approach, yet the long-term impact remains uncertain. It is plausible that the intervention influenced outcomes; nevertheless, the mechanisms are not fully understood. The results potentially indicate that explicit instruction enhances implicit learning, although the evidence is limited to specific contexts. One might conclude that the approach warrants further investigation, but the generalizability is questionable. The observed improvements may reflect teacher expectation rather than intervention effectiveness."
+    word_count: 129
+    keywords: ["educational technology", "student engagement", "data trend", "causation", "interactive learning retention", "confounding variables", "effect size modest", "long-term impact", "explicit instruction", "implicit learning", "generalizability questionable", "teacher expectation"]
+    target_spans: ["suggest a possible relationship", "does not definitively prove", "appear to support", "may enhance retention", "could reasonably argue", "arguably points to", "is plausible that", "potentially indicate", "may reflect"]
+    summary_ru: "Исследования указывают на возможную связь между образовательными технологиями и вовлечённостью учащихся: интерактивное обучение, вероятно, улучшает усвоение материала, но причинно-следственная связь не доказана, эффект невелик, а долгосрочное влияние остаётся неясным."
+    transformations: [authored]

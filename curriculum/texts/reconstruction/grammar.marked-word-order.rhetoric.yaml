@@ -1,0 +1,29 @@
+schema_version: 1
+texts:
+  - id: text.recon.marked-word-order-rhetoric.policy-argument
+    title: "Editorial argument on policy"
+    cefr: C2
+    topic: grammar.marked-word-order.rhetoric
+    carries: [structure:inversion]
+    domain: academic
+    context: editorial-argument
+    text: "Critical to this analysis is the distinction between correlation and causation in policy evaluation. Neither the budget increase nor the new hiring initiative directly produced the observed improvement in productivity metrics. What the original proposal failed to acknowledge was that market conditions, not internal restructuring, drove the gains. Into the discussion came an inconvenient fact: three competing organizations achieved similar results without any policy change whatsoever. Only by addressing this evidence honestly could the administration maintain credibility with skeptical stakeholders. Not until the revised report appeared did the public understand the true mechanisms at work. Through this debate emerged a consensus that measurement itself, rather than intervention, had transformed organizational practice and culture."
+    word_count: 113
+    keywords: ["critical to analysis", "correlation and causation", "budget increase", "direct produced", "improvement in metrics", "original proposal failed", "market conditions", "inconvenient fact", "three competing organizations", "addressing evidence honestly", "maintain credibility", "true mechanisms"]
+    target_spans: ["Critical to this analysis is the distinction", "What the original proposal failed to acknowledge was", "Into the discussion came an inconvenient fact", "Only by addressing this evidence honestly could", "Not until the revised report appeared did", "emerged a consensus that measurement itself, rather than intervention"]
+    summary_ru: "Критично различие корреляции и причины в политике; бюджет и найм не создали результат; неудобный факт; конкуренты достигли того же; честная работа с доказательствами важна; измерение само трансформировало практику."
+    transformations: [authored]
+
+  - id: text.recon.marked-word-order-rhetoric.executive-address
+    title: "Executive communication to stakeholders"
+    cefr: C2
+    topic: grammar.marked-word-order.rhetoric
+    carries: [structure:inversion]
+    domain: work
+    context: executive-address
+    text: "Unprecedented in its scope was the challenge we inherited at the outset. Three years ago, few observers anticipated the cascade of technical failures that would force a complete infrastructure modernization. What none of the consultants predicted were the secondary consequences for our supply chain relationships and customer trust. Into this turbulent environment came an opportunity that, paradoxically, our crisis had created through adversity. Bold action we took in restructuring capital allocation, a decision that many questioned initially and openly. Only through sustained commitment and systematic effort could we navigate the transformation successfully. Remarkable to witness was the resilience of employees who adapted faster than any analyst had projected. Behind this success lay not one innovation, but rather a culture that embraced calculated risk-taking and continuous improvement."
+    word_count: 126
+    keywords: ["unprecedented in scope", "challenge inherited", "cascade of failures", "infrastructure modernization", "secondary consequences", "supply chain relationships", "turbulent environment", "opportunity created", "bold action", "restructuring capital", "sustained commitment", "transformation successfully"]
+    target_spans: ["Unprecedented in its scope was the challenge", "What none of the consultants predicted were", "Into this turbulent environment came an opportunity", "Bold action we took in restructuring", "Only through sustained commitment and systematic effort could", "Remarkable to witness was the resilience", "Behind this success lay not one innovation"]
+    summary_ru: "Кризис был беспрецедентен; консультанты не предвидели последствия; в турбулентной обстановке появилась возможность через кризис; решительное действие и культура риска привели к успеху и адаптации."
+    transformations: [authored]

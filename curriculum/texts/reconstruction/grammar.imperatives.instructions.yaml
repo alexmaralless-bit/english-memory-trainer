@@ -1,0 +1,28 @@
+schema_version: 1
+texts:
+  - id: text.recon.imperatives-instructions.setup-guide
+    title: "Setup instructions for new employee"
+    cefr: A1
+    topic: grammar.imperatives.instructions
+    carries: [structure:imperative]
+    domain: work
+    context: work-chat
+    text: "Please open the shared drive first. Create a new folder with your name. Download the setup file from the server. Follow the installation steps carefully. Add your login to the team list. Check the configuration one more time. Submit your progress report by five o'clock. Contact me if you have questions."
+    word_count: 51
+    keywords: ["open shared drive", "Create folder", "Download setup file", "Follow steps", "Add login", "Check configuration", "Submit report"]
+    target_spans: ["Please open the shared drive", "Create a new folder", "Download the setup file", "Follow the installation steps", "Add your login", "Check the configuration", "Submit your progress report"]
+    summary_ru: "Инструкции: открой диск, создай папку, скачай файл, следуй шагам, добавь логин, проверь конфиг, отправь отчет."
+    transformations: [authored]
+  - id: text.recon.imperatives-instructions.recipe-steps
+    title: "Making a simple pasta dish"
+    cefr: A1
+    topic: grammar.imperatives.instructions
+    carries: [structure:imperative]
+    domain: everyday
+    context: work-chat
+    text: "Boil the water in a large pot first. Add salt to the boiling water. Pour the pasta into the pot. Stir it well and wait for ten minutes. Test the pasta with a fork. Drain the water carefully. Mix the sauce with the pasta. Serve the dish while it is hot. Please enjoy your meal."
+    word_count: 55
+    keywords: ["Boil water", "Add salt", "Pour pasta", "Stir well", "wait minutes", "Test pasta", "Drain water", "Mix sauce", "Serve hot"]
+    target_spans: ["Boil the water", "Add salt to the boiling water", "Pour the pasta", "Stir it well", "Test the pasta", "Drain the water carefully", "Mix the sauce"]
+    summary_ru: "Рецепт: вскипяти воду, соль, макароны, помешай, жди, слей, смешай, подавай горячим."
+    transformations: [authored]

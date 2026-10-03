@@ -59,14 +59,16 @@ def test_read_and_refused_commands_are_observable_without_raw_argument_values(tm
     started = _read_json(capsys)
     session_id = str(dict(started["data"])["session_id"])
 
+    report_file = tmp_path / "lesson-report.json"
+    report_file.write_text(json.dumps({"schema": "lesson_report@1", "session_id": session_id}), "utf-8")
     code = run(
         [
             "session",
-            "next",
-            "--expected-plan-version",
-            "1",
-            "--expected-session-revision",
-            "1",
+            "report",
+            "--file",
+            str(report_file),
+            "--provider",
+            "codex",
             "--root",
             root,
             "--format",
@@ -82,7 +84,7 @@ def test_read_and_refused_commands_are_observable_without_raw_argument_values(tm
     terminal = next(
         event
         for event in reversed(events)
-        if event.type == "cli.command_terminated" and event.payload.get("command") == "session.next"
+        if event.type == "cli.command_terminated" and event.payload.get("command") == "session.report"
     )
     invocation = next(event for event in events if event.id == terminal.causation_id)
     assert terminal.payload["session_id"] == session_id
@@ -91,4 +93,5 @@ def test_read_and_refused_commands_are_observable_without_raw_argument_values(tm
     assert invocation.payload["session_id"] == session_id
     assert set(invocation.payload) == {"command", "request_shape_hash", "session_id", "trust"}
     assert curriculum not in str(invocation.payload)
+    assert str(report_file) not in str(invocation.payload)
     conn.close()
